@@ -1,7 +1,10 @@
 export enum AppSubdomain {
     accounts = 'account-settings',
+    analytics = 'analytics',
+    contact = 'contact',
     devCenter = 'devcenter',
     earn = 'earn',
+    gigs = 'gigs',
     profiles = 'profiles',
     tcAcademy = 'academy',
     onboarding = 'onboarding',
@@ -16,6 +19,7 @@ export enum AppSubdomain {
     engagements = 'engagements',
     customer = 'customer',
     reports = 'reports',
+    sales = 'sales',
     procurement = 'procurement',
     status = 'status',
     support = 'support',
@@ -24,8 +28,11 @@ export enum AppSubdomain {
 
 export enum ToolTitle {
     accounts = 'Account Settings',
+    analytics = 'Analytics',
+    contact = 'Contact',
     devCenter = 'Dev Center',
     earn = 'Opportunity Feed',
+    gigs = 'Gigs',
     profiles = 'Profiles',
     tcAcademy = 'Topcoder Academy',
     selfService = 'Self Service Challenges',
@@ -41,6 +48,7 @@ export enum ToolTitle {
     engagements = 'Engagements',
     customer = 'Customer',
     reports = 'Reports',
+    sales = 'Sales',
     procurement = 'Procurement',
     status = 'Status',
     support = 'Support',

@@ -28,8 +28,11 @@ import {
 import { getOpportunityPage } from '../services'
 import {
     defaultSort,
+    compareOpportunityItems,
     opportunitySortOptions,
 } from '../utils/opportunity-listing.utils'
+import { myEngagementBucket, myEngagementState } from '../utils/engagement-status.utils'
+import { reviewOpportunityIsWaitlisted } from '../utils/review-opportunity.utils'
 
 import { ReactComponent as ChevronDownIcon } from '../assets/chevron-down.svg'
 import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
@@ -76,12 +79,31 @@ export function myWorkStatuses(
     if (status === 'active') {
         if (kind === 'competitions') return ['ACTIVE']
         if (kind === 'copilots') return ['active']
+        if (kind === 'engagements') return ['OPEN', 'ACTIVE', 'ON_HOLD']
         return ['OPEN']
     }
 
     if (kind === 'competitions') return ['COMPLETED']
     if (kind === 'copilots') return ['completed']
+    if (kind === 'engagements') return ['CANCELLED', 'CLOSED']
     return ['CLOSED']
+}
+
+/**
+ * Resolves the owner-filter query sent to the backing API for one My Work bucket.
+ *
+ * Engagements intentionally skip server-side lifecycle filtering because member
+ * assignment/application states can place still-active engagements into the Past
+ * bucket. We keep the current "first page from each owner, then merge locally"
+ * pagination semantics instead of switching this integration branch to multi-page
+ * client accumulation.
+ */
+function myWorkQueryStatuses(
+    kind: OpportunityKind,
+    status: OpportunityWorkStatus,
+): string[] | undefined {
+    if (kind === 'engagements') return undefined
+    return myWorkStatuses(kind, status)
 }
 
 /**
@@ -109,7 +131,7 @@ export async function getMyWorkPages(
             perPage: WORK_FETCH_SIZE,
             search: search || undefined,
             sort,
-            statuses: myWorkStatuses(kind, status),
+            statuses: myWorkQueryStatuses(kind, status),
         }
         const page = await getOpportunityPage(kind, filters) as OpportunityPage<OpportunityItem>
         return [kind, page] as const
@@ -191,24 +213,49 @@ export function myWorkType(result: MyWorkItem): string | undefined {
  * Resolves the member-facing application pill for a mixed My Work card.
  *
  * @param result tagged opportunity from an owning API.
- * @returns Registered for competitions, Accepted for approved work, otherwise Applied.
+ * @returns owner-appropriate registration or application state.
  * @throws Does not throw.
  */
 export function myWorkState(result: MyWorkItem): string {
     if (result.kind === 'competitions') return 'Registered'
     let value: string | undefined
     if (result.kind === 'engagements') {
-        const item = result.item as EngagementOpportunity
-        value = item.applicationStatus ?? item.myApplication?.status
-    } else if (result.kind === 'copilots') {
+        return myEngagementState(result.item as EngagementOpportunity)
+    }
+
+    if (result.kind === 'copilots') {
         value = (result.item as CopilotOpportunity).currentUserApplication?.status
     } else {
-        value = (result.item as ReviewOpportunity).myApplications?.[0]?.status
+        const reviewOpportunity = result.item as ReviewOpportunity
+        if (reviewOpportunityIsWaitlisted(reviewOpportunity)) return 'Waitlisted'
+        value = reviewOpportunity.myApplications?.[0]?.status
+        const reviewLabels: Record<string, string> = {
+            approved: 'Approved',
+            cancelled: 'Cancelled',
+            rejected: 'Rejected',
+        }
+        return reviewLabels[challengeCatalogKey(value)] ?? 'Applied'
     }
 
     const accepted = ['accepted', 'approved', 'selected']
         .includes(challengeCatalogKey(value))
     return accepted ? 'Accepted' : 'Applied'
+}
+
+/**
+ * Applies the authored My Work active/past selection to one mixed owner result.
+ *
+ * Engagements use the effective member state bucket so completed, terminated, and
+ * rejected rows stay visible in Past even when the public engagement itself is
+ * still active.
+ */
+export function myWorkMatchesStatus(
+    result: MyWorkItem,
+    status: OpportunityWorkStatus,
+): boolean {
+    if (status === 'all') return true
+    if (result.kind !== 'engagements') return true
+    return myEngagementBucket(result.item as EngagementOpportunity) === status
 }
 
 /**
@@ -301,15 +348,20 @@ export const MyWorkListing: FC<MyWorkListingProps> = props => {
         const query = deferredSearch.toLowerCase()
         const items = selectedKinds.flatMap(kind => (response.data?.[kind].items ?? [])
             .map(item => ({ item, kind })))
+            .filter(result => myWorkMatchesStatus(result, status))
             .filter(result => !query || myWorkSearchText(result)
                 .includes(query))
             .filter(result => !tracks.length || tracks.includes(myWorkTrack(result) ?? ''))
             .filter(result => !types.length || types.includes(myWorkType(result) ?? ''))
         const startingSoon = sort === 'startingSoon'
-        return [...items].sort((first, second) => (startingSoon
-            ? myWorkDate(first, true) - myWorkDate(second, true)
-            : myWorkDate(second, false) - myWorkDate(first, false)))
-    }, [deferredSearch, props.kinds, response.data, sort, tracks, types])
+        return [...items].sort((first, second) => {
+            const semanticDifference = compareOpportunityItems(first.item, second.item, sort)
+            if (semanticDifference !== 0) return semanticDifference
+            return startingSoon
+                ? myWorkDate(first, true) - myWorkDate(second, true)
+                : myWorkDate(second, false) - myWorkDate(first, false)
+        })
+    }, [deferredSearch, props.kinds, response.data, sort, status, tracks, types])
 
     const totalPages = filtered.length ? Math.ceil(filtered.length / perPage) : 0
     const visibleItems = filtered.slice((page - 1) * perPage, page * perPage)
@@ -427,7 +479,7 @@ export const MyWorkListing: FC<MyWorkListingProps> = props => {
                         <strong>Sort by</strong>
                         <span className={styles.sortSelect}>
                             <select aria-label='Sort my work' onChange={updateSort} value={sort}>
-                                {opportunitySortOptions('competitions')
+                                {opportunitySortOptions()
                                     .map(option => (
                                         <option key={option.value} value={option.value}>{option.label}</option>
                                     ))}

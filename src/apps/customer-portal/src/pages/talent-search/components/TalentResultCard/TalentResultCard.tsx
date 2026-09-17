@@ -19,6 +19,7 @@ interface TalentResultCardTalent {
     id: string
     handle: string
     isVerified: boolean
+    isCopilot?: boolean
     isRecentlyActive: boolean
     location: string
     matchIndex: number
@@ -92,6 +93,7 @@ export const TalentResultCard: FC<TalentResultCardProps> = (props: TalentResultC
         .trim()
 
     const isActive = talent.isRecentlyActive === true
+    const isCopilot = talent.isCopilot === true
     const openToWork = talent.openToWork
     const profileUrl = `${EnvironmentConfig.USER_PROFILE_URL}/${encodeURIComponent(talent.handle)}`
     const displayHandle = String(talent.handle || '')
@@ -132,6 +134,15 @@ export const TalentResultCard: FC<TalentResultCardProps> = (props: TalentResultC
                             <span className={styles.locationText}>{talent.location}</span>
                         </div>
                         <div className={styles.statusRow}>
+                            {isCopilot && (
+                                <span className={styles.copilotPill}>
+                                    <IconSolid.BadgeCheckIcon
+                                        aria-hidden
+                                        className={styles.copilotPillIcon}
+                                    />
+                                    <span>Copilot</span>
+                                </span>
+                            )}
                             <span
                                 className={classNames(
                                     styles.statusPill,

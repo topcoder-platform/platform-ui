@@ -7,7 +7,8 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) 223px;
     min-height: 136px;
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
     text-decoration: none;
     transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
 
@@ -20,6 +21,7 @@
         border-color: #007d79;
         box-shadow: 0 5px 18px rgba(0, 30, 46, .1);
         transform: translateY(-1px);
+        z-index: 10;
     }
 
 
@@ -27,6 +29,31 @@
         border-color: #007d79;
         box-shadow: 0 0 0 3px rgba(0, 125, 121, .28);
         outline: 0;
+    }
+
+    &:focus-within {
+        z-index: 10;
+    }
+}
+
+.titleLink {
+    color: inherit;
+    text-decoration: none;
+
+    &:link,
+    &:visited {
+        color: inherit;
+    }
+
+    &::after {
+        content: '';
+        inset: 0;
+        position: absolute;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #0f62fe;
+        outline-offset: 2px;
     }
 }
 
@@ -78,6 +105,14 @@
     }
 }
 
+.reviewTitle {
+    display: -webkit-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+}
+
 .eyebrow {
     align-items: center;
     color: #161616;
@@ -91,9 +126,9 @@
 }
 
 .badge {
-    background: #a7f0ba;
+    background: #e9ecef;
     border-radius: 2px;
-    color: #044317;
+    color: #161616;
     line-height: 12px;
     padding: 4px;
 }
@@ -112,6 +147,7 @@
     white-space: nowrap;
 
     svg {
+        flex: 0 0 16px;
         height: 16px;
         width: 16px;
     }
@@ -138,8 +174,15 @@
     flex-wrap: wrap;
     gap: 8px;
 
+    > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    button,
     span {
         background: #e9ecef;
+        border: 0;
         border-radius: 2px;
         color: #161616;
         font-family: 'Nunito Sans', sans-serif;
@@ -147,6 +190,19 @@
         font-weight: 600;
         line-height: 12px;
         padding: 4px;
+    }
+
+    .filterableSkill {
+        cursor: pointer;
+
+        &:focus-visible {
+            outline: 2px solid #0f62fe;
+            outline-offset: 2px;
+        }
+
+        &:hover {
+            background: #d9e1e8;
+        }
     }
 }
 
@@ -283,7 +339,6 @@
 }
 
 .competitionBadge {
-    background: #e9ecef;
     color: #161616;
 }
 
@@ -364,17 +419,16 @@
 .medalIcon {
     align-items: center;
     display: inline-flex;
-    flex: 0 0 16px;
-    height: 16px;
+    flex: 0 0 14px;
+    height: 18px;
     justify-content: center;
-    overflow: hidden;
-    width: 16px;
+    width: 14px;
 
     svg {
         display: block;
         flex: none;
-        height: 90%;
-        width: 70%;
+        height: 18px;
+        width: 14px;
     }
 }
 
@@ -389,6 +443,75 @@
     height: 28px;
     justify-content: center;
     width: 28px;
+}
+
+.winnersLink {
+    align-items: flex-start;
+    display: flex;
+    gap: 8px;
+    height: 45px;
+    position: relative;
+    text-decoration: none;
+    z-index: 2;
+
+    &:focus-visible {
+        border-radius: 4px;
+        outline: 2px solid #0f62fe;
+        outline-offset: 3px;
+    }
+}
+
+.winnerAvatar {
+    display: grid;
+    flex: 0 0 32px;
+    grid-template-columns: 32px;
+    grid-template-rows: 32px 13px;
+    height: 45px;
+    position: relative;
+    width: 32px;
+}
+
+.winnerPhoto {
+    align-items: center;
+    background: #e9ecef;
+    border: 1px solid #a8a8a8;
+    border-radius: 50%;
+    box-sizing: border-box;
+    color: #161616;
+    display: flex;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    grid-column: 1;
+    grid-row: 1;
+    height: 32px;
+    justify-content: center;
+    overflow: hidden;
+    width: 32px;
+
+    img {
+        height: 100%;
+        object-fit: cover;
+        width: 100%;
+    }
+}
+
+.winnerMedal {
+    align-items: center;
+    display: flex;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    height: 20px;
+    justify-content: center;
+    margin-left: 6px;
+    margin-top: 22px;
+    width: 20px;
+
+    svg {
+        display: block;
+        height: 20px;
+        width: 20px;
+    }
 }
 
 .prizeUnavailable {
@@ -473,6 +596,24 @@
     svg {
         height: 20px;
         width: 20px;
+    }
+}
+
+.metricRow {
+    position: relative;
+}
+
+.metricLink {
+    border-radius: 4px;
+    cursor: pointer;
+    inset: -4px;
+    position: absolute;
+    z-index: 2;
+
+    &:focus-visible {
+        box-shadow: 0 0 0 3px rgba(0, 125, 121, .28);
+        outline: 2px solid #0f62fe;
+        outline-offset: 1px;
     }
 }
 
@@ -566,7 +707,6 @@
 
 .competitionCard.gridCard {
     .competitionMain {
-        gap: 0;
         min-height: 0;
     }
 
@@ -686,8 +826,4 @@
         padding: 16px;
     }
 
-    .phaseHeading {
-        align-items: flex-start;
-        flex-direction: column;
-    }
 }

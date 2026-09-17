@@ -9,6 +9,7 @@ export type SearchTalent = {
     location: string
     matchIndex: number
     isRecentlyActive: boolean
+    isCopilot: boolean
     openToWork: boolean
     isVerified: boolean
     matchedSkills: Array<{
@@ -21,6 +22,7 @@ export type SearchTalent = {
 }
 
 export type MemberSearchPayload = {
+    copilot?: boolean
     countries?: string[]
     limit: number
     openToWork?: boolean

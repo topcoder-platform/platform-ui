@@ -11,9 +11,11 @@ import {
 import {
     budgetApprovalsRouteId,
     challengesRouteId,
+    // engagementLeadsRouteId, // Re-enable when Leads nav tab is restored
     engagementsRouteId,
     groupsRouteId,
     projectsRouteId,
+    salesRouteId,
     taasRouteId,
 } from '../../../../config/routes.config'
 import { canViewAllEngagements } from '../../../utils/permissions.utils'
@@ -22,6 +24,13 @@ function hasAnyRole(userRoles: string[], roles: string[]): boolean {
     return userRoles.some(role => roles.includes(role.toLowerCase()))
 }
 
+/**
+ * Builds Work navigation, including Sales for Administrators and Talent Managers.
+ * @param userRoles Authenticated caller roles.
+ * @param isAnonymous Whether the visitor has no authenticated profile.
+ * @returns Visible Work tabs; anonymous visitors receive none.
+ * @throws Does not throw.
+ */
 export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNavItem[] {
     if (isAnonymous) {
         return []
@@ -39,10 +48,17 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
     ]
 
     if (canViewEngagements) {
-        tabs.push({
-            id: engagementsRouteId,
-            title: 'Engagements',
-        })
+        tabs.push(
+            {
+                id: engagementsRouteId,
+                title: 'Engagements',
+            },
+            // Re-enable Leads nav tab when ready:
+            // {
+            //     id: engagementLeadsRouteId,
+            //     title: 'Leads',
+            // },
+        )
     }
 
     tabs.push(
@@ -63,6 +79,10 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
     )
 
     const isCopilot = hasAnyRole(userRoles, COPILOT_ROLES)
+
+    if (isAdmin || hasAnyRole(userRoles, ['talent manager'])) {
+        tabs.push({ id: salesRouteId, title: 'Sales' })
+    }
 
     if (isAdmin || isCopilot || isManager) {
         tabs.push({

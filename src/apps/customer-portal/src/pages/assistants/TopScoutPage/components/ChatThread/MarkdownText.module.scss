@@ -1,4 +1,5 @@
 @import '@libs/ui/styles/includes';
+@import '@libs/ui/styles/2026/tokens';
 
 .markdown {
     > :first-child {
@@ -41,23 +42,23 @@
 
     hr {
         border: none;
-        border-top: 1px solid $black-20;
+        border-top: 1px solid $tc-2026-border;
         margin: 12px 0;
     }
 
     a {
-        color: $blue-140;
+        color: $tc-2026-link;
         font-weight: 600;
         text-decoration: underline;
         text-underline-offset: 2px;
 
         &:hover {
-            color: $blue-160;
+            color: $tc-2026-teal;
         }
     }
 
     code {
-        background-color: $black-10;
+        background-color: $tc-2026-canvas;
         border-radius: 4px;
         font-family: 'Roboto Mono', monospace;
         font-size: 12px;
@@ -65,8 +66,8 @@
     }
 
     pre {
-        background-color: $black-10;
-        border-radius: 8px;
+        background-color: $tc-2026-canvas;
+        border-radius: $tc-2026-radius-md;
         margin: 0 0 10px;
         overflow-x: auto;
         padding: 10px 12px;
@@ -78,8 +79,8 @@
     }
 
     blockquote {
-        border-left: 3px solid $black-20;
-        color: #545f71;
+        border-left: 3px solid $tc-2026-border-strong;
+        color: $tc-2026-muted;
         margin: 0 0 10px;
         padding-left: 10px;
     }
@@ -94,13 +95,13 @@
 
     th,
     td {
-        border: 1px solid $black-20;
+        border: 1px solid $tc-2026-border;
         padding: 4px 8px;
         text-align: left;
     }
 
     th {
-        background-color: $black-5;
+        background-color: $tc-2026-canvas;
         font-weight: 700;
     }
 
@@ -110,6 +111,8 @@
     h4,
     h5,
     h6 {
+        color: $tc-2026-ink;
+        font-family: $tc-2026-font-heading;
         font-weight: 700;
         line-height: 1.3;
         margin: 12px 0 6px;

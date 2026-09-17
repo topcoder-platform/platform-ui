@@ -3,9 +3,6 @@ export type OpportunityKind = 'competitions' | 'engagements' | 'copilots' | 'rev
 /** Member-selected presentation for an Opportunities result page. */
 export type OpportunityView = 'list' | 'grid'
 
-/** Top-level authored destination within the Opportunities discovery experience. */
-export type OpportunityMode = 'browse' | 'work'
-
 /** Lifecycle facet shared by the mixed My Work result set. */
 export type OpportunityWorkStatus = 'all' | 'active' | 'past'
 
@@ -89,13 +86,37 @@ export interface ChallengeDiscussion {
 
 export interface ChallengeLegacy {
     forumId?: number
+    pureV5Task?: boolean
     reviewScorecardId?: number
     screeningScorecardId?: number
+}
+
+/** Legacy-compatible task metadata returned by Challenge API. */
+export interface ChallengeTask {
+    isAssigned?: boolean
+    isTask?: boolean
+    memberId?: number | string
 }
 
 export interface ChallengeMetadata {
     name: string
     value: unknown
+}
+
+/** AI review modes exposed by Review API for a challenge. */
+export type ChallengeAiReviewMode = 'AI_GATING' | 'AI_ONLY'
+
+/** Public-facing subset of a challenge's AI review configuration. */
+export interface ChallengeAiReviewConfig {
+    challengeId: string
+    id: string
+    instantReview: boolean
+    mode: ChallengeAiReviewMode
+}
+
+/** Challenge API reviewer assignment used to identify AI-reviewed challenges. */
+export interface ChallengeReviewer {
+    aiWorkflowId?: string
 }
 
 export interface ChallengeOpportunity {
@@ -108,6 +129,7 @@ export interface ChallengeOpportunity {
     endDate?: string
     events?: Array<{ key?: string; name?: string }>
     forumId?: number
+    funChallenge?: boolean
     id: string
     legacyId?: number
     legacy?: ChallengeLegacy
@@ -122,16 +144,20 @@ export interface ChallengeOpportunity {
     prizeSets?: ChallengePrizeSet[]
     projectId?: string
     registrationEndDate?: string
+    reviewers?: ChallengeReviewer[]
     skills?: OpportunitySkill[]
     startDate?: string
     status?: string
     tags?: string[]
+    task?: ChallengeTask
+    taskIsTask?: boolean
     terms?: ChallengeTerm[]
     track?: ChallengeCatalogValue
     type?: ChallengeCatalogValue
     winners?: Array<{
         handle?: string
         placement?: number
+        photoURL?: string
         prize?: number
         userId?: string
     }>
@@ -145,6 +171,7 @@ export interface ChallengeResource {
     memberId?: number | string
     rating?: number
     roleId?: string
+    roleName?: string
 }
 
 export interface ChallengeResourceRole {
@@ -154,6 +181,12 @@ export interface ChallengeResourceRole {
 
 export interface EngagementOpportunity {
     applicationStatus?: string
+    assignments?: Array<{
+        createdAt?: string
+        id?: string
+        status?: string
+        updatedAt?: string
+    }>
     anticipatedStart?: 'IMMEDIATE' | 'FEW_DAYS' | 'FEW_WEEKS' | string
     compensationRange?: string
     countries?: string[]
@@ -215,7 +248,9 @@ export interface ReviewApplicationSummary {
     handle?: string
     id?: string
     latestCompletedReviews?: number
+    maxRating?: number
     openReviews?: number
+    photoURL?: string
     role?: string
     status?: string
     userHandle?: string
@@ -239,6 +274,7 @@ export interface ReviewOpportunity {
     challengeData?: Record<string, any>
     challengeId: string
     challengeName?: string
+    createdAt?: string
     duration?: number
     defaultApplicationRole?: string
     id: string
@@ -337,12 +373,15 @@ export interface ChallengeProjectResult {
 }
 
 export interface ChallengeSubmission {
+    aiDecisionScore?: number | string | null
     challengeId?: string
     createdAt?: string
     createdBy?: string
     finalScore?: number | string | null
     id: string
     initialScore?: number | string | null
+    /** Review API discriminator; false when the submission is an authored external URL. */
+    isFileSubmission?: boolean
     isLatest?: boolean
     memberHandle?: string
     memberId?: string
@@ -369,6 +408,25 @@ export interface ChallengeSubmission {
     submitterHandle?: string
     submitterMaxRating?: number | null
     type?: string
+    url?: string
+    virusScan?: boolean
+}
+
+/** Review API workflow-run projection displayed beneath a member submission. */
+export interface ChallengeSubmissionAiWorkflowRun {
+    completedAt?: string
+    id: string
+    score?: number | string | null
+    status?: string
+    submissionId?: string
+    workflow?: {
+        id?: string
+        name?: string
+        scorecard?: {
+            minimumPassingScore?: number | string | null
+        }
+    }
+    workflowId?: string
 }
 
 /** Submission categories accepted by the v6 Review API upload endpoint. */

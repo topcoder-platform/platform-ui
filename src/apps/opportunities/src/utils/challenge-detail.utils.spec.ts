@@ -1,16 +1,22 @@
 /* eslint-disable no-script-url, ordered-imports/ordered-imports */
 import {
+    challengeAllowsStockArt,
     challengeFileTypes,
     challengeForumUrl,
+    challengeReviewAppUrl,
     challengeScorecardUrl,
     challengeSidebarLinks,
+    challengeSubmissionMode,
     challengeSubmissionLimit,
     memberProfileUrl,
+    submissionAiReviewAppUrl,
 } from './challenge-detail.utils'
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
         ADMIN: { ONLINE_REVIEW_URL: 'https://software.topcoder-dev.com/review' },
+        REVIEW_APP_URL: 'https://review.topcoder-dev.com',
+        TC_DOMAIN: 'topcoder-dev.com',
         URLS: { USER_PROFILE: 'https://profiles.topcoder-dev.com' },
         VANILLA_FORUM: { V2_URL: 'https://vanilla.topcoder-dev.com/api/v2' },
     },
@@ -35,6 +41,25 @@ jest.mock('~/libs/cms', () => ({
 }), { virtual: true })
 
 describe('challenge detail utilities', () => {
+    it('builds Review App links on the dedicated configured host', () => {
+        expect(challengeReviewAppUrl('challenge with/slash'))
+            .toBe('https://review.topcoder-dev.com/active-challenges/'
+                + 'challenge%20with%2Fslash/challenge-details')
+        expect(challengeReviewAppUrl('challenge-id', 'https://review.example/'))
+            .toBe('https://review.example/active-challenges/challenge-id/challenge-details')
+    })
+
+    it('builds encoded Review App links for one AI workflow run', () => {
+        expect(submissionAiReviewAppUrl(
+            'challenge with/slash',
+            'submission with/slash',
+            'workflow with/slash',
+            'https://review.example/',
+        ))
+            .toBe('https://review.example/active-challenges/challenge%20with%2Fslash'
+                + '/reviews/submission%20with%2Fslash?workflowId=workflow%20with%2Fslash')
+    })
+
     it('builds encoded links on the configured Profiles app host', () => {
         expect(memberProfileUrl('handle with/slash'))
             .toBe('https://profiles.topcoder-dev.com/handle%20with%2Fslash')
@@ -59,6 +84,59 @@ describe('challenge detail utilities', () => {
             .toEqual(['PSD', 'Sketch'])
         expect(challengeSubmissionLimit(challenge))
             .toBe(3)
+    })
+
+    it('retains a single authored file type when the API does not return a JSON array', () => {
+        expect(challengeFileTypes({
+            id: 'challenge',
+            metadata: [{ name: 'fileTypes', value: 'Figma' }],
+            name: 'Challenge',
+        }))
+            .toEqual(['Figma'])
+    })
+
+    it('requires an explicit stock-art allowance from challenge metadata', () => {
+        const challenge = {
+            id: 'challenge',
+            metadata: [{ name: 'ALLOWSTOCKART', value: ' true ' }],
+            name: 'Challenge',
+        }
+
+        expect(challengeAllowsStockArt(challenge))
+            .toBe(true)
+        expect(challengeAllowsStockArt({
+            ...challenge,
+            metadata: [{ name: 'allowStockArt', value: false }],
+        }))
+            .toBe(false)
+        expect(challengeAllowsStockArt({ ...challenge, metadata: [] }))
+            .toBe(false)
+    })
+
+    it('enables URL submissions only for the exact normalized metadata value', () => {
+        expect(challengeSubmissionMode({
+            id: 'url-challenge',
+            metadata: [{ name: ' SUBMISSION_TYPE ', value: ' URL ' }],
+            name: 'URL challenge',
+        }))
+            .toBe('url')
+        expect(challengeSubmissionMode({
+            id: 'zip-challenge',
+            metadata: [{ name: 'submission_type', value: 'zip' }],
+            name: 'ZIP challenge',
+        }))
+            .toBe('zip')
+        expect(challengeSubmissionMode({
+            id: 'unsupported-challenge',
+            metadata: [{ name: 'submission_type', value: 'external-url' }],
+            name: 'Unsupported challenge',
+        }))
+            .toBe('zip')
+        expect(challengeSubmissionMode({
+            id: 'default-challenge',
+            name: 'Default challenge',
+        }))
+            .toBe('zip')
     })
 
     it('returns only safe authored challenge and attachment links', () => {
@@ -113,6 +191,8 @@ describe('challenge detail utilities', () => {
             track: 'Development',
         }, 'https://vanilla.topcoder.com/api/v2'))
             .toBe('https://discussions.topcoder.com/?module=Category&categoryID=456')
+        expect(challengeForumUrl({ id: 'no-forum', name: 'No forum' }, 'https://vanilla.topcoder-dev.com/api/v2'))
+            .toBeUndefined()
         expect(challengeForumUrl({ id: 'bad', name: 'Bad config' }, 'javascript:alert(1)'))
             .toBeUndefined()
     })

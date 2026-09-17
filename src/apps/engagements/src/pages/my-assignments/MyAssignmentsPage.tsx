@@ -165,7 +165,7 @@ const MyAssignmentsPage: FC = () => {
         startTermsAgreementFlow,
         termsError,
     }: ReturnType<typeof useTermsAgreementGate> = useTermsAgreementGate({
-        contextDescription: 'you are accepting a private engagement offer',
+        contextDescription: 'you are accepting an engagement offer',
     })
 
     const [assignments, setAssignments] = useState<Engagement[]>([])

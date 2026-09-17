@@ -92,6 +92,7 @@ import {
     getMetadataValue,
     setMetadataValue,
 } from '../../../../lib/utils/metadata.utils'
+import { commitPendingFinalDeliverable } from '../../../../lib/utils/final-deliverables.utils'
 import { isReviewerAssignmentOptional } from '../../../../lib/utils/reviewer.utils'
 import {
     getProjectBillingAccountChallengeErrorMessage,
@@ -3359,7 +3360,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             setSaveValidationError(undefined)
 
             try {
-                const formData = getValues()
+                const formData = commitPendingFinalDeliverable(getValues())
                 const resolvedProjectBillingAccount = await resolveProjectBillingAccount()
                 const selectedRoundType = getCreateRoundType(formData.roundType, formElementRef.current)
                 const createProjectId = resolveRequiredCreateProjectId(formData.projectId, fallbackProjectId)
@@ -3653,7 +3654,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 }
 
                 const formDataWithProjectBilling = applyProjectBillingToChallengeFormData(
-                    formDataToSave,
+                    commitPendingFinalDeliverable(formDataToSave),
                     resolvedProjectBillingAccount,
                 )
                 const payload = transformFormDataToChallenge({

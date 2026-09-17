@@ -241,9 +241,9 @@ describe('ProjectEditorForm', () => {
 
         await waitFor(() => expect(mockedCreateProject)
             .toHaveBeenCalledWith(expect.objectContaining({
-                details: {
+                details: expect.objectContaining({
                     displayMemberPaymentDetailsToCopilots: true,
-                },
+                }),
             })))
     })
 
@@ -285,4 +285,43 @@ describe('ProjectEditorForm', () => {
         expect(mockedUpdateProject.mock.calls[0]?.[1].billingAccountId)
             .toBeNull()
     })
+    it('prefills shared metadata and saves changes while retaining other project details', async () => {
+        render(
+            <MemoryRouter>
+                <ProjectEditorForm
+                    canManage
+                    isEdit
+                    projectDetail={{
+                        description: 'Description',
+                        details: {
+                            customer: 'Customer',
+                            dealCloseDate: '2026-09-16',
+                            retained: true,
+                            smu: 'Others',
+                            smuOther: 'Custom',
+                        },
+                        id: 'project-1',
+                        name: 'Project',
+                        status: 'active',
+                    }}
+                    projectTypes={[]}
+                />
+            </MemoryRouter>,
+        )
+        expect((screen.getByLabelText(/^Other SMU/) as HTMLInputElement).value)
+            .toBe('Custom')
+        fireEvent.change(screen.getByLabelText('Customer'), { target: { value: 'Updated' } })
+        fireEvent.keyDown(screen.getByLabelText('SMU'), { code: 'ArrowDown', key: 'ArrowDown' })
+        fireEvent.click(screen.getByText('Europe'))
+        expect(screen.queryByLabelText(/^Other SMU/))
+            .toBeNull()
+        fireEvent.click(screen.getByRole('button', { name: 'Save project' }))
+        await waitFor(() => expect(mockedUpdateProject)
+            .toHaveBeenCalledWith('project-1', expect.objectContaining({
+                details: expect.objectContaining({
+                    customer: 'Updated', dealCloseDate: '2026-09-16', retained: true, smu: 'Europe', smuOther: '',
+                }),
+            })))
+    })
+
 })

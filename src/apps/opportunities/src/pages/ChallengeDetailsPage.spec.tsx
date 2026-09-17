@@ -1,4 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+import { PropsWithChildren } from 'react'
 import '@testing-library/jest-dom'
 import {
     fireEvent,
@@ -26,12 +27,16 @@ jest.mock('react-toastify', () => ({
 
 jest.mock('~/libs/core', () => ({
     authUrlLogin: (url: string): string => url,
+    recordAnalyticsEvent: jest.fn(),
     useProfileContext: () => ({ profile: undefined }),
 }), { virtual: true })
 
 jest.mock('~/libs/ui', () => {
     const Icon = (): JSX.Element => <svg />
     return {
+        ConfirmModal: (props: PropsWithChildren<{ open: boolean }>): JSX.Element => (
+            props.open ? <div>{props.children}</div> : <></>
+        ),
         IconOutline: new Proxy({}, { get: () => Icon }),
         LoadingSpinner: (): JSX.Element => <span>Loading</span>,
     }
@@ -56,7 +61,7 @@ jest.mock('../components/challenge-card.utils', () => ({
 }))
 
 jest.mock('../services', () => ({
-    agreeToChallengeTerms: jest.fn(),
+    getChallengeAiReviewConfig: jest.fn(),
     getChallengeOpportunity: jest.fn(),
     getChallengeProjectResults: jest.fn(),
     getChallengeRegistration: jest.fn(),
@@ -73,6 +78,7 @@ jest.mock('../utils', () => ({
     challengeForumUrl: (): undefined => undefined,
     formatMarathonScore: (): string => '—',
     isMarathonMatchChallenge: (): boolean => false,
+    isTaskChallenge: (): boolean => false,
     marathonDashboardIsEnabled: (): boolean => false,
     marathonSubmissionScores: (): Record<string, never> => ({}),
     memberProfileUrl: (handle: string): string => `https://profiles.topcoder-dev.com/${handle}`,

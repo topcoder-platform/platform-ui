@@ -120,7 +120,12 @@ const getTermsViewData = (termsDetails?: TermDetails): TermsViewData => {
 }
 
 /**
- * Manages the shared engagement terms gate, including sequential term checks and DocuSign-backed terms.
+ * Requires the standard terms and NDA before opening assignment offer acceptance.
+ * Application pages do not use this gate. Previously signed agreements are skipped;
+ * pending agreements are presented sequentially, including DocuSign-backed terms.
+ * @param options Description explaining why the member must sign before accepting an offer.
+ * @returns Modal state and a flow starter that calls its completion handler after both agreements are confirmed.
+ * @throws Does not propagate agreement API failures; exposes them through termsError and blocks completion.
  */
 export const useTermsAgreementGate = (
     options: UseTermsAgreementGateOptions,

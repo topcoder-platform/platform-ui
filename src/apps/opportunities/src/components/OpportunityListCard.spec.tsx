@@ -1,6 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
+import { readFileSync } from 'fs'
 import {
+    fireEvent,
     render,
     RenderResult,
     screen,
@@ -17,15 +19,40 @@ import {
 
 import { OpportunityListCard } from './OpportunityListCard'
 
+const opportunityListCardStyles = readFileSync(`${__dirname}/OpportunityListCard.module.scss`, 'utf8')
+
 jest.mock('~/libs/ui', () => {
     const Icon = (): JSX.Element => <svg />
     return {
         IconOutline: new Proxy({}, {
             get: () => Icon,
         }),
-        Tooltip: ({ children }: { children: JSX.Element }): JSX.Element => children,
+        Tooltip: (props: {
+            children: JSX.Element
+            strategy?: string
+        }): JSX.Element => (
+            <span data-tooltip-strategy={props.strategy}>{props.children}</span>
+        ),
     }
 }, { virtual: true })
+
+jest.mock('~/config', () => ({
+    EnvironmentConfig: {
+        ENGAGEMENTS_URL: 'https://engagements.example',
+    },
+}), { virtual: true })
+
+jest.mock('~/apps/copilots', () => ({
+    absoluteRootRoute: 'https://platform.example/copilots',
+}), { virtual: true })
+
+jest.mock('../assets/prize-medal-2.svg', () => ({
+    ReactComponent: (): JSX.Element => <svg data-testid='placement-medal-2' />,
+}))
+
+jest.mock('../assets/prize-medal-3.svg', () => ({
+    ReactComponent: (): JSX.Element => <svg data-testid='placement-medal-3' />,
+}))
 
 /**
  * Creates a complete competition-card fixture with an open registration and submission phase.
@@ -116,6 +143,12 @@ describe('OpportunityListCard competition presentation', () => {
             .toHaveClass('medalIcon')
         expect(firstMedal?.querySelector('svg'))
             .toBeInTheDocument()
+        expect(within(prizes)
+            .getByTestId('placement-medal-2'))
+            .toBeInTheDocument()
+        expect(within(prizes)
+            .getByTestId('placement-medal-3'))
+            .toBeInTheDocument()
         expect(screen.queryByText('Prize:'))
             .not.toBeInTheDocument()
 
@@ -123,6 +156,10 @@ describe('OpportunityListCard competition presentation', () => {
             .toBeInTheDocument()
         expect(screen.getByText('30m left'))
             .toBeInTheDocument()
+        expect(screen.getByText('Submission').parentElement)
+            .toBe(screen.getByText('30m left').parentElement)
+        expect(screen.getByText('30m left').parentElement)
+            .toHaveClass('phaseHeading')
         expect(screen.getByRole('progressbar', { name: 'Submission phase progress' }))
             .toHaveAttribute('aria-valuenow', '50')
         expect(screen.getByText('Submissions:'))
@@ -136,6 +173,25 @@ describe('OpportunityListCard competition presentation', () => {
         expect(screen.getByText('Figma').className)
             .toContain('primarySkill')
         expect(screen.queryByText(/intentionally absent/))
+            .not.toBeInTheDocument()
+    })
+
+    it('labels fun competitions as leaderboard-scored instead of showing prizes', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({ funChallenge: true })}
+                    kind='competitions'
+                />
+            </MemoryRouter>,
+        )
+
+        const prizes = screen.getByLabelText('Placement prizes')
+        expect(within(prizes)
+            .getByText('No individual prize - leaderboard scoring'))
+            .toBeInTheDocument()
+        expect(within(prizes)
+            .queryByText('$1000'))
             .not.toBeInTheDocument()
     })
 
@@ -158,12 +214,112 @@ describe('OpportunityListCard competition presentation', () => {
         )
 
         const card = screen.getByRole('link', { name: /Topcoder Opportunities Challenge/ })
-        expect(card.className)
+        expect(card.closest('article')?.className)
             .toContain('gridCard')
         expect(screen.getAllByText('+1'))
             .toHaveLength(2)
         expect(screen.getByText('Submissions:'))
             .toBeInTheDocument()
+    })
+
+    it('preserves the Figma spacing between grid skills and the divider', () => {
+        const competitionMainRules = Array.from(
+            opportunityListCardStyles.matchAll(/(?:^|\n)\s*\.competitionMain\s*\{([^}]*)\}/g),
+            match => match[1],
+        )
+
+        expect(competitionMainRules)
+            .toEqual(expect.arrayContaining([expect.stringContaining('gap: 15px;')]))
+        expect(competitionMainRules.some(rule => /\bgap:\s*0;/.test(rule)))
+            .toBe(false)
+    })
+
+    it('deep-links every active competition metric without nesting card links', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({
+                        numOfPosts: 5,
+                        numOfRegistrants: 2,
+                        numOfSubmissions: 0,
+                    })}
+                    kind='competitions'
+                />
+            </MemoryRouter>,
+        )
+
+        const titleLink = screen.getByRole('link', { name: /Topcoder Opportunities Challenge/ })
+        const metricLinks = [
+            ['View Submissions', '/opportunities/challenge/challenge-id?tab=submissions'],
+            ['View Registrants', '/opportunities/challenge/challenge-id?tab=registrants'],
+            ['View Posts', '/opportunities/challenge/challenge-id?tab=forum'],
+        ]
+        metricLinks.forEach(([name, href]) => {
+            const metricLink = screen.getByRole('link', { name })
+            expect(metricLink)
+                .toHaveAttribute('href', href)
+            expect(metricLink.className)
+                .toContain('metricLink')
+            expect(titleLink.contains(metricLink))
+                .toBe(false)
+            expect(metricLink.closest('article'))
+                .toBe(titleLink.closest('article'))
+        })
+        expect(screen.getByText('0'))
+            .toBeInTheDocument()
+    })
+
+    it('renders the Figma completed state with an API-backed winners affordance', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({
+                        currentPhase: undefined,
+                        currentPhaseNames: [],
+                        phases: [],
+                        status: 'COMPLETED',
+                        winners: [
+                            { handle: 'second', placement: 2, userId: '2' },
+                            {
+                                handle: 'first',
+                                photoURL: 'https://images.example/first.png',
+                                placement: 1,
+                                userId: '1',
+                            },
+                            { handle: 'third', placement: 3, userId: '3' },
+                            { handle: 'duplicate-third', placement: 3, userId: 'duplicate-3' },
+                            { handle: 'fourth', placement: 4, userId: '4' },
+                        ],
+                    })}
+                    kind='competitions'
+                />
+            </MemoryRouter>,
+        )
+
+        const completedState = screen.getByText('Completed')
+        expect(completedState)
+            .toBeInTheDocument()
+        expect(completedState.querySelector('svg'))
+            .toHaveTextContent('check-double.svg')
+        expect(screen.queryByText('Registration closed'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('progressbar'))
+            .not.toBeInTheDocument()
+
+        const winners = screen.getByRole('link', { name: 'View winners' })
+        expect(winners)
+            .toHaveAttribute('href', '/opportunities/challenge/challenge-id?tab=winners')
+        expect(winners.querySelectorAll('.winnerAvatar'))
+            .toHaveLength(3)
+        expect(winners.querySelector('img'))
+            .toHaveAttribute('src', 'https://images.example/first.png')
+        expect(winners.querySelectorAll('svg'))
+            .toHaveLength(3)
+        expect(within(winners)
+            .queryByText('$1000'))
+            .not.toBeInTheDocument()
+        expect(screen.getByLabelText('Placement prizes'))
+            .toHaveTextContent('$1000')
     })
 
     it('shows Registered for the server-filtered My competitions result', () => {
@@ -180,6 +336,28 @@ describe('OpportunityListCard competition presentation', () => {
             .toContain('registrationRegistered')
         expect(screen.queryByText('Open for registration'))
             .not.toBeInTheDocument()
+    })
+
+    it('filters by a clicked skill without following the challenge link', () => {
+        const onSkillClick = jest.fn()
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture()}
+                    kind='competitions'
+                    onSkillClick={onSkillClick}
+                />
+            </MemoryRouter>,
+        )
+
+        const skill = screen.getByRole('button', { name: 'Filter by Figma' })
+        fireEvent.click(skill)
+        expect(onSkillClick)
+            .toHaveBeenCalledWith('Figma')
+        expect(skill.closest('a'))
+            .toBeNull()
+        expect(screen.getByRole('link', { name: /Topcoder Opportunities Challenge/ }))
+            .toHaveAttribute('href', '/opportunities/challenge/challenge-id')
     })
 
     it('omits invented schedule progress when no phase is open', () => {
@@ -296,6 +474,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             description: 'Build a member-facing experience with the client team.',
             durationWeeks: 44,
             id: 'engagement-id',
+            nanoId: 'engagement-nano',
             role: 'SOFTWARE_DEVELOPER',
             skills: [{ name: 'React' }, { name: 'Node.js' }],
             status: 'OPEN',
@@ -307,8 +486,13 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('link').className)
+        expect(screen.getByRole('link')
+            .closest('article')?.className)
             .toEqual(expect.stringContaining('gridCard'))
+        expect(screen.getByRole('link'))
+            .toHaveAttribute('href', 'https://engagements.example/engagement-nano')
+        expect(screen.getByRole('link'))
+            .toHaveAttribute('target', '_blank')
         expect(screen.getByText('Role:'))
             .toBeInTheDocument()
         expect(screen.getByText('Development'))
@@ -338,8 +522,14 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('link').className)
+        expect(screen.getByRole('link')
+            .closest('article')?.className)
             .toEqual(expect.stringContaining('copilotCard'))
+        expect(screen.getByRole('link'))
+            .toHaveAttribute(
+                'href',
+                'https://platform.example/copilots/opportunity/copilot-id',
+            )
         expect(screen.getByText('Hours / week:'))
             .toBeInTheDocument()
         expect(screen.getByText('Challenge')
@@ -349,6 +539,26 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toBeInTheDocument()
         expect(screen.getByText('Start:'))
             .toBeInTheDocument()
+    })
+
+    it('formats the Copilot data science type as two words', () => {
+        const item: CopilotOpportunity = {
+            id: 'data-science-copilot',
+            opportunityTitle: 'Data Science Copilot',
+            projectType: 'datascience',
+            status: 'active',
+            type: 'datascience',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='copilots' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getAllByText('Data Science'))
+            .toHaveLength(2)
+        expect(screen.queryByText('Datascience'))
+            .not.toBeInTheDocument()
     })
 
     it('normalizes closed and applied owner statuses to the authored pills', () => {
@@ -380,7 +590,174 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toContain('stateApplied')
     })
 
-    it('lets My Work override the owning API state with the accepted treatment', () => {
+    it('shows selected and applied states for member engagement results', () => {
+        const selected: EngagementOpportunity = {
+            applicationStatus: 'ACCEPTED',
+            id: 'selected-engagement',
+            status: 'OPEN',
+            title: 'Selected engagement',
+        }
+        const applied: EngagementOpportunity = {
+            applicationStatus: 'SUBMITTED',
+            id: 'applied-engagement',
+            status: 'OPEN',
+            title: 'Applied engagement',
+        }
+        const { rerender }: RenderResult = render(
+            <MemoryRouter>
+                <OpportunityListCard item={selected} kind='engagements' memberApplied />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Selected').className)
+            .toContain('stateAccepted')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard item={applied} kind='engagements' memberApplied />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('Applied').className)
+            .toContain('stateApplied')
+    })
+
+    it('prefers member engagement status over public availability when assignments are present', () => {
+        const item: EngagementOpportunity = {
+            assignments: [{ status: 'SELECTED' }],
+            id: 'selected-engagement',
+            status: 'CLOSED',
+            title: 'Selected engagement',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='engagements' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Selected').className)
+            .toContain('stateAccepted')
+        expect(screen.queryByText('Application closed'))
+            .not.toBeInTheDocument()
+    })
+
+    it('shows authored under-review, shortlisted, on-hold, and declined engagement labels', () => {
+        const { rerender }: RenderResult = render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={{
+                        applicationStatus: 'UNDER_REVIEW',
+                        id: 'review-engagement',
+                        status: 'CLOSED',
+                        title: 'Review engagement',
+                    }}
+                    kind='engagements'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Under Review').className)
+            .toContain('stateApplied')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={{
+                        applicationStatus: 'SHORTLISTED',
+                        id: 'shortlisted-engagement',
+                        status: 'OPEN',
+                        title: 'Shortlisted engagement',
+                    }}
+                    kind='engagements'
+                />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('Shortlisted').className)
+            .toContain('stateApplied')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={{
+                        id: 'hold-engagement',
+                        status: 'ON_HOLD',
+                        title: 'On hold engagement',
+                    }}
+                    kind='engagements'
+                />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('On Hold').className)
+            .toContain('stateApplied')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={{
+                        applicationStatus: 'SELECTED',
+                        assignments: [{ status: 'OFFER_REJECTED' }],
+                        id: 'declined-engagement',
+                        status: 'CLOSED',
+                        title: 'Declined engagement',
+                    }}
+                    kind='engagements'
+                />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('Offer Declined').className)
+            .toContain('stateClosed')
+    })
+
+    it('uses the latest engagement assignment status when history is present', () => {
+        const item: EngagementOpportunity = {
+            assignments: [
+                {
+                    createdAt: '2026-02-11T11:00:00.000Z',
+                    id: 'assignment-selected',
+                    status: 'SELECTED',
+                    updatedAt: '2026-02-11T11:00:00.000Z',
+                },
+                {
+                    createdAt: '2026-02-10T11:00:00.000Z',
+                    id: 'assignment-terminated',
+                    status: 'TERMINATED',
+                    updatedAt: '2026-02-13T11:00:00.000Z',
+                },
+            ],
+            id: 'historical-engagement',
+            status: 'OPEN',
+            title: 'Historical engagement',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='engagements' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Terminated').className)
+            .toContain('stateClosed')
+        expect(screen.queryByText('Selected'))
+            .not.toBeInTheDocument()
+    })
+
+    it('does not let an undated selected assignment mask an offer decline', () => {
+        const item: EngagementOpportunity = {
+            assignments: [
+                { id: 'assignment-selected', status: 'SELECTED' },
+                { id: 'assignment-declined', status: 'OFFER_DECLINED' },
+            ],
+            id: 'declined-engagement',
+            status: 'OPEN',
+            title: 'Declined engagement',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='engagements' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Offer Declined'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Selected'))
+            .not.toBeInTheDocument()
+    })
+
+    it('lets My Work override the owning API state with the selected treatment', () => {
         const item: EngagementOpportunity = {
             id: 'accepted-engagement',
             status: 'OPEN',
@@ -389,14 +766,14 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         render(
             <MemoryRouter>
                 <OpportunityListCard
-                    applicationState='Accepted'
+                    applicationState='Selected'
                     item={item}
                     kind='engagements'
                 />
             </MemoryRouter>,
         )
 
-        const state = screen.getByText('Accepted')
+        const state = screen.getByText('Selected')
         expect(state.className)
             .toContain('stateAccepted')
         expect(state.querySelector('svg'))
@@ -405,14 +782,15 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .not.toBeInTheDocument()
     })
 
-    it('renders Review role, start, and application metrics without a description', () => {
+    it('renders Review role, payment, start, and application metrics without a description', () => {
         const item: ReviewOpportunity = {
             applicationCount: 3,
             canApply: true,
             challengeId: 'challenge-id',
             challengeName: 'Review this challenge',
             id: 'review-id',
-            payments: [{ payment: 100, role: 'Reviewer', roleId: 1 }],
+            incrementalPayment: 0.55,
+            payments: [{ payment: 1.43, role: 'Reviewer', roleId: 1 }],
             startDate: '2026-06-22T00:00:00.000Z',
             status: 'OPEN',
         }
@@ -422,13 +800,155 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('link').className)
+        expect(screen.getByRole('link')
+            .closest('article')?.className)
             .toEqual(expect.stringContaining('reviewCard'))
         expect(screen.getByText('Role:'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Payment:'))
+            .toBeInTheDocument()
+        expect(screen.getByText('$1.98'))
             .toBeInTheDocument()
         expect(screen.getByText('Applications:'))
             .toBeInTheDocument()
         expect(screen.getByText('3'))
             .toBeInTheDocument()
+    })
+
+    it('merges review tags, technologies, and skills without duplicate chips', () => {
+        const item: ReviewOpportunity = {
+            challengeData: {
+                skills: [{ name: 'MyTag' }, 'Test'],
+                tags: ['Featured', 'Test'],
+                technologies: [{ name: 'MyTag' }, 'React'],
+                track: 'Development',
+            },
+            challengeId: 'review-challenge',
+            challengeName: 'Reviewer test',
+            id: 'review-skills',
+            status: 'OPEN',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='reviews' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Featured'))
+            .toBeInTheDocument()
+        expect(screen.getByText('MyTag'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Test'))
+            .toBeInTheDocument()
+        expect(screen.getByText('React'))
+            .toBeInTheDocument()
+        expect(screen.getAllByText('Test'))
+            .toHaveLength(1)
+    })
+
+    it('filters review opportunities from either a tag or standardized skill chip', () => {
+        const onSkillClick = jest.fn()
+        const item: ReviewOpportunity = {
+            challengeData: {
+                skills: [{ name: 'UICollectionView' }],
+                technologies: ['Tag'],
+                track: 'Development',
+            },
+            challengeId: 'review-challenge',
+            challengeName: 'Review post check',
+            id: 'review-search-skills',
+            status: 'OPEN',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={item}
+                    kind='reviews'
+                    onSkillClick={onSkillClick}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Filter by Tag' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Filter by UICollectionView' }))
+
+        expect(onSkillClick.mock.calls)
+            .toEqual([['Tag'], ['UICollectionView']])
+        expect(screen.getByRole('link', { name: /Review post check/ }))
+            .toHaveAttribute('href', '/opportunities/review/review-search-skills')
+    })
+
+    it('positions review title tooltips outside the card clipping context', () => {
+        const item: ReviewOpportunity = {
+            challengeId: 'challenge-id',
+            challengeName: 'Long review opportunity title',
+            id: 'review-id',
+            status: 'OPEN',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='reviews' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Long review opportunity title' }).parentElement)
+            .toHaveAttribute('data-tooltip-strategy', 'fixed')
+        expect(screen.getByRole('heading', { name: 'Long review opportunity title' }).className)
+            .toContain('reviewTitle')
+    })
+
+    it('shows approved and rejected Review API application decisions', () => {
+        const approved: ReviewOpportunity = {
+            challengeId: 'approved-challenge',
+            challengeName: 'Approved review',
+            id: 'approved-review',
+            myApplications: [{ status: 'APPROVED' }],
+            status: 'OPEN',
+        }
+        const rejected: ReviewOpportunity = {
+            challengeId: 'rejected-challenge',
+            challengeName: 'Rejected review',
+            id: 'rejected-review',
+            myApplications: [{ status: 'REJECTED' }],
+            status: 'OPEN',
+        }
+        const { rerender }: RenderResult = render(
+            <MemoryRouter>
+                <OpportunityListCard item={approved} kind='reviews' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Approved').className)
+            .toContain('stateAccepted')
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard item={rejected} kind='reviews' />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('Rejected').className)
+            .toContain('stateClosed')
+    })
+
+    it('shows a pending reviewer as waitlisted after approved capacity is filled', () => {
+        const item: ReviewOpportunity = {
+            canApply: false,
+            challengeId: 'waitlist-challenge',
+            challengeName: 'Full review opportunity',
+            id: 'waitlist-review',
+            myApplications: [{ status: 'PENDING' }],
+            openPositions: 1,
+            remainingPositions: 0,
+            status: 'OPEN',
+        }
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={item} kind='reviews' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Waitlisted').className)
+            .toContain('stateApplied')
+        expect(screen.queryByText('Applied'))
+            .not.toBeInTheDocument()
     })
 })

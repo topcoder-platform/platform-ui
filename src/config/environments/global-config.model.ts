@@ -12,6 +12,11 @@ export interface LocalServiceOverride {
 export type ChallengeTypeNamesByTrackConfig = Record<string, string[]>
 
 export interface GlobalConfig {
+    ANALYTICS: {
+        API_URL: string
+        APP_ID: string
+        ENDPOINT: string
+    }
     TC_DOMAIN: string
     TOPCODER_URL: string
     PLATFORMUI_URL: string
@@ -34,6 +39,7 @@ export interface GlobalConfig {
     STANDARDIZED_SKILLS_API: string,
     TC_FINANCE_API: string,
     TC_AI_API: string,
+    CONTACT_API: string,
     MARATHON_MATCH_API?: string,
     REPORTS_API: string,
     PROCUREMENT_API: string,
@@ -55,10 +61,13 @@ export interface GlobalConfig {
         ACADEMY_COURSE: string
         USER_PROFILE: string
         ACCOUNT_SETTINGS: string
+        TERMS_OF_USE: string
+        TOPGEAR_TERMS: string
         UNIVERSAL_NAV: string
         CHALLENGES_PAGE: string
         WORK_APP: string
     }
+    TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS: string[]
     TERMS_URL?: string
     NDA_TERMS_URL?: string
     DEFAULT_NDA_UUID: string
@@ -105,6 +114,7 @@ export interface GlobalConfig {
         CNAME?: string
         REGION: string
         CONTAINER: string
+        SUBMISSION_CONTAINER: string
         PATH_PREFIX: string
         SECURITY?: {
             POLICY: string
@@ -116,6 +126,7 @@ export interface GlobalConfig {
     },
     SKILLS_EXTRACTION_WORKFLOW_ID: string
     RAG_CHALLENGE_INGESTION_WORKFLOW_ID: string
+    RAG_CHALLENGE_BULK_INGESTION_WORKFLOW_ID: string
     ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[]
     LOCAL_SERVICE_OVERRIDES?: LocalServiceOverride[]
     TROLLEY_WIDGET_ORIGIN: string

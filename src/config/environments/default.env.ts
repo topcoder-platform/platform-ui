@@ -161,12 +161,19 @@ export const API = {
 export const STANDARDIZED_SKILLS_API = `${API.V5}/standardized-skills`
 export const TC_FINANCE_API = `${API.V6}/finance`
 export const TC_AI_API = `${API.V6}/ai`
+export const CONTACT_API = getReactEnv<string>('CONTACT_API_URL', `${API.V6}/contact`)
 export const MARATHON_MATCH_API = `${API.V6}/marathon-match`
 export const REPORTS_API = `${API.V6}/reports`
 export const PROCUREMENT_API = `${API.V6}/procurement`
 
 export const AUTH = {
     ACCOUNTS_APP_CONNECTOR: `https://accounts-auth0.${TC_DOMAIN}`,
+}
+
+export const ANALYTICS = {
+    API_URL: getReactEnv<string>('ANALYTICS_API_URL', ''),
+    APP_ID: getReactEnv<string>('AWS_ANALYTICS_APP_ID', ''),
+    ENDPOINT: getReactEnv<string>('AWS_ANALYTICS_ENDPOINT', ''),
 }
 
 export const LOGGING = {
@@ -178,10 +185,6 @@ export const LOGGING = {
 }
 
 export const REAUTH_OFFSET = 55
-
-export const SPRIG = {
-    ENVIRONMENT_ID: getReactEnv<string | undefined>('SPRIG_ENV_ID', undefined),
-}
 
 export const VANILLA_FORUM = {
     V2_URL: 'https://vanilla.topcoder-dev.com/api/v2',
@@ -208,10 +211,22 @@ export const URLS = {
     ACADEMY_COURSE: `https://academy.${TC_DOMAIN}/freeCodeCamp`,
     ACCOUNT_SETTINGS: `https://account-settings.${TC_DOMAIN}/#account`,
     CHALLENGES_PAGE: `${TOPCODER_URL}/challenges`,
+    TERMS_OF_USE: 'https://www.topcoder.com/community/how-it-works/terms/',
+    TOPGEAR_TERMS: 'https://topgear.topcoder.com/challenges/terms/detail/f1d8cca9-ac24-473c-998d-02f499a829cb',
     UNIVERSAL_NAV: `https://uni-nav.${TC_DOMAIN}/v1/tc-universal-nav.js`,
     USER_PROFILE: `https://profiles.${TC_DOMAIN}`,
     WORK_APP: `https://work.${TC_DOMAIN}`,
 }
+
+// Preserve community-app's pipe-separated Topgear submission host allowlist.
+export const TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS: string[] = getReactEnv<string>(
+    'TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS',
+    'wipro365.sharepoint.com|wipro365-my.sharepoint.com|wipro365-my.sharepoint.com.mcas.ms',
+)
+    .split('|')
+    .map(domain => domain.trim()
+        .toLowerCase())
+    .filter(Boolean)
 
 export const MEMBER_VERIFY_LOOKER = getReactEnv<number>(
     'MEMBER_VERIFY_LOOKER',
@@ -267,9 +282,18 @@ export const SKILLS_EXTRACTION_WORKFLOW_ID = getReactEnv<string>(
     'skillExtractionWorkflow',
 )
 
+// Workflow ids default to each workflow's own `.id` (the value passed to
+// createWorkflow), not the object key it's registered under in tc-ai-api's
+// mastra instance. Mastra resolves either, but tc-ai-api's RBAC policies are
+// keyed on `.id` — see its ADR 0004.
 export const RAG_CHALLENGE_INGESTION_WORKFLOW_ID = getReactEnv<string>(
     'RAG_CHALLENGE_INGESTION_WORKFLOW_ID',
-    'challengeIngestionWorkflow',
+    'challenge-ingestion',
+)
+
+export const RAG_CHALLENGE_BULK_INGESTION_WORKFLOW_ID = getReactEnv<string>(
+    'RAG_CHALLENGE_BULK_INGESTION_WORKFLOW_ID',
+    'challenge-bulk-ingestion',
 )
 
 export const ADMIN = {
@@ -333,6 +357,10 @@ export const FILESTACK = {
                 SIGNATURE: FILESTACK_SECURITY_SIGNATURE,
             }
             : undefined,
+    SUBMISSION_CONTAINER: getReactEnv<string>(
+        'FILESTACK_SUBMISSION_CONTAINER',
+        'topcoder-dev-submissions-dmz',
+    ),
     TIMEOUT: getReactEnv<number>('FILESTACK_UPLOAD_TIMEOUT', 30 * 60 * 1000),
 }
 

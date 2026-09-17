@@ -69,7 +69,7 @@ describe('SubmissionHistoryModal', () => {
                     onClose={onClose}
                     open
                     reviewSummations={[{
-                        aggregateScore: 31.25,
+                        aggregateScore: 31.25123456789,
                         id: 'summation',
                         isProvisional: true,
                         submissionId: 'submission-two',
@@ -91,17 +91,135 @@ describe('SubmissionHistoryModal', () => {
             .toHaveBeenCalledWith('challenge', '123', 'CONTEST_SUBMISSION')
         expect(await screen.findByRole('columnheader', { name: 'Provisional Score' }))
             .toBeInTheDocument()
+        expect(screen.getByText('Latest Submission:').parentElement)
+            .toHaveTextContent('Latest Submission: submission-two')
         expect(screen.getByRole('columnheader', { name: 'Final Score' }))
             .toBeInTheDocument()
-        expect(screen.getByText('31.25'))
+        expect(screen.queryByRole('columnheader', { name: 'Status' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByText('31.25123456789'))
             .toBeInTheDocument()
         expect(screen.getByText('50'))
             .toBeInTheDocument()
         expect(screen.queryByRole('link'))
             .not.toBeInTheDocument()
+        expect(screen.getByRole('cell', { name: 'submission-two' }))
+            .toHaveAttribute('data-mobile-label', 'Submission')
+        expect(screen.getByRole('cell', { name: 'submission-two' }))
+            .toHaveAttribute('data-mobile-order', '1')
+        expect(screen.getByText(/^June 2, 2026 at /)
+            .closest('td'))
+            .toHaveAttribute('data-mobile-label', 'Time')
+        expect(screen.getByText(/^June 2, 2026 at /)
+            .closest('td'))
+            .toHaveAttribute('data-mobile-order', '4')
+        expect(screen.getByText('31.25123456789')
+            .closest('td'))
+            .toHaveAttribute('data-mobile-label', 'Provisional Score')
+        expect(screen.getByText('31.25123456789')
+            .closest('td'))
+            .toHaveAttribute('data-mobile-order', '3')
+        expect(screen.getByRole('cell', { name: '50' }))
+            .toHaveAttribute('data-mobile-order', '2')
 
         fireEvent.click(screen.getByRole('button', { name: 'Close submission history' }))
         expect(onClose)
             .toHaveBeenCalledTimes(1)
+        fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+        expect(onClose)
+            .toHaveBeenCalledTimes(2)
+    })
+
+    it.each([false, true])('gates historical artifact actions with authorization %s', async allowed => {
+        const onOpenArtifacts = jest.fn()
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <SubmissionHistoryModal
+                    challengeId='challenge'
+                    isMarathonMatch
+                    onClose={jest.fn()}
+                    onOpenArtifacts={allowed ? onOpenArtifacts : undefined}
+                    open
+                    submission={{ id: 'submission-two', memberId: '123' }}
+                />
+            </SWRConfig>,
+        )
+        await screen.findByText('submission-one')
+        const action = screen.queryByRole('button', { name: 'Download submission artifacts submission-one' })
+        if (allowed) {
+            fireEvent.click(action as HTMLElement)
+            expect(onOpenArtifacts)
+                .toHaveBeenCalledWith('submission-one')
+        } else {
+            expect(action)
+                .not.toBeInTheDocument()
+        }
+    })
+
+    it('replaces the non-Marathon status column with the final score', async () => {
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <SubmissionHistoryModal
+                    challengeId='challenge'
+                    onClose={jest.fn()}
+                    open
+                    submission={{
+                        id: 'submission-two',
+                        memberId: '123',
+                        submitterHandle: 'coder',
+                        type: 'CONTEST_SUBMISSION',
+                    }}
+                />
+            </SWRConfig>,
+        )
+
+        expect(await screen.findByRole('columnheader', { name: 'Final Score' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('columnheader', { name: 'Status' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('cell', { name: '50' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('columnheader', { name: 'Provisional Score' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('renders only the latest row when Review API restricts another submitter history', async () => {
+        mockedGetHistory.mockResolvedValueOnce([{
+            finalScore: 84.1576,
+            id: 'latest-visible-attempt',
+            initialScore: 82.72,
+            memberId: '456',
+            submittedDate: '2026-06-02T15:05:00.000Z',
+            type: 'CONTEST_SUBMISSION',
+        }])
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <SubmissionHistoryModal
+                    challengeId='challenge'
+                    isMarathonMatch
+                    onClose={jest.fn()}
+                    open
+                    showFinalScores
+                    submission={{
+                        id: 'latest-visible-attempt',
+                        memberId: '456',
+                        submitterHandle: 'other-coder',
+                        type: 'CONTEST_SUBMISSION',
+                    }}
+                />
+            </SWRConfig>,
+        )
+
+        expect(await screen.findByRole('dialog', { name: 'Submission History for other-coder' }))
+            .toBeInTheDocument()
+        expect(mockedGetHistory)
+            .toHaveBeenCalledWith('challenge', '456', 'CONTEST_SUBMISSION')
+        expect(await screen.findAllByText('latest-visible-attempt'))
+            .toHaveLength(2)
+        expect(screen.getAllByRole('row'))
+            .toHaveLength(2)
+        expect(screen.queryByText('submission-one'))
+            .not.toBeInTheDocument()
     })
 })

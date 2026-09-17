@@ -851,7 +851,8 @@ function mapDefaultReviewerToReviewer(
  * assignments and valid custom selections while repairing missing, duplicate, or stale rows.
  * @remarks Checkpoint Review, Review, and Approval are always private and assigned to the selected
  * copilot. The helper is used before save validation because those rows are hidden in simplified
- * mode and cannot be repaired manually by the user.
+ * mode and cannot be repaired manually by the user. Resource hydration must leave these assignments
+ * to this helper so persisted member ids cannot conflict with the selected copilot handle.
  * @throws Does not throw.
  */
 function reconcileSimplifiedDesignReviewerDefaults(params: {
@@ -1895,6 +1896,18 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
                     return
                 }
 
+                // Simplified Design defaults own these assignments. Restoring a persisted member id
+                // here would fight the copilot handle normalization on every subsequent render.
+                if (
+                    props.screenerOnly
+                    && isDesignTrackSelected
+                    && DESIGN_COPILOT_REVIEW_PHASE_KEYS.has(
+                        normalizeKey(phaseNameById.get(normalizeText(reviewer.phaseId))),
+                    )
+                ) {
+                    return
+                }
+
                 const assignedResources = assignedResourcesByReviewer[reviewerIndex] || []
                 const assignment = getHydratedReviewerAssignment(
                     reviewer,
@@ -1926,9 +1939,11 @@ export const HumanReviewTab: FC<HumanReviewTabProps> = (props: HumanReviewTabPro
         challengeResourcesResult.resources,
         formContext,
         getReviewerFieldIndex,
+        isDesignTrackSelected,
         isFormDirty,
         normalizedChallengeId,
         phaseNameById,
+        props.screenerOnly,
         resourceRoles,
         reviewerRows,
     ])

@@ -10,14 +10,39 @@ import {
 } from '@testing-library/react'
 
 import { ChallengeOpportunity, ChallengeSubmission } from '../models'
-import { createChallengeSubmission } from '../services'
+import {
+    createChallengeSubmission,
+    createChallengeUrlSubmission,
+} from '../services'
 
 import {
     ChallengeSubmissionUpload,
     challengeSubmissionType,
     validateChallengeSubmissionFile,
+    validateChallengeSubmissionUrl,
 } from './ChallengeSubmissionUpload'
 
+const mockRecordAnalyticsEvent = jest.fn()
+
+jest.mock('~/config', () => ({
+    EnvironmentConfig: {
+        TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS: [
+            'wipro365.sharepoint.com',
+            'wipro365-my.sharepoint.com',
+            'wipro365-my.sharepoint.com.mcas.ms',
+        ],
+        URLS: {
+            TERMS_OF_USE: 'https://www.example.com/terms',
+            TOPGEAR_TERMS: 'https://topgear.topcoder.com/challenges/terms/detail/f1d8cca9-ac24-473c-998d-02f499a829cb',
+        },
+    },
+}), { virtual: true })
+jest.mock('~/libs/cms', () => ({
+    getSafeCmsLink: jest.fn(),
+}), { virtual: true })
+jest.mock('~/libs/core', () => ({
+    recordAnalyticsEvent: (...args: unknown[]) => mockRecordAnalyticsEvent(...args),
+}), { virtual: true })
 jest.mock('~/libs/ui', () => {
     const Icon = (): JSX.Element => <svg />
     return {
@@ -31,9 +56,12 @@ jest.mock('react-toastify', () => ({
 }))
 jest.mock('../services', () => ({
     createChallengeSubmission: jest.fn(),
+    createChallengeUrlSubmission: jest.fn(),
 }))
 
 const mockedCreateSubmission = createChallengeSubmission as jest.MockedFunction<typeof createChallengeSubmission>
+const mockedCreateUrlSubmission
+    = createChallengeUrlSubmission as jest.MockedFunction<typeof createChallengeUrlSubmission>
 
 /** Creates the minimum challenge data needed by the upload workflow. */
 function challengeFixture(overrides: Partial<ChallengeOpportunity> = {}): ChallengeOpportunity {
@@ -49,17 +77,30 @@ function challengeFixture(overrides: Partial<ChallengeOpportunity> = {}): Challe
     }
 }
 
-/** Renders the upload workflow with stable no-op callbacks and optional prop overrides. */
-function renderUpload(challenge: ChallengeOpportunity = challengeFixture()): RenderResult {
+/**
+ * Renders the upload workflow with stable callbacks.
+ *
+ * @param challenge challenge fixture rendered by the form.
+ * @param onValidateRegistration pre-upload registration result.
+ * @param onUploadingChange optional observer for the active upload state.
+ * @returns Testing Library render result.
+ * @throws Does not throw.
+ */
+function renderUpload(
+    challenge?: ChallengeOpportunity,
+    onValidateRegistration?: () => Promise<boolean>,
+    onUploadingChange?: (uploading: boolean) => void,
+): RenderResult {
     return render(
         <ChallengeSubmissionUpload
-            challenge={challenge}
+            challenge={challenge ?? challengeFixture()}
             memberId='123'
             onBack={jest.fn()}
             onContactSupport={jest.fn()}
             onShowRequirements={jest.fn()}
-            onShowTerms={jest.fn()}
             onSubmitted={jest.fn()}
+            onUploadingChange={onUploadingChange}
+            onValidateRegistration={onValidateRegistration ?? (async () => true)}
         />,
     )
 }
@@ -95,6 +136,15 @@ describe('ChallengeSubmissionUpload', () => {
             .not.toBeInTheDocument()
     })
 
+    it('opens the site Terms of Use instead of challenge registration terms', () => {
+        renderUpload()
+
+        expect(screen.getByRole('link', { name: /Terms of Use/ }))
+            .toHaveAttribute('href', 'https://www.example.com/terms')
+        expect(screen.getByRole('link', { name: /Terms of Use/ }))
+            .toHaveAttribute('target', '_blank')
+    })
+
     it('rejects a non-ZIP and an archive over 500MB', () => {
         expect(validateChallengeSubmissionFile(new File(['source'], 'submission.txt')))
             .toBe('Choose a ZIP file ending in .zip.')
@@ -102,6 +152,279 @@ describe('ChallengeSubmissionUpload', () => {
         Object.defineProperty(oversized, 'size', { value: (500 * 1024 * 1024) + 1 })
         expect(validateChallengeSubmissionFile(oversized))
             .toBe('The ZIP file must be 500MB or smaller.')
+    })
+
+    it('requires an absolute HTTP or HTTPS submission URL', () => {
+        expect(validateChallengeSubmissionUrl(''))
+            .toBe('Enter the URL to your submission.')
+        expect(validateChallengeSubmissionUrl('deliverables.example.com/result'))
+            .toBe('Enter a valid submission URL.')
+        expect(validateChallengeSubmissionUrl('ftp://deliverables.example.com/result'))
+            .toBe('Enter a URL beginning with http:// or https://.')
+        expect(validateChallengeSubmissionUrl('  https://wipro365.sharepoint.com/result  '))
+            .toBeUndefined()
+    })
+
+    it.each([
+        'https://wipro365.sharepoint.com/:f:/r/sites/project/deliverables?download=1',
+        'https://wipro365-my.sharepoint.com/personal/member/result.docx',
+        'https://wipro365-my.sharepoint.com.mcas.ms/personal/member/result.docx',
+        'http://wipro365.sharepoint.com/sites/project/result',
+        '  https://WIPRO365.SHAREPOINT.COM/sites/project/Work%20Summary.docx  ',
+    ])('accepts legacy Wipro SharePoint deliverable links: %s', url => {
+        expect(validateChallengeSubmissionUrl(url))
+            .toBeUndefined()
+    })
+
+    it.each([
+        'https://files.example.com/result',
+        'https://wipro365.sharepoint.com',
+        'https://wipro365.sharepoint.com/?result=1',
+        'https://wipro365.sharepoint.com.evil.example/result',
+        'https://wipro365Xsharepoint.com/result',
+        'https://wipro365.sharepoint.com@evil.example/result',
+        'https://user:password@wipro365.sharepoint.com/result',
+        'https://wipro365.sharepoint.com:8443/result',
+    ])('rejects links outside the allowed SharePoint deliverables: %s', url => {
+        expect(validateChallengeSubmissionUrl(url))
+            .toBe('Ensure that you submit a valid Wipro SharePoint link only. '
+                + 'The link should point to the outcome/deliverable of the challenge and should reflect the work done. '
+                + 'Please check the challenge submission guidelines.')
+    })
+
+    it.each([
+        'Development', 'Design', 'Data Science', 'Quality Assurance',
+    ])('renders the exact Topgear guidance for a metadata-selected URL %s challenge', track => {
+        renderUpload(challengeFixture({
+            metadata: [{ name: ' SUBMISSION_TYPE ', value: ' URL ' }],
+            track: { name: track },
+        }))
+
+        expect(screen.getByText('Enter the URL to your submission.'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Steps for Submission:' }))
+            .toBeInTheDocument()
+        expect(screen.getAllByRole('listitem')
+            .map(item => item.textContent))
+            .toEqual([
+                'Upload the outcome/asset/deliverable of the challenge to the repository (Wipro SharePoint folder) '
+                + 'as specified by the project team/challenge creator.',
+                'Copy the link of the outcome/asset/deliverable that was uploaded. '
+                + 'Enter this link in the text box and click on “SET URL”.',
+                'Please check the acceptance/confirmation box at the bottom left corner.',
+                'Click on the ‘Submit’ option at the bottom right.',
+            ])
+        expect(screen.getByText('Do not submit any irrelevant links').parentElement)
+            .toHaveTextContent('Ensure that the submission link always reflects the outcome '
+                + 'that was delivered as part of the challenge. Do not submit any irrelevant links '
+                + 'as the submission link is proof of the work done.')
+        expect(screen.getByText(/Note: All deliverables\/outcomes/))
+            .toHaveTextContent('Note: All deliverables/outcomes should be uploaded to the Wipro SharePoint '
+                + 'directory ONLY. For work done directly on customer environment and involving a customer '
+                + 'SharePoint/drive/folder link, create a word document and include a brief summary of the work '
+                + 'done and list the deliverables/assets created along with the link to the customer '
+                + 'SharePoint/drive/folder link and upload the word document '
+                + 'to a Wipro SharePoint folder. And submit the link to this Word document as the submission link.')
+        expect(screen.getByText(/If you are having trouble with the submission/))
+            .toHaveTextContent('If you are having trouble with the submission or have any queries, '
+                + 'please raise a Service Now (SNOW) ticket under the TopGear category.')
+        const termsLink = screen.getByRole('link', { name: 'TopGear terms and conditions' })
+        expect(termsLink)
+            .toHaveAttribute(
+                'href',
+                'https://topgear.topcoder.com/challenges/terms/detail/f1d8cca9-ac24-473c-998d-02f499a829cb',
+            )
+        expect(termsLink)
+            .toHaveAttribute('target', '_blank')
+        expect(termsLink.parentElement)
+            .toHaveTextContent('Submitting your link means you hereby agree to the TopGear terms and conditions '
+                + 'and to the extent your submission wins a TopGear challenge, you hereby agree to assign, grant, '
+                + 'and transfer to TopGear all right and title to the Winning Submission.')
+        expect(screen.getByLabelText(/Submission URL/))
+            .toHaveAttribute('type', 'url')
+        expect(screen.getByRole('button', { name: 'Set URL' }))
+            .toBeInTheDocument()
+        expect(screen.queryByLabelText(/Upload File/))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Drop your file(s) here or'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: 'Submission tips' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Topcoder Support' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('keeps the file picker and Topcoder declaration for an explicit ZIP challenge', () => {
+        renderUpload(challengeFixture({ metadata: [{ name: 'submission_type', value: 'zip' }] }))
+
+        expect(screen.getByLabelText(/Upload File/))
+            .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Topcoder Terms of Use' }))
+            .toHaveAttribute('href', 'https://www.example.com/terms')
+        expect(screen.queryByLabelText(/Submission URL/))
+            .not.toBeInTheDocument()
+    })
+
+    it('validates and reconfirms an edited URL before enabling its declaration', () => {
+        renderUpload(challengeFixture({
+            metadata: [{ name: 'submission_type', value: 'url' }],
+        }))
+        const urlInput = screen.getByLabelText(/Submission URL/)
+        const agreement = screen.getByRole('checkbox', { name: 'I understand and agree' })
+
+        fireEvent.change(urlInput, { target: { value: 'ftp://files.example.com/result' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        expect(screen.getByRole('alert'))
+            .toHaveTextContent('Enter a URL beginning with http:// or https://.')
+        expect(urlInput)
+            .toHaveAttribute('aria-invalid', 'true')
+        expect(agreement)
+            .toBeDisabled()
+
+        fireEvent.change(urlInput, { target: { value: 'https://files.example.com/result' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        expect(screen.getByRole('alert'))
+            .toHaveTextContent('Ensure that you submit a valid Wipro SharePoint link only.')
+        expect(agreement)
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Submit' }))
+            .toBeDisabled()
+
+        fireEvent.change(urlInput, { target: { value: '  https://wipro365.sharepoint.com/result  ' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        expect(screen.getByText('Ready to submit'))
+            .toBeInTheDocument()
+        expect(screen.getByText('https://wipro365.sharepoint.com/result'))
+            .toBeInTheDocument()
+        expect(urlInput)
+            .toHaveValue('https://wipro365.sharepoint.com/result')
+        expect(agreement)
+            .not.toBeDisabled()
+
+        fireEvent.click(agreement)
+        fireEvent.change(urlInput, { target: { value: 'https://wipro365.sharepoint.com/revised' } })
+        expect(screen.queryByText('Ready to submit'))
+            .not.toBeInTheDocument()
+        expect(agreement)
+            .toBeDisabled()
+        expect(agreement)
+            .not.toBeChecked()
+    })
+
+    it('posts a confirmed URL directly and resets URL state for another solution', async () => {
+        mockedCreateUrlSubmission.mockResolvedValue({ id: 'url-submission-id' })
+        renderUpload(challengeFixture({
+            currentPhaseNames: ['Submission'],
+            metadata: [{ name: 'submission_type', value: 'url' }],
+            phases: [{ isOpen: true, name: 'Submission' }],
+        }))
+
+        fireEvent.change(screen.getByLabelText(/Submission URL/), {
+            target: { value: '  https://wipro365.sharepoint.com/result  ' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+        await waitFor(() => expect(mockedCreateUrlSubmission)
+            .toHaveBeenCalledWith(
+                'challenge-id',
+                '123',
+                'CONTEST_SUBMISSION',
+                'https://wipro365.sharepoint.com/result',
+                expect.any(AbortSignal),
+            ))
+        expect(mockedCreateSubmission)
+            .not.toHaveBeenCalled()
+        expect(await screen.findByText('url-submission-id'))
+            .toBeInTheDocument()
+        expect(mockRecordAnalyticsEvent)
+            .toHaveBeenCalledWith('challenge_submitted', {
+                challenge_id: 'challenge-id',
+                challenge_track: 'design',
+                member_id: '123',
+                submission_type: 'CONTEST_SUBMISSION',
+            }, true)
+
+        fireEvent.click(screen.getByRole('button', { name: 'Submit another solution' }))
+        expect(screen.getByLabelText(/Submission URL/))
+            .toHaveValue('')
+        expect(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+            .toBeDisabled()
+    })
+
+    it('keeps a confirmed URL semantically valid when submission fails', async () => {
+        mockedCreateUrlSubmission.mockRejectedValue(new Error('Review API unavailable.'))
+        renderUpload(challengeFixture({
+            metadata: [{ name: 'submission_type', value: 'url' }],
+        }))
+
+        const urlInput = screen.getByLabelText(/Submission URL/)
+        fireEvent.change(urlInput, {
+            target: { value: 'https://wipro365.sharepoint.com/result' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent('Review API unavailable.')
+        expect(urlInput)
+            .toHaveAttribute('aria-invalid', 'false')
+        expect(urlInput)
+            .toHaveAttribute('aria-describedby', 'challenge-submission-url-help challenge-submission-url-error')
+    })
+
+    it('revalidates registration before creating a URL submission', async () => {
+        const validateRegistration = jest.fn()
+            .mockResolvedValue(false)
+        renderUpload(
+            challengeFixture({ metadata: [{ name: 'submission_type', value: 'url' }] }),
+            validateRegistration,
+        )
+
+        fireEvent.change(screen.getByLabelText(/Submission URL/), {
+            target: { value: 'https://wipro365.sharepoint.com/result' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' }))
+            .not.toBeDisabled())
+        expect(validateRegistration)
+            .toHaveBeenCalledTimes(1)
+        expect(mockedCreateUrlSubmission)
+            .not.toHaveBeenCalled()
+    })
+
+    it('cancels a pending URL submission and unlocks parent navigation', async () => {
+        const onUploadingChange = jest.fn()
+        mockedCreateUrlSubmission.mockImplementation((...args) => new Promise((_resolve, reject) => {
+            args[4]?.addEventListener('abort', () => reject(new DOMException('Cancelled', 'AbortError')))
+        }))
+        renderUpload(
+            challengeFixture({ metadata: [{ name: 'submission_type', value: 'url' }] }),
+            async () => true,
+            onUploadingChange,
+        )
+
+        fireEvent.change(screen.getByLabelText(/Submission URL/), {
+            target: { value: 'https://wipro365.sharepoint.com/result' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+        await waitFor(() => expect(onUploadingChange)
+            .toHaveBeenLastCalledWith(true))
+        expect(screen.getByRole('button', { name: 'Back to My Submissions' }))
+            .toBeDisabled()
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel submission' }))
+        await waitFor(() => expect(onUploadingChange)
+            .toHaveBeenLastCalledWith(false))
+        expect(screen.getByLabelText(/Submission URL/))
+            .toHaveValue('')
     })
 
     it('derives final-fix, checkpoint, and contest Review API types', () => {
@@ -133,11 +456,19 @@ describe('ChallengeSubmissionUpload', () => {
         fireEvent.change(screen.getByLabelText(/Upload File\*/), {
             target: { files: [file] },
         })
+        expect(screen.getByText('Ready to upload'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('progressbar'))
+            .not.toBeInTheDocument()
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
         fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
 
         expect(await screen.findByText('25%'))
             .toBeInTheDocument()
+        expect(screen.getByText('Uploading'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('progressbar'))
+            .toHaveAttribute('aria-valuenow', '25')
         expect(mockedCreateSubmission)
             .toHaveBeenCalledWith(
                 'challenge-id',
@@ -157,5 +488,83 @@ describe('ChallengeSubmissionUpload', () => {
             .toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Submit another solution' }))
             .toBeInTheDocument()
+        expect(mockRecordAnalyticsEvent)
+            .toHaveBeenCalledWith('challenge_submitted', {
+                challenge_id: 'challenge-id',
+                challenge_track: 'design',
+                member_id: '123',
+                submission_type: 'CHECKPOINT_SUBMISSION',
+            }, true)
+    })
+
+    it('does not upload when the submitter registration is no longer current', async () => {
+        const validateRegistration = jest.fn()
+            .mockResolvedValue(false)
+        renderUpload(challengeFixture(), validateRegistration)
+        const file = new File(['zip'], 'MySubmission.zip', { type: 'application/zip' })
+
+        fireEvent.change(screen.getByLabelText(/Upload File\*/), {
+            target: { files: [file] },
+        })
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' }))
+            .not.toBeDisabled())
+        expect(validateRegistration)
+            .toHaveBeenCalledTimes(1)
+        expect(mockedCreateSubmission)
+            .not.toHaveBeenCalled()
+    })
+
+    it('keeps cancellation effective while registration validation is pending', async () => {
+        let resolveRegistration: ((value: boolean) => void) | undefined
+        const validateRegistration = jest.fn(() => new Promise<boolean>(resolve => {
+            resolveRegistration = resolve
+        }))
+        renderUpload(challengeFixture(), validateRegistration)
+        const file = new File(['zip'], 'MySubmission.zip', { type: 'application/zip' })
+
+        fireEvent.change(screen.getByLabelText(/Upload File\*/), {
+            target: { files: [file] },
+        })
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+        await waitFor(() => expect(validateRegistration)
+            .toHaveBeenCalledTimes(1))
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel upload' }))
+        await act(async () => resolveRegistration?.(true))
+
+        expect(mockedCreateSubmission)
+            .not.toHaveBeenCalled()
+    })
+
+    it('locks navigation while an upload is active and reports when it is safe again', async () => {
+        const onUploadingChange = jest.fn()
+        mockedCreateSubmission.mockImplementation(() => new Promise(() => {
+            // Keep the upload pending until the member explicitly cancels it.
+        }))
+        renderUpload(challengeFixture(), async () => true, onUploadingChange)
+        const file = new File(['zip'], 'MySubmission.zip', { type: 'application/zip' })
+
+        fireEvent.change(screen.getByLabelText(/Upload File\*/), {
+            target: { files: [file] },
+        })
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+        await waitFor(() => expect(onUploadingChange)
+            .toHaveBeenLastCalledWith(true))
+        expect(screen.getByRole('button', { name: 'Back to My Submissions' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Learn more' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Cancel' }))
+            .toBeDisabled()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel upload' }))
+
+        await waitFor(() => expect(onUploadingChange)
+            .toHaveBeenLastCalledWith(false))
     })
 })

@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Preserves AWS Clickstream ingestion while analytics.topcoder-dev.com becomes a UI host.
+
+Parameters:
+  ApplicationId:
+    Type: String
+    Default: topcoder_web
+  EventsDomainName:
+    Type: String
+    Default: events.topcoder-dev.com
+  HostedZoneId:
+    Type: String
+    Description: Public Route 53 hosted zone ID for topcoder-dev.com.
+  IngestionAlbDnsName:
+    Type: String
+  IngestionAlbHostedZoneId:
+    Type: String
+  IngestionHttpsListenerArn:
+    Type: String
+  IngestionTargetGroupArn:
+    Type: String
+
+Resources:
+  EventsDns:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      AliasTarget:
+        DNSName: !Ref IngestionAlbDnsName
+        HostedZoneId: !Ref IngestionAlbHostedZoneId
+        EvaluateTargetHealth: true
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref EventsDomainName
+      Type: A
+
+  EventsCollectRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref IngestionTargetGroupArn
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values:
+              - !Ref EventsDomainName
+        - Field: path-pattern
+          PathPatternConfig:
+            Values:
+              - /collect
+        - Field: query-string
+          QueryStringConfig:
+            Values:
+              - Key: appId
+                Value: !Ref ApplicationId
+      ListenerArn: !Ref IngestionHttpsListenerArn
+      Priority: 7
+
+  EventsPingRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref IngestionTargetGroupArn
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values:
+              - !Ref EventsDomainName
+        - Field: path-pattern
+          PathPatternConfig:
+            Values:
+              - /ping
+        - Field: query-string
+          QueryStringConfig:
+            Values:
+              - Key: appId
+                Value: !Ref ApplicationId
+      ListenerArn: !Ref IngestionHttpsListenerArn
+      Priority: 8
+
+Outputs:
+  CollectorEndpoint:
+    Value: !Sub 'https://${EventsDomainName}/collect'

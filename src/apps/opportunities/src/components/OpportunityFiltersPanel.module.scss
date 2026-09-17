@@ -9,8 +9,7 @@
     padding: 24px;
     width: 100%;
 
-    h3,
-    legend {
+    h3 {
         color: #161616;
         font-family: 'Figtree', sans-serif;
         font-weight: 700;
@@ -24,9 +23,13 @@
     }
 
     legend {
+        color: #161616;
+        font-family: 'Nunito Sans', sans-serif;
         font-size: 14px;
+        font-weight: 700;
         line-height: 22px;
         margin-bottom: 8px;
+        text-transform: none;
     }
 
     small {
@@ -66,6 +69,41 @@
         line-height: 22px;
         padding: 0;
     }
+}
+
+.advancedFilters {
+    display: contents;
+}
+
+.moreFilters {
+    align-items: center;
+    align-self: flex-start;
+    background: none;
+    border: 0;
+    color: #007d79;
+    cursor: pointer;
+    display: none;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    gap: 6px;
+    line-height: 22px;
+    padding: 0;
+
+    svg {
+        height: 16px;
+        transition: transform .15s ease;
+        width: 16px;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #161616;
+        outline-offset: 3px;
+    }
+}
+
+.chevronOpen {
+    transform: rotate(180deg);
 }
 
 .searchGroup {
@@ -110,6 +148,13 @@
         &::placeholder {
             color: #6f6f6f;
             opacity: 1;
+        }
+
+        // The container supplies the visible teal focus indicator. This
+        // higher-specificity rule prevents the app-wide blue input outline
+        // from rendering a second focus ring inside it.
+        &:focus-visible {
+            outline: 0;
         }
     }
 
@@ -259,5 +304,17 @@
     .panel {
         min-height: 0;
         position: static;
+    }
+
+    .advancedFilters {
+        display: none;
+    }
+
+    .advancedFiltersOpen {
+        display: contents;
+    }
+
+    .moreFilters {
+        display: inline-flex;
     }
 }

@@ -40,6 +40,7 @@ export const TalentSearchPage: FC = () => {
     const [selectedCountries, setSelectedCountries] = useState<InputMultiselectOption[]>([])
     const [selectedPreferredRoles, setSelectedPreferredRoles] = useState<InputMultiselectOption[]>([])
     const [onlyProfileComplete, setOnlyProfileComplete] = useState<boolean>(false)
+    const [onlyCopilots, setOnlyCopilots] = useState<boolean>(false)
     const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(false)
     const [onlyActive, setOnlyActive] = useState<boolean>(false)
     const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(false)
@@ -86,6 +87,7 @@ export const TalentSearchPage: FC = () => {
     const shouldShowIntroState = !hasSearched
     const currentSearchSignature = useMemo(
         (): string => JSON.stringify({
+            copilot: onlyCopilots,
             countries: selectedCountryCodesList
                 .slice()
                 .sort(),
@@ -101,6 +103,7 @@ export const TalentSearchPage: FC = () => {
         }),
         [
             onlyActive,
+            onlyCopilots,
             onlyOpenToWork,
             onlyProfileComplete,
             selectedCountryCodesList,
@@ -171,6 +174,7 @@ export const TalentSearchPage: FC = () => {
         skillsToSearch: InputMultiselectOption[],
         overrides?: {
             append?: boolean
+            copilot?: boolean
             countries?: string[]
             generation?: number
             openToWork?: boolean
@@ -182,6 +186,7 @@ export const TalentSearchPage: FC = () => {
     ): Promise<boolean> => {
         const append = overrides?.append === true
 
+        const copilot = overrides?.copilot ?? onlyCopilots
         const countries = (overrides?.countries ?? selectedCountryCodesList)
             .filter(Boolean)
         const generation = overrides?.generation
@@ -211,6 +216,10 @@ export const TalentSearchPage: FC = () => {
 
         if (preferredRoles.length > 0) {
             payload.preferredRoles = preferredRoles
+        }
+
+        if (copilot) {
+            payload.copilot = true
         }
 
         if (openToWork) {
@@ -275,12 +284,20 @@ export const TalentSearchPage: FC = () => {
                 setIsSearchingMembers(false)
             }
         }
-    }, [onlyActive, onlyOpenToWork, onlyProfileComplete, selectedCountryCodesList, selectedPreferredRoleValues])
+    }, [
+        onlyActive,
+        onlyCopilots,
+        onlyOpenToWork,
+        onlyProfileComplete,
+        selectedCountryCodesList,
+        selectedPreferredRoleValues,
+    ])
 
     const clearAllFilters = useCallback((): void => {
         setSelectedCountries([])
         setSelectedPreferredRoles([])
         setOnlyProfileComplete(false)
+        setOnlyCopilots(false)
         setOnlyOpenToWork(false)
         setOnlyActive(false)
         setSelectedSkills([])
@@ -350,6 +367,7 @@ export const TalentSearchPage: FC = () => {
         setHasSearched(true)
         const hadSkills = selectedSkills.length > 0
         const searchSucceeded = await runMemberSearch(selectedSkills, {
+            copilot: onlyCopilots,
             countries: selectedCountryCodesList,
             openToWork: onlyOpenToWork,
             page: 1,
@@ -365,6 +383,7 @@ export const TalentSearchPage: FC = () => {
         currentSearchSignature,
         isSearchingMembers,
         onlyActive,
+        onlyCopilots,
         onlyOpenToWork,
         onlyProfileComplete,
         runMemberSearch,
@@ -531,6 +550,32 @@ export const TalentSearchPage: FC = () => {
                         />
                         <span className={styles.toggleControl} />
                         <span>100% Profile complete</span>
+                    </label>
+                    <label className={styles.checkboxRow}>
+                        <input
+                            type='checkbox'
+                            checked={onlyCopilots}
+                            className={styles.checkboxInput}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                setOnlyCopilots(event.target.checked)
+                            }}
+                        />
+                        <span className={styles.toggleControl} />
+                        <span className={styles.checkboxLabelWithInfo}>
+                            <span>Copilot members</span>
+                            <Tooltip
+                                content='This member has the Topcoder Copilot role.'
+                                place='top'
+                            >
+                                <button
+                                    type='button'
+                                    className={styles.infoIconButton}
+                                    aria-label='Only copilot members info'
+                                >
+                                    <IconOutline.InformationCircleIcon />
+                                </button>
+                            </Tooltip>
+                        </span>
                     </label>
                     <div className={styles.clearFiltersWrap}>
                         <Button secondary onClick={clearAllFilters}>

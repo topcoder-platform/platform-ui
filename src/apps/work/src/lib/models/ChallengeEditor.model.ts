@@ -37,6 +37,8 @@ export interface ChallengeEditorFormData extends Omit<Partial<Challenge>, 'id' |
     copilot?: string
     description: string
     discussionForum?: boolean
+    /** Pending file type included in final-deliverables metadata when creating or saving. */
+    finalDeliverable?: string
     funChallenge?: boolean
     wiproAllowed?: boolean
     groups?: string[]

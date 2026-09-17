@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
 import {
+    act,
     render,
     screen,
 } from '@testing-library/react'
@@ -31,7 +32,7 @@ describe('MarathonDashboard', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         mockedGetReviewSummations.mockResolvedValue([{
-            aggregateScore: 35.12,
+            aggregateScore: 35.123456789,
             createdAt: '2026-06-03T10:00:00.000Z',
             id: 'summation',
             isPassing: true,
@@ -56,12 +57,44 @@ describe('MarathonDashboard', () => {
             .toBeInTheDocument()
         const chart = screen.getByTestId('marathon-chart')
         expect(chart)
-            .toHaveAttribute('data-options', expect.stringContaining('35.12'))
+            .toHaveAttribute('data-options', expect.stringContaining('"scoreLabel":"35.123456789"'))
+        expect(chart)
+            .toHaveAttribute('data-options', expect.stringContaining('Score: <b>{point.custom.scoreLabel}</b>'))
         expect(chart)
             .toHaveAttribute('data-options', expect.stringContaining('coder'))
         expect(mockedGetReviewSummations)
             .toHaveBeenCalledWith('challenge')
         expect(screen.getByRole('table', { name: 'Marathon Match submission scores over time' }))
             .toBeInTheDocument()
+        expect(screen.getByRole('cell', { name: '35.123456789' }))
+            .toBeInTheDocument()
+    })
+
+    it('shows one stable error state without automatically retrying a missing score feed', async () => {
+        mockedGetReviewSummations.mockRejectedValueOnce(new Error('Unauthorized'))
+
+        render(
+            <SWRConfig
+                value={{
+                    dedupingInterval: 0,
+                    errorRetryInterval: 1,
+                    provider: () => new Map(),
+                }}
+            >
+                <MarathonDashboard
+                    challenge={{ id: 'no-scores', name: 'MM', type: 'Marathon Match' }}
+                />
+            </SWRConfig>,
+        )
+
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent('Dashboard unavailable')
+        await act(async () => {
+            await new Promise(resolve => {
+                setTimeout(resolve, 20)
+            })
+        })
+        expect(mockedGetReviewSummations)
+            .toHaveBeenCalledTimes(1)
     })
 })

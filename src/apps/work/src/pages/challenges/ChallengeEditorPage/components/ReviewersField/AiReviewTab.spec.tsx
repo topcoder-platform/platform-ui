@@ -81,6 +81,14 @@ jest.mock('~/libs/ui', () => ({
         </button>
     ),
     IconOutline: {
+        InformationCircleIcon: (props: {
+            className?: string
+        }) => (
+            <svg
+                className={props.className}
+                data-testid='information-circle-icon'
+            />
+        ),
         LightningBoltIcon: (props: {
             className?: string
         }) => (
@@ -90,6 +98,9 @@ jest.mock('~/libs/ui', () => ({
             />
         ),
     },
+    Tooltip: (props: {
+        children?: React.ReactNode
+    }) => <span>{props.children}</span>,
 }), {
     virtual: true,
 })
@@ -199,6 +210,49 @@ describe('AiReviewTab review mode options', () => {
             screen.getByRole('option', { name: 'AI_ONLY' }),
         )
             .not.toBeNull()
+    })
+
+    it('reports the selected review mode before the configuration autosave runs', async () => {
+        const onSelectedModeChange = jest.fn()
+
+        render(
+            <AiReviewTab
+                challengeId='challenge-1'
+                onSelectedModeChange={onSelectedModeChange}
+                reviewers={persistedAiReviewers}
+            />,
+        )
+
+        const reviewModeSelect = await screen.findByRole('combobox')
+
+        await waitFor(() => {
+            expect(onSelectedModeChange)
+                .toHaveBeenCalledWith('AI_GATING')
+        })
+
+        fireEvent.change(reviewModeSelect, {
+            target: {
+                value: 'AI_ONLY',
+            },
+        })
+
+        await waitFor(() => {
+            expect(onSelectedModeChange)
+                .toHaveBeenLastCalledWith('AI_ONLY')
+        })
+        expect(mockedUpdateAiReviewConfig).not.toHaveBeenCalled()
+
+        fireEvent.change(reviewModeSelect, {
+            target: {
+                value: 'AI_GATING',
+            },
+        })
+
+        await waitFor(() => {
+            expect(onSelectedModeChange)
+                .toHaveBeenLastCalledWith('AI_GATING')
+        })
+        expect(mockedUpdateAiReviewConfig).not.toHaveBeenCalled()
     })
 
     it('does not refetch the persisted AI review config when the parent callback changes', async () => {

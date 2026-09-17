@@ -149,6 +149,27 @@
     font-weight: 500;
 }
 
+.copilotPill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 999px;
+    padding: 2px 10px;
+    background: $blue-10;
+    color: $blue-140;
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.copilotPillIcon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+}
+
 .statusPillActive {
     background: $green-25;
     color: $turq-180;

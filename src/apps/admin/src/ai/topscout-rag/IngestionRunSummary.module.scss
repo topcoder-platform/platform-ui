@@ -1,0 +1,153 @@
+@import '@libs/ui/styles/includes';
+
+.summary {
+    border: 1px solid $blue-25;
+    border-radius: 6px;
+    background-color: $blue-10;
+    padding: $sp-4;
+    margin-top: $sp-4;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $sp-2;
+    flex-wrap: wrap;
+}
+
+.headerText {
+    font-size: 13px;
+    color: $black-80;
+}
+
+.statusPill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px $sp-2;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.status-completed {
+    background-color: $green-25;
+    color: $green-140;
+}
+
+.status-failed {
+    background-color: $red-25;
+    color: $red-120;
+}
+
+.status-timed-out {
+    background-color: $orange-25;
+    color: $orange-140;
+}
+
+.counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-8;
+    margin-top: $sp-4;
+    padding-bottom: $sp-4;
+    border-bottom: 1px solid $blue-25;
+}
+
+.count {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.countLabel {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $black-60;
+}
+
+.countValue {
+    font-size: 22px;
+    font-weight: 600;
+    color: $black-100;
+}
+
+.succeeded {
+    color: $green-140;
+}
+
+.failed {
+    color: $red-120;
+}
+
+.skipped {
+    color: $orange-140;
+}
+
+.chunks {
+    color: $blue-120;
+}
+
+.message {
+    margin-top: $sp-3;
+    font-size: 13px;
+    color: $black-80;
+}
+
+.messageError {
+    color: $red-120;
+}
+
+.failures {
+    margin-top: $sp-3;
+}
+
+.failuresToggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 13px;
+    color: $blue-120;
+
+    svg {
+        transition: transform 0.15s ease;
+    }
+}
+
+.chevronOpen {
+    transform: rotate(90deg);
+}
+
+.failureList {
+    list-style: none;
+    margin: $sp-2 0 0;
+    padding: 0;
+
+    li {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: $sp-2 0;
+        border-top: 1px solid $blue-25;
+        font-size: 13px;
+    }
+}
+
+.failureName {
+    font-weight: 600;
+    color: $black-100;
+    word-break: break-all;
+}
+
+.failureError {
+    color: $red-120;
+}

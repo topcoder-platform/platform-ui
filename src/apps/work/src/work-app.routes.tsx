@@ -10,6 +10,7 @@ import {
     LazyLoadedComponent,
     PlatformRoute,
     Rewrite,
+    UserRole,
 } from '~/libs/core'
 
 import {
@@ -24,6 +25,8 @@ import {
     engagementEditRouteId,
     engagementExperienceRouteId,
     engagementFeedbackRouteId,
+    engagementLeadDetailRouteId,
+    engagementLeadsRouteId,
     engagementsRouteId,
     groupsEditRouteId,
     groupsRouteId,
@@ -36,6 +39,7 @@ import {
     roleErrorRoute,
     roleErrorRouteId,
     rootRoute,
+    salesRouteId,
     taasCreateRouteId,
     taasEditRouteId,
     taasRouteId,
@@ -51,6 +55,7 @@ import { WorkAppContextModel } from './lib/models'
 import { canViewAllEngagements } from './lib/utils'
 
 const WorkApp: LazyLoadedComponent = lazyLoad(() => import('./WorkApp'))
+const SalesPage: LazyLoadedComponent = lazyLoad(() => import('~/apps/sales/src/SalesPage'))
 
 const ChallengesListPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/challenges/ChallengesListPage'),
@@ -110,6 +115,14 @@ const EngagementFeedbackPage: LazyLoadedComponent = lazyLoad(
 
 const EngagementExperiencePage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/engagements/EngagementExperiencePage'),
+)
+
+const EngagementLeadsListPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/engagement-leads/EngagementLeadsListPage'),
+)
+
+const EngagementLeadDetailPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/engagement-leads/EngagementLeadDetailPage'),
 )
 
 const TaasListPage: LazyLoadedComponent = lazyLoad(
@@ -279,6 +292,14 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
+                element: <SalesPage />,
+                id: salesRouteId,
+                rolesRequired: [UserRole.administrator, UserRole.talentManager],
+                route: salesRouteId,
+                title: 'Sales',
+            },
+            {
+                authRequired: true,
                 element: (
                     <BudgetApprovalsRouteGuard>
                         <BudgetApprovalsPage />
@@ -312,6 +333,28 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                 id: engagementsRouteId,
                 route: engagementsRouteId,
                 title: 'Engagements',
+            },
+            {
+                authRequired: true,
+                element: (
+                    <EngagementsRouteGuard>
+                        <EngagementLeadsListPage />
+                    </EngagementsRouteGuard>
+                ),
+                id: engagementLeadsRouteId,
+                route: engagementLeadsRouteId,
+                title: 'Engagement Leads',
+            },
+            {
+                authRequired: true,
+                element: (
+                    <EngagementsRouteGuard>
+                        <EngagementLeadDetailPage />
+                    </EngagementsRouteGuard>
+                ),
+                id: engagementLeadDetailRouteId,
+                route: `${engagementLeadsRouteId}/:leadId`,
+                title: 'Engagement Lead Detail',
             },
             {
                 authRequired: true,

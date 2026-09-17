@@ -11,6 +11,52 @@ export interface ChallengeSidebarLink {
     url: string
 }
 
+/** Submission experiences selected by Work Manager challenge metadata. */
+export type ChallengeSubmissionMode = 'url' | 'zip'
+
+/**
+ * Builds the canonical Review App challenge-detail destination.
+ *
+ * The Review App uses its own configured origin in deployed environments, so
+ * Opportunities must not route these links through the current www host.
+ *
+ * @param challengeId Challenge API UUID.
+ * @param reviewAppUrl configured Review App origin, optionally overridden by tests.
+ * @returns absolute, safely encoded active-challenge detail URL.
+ * @throws Does not throw.
+ */
+export function challengeReviewAppUrl(
+    challengeId: string,
+    reviewAppUrl: string = EnvironmentConfig.REVIEW_APP_URL
+        ?? `https://review.${EnvironmentConfig.TC_DOMAIN}`,
+): string {
+    return `${reviewAppUrl.replace(/\/+$/, '')}`
+        + `/active-challenges/${encodeURIComponent(challengeId)}/challenge-details`
+}
+
+/**
+ * Builds the Review App destination for one AI workflow run and submission.
+ *
+ * @param challengeId Challenge API UUID.
+ * @param submissionId Review API submission identifier.
+ * @param workflowId workflow identifier returned at the top level of the run.
+ * @param reviewAppUrl configured Review App origin, optionally overridden by tests.
+ * @returns absolute, safely encoded workflow-review URL.
+ * @throws Does not throw.
+ */
+export function submissionAiReviewAppUrl(
+    challengeId: string,
+    submissionId: string,
+    workflowId: string,
+    reviewAppUrl: string = EnvironmentConfig.REVIEW_APP_URL
+        ?? `https://review.${EnvironmentConfig.TC_DOMAIN}`,
+): string {
+    return `${reviewAppUrl.replace(/\/+$/, '')}`
+        + `/active-challenges/${encodeURIComponent(challengeId)}`
+        + `/reviews/${encodeURIComponent(submissionId)}`
+        + `?workflowId=${encodeURIComponent(workflowId)}`
+}
+
 /**
  * Builds a member profile URL on the environment-specific Profiles app.
  *
@@ -45,6 +91,25 @@ export function challengeMetadataValue(
 }
 
 /**
+ * Resolves whether a challenge accepts a URL or the standard ZIP archive.
+ *
+ * Work Manager persists this choice as `submission_type` metadata. URL mode
+ * is deliberately opt-in: missing, malformed, and unsupported values retain
+ * the established ZIP flow.
+ *
+ * @param challenge raw Challenge API detail response.
+ * @returns `url` only for an exact case-insensitive metadata value; otherwise `zip`.
+ * @throws Does not throw.
+ */
+export function challengeSubmissionMode(challenge: ChallengeOpportunity): ChallengeSubmissionMode {
+    const value = challengeMetadataValue(challenge.metadata, 'submission_type')
+    return typeof value === 'string' && value.trim()
+        .toLowerCase() === 'url'
+        ? 'url'
+        : 'zip'
+}
+
+/**
  * Parses the legacy file-types metadata into unique member-facing labels.
  *
  * @param challenge raw Challenge API detail response.
@@ -55,7 +120,12 @@ export function challengeFileTypes(challenge: ChallengeOpportunity): string[] {
     const raw = challengeMetadataValue(challenge.metadata, 'fileTypes')
     try {
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
-        if (!Array.isArray(parsed)) return []
+        if (!Array.isArray(parsed)) {
+            if (typeof parsed === 'string' && parsed.trim()) return [parsed.trim()]
+
+            return []
+        }
+
         const seen = new Set<string>()
         return parsed.reduce<string[]>((result, item) => {
             if (typeof item !== 'string' || !item.trim()) return result
@@ -69,8 +139,22 @@ export function challengeFileTypes(challenge: ChallengeOpportunity): string[] {
             return result
         }, [])
     } catch (error) {
+        if (typeof raw === 'string' && raw.trim()) return [raw.trim()]
         return []
     }
+}
+
+/**
+ * Reads the legacy design-challenge stock-photography allowance.
+ *
+ * @param challenge raw Challenge API detail response.
+ * @returns true only when Work Manager explicitly enables stock art.
+ * @throws Does not throw.
+ */
+export function challengeAllowsStockArt(challenge: ChallengeOpportunity): boolean {
+    return String(challengeMetadataValue(challenge.metadata, 'allowStockArt'))
+        .trim()
+        .toLowerCase() === 'true'
 }
 
 /**
@@ -240,7 +324,7 @@ export function challengeForumUrl(
     const origin = vanillaWebOrigin(v2Url)
     if (!origin) return undefined
     const forumId = challenge.legacy?.forumId ?? challenge.forumId
-    if (!forumId) return `${origin}/`
+    if (!forumId) return undefined
     const design = typeof challenge.track === 'string'
         ? challenge.track.toLowerCase() === 'design'
         : challenge.track?.name?.toLowerCase() === 'design'

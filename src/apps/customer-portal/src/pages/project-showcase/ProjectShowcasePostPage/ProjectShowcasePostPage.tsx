@@ -6,6 +6,8 @@ import { IconOutline, LinkButton, PageTitle } from '~/libs/ui'
 import { renderRichTextToHtml } from '~/libs/shared/lib/utils/rich-text'
 import { textFormatDateLocaleShortString } from '~/libs/shared/lib/utils/text-format'
 import {
+    getShowcaseStorySections,
+    ShowcasePostDetails,
     useFetchProjectShowcasePost,
     UseFetchProjectShowcasePostResult,
 } from '~/apps/work/src/lib'
@@ -29,6 +31,12 @@ const ProjectShowcasePostPage: FC = () => {
         projectsRouteId,
         encodeURIComponent(routeParams.projectId as string),
     ].join('/')
+
+    const storySections = useMemo(
+        () => (post ? getShowcaseStorySections(post) : []),
+        [post],
+    )
+    const challengeCount = post?.challengeMetadata?.length ?? 0
 
     const skills = useMemo(
         () => uniqBy(post?.challengeMetadata?.flatMap(entry => entry.skills), 'id') ?? [],
@@ -75,10 +83,12 @@ const ProjectShowcasePostPage: FC = () => {
                         {post?.title}
                     </h3>
                     <div className={styles.subTitle}>
-                        <div className={styles.subTitleItem}>
-                            <IconOutline.OfficeBuildingIcon className='icon-lg' />
-                            <span>{industries}</span>
-                        </div>
+                        {industries && (
+                            <div className={styles.subTitleItem}>
+                                <IconOutline.OfficeBuildingIcon className='icon-lg' />
+                                <span>{industries}</span>
+                            </div>
+                        )}
                         <div className={styles.subTitleItem}>
                             <IconOutline.CalendarIcon className='icon-lg' />
                             <span>Published</span>
@@ -90,24 +100,34 @@ const ProjectShowcasePostPage: FC = () => {
                 </div>
                 <div className={styles.contentBodyWrap}>
                     <div className={styles.contentBody}>
-                        <div
-                            className={styles.htmlContent}
-                            dangerouslySetInnerHTML={{
-                                __html: renderRichTextToHtml(post?.content || ''),
-                            }}
-                        />
-                        <div className={styles.contentSection}>
-                            <h5 className={styles.sectionTitle}>Media assets</h5>
-                            <ShowcasePostMedia
-                                assets={post?.media}
-                            />
-                        </div>
-                        <div className={styles.contentSection}>
-                            <h5 className={styles.sectionTitle}>Challenges</h5>
-                            <ShowcasePostChallengeList
-                                challengeIds={post?.challengeIds}
-                            />
-                        </div>
+                        {post && <ShowcasePostDetails data={post} />}
+                        {storySections.map(section => (
+                            <div key={section.label} className={styles.contentSection}>
+                                <h5 className={styles.sectionTitle}>{section.label}</h5>
+                                <div
+                                    className={styles.htmlContent}
+                                    dangerouslySetInnerHTML={{
+                                        __html: renderRichTextToHtml(section.value),
+                                    }}
+                                />
+                            </div>
+                        ))}
+                        {!!post?.media?.length && (
+                            <div className={styles.contentSection}>
+                                <h5 className={styles.sectionTitle}>Media assets</h5>
+                                <ShowcasePostMedia
+                                    assets={post.media}
+                                />
+                            </div>
+                        )}
+                        {!!post?.challengeIds?.length && (
+                            <div className={styles.contentSection}>
+                                <h5 className={styles.sectionTitle}>Topcoder Challenge Launched</h5>
+                                <ShowcasePostChallengeList
+                                    challengeIds={post.challengeIds}
+                                />
+                            </div>
+                        )}
                     </div>
                     <aside className={styles.contentBodySidebar}>
                         <div className={styles.panel}>
@@ -139,46 +159,50 @@ const ProjectShowcasePostPage: FC = () => {
                                 {projectUrl}
                             </span>
                         </div>
-                        <div className={styles.panel}>
-                            <h5 className={styles.panelTitle}>Stats</h5>
-                            <ul className={styles.statsList}>
-                                <li>
-                                    <strong>
-                                        {post?.challengeMetadata.length}
-                                    </strong>
-                                    <span>Challenges</span>
-                                </li>
-                                <li>
-                                    <strong>
-                                        {registrantsCount}
-                                    </strong>
-                                    <span>Registrants</span>
-                                </li>
-                                <li>
-                                    <strong>
-                                        {countriesCount}
-                                    </strong>
-                                    <span>Countries</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <div className={styles.panel}>
-                            <h5 className={styles.panelTitle}>Skills</h5>
-                            <p>
-                                This showcase includes
-                                {' '}
-                                <strong>
-                                    {skills.length}
+                        {challengeCount > 0 && (
+                            <div className={styles.panel}>
+                                <h5 className={styles.panelTitle}>Stats</h5>
+                                <ul className={styles.statsList}>
+                                    <li>
+                                        <strong>
+                                            {challengeCount}
+                                        </strong>
+                                        <span>Challenges</span>
+                                    </li>
+                                    <li>
+                                        <strong>
+                                            {registrantsCount}
+                                        </strong>
+                                        <span>Registrants</span>
+                                    </li>
+                                    <li>
+                                        <strong>
+                                            {countriesCount}
+                                        </strong>
+                                        <span>Countries</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        )}
+                        {skills.length > 0 && (
+                            <div className={styles.panel}>
+                                <h5 className={styles.panelTitle}>Skills</h5>
+                                <p>
+                                    This showcase includes
                                     {' '}
-                                    skills.
-                                </strong>
-                            </p>
-                            <ul className={styles.skillsList}>
-                                {skills.map(skill => (
-                                    <li key={skill.id}>{skill.name}</li>
-                                ))}
-                            </ul>
-                        </div>
+                                    <strong>
+                                        {skills.length}
+                                        {' '}
+                                        skills.
+                                    </strong>
+                                </p>
+                                <ul className={styles.skillsList}>
+                                    {skills.map(skill => (
+                                        <li key={skill.id}>{skill.name}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                     </aside>
                 </div>
             </div>

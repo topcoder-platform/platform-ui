@@ -600,7 +600,8 @@
 .tooltipSkillLegend {
     align-items: center;
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 12px;
 }
 
 .tooltipSkillLegendItem {
@@ -608,13 +609,6 @@
     display: flex;
     gap: 8px;
     min-width: 0;
-
-    > span:last-child {
-        max-width: 70px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
 }
 
 .tooltipSkillDot {

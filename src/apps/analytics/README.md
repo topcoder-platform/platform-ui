@@ -1,0 +1,140 @@
+# Analytics app
+
+The Analytics app is the first-party reporting UI for Topcoder's AWS
+Clickstream data. It is bundled with Platform UI and is available at
+`/analytics` on the combined Platform UI host or at the root of the dedicated
+`analytics.<domain>` host.
+
+## Access control
+
+Every Analytics route requires an authenticated profile with the exact
+`analytics` role. The browser guard controls navigation only; the analytics API
+also validates the Auth0 JWT issuer and audience and independently checks the
+verified Topcoder roles claim before running a query.
+
+The route tree is:
+
+```text
+/analytics
+  -> /analytics/campaigns
+  /campaigns
+  /general
+```
+
+On `analytics.<domain>`, the same children are `/campaigns` and `/general`.
+
+## Reports
+
+Campaign Analytics uses UTM attribution and an ordered cohort funnel. Its
+totals answer how many distinct landing visitors clicked, then registered for
+a challenge after clicking, then submitted after registering. It also shows
+campaign and landing-page breakdowns plus aggregate click locations by semantic
+element fields. Click locations are ranked by clicks and paginated twenty rows
+at a time. The API combines coarse viewport-position buckets for the same
+semantic item before returning the ranking.
+
+General Analytics shows page views, distinct visitors, clicks, and distinct
+clickers. Page views, visitors, and clicks use separate daily area charts, and
+the ranked page table is paginated twenty rows at a time. Traffic-source and
+page breakdowns remain available; the application-surface breakdown is not
+shown.
+
+The General tab also provides an exact route/page-URL lookup. It accepts an
+absolute query-free path or strips the query and fragment from a pasted HTTP(S)
+URL. The detailed request runs only after a route is selected, keeping the
+initial General report small. Its definitions are:
+
+- unique source counts are mutually exclusive and use the acquisition group on
+  each visitor's first view of the selected route: Organic, Paid, Social,
+  Email, or Other/direct;
+- click-through rate is distinct people who clicked divided by distinct route
+  visitors;
+- new/returning uses AWS Clickstream session number `1` versus greater than
+  `1` at a visitor's first selected-route view;
+- average time on page is focused foreground engagement seconds divided by
+  page views;
+- bounce rate is single-page entrance sessions divided by all entrance
+  sessions for the route;
+- a conversion is a distinct route visitor who successfully completes an
+  instrumented form there or registers after clicking a specific challenge
+  link there; and
+- the challenge funnel sequences route visitor, challenge-link click,
+  registration, and submission for the same challenge ID and pseudonymous
+  visitor within the selected period. A trusted winner event is not currently available, so the
+  final stage is explicitly shown as **Not tracked** rather than inferred.
+
+Form reporting begins when `form_viewed`, `form_started`, `form_completed`, and
+`form_abandoned` events are deployed on an opted-in form. Completion means its
+server accepted the submission. Abandonment stores only the last stable field
+identifier; form values and rendered labels are never collected. Historical
+periods before that instrumentation correctly show no form activity.
+
+Counts are daily aggregates from the AWS Clickstream reporting views. Date
+ranges are inclusive and limited to 366 days. The UI displays the warehouse's
+`dataThrough` value because the development transform currently runs daily.
+Empty dates in a series are not inferred as provider outages.
+
+Development includes a clearly labeled synthetic campaign named
+`aws_analytics`. UTM ID `dev_fixture_20260902` supplies the September 1 cohort
+with 30 landing visitors, 22 clickers, 14 registrations, and 8 submissions.
+UTM ID `dev_fixture_multiday_20260904` supplies September 2–3 cohorts totaling
+38 landing visitors, 29 clickers, 19 registrations, and 13 submissions, with 29
+distinct semantic clicked items. Together they provide three dates and enough
+ranked clicks to exercise table pagination. Treat these fixtures as UI test
+data, not member traffic.
+
+Redshift Serverless can take longer than one HTTP request after an idle period.
+The UI opts into resumable queries and transparently polls `202` responses with
+the server-issued query token. A low-frequency EventBridge schedule prepares
+the default Campaigns report and filter options at the start of each four-hour
+Data API idempotency window, avoiding an interactive warehouse wake-up in the
+normal case without keeping development Redshift capacity running continuously.
+The report spinner stays in a contained region below the filters, leaving
+filters and Analytics navigation usable. Polling is bounded to twelve requests
+(roughly five minutes at the API's maximum query wait); after that, or after a
+genuine failure, the explicit retry action is shown.
+
+## Privacy
+
+The UI receives aggregate counts only. It never receives member IDs,
+pseudonymous analytics IDs, handles, email addresses, rendered click text, form
+values, raw destination queries, or raw click coordinates. API errors are
+mapped to safe categories before display, and last-good data remains visible if
+a refresh fails.
+
+## Configuration
+
+Set the following build variable for each provisioned environment:
+
+```text
+REACT_APP_ANALYTICS_API_URL=https://api.<domain>/v1/analytics
+```
+
+Leave it empty where the API has not been provisioned. Authenticated requests
+use Platform UI's global XHR client, which attaches the current access token.
+
+The event collector is a separate public ingestion endpoint configured through
+`REACT_APP_AWS_ANALYTICS_ENDPOINT`; in development it is
+`https://events.topcoder-dev.com/collect`. Do not point the reporting UI at the
+collector or reuse development resources in production.
+
+## Verification
+
+From the Platform UI project directory:
+
+```bash
+nvm use
+yarn lint
+CI=true yarn test --watchAll=false --runTestsByPath \
+  src/apps/analytics/src/config/routes.config.spec.ts \
+  src/apps/analytics/src/analytics-app.routes.spec.tsx \
+  src/apps/analytics/src/pages/AnalyticsPages.spec.tsx \
+  src/apps/analytics/src/lib/services/analytics.service.spec.ts \
+  src/apps/analytics/src/lib/utils/analytics.utils.spec.ts \
+  src/apps/analytics/src/lib/hooks/useAnalyticsResource.spec.ts
+yarn run build
+```
+
+The AWS API source, database grants, deployment sequence, and operational
+checks are documented in
+[`../../../infrastructure/analytics-api/README.md`](../../../infrastructure/analytics-api/README.md).

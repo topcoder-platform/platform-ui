@@ -20,6 +20,14 @@ The Work app provides work management capabilities for:
 
 `config/routes.config.ts` contains route ids and the `rootRoute` resolver based on the active subdomain.
 
+## Navigation styles
+
+The Work subnavigation uses regular black text and a bold active item on desktop
+and mobile. Project section tabs use black text with a bold teal active label and
+underline. These component styles override the shared theme's general link color.
+System Admin dropdown links similarly inherit their menu row color: black by
+default and white on a teal hover background.
+
 ## Providers
 
 `WorkApp.tsx` composes these providers:
@@ -36,3 +44,10 @@ The Work app provides work management capabilities for:
 
 Original implementation reference:
 - `work-manager/`
+
+## Sales
+
+The Sales tab opens the read-only Salesforce report for Administrators and Talent
+Managers. It is also available on the dedicated Sales host. Search, column
+filters, sorting, pagination and refresh use `reports-api-v6`; all edits remain
+in Salesforce. See [Sales app documentation](../sales/README.md).

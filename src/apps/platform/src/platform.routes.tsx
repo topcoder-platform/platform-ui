@@ -11,6 +11,7 @@ import { walletAdminRoutes } from '~/apps/wallet-admin'
 import { copilotsRoutes } from '~/apps/copilots'
 import { adminRoutes } from '~/apps/admin'
 import { reportsRoutes } from '~/apps/reports'
+import { salesRoutes } from '~/apps/sales'
 import { reviewRoutes } from '~/apps/review'
 import { workRoutes } from '~/apps/work'
 import { calendarRoutes } from '~/apps/calendar'
@@ -21,10 +22,18 @@ import { statusRoutes } from '~/apps/status'
 import { supportRoutes } from '~/apps/support'
 import { thriveRoutes } from '~/apps/thrive'
 import { legacyOpportunityRoutes, opportunitiesRoutes } from '~/apps/opportunities'
+import { analyticsRoutes } from '~/apps/analytics'
+import { contactRoutes } from '~/apps/contact'
+import { gigsRoutes } from '~/apps/gigs'
 
 const Home: LazyLoadedComponent = lazyLoad(
     () => import('./routes/home'),
     'HomePage',
+)
+
+const NotFound: LazyLoadedComponent = lazyLoad(
+    () => import('./routes/not-found'),
+    'NotFoundPage',
 )
 
 const homeRoutes: ReadonlyArray<PlatformRoute> = [
@@ -35,6 +44,17 @@ const homeRoutes: ReadonlyArray<PlatformRoute> = [
     },
 ]
 
+// Catch-all for paths Platform UI is served for but does not own a route for,
+// eg. `/opportunities` on the Topcoder apex host. React-router ranks the `*`
+// path last, so this never shadows a route declared above.
+const notFoundRoutes: ReadonlyArray<PlatformRoute> = [
+    {
+        element: <NotFound />,
+        id: 'Not found page',
+        route: '*',
+    },
+]
+
 export const platformRoutes: Array<PlatformRoute> = [
     // NOTE: Order matters here bc the active tool
     // is determined by finding the first route
@@ -42,6 +62,7 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...onboardingRoutes,
     ...legacyOpportunityRoutes,
     ...opportunitiesRoutes,
+    ...gigsRoutes,
     ...devCenterRoutes,
     ...campusRoutes,
     ...copilotsRoutes,
@@ -55,11 +76,15 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...calendarRoutes,
     ...engagementsRoutes,
     ...procurementRoutes,
+    ...analyticsRoutes,
+    ...contactRoutes,
     ...statusRoutes,
     ...supportRoutes,
     ...thriveRoutes,
     ...homeRoutes,
     ...adminRoutes,
     ...reportsRoutes,
+    ...salesRoutes,
     ...customerPortalRoutes,
+    ...notFoundRoutes,
 ]

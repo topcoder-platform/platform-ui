@@ -99,6 +99,8 @@ export interface WinningDetail {
     category: string
     title: string
     description: string
+    /** Gross member amount across current installments; absent on older Finance deployments. */
+    grossAmount?: number
     externalId: string
     attributes: {
         assignmentId?: number | string

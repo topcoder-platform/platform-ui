@@ -59,6 +59,42 @@
     gap: 16px;
 }
 
+.urlFlow {
+    .columns {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .leftPanel {
+        display: flex;
+    }
+
+    .actions {
+        justify-content: flex-end;
+    }
+}
+
+.submissionInstructions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    ol {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 0;
+        padding-left: 20px;
+    }
+}
+
+.submissionWarning {
+    font-weight: 700;
+
+    span {
+        color: #c1294f;
+    }
+}
+
 .infoCard,
 .mainPanel {
     background: #fff;
@@ -119,6 +155,22 @@
     }
 }
 
+.fileTypeIcon {
+    align-items: center;
+    border: 1.5px solid #161616;
+    border-radius: 1px;
+    box-sizing: border-box;
+    display: inline-flex;
+    flex: 0 0 16px;
+    font-size: 6px;
+    font-weight: 800;
+    height: 18px;
+    justify-content: center;
+    letter-spacing: -0.25px;
+    line-height: 8px;
+    width: 16px;
+}
+
 .tips svg {
     flex-basis: 20px;
     height: 20px;
@@ -133,6 +185,7 @@
     cursor: pointer;
     font: inherit;
     padding: 0;
+    text-decoration: none;
 }
 
 .textButton {
@@ -158,7 +211,8 @@
     min-width: 0;
 }
 
-.fileUploader {
+.fileUploader,
+.urlSubmission {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -174,6 +228,14 @@
         }
     }
 
+    > small {
+        color: #6f6f6f;
+        font-size: 12px;
+        line-height: 16px;
+    }
+}
+
+.fileUploader {
     > input {
         height: 1px;
         opacity: 0;
@@ -181,11 +243,66 @@
         position: absolute;
         width: 1px;
     }
+}
 
-    > small {
-        color: #6f6f6f;
-        font-size: 12px;
-        line-height: 16px;
+.urlInputRow {
+    align-items: stretch;
+    display: flex;
+    gap: 8px;
+
+    > input {
+        border: 1px solid #a8a8a8;
+        border-radius: 4px;
+        box-sizing: border-box;
+        color: #161616;
+        flex: 1;
+        font: inherit;
+        font-size: 14px;
+        height: 40px;
+        line-height: 20px;
+        min-width: 0;
+        padding: 9px 12px;
+
+        &::placeholder {
+            color: #6f6f6f;
+        }
+
+        &:focus {
+            border-color: #007d79;
+            box-shadow: 0 0 0 1px #007d79;
+            outline: none;
+        }
+
+        &[aria-invalid='true'] {
+            border-color: #c1294f;
+        }
+
+        &:disabled {
+            background: #f4f4f4;
+            cursor: not-allowed;
+        }
+    }
+}
+
+.setUrlButton {
+    align-items: center;
+    background: #007d79;
+    border: 1px solid #007d79;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    justify-content: center;
+    line-height: 20px;
+    padding: 9px 20px;
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: .65;
     }
 }
 
@@ -285,6 +402,11 @@
 .fileCopy {
     display: flex;
     flex-direction: column;
+    min-width: 0;
+
+    strong {
+        overflow-wrap: anywhere;
+    }
 
     span {
         color: #6f6f6f;
@@ -491,7 +613,8 @@
 }
 
 @media (max-width: 900px) {
-    .columns {
+    .columns,
+    .urlFlow .columns {
         grid-template-columns: 1fr;
     }
 
@@ -519,5 +642,9 @@
     .submissionId {
         align-items: center;
         flex-wrap: wrap;
+    }
+
+    .urlInputRow {
+        flex-direction: column;
     }
 }
