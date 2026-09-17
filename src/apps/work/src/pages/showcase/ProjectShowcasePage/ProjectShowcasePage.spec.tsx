@@ -73,6 +73,11 @@ jest.mock('../../../lib/components/form', () => {
         },
     }
 })
+jest.mock('../../../lib/services/salesforce-opportunities.service', () => ({
+    fetchSalesforceOpportunity: jest.fn(),
+    salesforceOpportunityErrorMessage: () => 'We could not reach Salesforce. Please try again.',
+}))
+
 jest.mock('../../../lib/services', () => ({
     createProjectShowcasePost: jest.fn(),
 }))
@@ -144,7 +149,8 @@ describe('Showcase creation', () => {
                 customer: 'Updated customer',
                 dealCloseDate: '2026-09-16',
                 sendToWin: true,
-                smu: 'Europe',
+                // Legacy labels are upgraded to the Salesforce-aligned option on save.
+                smu: 'EURP',
                 type: 'Open Innovation',
             })))
         await waitFor(() => expect(refreshProject)

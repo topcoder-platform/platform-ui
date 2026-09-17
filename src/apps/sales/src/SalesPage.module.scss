@@ -48,6 +48,8 @@
 .table th button:hover { color: $tc-2026-teal; }
 .table td { border-bottom: 1px solid $tc-2026-border; padding: 16px 20px; min-width: 140px; max-width: 420px; overflow-wrap: anywhere; vertical-align: top; }
 .table tr:last-child td { border-bottom: 0; }
+.opportunityButton { padding: 0; border: 0; background: transparent; text-align: left; color: $tc-2026-teal; font-weight: 700; text-decoration: underline; cursor: pointer; overflow-wrap: anywhere; }
+.opportunityButton:hover, .opportunityButton:focus-visible { color: $tc-2026-body; }
 .table tbody tr:hover { background: $tc-2026-canvas; }
 .pagination { padding: 20px 24px; border-top: 1px solid $tc-2026-border; flex-wrap: wrap; font-size: 13px; }
 .pageControls { flex-wrap: wrap; gap: 12px; }

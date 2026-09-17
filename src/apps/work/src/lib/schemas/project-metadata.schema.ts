@@ -1,6 +1,7 @@
 import * as yup from 'yup'
 
-import { SMU_VALUES } from '../constants/showcase.constants'
+import { SALESFORCE_OPPORTUNITY_ID_PATTERN } from '../constants/salesforce.constants'
+import { LEGACY_SMU_VALUES, SMU_VALUES } from '../constants/showcase.constants'
 
 /**
  * Checks a date-only value without converting its calendar day to a local timezone.
@@ -25,19 +26,29 @@ function isCalendarDate(value: string | undefined): boolean {
 export function projectMetadataSchemaFields(required: boolean): {
     customer: yup.StringSchema<string | undefined>
     dealCloseDate: yup.StringSchema<string | undefined>
+    salesforceOpportunityId: yup.StringSchema<string | undefined>
     smu: yup.StringSchema<string | undefined>
     smuOther: yup.StringSchema<string | undefined>
 } {
     const text = yup.string()
         .trim()
         .max(255)
+    // Projects saved before the Salesforce naming alignment still hold the legacy labels.
     const smu = yup.string()
-        .oneOf([...SMU_VALUES, ''])
+        .oneOf([...SMU_VALUES, ...Object.keys(LEGACY_SMU_VALUES), ''])
     const date = yup.string()
         .test('calendar-date', 'Enter a valid deal close date', isCalendarDate)
     return {
         customer: required ? text.required('Customer is required') : text.optional(),
         dealCloseDate: required ? date.required('Deal Close Date is required') : date.optional(),
+        salesforceOpportunityId: yup.string()
+            .trim()
+            .test(
+                'salesforce-opportunity-id',
+                'Enter a valid 15 or 18 character Salesforce Opportunity ID',
+                value => !value || SALESFORCE_OPPORTUNITY_ID_PATTERN.test(value),
+            )
+            .optional(),
         smu: required ? smu.required('SMU is required') : smu.optional(),
         smuOther: text.when('smu', {
             is: 'Others',
