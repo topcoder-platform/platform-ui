@@ -161,6 +161,14 @@
         margin-bottom: 8px;
     }
 
+    img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 0 0 16px;
+        border-radius: 8px;
+    }
+
     a {
         color: $link-blue-dark;
         font-weight: 700;
