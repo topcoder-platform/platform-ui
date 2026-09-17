@@ -41,6 +41,27 @@
 .filterField input::placeholder { color: $tc-2026-muted; opacity: 1; }
 .filterField input:disabled { background: $tc-2026-border; cursor: not-allowed; }
 .filterActions { min-height: 48px; }
+.dateFilters { margin-bottom: 24px; }
+.dateFieldset { background: $tc-2026-surface; border: 1px solid $tc-2026-border; border-radius: $tc-2026-radius-lg; box-shadow: $tc-2026-shadow-card; padding: 24px; margin: 0; }
+.dateLegend { font-size: $tc-2026-h4-size; line-height: 32px; font-weight: 700; padding: 0; }
+.dateHint { margin-top: 4px; color: $tc-2026-muted; max-width: 820px; }
+.dateControls { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 16px; margin-top: 20px; }
+.dateStatus { margin-top: 16px; font-size: 13px; color: $tc-2026-muted; }
+.dateError { color: $tc-2026-danger; font-weight: 700; }
+.summary { margin-bottom: 24px; display: flex; flex-direction: column; gap: 16px; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.metric { background: $tc-2026-surface; border: 1px solid $tc-2026-border; border-radius: $tc-2026-radius-lg; box-shadow: $tc-2026-shadow-card; padding: 20px 24px; }
+.metricLabel { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: $tc-2026-muted; }
+.metricValue { font-size: 32px; line-height: 40px; font-weight: 700; margin-top: 8px; overflow-wrap: anywhere; }
+.metricNote { margin-top: 8px; font-size: 13px; color: $tc-2026-muted; }
+.breakdown { background: $tc-2026-surface; border: 1px solid $tc-2026-border; border-radius: $tc-2026-radius-lg; box-shadow: $tc-2026-shadow-card; padding: 20px 24px; }
+.breakdown h3 { font-size: 20px; line-height: 28px; }
+.breakdown ul { list-style: none; margin-top: 12px; }
+.breakdown li { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 10px 0; border-bottom: 1px solid $tc-2026-border; }
+.breakdown li:last-child { border-bottom: 0; }
+.bucketLabel { font-weight: 700; flex: 1 1 200px; overflow-wrap: anywhere; }
+.bucketCount { color: $tc-2026-muted; font-size: 13px; }
+.bucketTotal { font-weight: 700; min-width: 120px; text-align: right; }
 .tableScroll { overflow-x: auto; width: 100%; }
 .table { width: 100%; border-collapse: collapse; text-align: left; }
 .table th { background: $tc-2026-canvas; white-space: nowrap; border-bottom: 1px solid $tc-2026-border; }
@@ -69,8 +90,10 @@
     .page { padding: 20px 12px 40px; }
     .header h1 { font-size: 36px; line-height: 44px; }
     .headerActions { width: 100%; justify-content: space-between; }
-    .panelHeader, .filters, .pagination { padding: 16px; }
+    .panelHeader, .filters, .pagination, .dateFieldset, .metric, .breakdown { padding: 16px; }
     .panelHeader { align-items: flex-start; flex-direction: column; }
     .filterField { flex-basis: 100%; }
+    .filterActions { width: 100%; }
+    .bucketTotal { text-align: left; min-width: 0; }
     .error { align-items: flex-start; flex-direction: column; }
 }

@@ -2,12 +2,19 @@
 /* eslint react/jsx-no-bind: ["error", { "allowArrowFunctions": true, "allowFunctions": true }] */
 /* The horizontal report viewport must be focusable for keyboard scrolling. */
 /* eslint jsx-a11y/no-noninteractive-tabindex: ["error", { "roles": ["region"] }] */
-import { FC, FormEvent, useCallback, useEffect, useRef, useState } from 'react'
+import { FC, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Button, IconOutline, LoadingSpinner, PageTitle } from '~/libs/ui'
 
 import { SalesQuery, SalesReport } from './sales.models'
 import { fetchSalesReport, salesErrorMessage } from './sales.service'
+import {
+    dateColumns,
+    dateRangeError,
+    defaultDateColumn,
+    formatSummaryAmount,
+    withDateRange,
+} from './sales.utils'
 import styles from './SalesPage.module.scss'
 import './sales.scss'
 
@@ -42,7 +49,8 @@ function withFilters(current: SalesQuery, search: string, filterColumn: string, 
 
 /**
  * Read-only Sales workspace, used on the dedicated host and inside Work.
- * @returns An accessible metadata-driven report with server-side view controls and live refresh.
+ * @returns An accessible metadata-driven report with a Created/Close date range filter,
+ * snapshot-wide totals, server-side view controls and live refresh.
  * @throws Does not throw request failures; shows inline recovery and stale-data status.
  */
 const SalesPage: FC = () => {
@@ -50,6 +58,10 @@ const SalesPage: FC = () => {
     const [search, setSearch] = useState('')
     const [filterColumn, setFilterColumn] = useState('')
     const [filterValue, setFilterValue] = useState('')
+    const [dateColumn, setDateColumn] = useState('')
+    const [dateFrom, setDateFrom] = useState('')
+    const [dateTo, setDateTo] = useState('')
+    const [dateError, setDateError] = useState('')
     const [report, setReport] = useState<SalesReport>()
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(true)
@@ -130,7 +142,15 @@ const SalesPage: FC = () => {
         setSearch('')
         setFilterColumn('')
         setFilterValue('')
-        setQuery({ ...initialQuery, perPage: query.perPage })
+        // The date range is its own section with its own reset, so clearing the
+        // report filters must not empty it behind the user's back.
+        setQuery(current => ({
+            ...initialQuery,
+            dateColumn: current.dateColumn,
+            dateFrom: current.dateFrom,
+            dateTo: current.dateTo,
+            perPage: current.perPage,
+        }))
     }
 
     /** @param id Report column ID. @returns Nothing; toggles global sorting and resets pagination. Does not throw. */
@@ -143,6 +163,36 @@ const SalesPage: FC = () => {
         }))
     }
 
+    const availableDates = useMemo(() => dateColumns(report), [report])
+
+    useEffect(() => {
+        // The report defines its own date fields, so the selection follows the
+        // live schema instead of hard-coded Salesforce column IDs.
+        if (!availableDates.length) return
+        if (availableDates.some(column => column.id === dateColumn)) return
+        setDateColumn(defaultDateColumn(availableDates))
+    }, [availableDates, dateColumn])
+
+    /** @param event Date range submission. @returns Nothing; applies a valid range. Does not throw. */
+    function applyDateRange(event: FormEvent<HTMLFormElement>): void {
+        event.preventDefault()
+        const invalid = dateRangeError(dateColumn, dateFrom, dateTo)
+        setDateError(invalid)
+        if (invalid) return
+        setQuery(current => withDateRange(current, dateColumn, dateFrom, dateTo))
+    }
+
+    /** Clears the date range without disturbing search, column filters or sorting. Does not throw. */
+    function resetDateRange(): void {
+        setDateFrom('')
+        setDateTo('')
+        setDateError('')
+        setDateColumn(defaultDateColumn(availableDates))
+        setQuery(current => withDateRange(current, '', '', ''))
+    }
+
+    const rangeApplied = !!query.dateColumn
+    const summary = report?.summary
     const firstRow = report?.total ? (report.page - 1) * report.perPage + 1 : 0
     const lastRow = report ? Math.min(report.page * report.perPage, report.total) : 0
     const updatedAt = report ? new Date(report.refreshedAt)
@@ -198,6 +248,142 @@ const SalesPage: FC = () => {
                     {' '}
                     received records. Refine the source report in Salesforce to view a complete result.
                 </div>
+            )}
+
+            <form className={styles.dateFilters} onSubmit={applyDateRange}>
+                <fieldset className={styles.dateFieldset}>
+                    <legend className={styles.dateLegend}>Date range filter</legend>
+                    <p className={styles.dateHint}>
+                        Filter by Created Date for pipeline generation, or by Close Date for revenue
+                        projections. Counts and totals below cover every matching record, not just this page.
+                    </p>
+                    <div className={styles.dateControls}>
+                        <div className={styles.filterField}>
+                            <label htmlFor='sales-date-column'>Filter type</label>
+                            <select
+                                disabled={!availableDates.length}
+                                id='sales-date-column'
+                                onChange={event => setDateColumn(event.target.value)}
+                                value={dateColumn}
+                            >
+                                {!availableDates.length && <option value=''>No date fields available</option>}
+                                {availableDates.map(column => (
+                                    <option key={column.id} value={column.id}>{column.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className={styles.filterField}>
+                            <label htmlFor='sales-date-from'>From date</label>
+                            <input
+                                disabled={!availableDates.length}
+                                id='sales-date-from'
+                                name='sales-date-from'
+                                onChange={event => setDateFrom(event.target.value)}
+                                type='date'
+                                value={dateFrom}
+                            />
+                        </div>
+                        <div className={styles.filterField}>
+                            <label htmlFor='sales-date-to'>To date</label>
+                            <input
+                                disabled={!availableDates.length}
+                                id='sales-date-to'
+                                name='sales-date-to'
+                                onChange={event => setDateTo(event.target.value)}
+                                type='date'
+                                value={dateTo}
+                            />
+                        </div>
+                        <div className={styles.filterActions}>
+                            <Button
+                                disabled={!availableDates.length}
+                                noCaps
+                                primary
+                                type='submit'
+                            >
+                                Apply filter
+                            </Button>
+                            <Button
+                                disabled={!rangeApplied && !dateFrom && !dateTo}
+                                noCaps
+                                onClick={resetDateRange}
+                                secondary
+                            >
+                                Reset filter
+                            </Button>
+                        </div>
+                    </div>
+                    <p className={styles.dateStatus} aria-live='polite' role='status'>
+                        {dateError && <span className={styles.dateError}>{dateError}</span>}
+                        {!dateError && rangeApplied && (
+                            <span>
+                                {`Showing records by ${availableDates
+                                    .find(column => column.id === query.dateColumn)?.label ?? query.dateColumn}`}
+                                {query.dateFrom ? ` from ${query.dateFrom}` : ''}
+                                {query.dateTo ? ` through ${query.dateTo}` : ''}
+                                .
+                            </span>
+                        )}
+                        {!dateError && !rangeApplied && <span>No date range applied.</span>}
+                    </p>
+                </fieldset>
+            </form>
+
+            {summary && (
+                <section className={styles.summary} aria-label='Filtered sales totals'>
+                    <div className={styles.metrics}>
+                        <div className={styles.metric}>
+                            <p className={styles.metricLabel}>Opportunities</p>
+                            <p className={styles.metricValue}>{summary.recordCount.toLocaleString()}</p>
+                            <p className={styles.metricNote}>Matching records</p>
+                        </div>
+                        {summary.amounts.map(amount => (
+                            <div className={styles.metric} key={amount.columnId}>
+                                <p className={styles.metricLabel}>{amount.label}</p>
+                                <p className={styles.metricValue}>{formatSummaryAmount(amount)}</p>
+                                <p className={styles.metricNote}>
+                                    {`${amount.count.toLocaleString()} of `}
+                                    {`${summary.recordCount.toLocaleString()} records with a value`}
+                                    {amount.mixedCurrency ? ' · totals mixed currencies' : ''}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                    {summary.groups.map(group => (
+                        <div className={styles.breakdown} key={group.columnId}>
+                            <h3>{`${group.label} breakdown`}</h3>
+                            <ul>
+                                {group.buckets.map(bucket => (
+                                    <li key={bucket.label || '—'}>
+                                        <span className={styles.bucketLabel}>{bucket.label || '—'}</span>
+                                        <span className={styles.bucketCount}>
+                                            {`${bucket.count.toLocaleString()} records`}
+                                        </span>
+                                        <span className={styles.bucketTotal}>
+                                            {formatSummaryAmount({
+                                                columnId: group.columnId,
+                                                count: bucket.count,
+                                                currencyCode: group.currencyCode,
+                                                label: bucket.label,
+                                                mixedCurrency: group.mixedCurrency,
+                                                total: bucket.total,
+                                            })}
+                                        </span>
+                                    </li>
+                                ))}
+                                {!group.buckets.length && <li><span>No matching records.</span></li>}
+                            </ul>
+                            {group.mixedCurrency && (
+                                <p className={styles.metricNote}>Totals mix currencies.</p>
+                            )}
+                            {group.otherBuckets > 0 && (
+                                <p className={styles.metricNote}>
+                                    {`${group.otherBuckets.toLocaleString()} further values not shown.`}
+                                </p>
+                            )}
+                        </div>
+                    ))}
+                </section>
             )}
 
             <section className={styles.panel} aria-label='Sales report'>
