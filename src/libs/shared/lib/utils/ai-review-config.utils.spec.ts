@@ -19,11 +19,11 @@ describe('ai-review-config.utils', () => {
 
     it('formats review mode labels', () => {
         expect(formatReviewModeLabel())
-            .toBe('Manual (Manual review)')
+            .toBe('Manual')
         expect(formatReviewModeLabel({ instantReview: false, mode: 'AI_ONLY' }))
-            .toBe('AI only (AI review)')
+            .toBe('AI only')
         expect(formatReviewModeLabel({ instantReview: true, mode: 'AI_GATING' }))
-            .toBe('AI Gating (AI review + Manual review)')
+            .toBe('AI Gating')
     })
 
     it('formats instant review and detects AI config presence', () => {

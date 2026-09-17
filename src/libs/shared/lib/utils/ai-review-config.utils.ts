@@ -33,35 +33,6 @@ export function isDevelopmentChallengeTrack(
 }
 
 /**
- * Returns the member-facing review mode label for challenge details surfaces.
- */
-export function formatReviewModeLabel(config?: AiReviewConfigSummary): string {
-    if (!config) {
-        return 'Manual (Manual review)'
-    }
-
-    if (config.mode === 'AI_GATING') {
-        return 'AI Gating (AI review + Manual review)'
-    }
-
-    return 'AI only (AI review)'
-}
-
-/**
- * Returns whether an AI review configuration is present for the challenge.
- */
-export function hasAiReviewConfig(config?: AiReviewConfigSummary): boolean {
-    return !!config
-}
-
-/**
- * Returns the ON/OFF label for instant review.
- */
-export function formatInstantReviewLabel(instantReview: boolean): string {
-    return instantReview ? 'ON' : 'OFF'
-}
-
-/**
  * Returns the sidebar review-mode bullet label and tooltip.
  */
 export function getReviewStyleModeItem(config?: AiReviewConfigSummary): ReviewStyleListItem {
@@ -84,6 +55,27 @@ export function getReviewStyleModeItem(config?: AiReviewConfigSummary): ReviewSt
         label: 'AI only',
         tooltip: 'AI will perform a thorough review based on scorecards.',
     }
+}
+
+/**
+ * Returns the member-facing review mode label for challenge details surfaces.
+ */
+export function formatReviewModeLabel(config?: AiReviewConfigSummary): string {
+    return getReviewStyleModeItem(config).label
+}
+
+/**
+ * Returns whether an AI review configuration is present for the challenge.
+ */
+export function hasAiReviewConfig(config?: AiReviewConfigSummary): boolean {
+    return !!config
+}
+
+/**
+ * Returns the ON/OFF label for instant review.
+ */
+export function formatInstantReviewLabel(instantReview: boolean): string {
+    return instantReview ? 'ON' : 'OFF'
 }
 
 /**
