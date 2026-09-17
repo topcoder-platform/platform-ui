@@ -868,6 +868,7 @@ export const ChallengeDetailsPage: FC = () => {
                             && aiReviewConfigResponse.data === undefined
                             && !aiReviewConfigResponse.error}
                         reviewStyleUnavailable={!!aiReviewConfigResponse.error}
+                        showReviewStyle={profileInitialized && !!profile}
                     />
                 )}
             </div>

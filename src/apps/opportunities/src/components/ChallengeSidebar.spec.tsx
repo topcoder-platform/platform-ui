@@ -112,6 +112,7 @@ const marathonChallenge: ChallengeOpportunity = {
 function renderSidebar(
     aiReviewConfig?: ChallengeAiReviewConfig,
     sidebarChallenge: ChallengeOpportunity = challenge,
+    showReviewStyle: boolean = true,
 ): void {
     render(
         <MemoryRouter>
@@ -120,6 +121,7 @@ function renderSidebar(
                 challenge={sidebarChallenge}
                 onContactTeam={jest.fn()}
                 onShowTerms={jest.fn()}
+                showReviewStyle={showReviewStyle}
             />
         </MemoryRouter>,
     )
@@ -138,6 +140,13 @@ describe('ChallengeSidebar Review Style', () => {
 
     it('does not show review style for non-development challenges', () => {
         renderSidebar()
+
+        expect(screen.queryByRole('heading', { name: 'Review Style' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('does not show review style for anonymous viewers on development challenges', () => {
+        renderSidebar(undefined, developmentChallenge, false)
 
         expect(screen.queryByRole('heading', { name: 'Review Style' }))
             .not.toBeInTheDocument()

@@ -64,6 +64,7 @@ interface ChallengeSidebarProps {
     onShowTerms: (term?: ChallengeTerm) => void
     reviewStyleLoading?: boolean
     reviewStyleUnavailable?: boolean
+    showReviewStyle?: boolean
 }
 
 interface SidebarCardProps {
@@ -488,7 +489,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                         </div>
                     </>
                 )}
-                {developmentChallenge && !marathonMatch && (
+                {developmentChallenge && !marathonMatch && props.showReviewStyle && (
                     <ReviewStyleSection
                         config={props.aiReviewConfig}
                         loading={props.reviewStyleLoading}
