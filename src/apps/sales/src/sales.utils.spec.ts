@@ -1,8 +1,9 @@
-import { SalesReport } from './sales.models'
+import { SalesReport, SalesSummaryAmount } from './sales.models'
 import {
     dateColumns,
     dateRangeError,
     defaultDateColumn,
+    displayedAmounts,
     formatSummaryAmount,
     withDateRange,
 } from './sales.utils'
@@ -73,9 +74,31 @@ describe('Sales date range utilities', () => {
             .toMatchObject({ dateColumn: undefined, dateFrom: undefined, dateTo: undefined, page: 1 })
     })
 
-    it('labels a total with its shared currency and leaves a mixed sum unlabelled', () => {
+    it('hides a total whose converted counterpart the report also provides', () => {
+        /** @returns A single-currency total for the given column. Does not throw. */
+        const amount = (columnId: string, label: string): SalesSummaryAmount => ({
+            columnId, count: 1, label, mixedCurrency: false, total: 1,
+        })
+
+        const converted = amount('AMOUNT_CONVERTED', 'Amount (converted)')
+        const plain = amount('AMOUNT', 'Amount')
+        const revenue = amount('EXP_AMOUNT', 'Expected Revenue')
+        const revenueConverted = amount('CONVERTED_REVENUE', 'Expected Revenue (Converted)')
+        expect(displayedAmounts([converted, plain, revenue, revenueConverted]))
+            .toEqual([converted, revenueConverted])
+        expect(displayedAmounts([plain, revenue]))
+            .toEqual([plain, revenue])
+        expect(displayedAmounts([]))
+            .toEqual([])
+    })
+
+    it('labels a total with its shared currency, shows an uncoded one in dollars and leaves a mixed sum bare', () => {
         expect(formatSummaryAmount({
             columnId: 'AMOUNT', count: 2, currencyCode: 'USD', label: 'Amount', mixedCurrency: false, total: 1234.56,
+        }))
+            .toBe('$1,235')
+        expect(formatSummaryAmount({
+            columnId: 'EXPECTED_REVENUE', count: 2, label: 'Expected Revenue', mixedCurrency: false, total: 1234.56,
         }))
             .toBe('$1,235')
         expect(formatSummaryAmount({

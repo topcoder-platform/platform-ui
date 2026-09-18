@@ -19,18 +19,19 @@ with its Close button or the X icon; obsolete lookups are aborted.
 
 ## Date range filter (PM-6364)
 
-A date range section at the top of the page filters the report by **Created
-Date** for pipeline generation, or by **Close Date** for revenue projection.
+A date range panel at the top of the page, headed inside its box like the
+report panel, filters the report by **Created Date** for pipeline generation,
+or by **Close Date** for revenue projection.
 The Filter type dropdown lists the report's own `date`/`datetime` columns rather
 than hard-coded Salesforce field IDs, and opens on the Created Date column when
 the report has one. From date and To date are inclusive and either may be left
 empty for an open-ended range.
 
-Unlike the search and column filters, the range is only sent when **Apply
-filter** is pressed, and **Reset filter** clears it without disturbing search,
-column filters or sorting. Clearing the report filters likewise leaves the range
-intact. An inverted range is reported inline and never sent. A report with no
-date columns disables the section.
+Like the search and column filters, the range applies automatically (debounced)
+as the Filter type, From date or To date change. **Clear** empties it without
+disturbing search, column filters or sorting, and clearing the report filters
+likewise leaves the range intact. An inverted range is reported inline and never
+sent. A report with no date columns disables the panel.
 
 The Reports API applies the range across the whole received snapshot before
 paginating, so a filtered count is the real matching count and not a per-page
@@ -42,8 +43,12 @@ Summary tiles above the report show the metrics the current filters produce over
 every matching record: opportunity count, a total per numeric column (pipeline
 value and revenue projections), and a breakdown per category column such as
 Stage. The API computes them, so they never describe only the visible page.
-Totals show their shared currency; a total that sums different currencies is
-rendered as a plain number and labelled as mixed. Tiles are hidden when the API
+Each tile shows only its label and value. A total whose converted counterpart
+the report also provides, such as Amount beside Amount (converted), is hidden
+for now as redundant. Totals show their shared currency, and a single-currency
+total the report leaves uncoded is shown in US dollars to match the converted
+columns; a total that sums different currencies is rendered as a plain number
+and labelled as mixed. Tiles are hidden when the API
 returns no `summary`, which keeps the page working against an API that predates
 this feature.
 
