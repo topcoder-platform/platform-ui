@@ -19,7 +19,10 @@ import { useRole, useRoleProps } from '../../hooks'
 
 import styles from './ChallengeLinks.module.scss'
 
+type ChallengeLinkAction = 'contactManager' | 'forum' | 'payments'
+
 interface Props {
+    actions?: ChallengeLinkAction[]
     className?: string
 }
 
@@ -47,9 +50,14 @@ export const ChallengeLinks: FC<Props> = (props: Props) => {
         [actionChallengeRole, myResources],
     )
 
+    const enabledActions = useMemo(
+        () => new Set<ChallengeLinkAction>(props.actions ?? ['contactManager', 'forum', 'payments']),
+        [props.actions],
+    )
+
     return (
         <div className={classNames(styles.container, props.className)}>
-            {canShowContactManagerButton && (
+            {enabledActions.has('contactManager') && canShowContactManagerButton && (
                 <button
                     type='button'
                     className='borderButton'
@@ -60,7 +68,7 @@ export const ChallengeLinks: FC<Props> = (props: Props) => {
                     Contact Manager
                 </button>
             )}
-            {challengeInfo && challengeInfo.discussionsUrl && (
+            {enabledActions.has('forum') && challengeInfo && challengeInfo.discussionsUrl && (
                 <a
                     href={challengeInfo?.discussionsUrl}
                     className='borderButton'
@@ -70,7 +78,7 @@ export const ChallengeLinks: FC<Props> = (props: Props) => {
                     Forum
                 </a>
             )}
-            {challengeInfo && canShowPaymentsButton && (
+            {enabledActions.has('payments') && challengeInfo && canShowPaymentsButton && (
                 <button
                     type='button'
                     className='borderButton'

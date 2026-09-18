@@ -25,7 +25,17 @@ import {
 const mockRecordAnalyticsEvent = jest.fn()
 
 jest.mock('~/config', () => ({
-    EnvironmentConfig: { URLS: { TERMS_OF_USE: 'https://www.example.com/terms' } },
+    EnvironmentConfig: {
+        TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS: [
+            'wipro365.sharepoint.com',
+            'wipro365-my.sharepoint.com',
+            'wipro365-my.sharepoint.com.mcas.ms',
+        ],
+        URLS: {
+            TERMS_OF_USE: 'https://www.example.com/terms',
+            TOPGEAR_TERMS: 'https://topgear.topcoder.com/challenges/terms/detail/f1d8cca9-ac24-473c-998d-02f499a829cb',
+        },
+    },
 }), { virtual: true })
 jest.mock('~/libs/cms', () => ({
     getSafeCmsLink: jest.fn(),
@@ -144,26 +154,92 @@ describe('ChallengeSubmissionUpload', () => {
             .toBe('The ZIP file must be 500MB or smaller.')
     })
 
-    it('accepts only trimmed absolute HTTP or HTTPS submission URLs', () => {
+    it('requires an absolute HTTP or HTTPS submission URL', () => {
         expect(validateChallengeSubmissionUrl(''))
             .toBe('Enter the URL to your submission.')
         expect(validateChallengeSubmissionUrl('deliverables.example.com/result'))
             .toBe('Enter a valid submission URL.')
         expect(validateChallengeSubmissionUrl('ftp://deliverables.example.com/result'))
             .toBe('Enter a URL beginning with http:// or https://.')
-        expect(validateChallengeSubmissionUrl('  https://deliverables.example.com/result  '))
+        expect(validateChallengeSubmissionUrl('  https://wipro365.sharepoint.com/result  '))
             .toBeUndefined()
     })
 
-    it('renders metadata-selected URL guidance without the ZIP picker', () => {
+    it.each([
+        'https://wipro365.sharepoint.com/:f:/r/sites/project/deliverables?download=1',
+        'https://wipro365-my.sharepoint.com/personal/member/result.docx',
+        'https://wipro365-my.sharepoint.com.mcas.ms/personal/member/result.docx',
+        'http://wipro365.sharepoint.com/sites/project/result',
+        '  https://WIPRO365.SHAREPOINT.COM/sites/project/Work%20Summary.docx  ',
+    ])('accepts legacy Wipro SharePoint deliverable links: %s', url => {
+        expect(validateChallengeSubmissionUrl(url))
+            .toBeUndefined()
+    })
+
+    it.each([
+        'https://files.example.com/result',
+        'https://wipro365.sharepoint.com',
+        'https://wipro365.sharepoint.com/?result=1',
+        'https://wipro365.sharepoint.com.evil.example/result',
+        'https://wipro365Xsharepoint.com/result',
+        'https://wipro365.sharepoint.com@evil.example/result',
+        'https://user:password@wipro365.sharepoint.com/result',
+        'https://wipro365.sharepoint.com:8443/result',
+    ])('rejects links outside the allowed SharePoint deliverables: %s', url => {
+        expect(validateChallengeSubmissionUrl(url))
+            .toBe('Ensure that you submit a valid Wipro SharePoint link only. '
+                + 'The link should point to the outcome/deliverable of the challenge and should reflect the work done. '
+                + 'Please check the challenge submission guidelines.')
+    })
+
+    it.each([
+        'Development', 'Design', 'Data Science', 'Quality Assurance',
+    ])('renders the exact Topgear guidance for a metadata-selected URL %s challenge', track => {
         renderUpload(challengeFixture({
             metadata: [{ name: ' SUBMISSION_TYPE ', value: ' URL ' }],
+            track: { name: track },
         }))
 
-        expect(screen.getByText('Submit the URL to your solution as described in the requirements.'))
+        expect(screen.getByText('Enter the URL to your submission.'))
             .toBeInTheDocument()
-        expect(screen.getByRole('heading', { name: 'Required Link' }))
+        expect(screen.getByRole('heading', { name: 'Steps for Submission:' }))
             .toBeInTheDocument()
+        expect(screen.getAllByRole('listitem')
+            .map(item => item.textContent))
+            .toEqual([
+                'Upload the outcome/asset/deliverable of the challenge to the repository (Wipro SharePoint folder) '
+                + 'as specified by the project team/challenge creator.',
+                'Copy the link of the outcome/asset/deliverable that was uploaded. '
+                + 'Enter this link in the text box and click on “SET URL”.',
+                'Please check the acceptance/confirmation box at the bottom left corner.',
+                'Click on the ‘Submit’ option at the bottom right.',
+            ])
+        expect(screen.getByText('Do not submit any irrelevant links').parentElement)
+            .toHaveTextContent('Ensure that the submission link always reflects the outcome '
+                + 'that was delivered as part of the challenge. Do not submit any irrelevant links '
+                + 'as the submission link is proof of the work done.')
+        expect(screen.getByText(/Note: All deliverables\/outcomes/))
+            .toHaveTextContent('Note: All deliverables/outcomes should be uploaded to the Wipro SharePoint '
+                + 'directory ONLY. For work done directly on customer environment and involving a customer '
+                + 'SharePoint/drive/folder link, create a word document and include a brief summary of the work '
+                + 'done and list the deliverables/assets created along with the link to the customer '
+                + 'SharePoint/drive/folder link and upload the word document '
+                + 'to a Wipro SharePoint folder. And submit the link to this Word document as the submission link.')
+        expect(screen.getByText(/If you are having trouble with the submission/))
+            .toHaveTextContent('If you are having trouble with the submission or have any queries, '
+                + 'please raise a Service Now (SNOW) ticket under the TopGear category.')
+        const termsLink = screen.getByRole('link', { name: 'TopGear terms and conditions' })
+        expect(termsLink)
+            .toHaveAttribute(
+                'href',
+                'https://topgear.topcoder.com/challenges/terms/detail/f1d8cca9-ac24-473c-998d-02f499a829cb',
+            )
+        expect(termsLink)
+            .toHaveAttribute('target', '_blank')
+        expect(termsLink.parentElement)
+            .toHaveTextContent('Submitting your link means you hereby agree to the TopGear terms and conditions '
+                + 'and to the extent your submission wins a TopGear challenge, you hereby agree to assign, grant, '
+                + 'and transfer to TopGear all right and title to the Winning Submission.')
         expect(screen.getByLabelText(/Submission URL/))
             .toHaveAttribute('type', 'url')
         expect(screen.getByRole('button', { name: 'Set URL' }))
@@ -172,8 +248,21 @@ describe('ChallengeSubmissionUpload', () => {
             .not.toBeInTheDocument()
         expect(screen.queryByText('Drop your file(s) here or'))
             .not.toBeInTheDocument()
-        expect(screen.getByText('Link directly to your challenge deliverable'))
+        expect(screen.queryByRole('heading', { name: 'Submission tips' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Topcoder Support' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('keeps the file picker and Topcoder declaration for an explicit ZIP challenge', () => {
+        renderUpload(challengeFixture({ metadata: [{ name: 'submission_type', value: 'zip' }] }))
+
+        expect(screen.getByLabelText(/Upload File/))
             .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Topcoder Terms of Use' }))
+            .toHaveAttribute('href', 'https://www.example.com/terms')
+        expect(screen.queryByLabelText(/Submission URL/))
+            .not.toBeInTheDocument()
     })
 
     it('validates and reconfirms an edited URL before enabling its declaration', () => {
@@ -192,19 +281,28 @@ describe('ChallengeSubmissionUpload', () => {
         expect(agreement)
             .toBeDisabled()
 
-        fireEvent.change(urlInput, { target: { value: '  https://files.example.com/result  ' } })
+        fireEvent.change(urlInput, { target: { value: 'https://files.example.com/result' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        expect(screen.getByRole('alert'))
+            .toHaveTextContent('Ensure that you submit a valid Wipro SharePoint link only.')
+        expect(agreement)
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Submit' }))
+            .toBeDisabled()
+
+        fireEvent.change(urlInput, { target: { value: '  https://wipro365.sharepoint.com/result  ' } })
         fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
         expect(screen.getByText('Ready to submit'))
             .toBeInTheDocument()
-        expect(screen.getByText('https://files.example.com/result'))
+        expect(screen.getByText('https://wipro365.sharepoint.com/result'))
             .toBeInTheDocument()
         expect(urlInput)
-            .toHaveValue('https://files.example.com/result')
+            .toHaveValue('https://wipro365.sharepoint.com/result')
         expect(agreement)
             .not.toBeDisabled()
 
         fireEvent.click(agreement)
-        fireEvent.change(urlInput, { target: { value: 'https://files.example.com/revised' } })
+        fireEvent.change(urlInput, { target: { value: 'https://wipro365.sharepoint.com/revised' } })
         expect(screen.queryByText('Ready to submit'))
             .not.toBeInTheDocument()
         expect(agreement)
@@ -222,7 +320,7 @@ describe('ChallengeSubmissionUpload', () => {
         }))
 
         fireEvent.change(screen.getByLabelText(/Submission URL/), {
-            target: { value: '  https://files.example.com/result  ' },
+            target: { value: '  https://wipro365.sharepoint.com/result  ' },
         })
         fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
@@ -233,7 +331,7 @@ describe('ChallengeSubmissionUpload', () => {
                 'challenge-id',
                 '123',
                 'CONTEST_SUBMISSION',
-                'https://files.example.com/result',
+                'https://wipro365.sharepoint.com/result',
                 expect.any(AbortSignal),
             ))
         expect(mockedCreateSubmission)
@@ -263,7 +361,7 @@ describe('ChallengeSubmissionUpload', () => {
 
         const urlInput = screen.getByLabelText(/Submission URL/)
         fireEvent.change(urlInput, {
-            target: { value: 'https://files.example.com/result' },
+            target: { value: 'https://wipro365.sharepoint.com/result' },
         })
         fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
@@ -286,7 +384,7 @@ describe('ChallengeSubmissionUpload', () => {
         )
 
         fireEvent.change(screen.getByLabelText(/Submission URL/), {
-            target: { value: 'https://files.example.com/result' },
+            target: { value: 'https://wipro365.sharepoint.com/result' },
         })
         fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
@@ -312,7 +410,7 @@ describe('ChallengeSubmissionUpload', () => {
         )
 
         fireEvent.change(screen.getByLabelText(/Submission URL/), {
-            target: { value: 'https://files.example.com/result' },
+            target: { value: 'https://wipro365.sharepoint.com/result' },
         })
         fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))

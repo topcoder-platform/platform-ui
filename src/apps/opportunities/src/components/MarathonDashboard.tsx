@@ -100,6 +100,12 @@ export const MarathonDashboard: FC<MarathonDashboardProps> = props => {
         series: [{
             data: points,
             name: 'Submissions',
+            // Marathon Matches routinely graph more than Highcharts' default
+            // 1000-point turbo threshold. Turbo mode only accepts numeric or
+            // array point configs, so it discards these keyed points and
+            // silently renders an empty chart. community-app disables the
+            // threshold for the same dashboard.
+            turboThreshold: 0,
             type: 'scatter',
         }],
         title: { text: undefined },

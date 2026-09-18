@@ -7,6 +7,7 @@ import {
     SyntheticEvent,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import {
@@ -356,6 +357,8 @@ export const ChallengeDetailsPage: FC = () => {
     const [registrationBusy, setRegistrationBusy] = useState(false)
     const [registrantsRevision, setRegistrantsRevision] = useState(0)
     const [submissionFlowOpen, setSubmissionFlowOpen] = useState(false)
+    const [submissionScrollRequest, setSubmissionScrollRequest] = useState(0)
+    const submissionPanelRef = useRef<HTMLElement>(null)
     const [submissionUploadBusy, setSubmissionUploadBusy] = useState(false)
     const [unregisterConfirmOpen, setUnregisterConfirmOpen] = useState(false)
     const [visibleTerms, setVisibleTerms] = useState<ChallengeTerm[]>([])
@@ -366,8 +369,11 @@ export const ChallengeDetailsPage: FC = () => {
     )
     const challenge = challengeResponse.data
     const taskChallenge = isTaskChallenge(challenge)
+    const developmentChallenge = challenge
+        ? challengeCatalogKey(challenge.track) === 'development'
+        : false
     const aiReviewConfigResponse: SWRResponse<ChallengeAiReviewConfig | undefined, Error> = useSWR(
-        challengeId && profile && challenge && !isMarathonMatchChallenge(challenge)
+        challengeId && profile && challenge && developmentChallenge && !isMarathonMatchChallenge(challenge)
             ? ['opportunities:challenge-review-style', challengeId]
             : undefined,
         () => getChallengeAiReviewConfig(challengeId),
@@ -421,6 +427,7 @@ export const ChallengeDetailsPage: FC = () => {
         setIssueOpen(false)
         setRegistrationBusy(false)
         setSubmissionFlowOpen(false)
+        setSubmissionScrollRequest(0)
         setSubmissionUploadBusy(false)
         setTermsMode('view')
         setTermsOpen(false)
@@ -481,6 +488,15 @@ export const ChallengeDetailsPage: FC = () => {
     const tabAccessIsLoading = !profileInitialized
         || registrationAccessIsLoading
         || memberResourceAccessIsLoading
+
+    useEffect(() => {
+        if (!submissionScrollRequest || !submissionFlowOpen || activeTab !== 'mine') return
+
+        submissionPanelRef.current?.scrollIntoView?.({
+            behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+            block: 'start',
+        })
+    }, [activeTab, submissionFlowOpen, submissionScrollRequest])
 
     useEffect(() => {
         if (!challenge || !searchParams.has('tab') || tabAccessIsLoading || requestedTabIsVisible) return
@@ -554,7 +570,8 @@ export const ChallengeDetailsPage: FC = () => {
 
     /**
      * Opens the Figma submission flow under the member's revalidated My Submissions tab
-     * only while the challenge accepts submissions.
+     * only while the challenge accepts submissions, then scrolls the rendered upload
+     * panel into view. Repeated clicks also return to the open upload panel.
      *
      * @returns promise settled after selecting the tab, restoring registration state,
      * or redirecting an anonymous member to sign in.
@@ -570,6 +587,7 @@ export const ChallengeDetailsPage: FC = () => {
         if (!await validateSubmissionRegistration()) return
         selectTab('mine')
         setSubmissionFlowOpen(true)
+        setSubmissionScrollRequest(request => request + 1)
     }
 
     /**
@@ -817,6 +835,7 @@ export const ChallengeDetailsPage: FC = () => {
                     aria-labelledby={`challenge-tab-${activeTab}`}
                     className={styles.mainContent}
                     id={`challenge-panel-${activeTab}`}
+                    ref={submissionPanelRef}
                     role='tabpanel'
                 >
                     <ChallengeTabContent
@@ -849,6 +868,7 @@ export const ChallengeDetailsPage: FC = () => {
                             && aiReviewConfigResponse.data === undefined
                             && !aiReviewConfigResponse.error}
                         reviewStyleUnavailable={!!aiReviewConfigResponse.error}
+                        showReviewStyle={profileInitialized && !!profile}
                     />
                 )}
             </div>
@@ -1585,7 +1605,6 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                     <>
                                         <th>Current Test Process</th>
                                         <th>Test Status</th>
-                                        <th>Test Progress</th>
                                         <th className={styles.scoreColumn}>Final Score</th>
                                         <th className={styles.scoreColumn}>Provisional Score</th>
                                     </>
@@ -1633,23 +1652,41 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                         {progress.process ?? '—'}
                                                     </td>
                                                     <td data-mobile-label='Test Status'>
-                                                        <span
-                                                            className={`${styles.testStatus} ${statusClass}`}
-                                                        >
-                                                            {progress.status ?? '—'}
-                                                        </span>
-                                                    </td>
-                                                    <td data-mobile-label='Test Progress'>
-                                                        <div className={styles.testProgress}>
-                                                            <span className={styles.progressTrack}>
-                                                                <span style={{ width: `${progress.progress ?? 0}%` }} />
-                                                            </span>
-                                                            <span>
-                                                                {progress.progress === undefined
-                                                                    ? '—'
-                                                                    : `${Math.round(progress.progress)}%`}
-                                                            </span>
-                                                        </div>
+                                                        {(!progress.status || progress.status === 'In progress')
+                                                            && progress.progress !== undefined ? (
+                                                                <div
+                                                                    aria-label={
+                                                                        `Test progress for submission ${submission.id}`
+                                                                    }
+                                                                    aria-valuemax={100}
+                                                                    aria-valuemin={0}
+                                                                    aria-valuenow={Math.round(progress.progress)}
+                                                                    className={styles.testProgress}
+                                                                    role='progressbar'
+                                                                >
+                                                                    <span
+                                                                        aria-hidden='true'
+                                                                        className={styles.progressTrack}
+                                                                    >
+                                                                        <span
+                                                                            style={{ width: `${progress.progress}%` }}
+                                                                        />
+                                                                    </span>
+                                                                    <span>{`${Math.round(progress.progress)}%`}</span>
+                                                                </div>
+                                                            ) : (
+                                                                <span className={`${styles.testStatus} ${statusClass}`}>
+                                                                    {progress.status === 'Passed' && (
+                                                                        <IconOutline.CheckIcon aria-hidden='true' />
+                                                                    )}
+                                                                    {progress.status === 'Failed' && (
+                                                                        <IconOutline.MinusCircleIcon
+                                                                            aria-hidden='true'
+                                                                        />
+                                                                    )}
+                                                                    {progress.status ?? '—'}
+                                                                </span>
+                                                            )}
                                                     </td>
                                                     <td
                                                         className={styles.scoreColumn}

@@ -10,6 +10,7 @@ import {
     LazyLoadedComponent,
     PlatformRoute,
     Rewrite,
+    UserRole,
 } from '~/libs/core'
 
 import {
@@ -38,6 +39,7 @@ import {
     roleErrorRoute,
     roleErrorRouteId,
     rootRoute,
+    salesRouteId,
     taasCreateRouteId,
     taasEditRouteId,
     taasRouteId,
@@ -53,6 +55,7 @@ import { WorkAppContextModel } from './lib/models'
 import { canViewAllEngagements } from './lib/utils'
 
 const WorkApp: LazyLoadedComponent = lazyLoad(() => import('./WorkApp'))
+const SalesPage: LazyLoadedComponent = lazyLoad(() => import('~/apps/sales/src/SalesPage'))
 
 const ChallengesListPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/challenges/ChallengesListPage'),
@@ -286,6 +289,14 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                 id: projectsRouteId,
                 route: projectsRouteId,
                 title: 'Projects',
+            },
+            {
+                authRequired: true,
+                element: <SalesPage />,
+                id: salesRouteId,
+                rolesRequired: [UserRole.administrator, UserRole.talentManager],
+                route: salesRouteId,
+                title: 'Sales',
             },
             {
                 authRequired: true,

@@ -15,6 +15,7 @@ import { useParams } from 'react-router-dom'
 import { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
+import { yupResolver } from '@hookform/resolvers/yup'
 import { EnvironmentConfig } from '~/config'
 import { BaseModal, Button, LoadingSpinner, useConfirmationModal } from '~/libs/ui'
 
@@ -47,6 +48,7 @@ import {
     useFetchProjectShowcasePosts,
 } from '../../../lib/hooks'
 import {
+    FormCheckboxField,
     FormMarkdownEditor,
     FormSelectField,
     FormSelectOption,
@@ -57,14 +59,23 @@ import { checkCanManageProject, hasManagerRole } from '../../../lib/utils/permis
 import type {
     Challenge,
     FetchProjectShowcasePostsParams,
+    ProjectMetadata,
     ProjectShowcasePost,
     ProjectShowcasePostCategory,
     ProjectShowcasePostDetails,
     ProjectShowcasePostFilters,
     ProjectShowcasePostIndustry,
     ProjectShowcasePostTaxonomyItem,
+    ShowcaseMetadata,
     WorkAppContextModel,
 } from '../../../lib/models'
+import { ProjectMetadataFields } from '../../../lib/components/form/ProjectMetadataFields'
+import {
+    normalizeSmuValue,
+    SHOWCASE_CURRENT_STATUS_VALUES,
+    SHOWCASE_TYPE_VALUES,
+} from '../../../lib/constants/showcase.constants'
+import { showcasePostSchema } from '../../../lib/schemas/showcase-post.schema'
 
 import styles from './ProjectShowcasePage.module.scss'
 
@@ -187,6 +198,17 @@ function normalizeTaxonomyOption(item: ProjectShowcasePostCategory | ProjectShow
 }
 
 interface ProjectShowcasePostFormData {
+    type: string
+    customer: string
+    smu: string
+    smuOther: string
+    dealCloseDate: string
+    challenge: string
+    businessImpact: string
+    keyWin: string
+    currentStatus: string
+    owner: string
+    sendToWin: boolean
     title: string
     content: string
     industryIds: string[]
@@ -199,18 +221,62 @@ interface ProjectShowcasePostFormData {
     }>
 }
 
-function mapPostToFormData(post?: ProjectShowcasePost): ProjectShowcasePostFormData {
+/**
+ * Initializes showcase content and the current shared project metadata.
+ * @param post Existing post for editing, or undefined for a new post.
+ * @param projectMetadata Current project values; post responses supply them when editing.
+ * @returns Complete form defaults with WIN sharing off for new posts.
+ * @throws Does not throw.
+ */
+function mapPostToFormData(
+    post?: ProjectShowcasePost,
+    projectMetadata?: ProjectMetadata,
+): ProjectShowcasePostFormData {
+    const metadata = projectMetadata || post
     return {
+        businessImpact: post?.businessImpact || '',
         categoryIds: post?.categories.map(item => item.id) || [],
+        challenge: post?.challenge || '',
         challengeIds: post?.challengeIds || [],
         content: post?.content || '',
+        currentStatus: post?.currentStatus || '',
+        customer: metadata?.customer || '',
+        dealCloseDate: metadata?.dealCloseDate || '',
         industryIds: post?.industries.map(item => item.id) || [],
+        keyWin: post?.keyWin || '',
         media: post?.media?.map(item => ({
             alt: item.alt,
             type: item.type,
             url: item.url,
         })) || [],
+        owner: post?.owner || '',
+        sendToWin: post?.sendToWin === true,
+        smu: normalizeSmuValue(metadata?.smu),
+        smuOther: metadata?.smuOther || '',
         title: post?.title || '',
+        type: post?.type || '',
+    }
+}
+
+/**
+ * Selects the shared fields sent with a full showcase save.
+ * @param data Current showcase form values.
+ * @returns Normalized post metadata and project metadata, clearing an unused custom SMU.
+ * @throws Does not throw.
+ */
+function getShowcaseMetadata(data: ProjectShowcasePostFormData): ShowcaseMetadata {
+    return {
+        businessImpact: data.businessImpact,
+        challenge: data.challenge,
+        currentStatus: data.currentStatus,
+        customer: data.customer.trim(),
+        dealCloseDate: data.dealCloseDate,
+        keyWin: data.keyWin.trim(),
+        owner: data.owner.trim(),
+        sendToWin: data.sendToWin,
+        smu: data.smu,
+        smuOther: data.smu === 'Others' ? data.smuOther.trim() : '',
+        type: data.type,
     }
 }
 
@@ -248,6 +314,12 @@ interface BuildShowcasePreviewDataParams {
     editingPost?: ProjectShowcasePostDetails
 }
 
+/**
+ * Builds the preview using current form values and challenge statistics.
+ * @param params Form fields, taxonomy options, project context and existing post metadata.
+ * @returns Preview data including all WIN fields and existing challenge/media metadata.
+ * @throws Propagates errors from required challenge lookups.
+ */
 async function buildShowcasePreviewData(
     params: BuildShowcasePreviewDataParams,
 ): Promise<ShowcasePostPreviewData> {
@@ -343,6 +415,7 @@ async function buildShowcasePreviewData(
     ].join('/')
 
     return {
+        ...getShowcaseMetadata(formData),
         categories: resolveTaxonomyItems(formData.categoryIds, categoryOptions),
         challengeCount,
         challenges,
@@ -520,6 +593,10 @@ export const ProjectShowcasePage: FC = () => {
     const isFirstDebouncedRender = useRef<boolean>(true)
 
     const projectResult = useFetchProject(projectId || undefined)
+    const projectMetadataRef = useRef<ProjectMetadata>()
+    useEffect(() => {
+        projectMetadataRef.current = projectResult.project?.details
+    }, [projectResult.project?.details])
     const industriesResult = useFetchProjectShowcasePostIndustries()
     const categoriesResult = useFetchProjectShowcasePostCategories()
 
@@ -845,13 +922,13 @@ export const ProjectShowcasePage: FC = () => {
     const formMethods = useForm<ProjectShowcasePostFormData>({
         defaultValues: mapPostToFormData(),
         mode: 'all',
+        resolver: yupResolver(showcasePostSchema) as any,
     })
 
     const {
         getValues,
         handleSubmit,
         reset,
-        setError,
         setValue,
         watch,
     }: UseFormReturn<ProjectShowcasePostFormData, any, ProjectShowcasePostFormData> = formMethods
@@ -1279,7 +1356,7 @@ export const ProjectShowcasePage: FC = () => {
         }
 
         if (manageMode === 'create') {
-            reset(mapPostToFormData())
+            reset(mapPostToFormData(undefined, projectMetadataRef.current))
             setSelectedChallengeOptions([])
             setFormError(undefined)
             setSelectedPostId(undefined)
@@ -1454,7 +1531,7 @@ export const ProjectShowcasePage: FC = () => {
                                         </span>
                                     </td>
                                     <td>{formatDate(post.createdAt)}</td>
-                                    <td>{post.createdByHandle || '—'}</td>
+                                    <td>{post.owner || post.createdByHandle || '—'}</td>
                                     <td>
                                         {post.industries
                                             .map(item => item.name)
@@ -1570,32 +1647,6 @@ export const ProjectShowcasePage: FC = () => {
                             setFormError(undefined)
                             setIsSaving(true)
 
-                            if (!data.title.trim()) {
-                                setError('title', { message: 'Title is required.', type: 'required' })
-                            }
-
-                            if (!data.content.trim()) {
-                                setError('content', { message: 'Content is required.', type: 'required' })
-                            }
-
-                            if (!data.industryIds.length) {
-                                setError('industryIds', { message: 'Select at least one industry.', type: 'required' })
-                            }
-
-                            if (!data.categoryIds.length) {
-                                setError('categoryIds', { message: 'Select at least one category.', type: 'required' })
-                            }
-
-                            if (
-                                !data.title.trim()
-                                || !data.content.trim()
-                                || !data.industryIds.length
-                                || !data.categoryIds.length
-                            ) {
-                                setIsSaving(false)
-                                return
-                            }
-
                             try {
                                 const resolvedIndustryIds = await resolveTaxonomyIds(
                                     data.industryIds,
@@ -1610,6 +1661,7 @@ export const ProjectShowcasePage: FC = () => {
 
                                 if (manageMode === 'create') {
                                     await createProjectShowcasePost(projectId, {
+                                        ...getShowcaseMetadata(data),
                                         categoryIds: resolvedCategoryIds,
                                         challengeIds: data.challengeIds,
                                         content: data.content.trim(),
@@ -1622,13 +1674,17 @@ export const ProjectShowcasePage: FC = () => {
                                     })
                                     setIsManageModalOpen(false)
                                     await Promise.all([
+                                        projectResult.mutate(),
                                         postsResult.mutate(),
                                         industriesResult.mutate(),
                                         categoriesResult.mutate(),
                                     ])
-                                    showSuccessToast('Post created successfully')
+                                    showSuccessToast(data.sendToWin
+                                        ? 'Post created successfully and made available to WIN'
+                                        : 'Post created successfully')
                                 } else if (selectedPostId) {
                                     await updateProjectShowcasePost(projectId, selectedPostId, {
+                                        ...getShowcaseMetadata(data),
                                         categoryIds: resolvedCategoryIds,
                                         challengeIds: data.challengeIds,
                                         content: data.content.trim(),
@@ -1641,11 +1697,14 @@ export const ProjectShowcasePage: FC = () => {
                                     })
                                     setIsManageModalOpen(false)
                                     await Promise.all([
+                                        projectResult.mutate(),
                                         postsResult.mutate(),
                                         industriesResult.mutate(),
                                         categoriesResult.mutate(),
                                     ])
-                                    showSuccessToast('Post updated successfully')
+                                    showSuccessToast(data.sendToWin
+                                        ? 'Post updated successfully and made available to WIN'
+                                        : 'Post updated successfully')
                                 }
                             } catch (err) {
                                 const message = err instanceof Error
@@ -1674,16 +1733,19 @@ export const ProjectShowcasePage: FC = () => {
                             </div>
 
                             <div className={styles.modalField}>
-                                <FormMarkdownEditor
-                                    label='Content'
-                                    name='content'
+                                <FormSelectField
+                                    label='Type'
+                                    name='type'
+                                    options={SHOWCASE_TYPE_VALUES.map(value => ({ label: value, value }))}
                                     required
                                 />
                             </div>
 
+                            <ProjectMetadataFields className={styles.modalField} required />
+
                             <div className={styles.modalField}>
                                 <FormSelectField
-                                    label='Industries'
+                                    label='Industry/Sector'
                                     name='industryIds'
                                     options={industryOptions.slice(1)}
                                     isMulti
@@ -1695,7 +1757,7 @@ export const ProjectShowcasePage: FC = () => {
 
                             <div className={styles.modalField}>
                                 <FormSelectField
-                                    label='Categories'
+                                    label='Category/Technology'
                                     name='categoryIds'
                                     options={categoryOptions.slice(1)}
                                     isMulti
@@ -1703,6 +1765,22 @@ export const ProjectShowcasePage: FC = () => {
                                     isClearable
                                     required
                                 />
+                            </div>
+
+                            <div className={styles.modalField}>
+                                <FormMarkdownEditor label='The Challenge' name='challenge' />
+                            </div>
+
+                            <div className={styles.modalField}>
+                                <FormMarkdownEditor label='The Solution' name='content' required />
+                            </div>
+
+                            <div className={styles.modalField}>
+                                <FormMarkdownEditor label='Business Impact Realised' name='businessImpact' />
+                            </div>
+
+                            <div className={styles.modalField}>
+                                <FormTextField label='Key Win' name='keyWin' maxLength={255} />
                             </div>
 
                             <div className={styles.modalField}>
@@ -1771,7 +1849,7 @@ export const ProjectShowcasePage: FC = () => {
 
                             <div className={styles.modalField}>
                                 <FormSelectField
-                                    label='Challenge'
+                                    label='Topcoder Challenge Launched'
                                     name='challengeIds'
                                     isAsync
                                     isMulti
@@ -1783,6 +1861,27 @@ export const ProjectShowcasePage: FC = () => {
                                     }}
                                     options={formChallengeOptions}
                                     placeholder='Select a challenge'
+                                />
+                            </div>
+
+                            <div className={styles.modalField}>
+                                <FormSelectField
+                                    label='Current Status'
+                                    name='currentStatus'
+                                    options={SHOWCASE_CURRENT_STATUS_VALUES.map(value => ({ label: value, value }))}
+                                    isClearable
+                                />
+                            </div>
+
+                            <div className={styles.modalField}>
+                                <FormTextField label='Owner' name='owner' maxLength={255} />
+                            </div>
+
+                            <div className={styles.modalField}>
+                                <FormCheckboxField
+                                    label='Send to WIN'
+                                    name='sendToWin'
+                                    hint='Make this showcase available to WIN when you save.'
                                 />
                             </div>
                         </div>

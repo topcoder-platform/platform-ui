@@ -1,0 +1,39 @@
+@import '@libs/ui/styles/includes';
+
+.details {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: $sp-4 $sp-6;
+    margin: 0;
+    padding: $sp-4;
+    border-radius: 8px;
+    border: 1px solid $black-20;
+    background: $black-5;
+}
+
+.item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.label {
+    color: $black-80;
+    font-family: Roboto;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.value {
+    margin: 0;
+    color: $black-100;
+    font-family: Roboto;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    overflow-wrap: anywhere;
+}

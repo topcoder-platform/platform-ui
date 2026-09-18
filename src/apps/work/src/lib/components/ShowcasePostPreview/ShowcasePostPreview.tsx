@@ -5,6 +5,9 @@ import { IconOutline } from '~/libs/ui'
 import { renderRichTextToHtml } from '~/libs/shared/lib/utils/rich-text'
 import { textFormatDateLocaleShortString } from '~/libs/shared/lib/utils/text-format'
 
+import { ShowcaseMetadata } from '../../models/ProjectShowcasePost.model'
+import { getShowcaseStorySections, ShowcasePostDetails } from '../ShowcasePostDetails'
+
 import styles from './ShowcasePostPreview.module.scss'
 
 export interface ShowcasePostPreviewChallenge {
@@ -16,7 +19,7 @@ export interface ShowcasePostPreviewChallenge {
     numOfRegistrants?: number
 }
 
-export interface ShowcasePostPreviewData {
+export interface ShowcasePostPreviewData extends ShowcaseMetadata {
     title: string
     content: string
     categories: Array<{ id: string; name: string }>
@@ -99,16 +102,21 @@ const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
 
             <div className={styles.bodyWrap}>
                 <div className={styles.body}>
-                    <div
-                        className={styles.htmlContent}
-                        dangerouslySetInnerHTML={{
-                            __html: renderRichTextToHtml(data.content || ''),
-                        }}
-                    />
+                    <ShowcasePostDetails data={data} />
+                    {getShowcaseStorySections(data)
+                        .map(section => (
+                            <section key={section.label} className={styles.section}>
+                                <h5 className={styles.sectionTitle}>{section.label}</h5>
+                                <div
+                                    className={styles.htmlContent}
+                                    dangerouslySetInnerHTML={{ __html: renderRichTextToHtml(section.value) }}
+                                />
+                            </section>
+                        ))}
 
-                    <section className={styles.section}>
-                        <h5 className={styles.sectionTitle}>Media assets</h5>
-                        {data.media.length > 0 ? (
+                    {data.media.length > 0 && (
+                        <section className={styles.section}>
+                            <h5 className={styles.sectionTitle}>Media assets</h5>
                             <ul className={styles.mediaList}>
                                 {data.media.map((item, index) => {
                                     const key: string = `${item.url}-${index}`
@@ -149,14 +157,12 @@ const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
                                     )
                                 })}
                             </ul>
-                        ) : (
-                            <p className={styles.emptyMessage}>No media added yet.</p>
-                        )}
-                    </section>
+                        </section>
+                    )}
 
-                    <section className={styles.section}>
-                        <h5 className={styles.sectionTitle}>Challenges</h5>
-                        {data.challenges.length > 0 ? (
+                    {data.challenges.length > 0 && (
+                        <section className={styles.section}>
+                            <h5 className={styles.sectionTitle}>Topcoder Challenge Launched</h5>
                             <ul className={styles.challengeList}>
                                 {data.challenges.map(challenge => {
                                     const challengeUrl: string | undefined = getSafeHttpUrl(
@@ -223,10 +229,8 @@ const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
                                     )
                                 })}
                             </ul>
-                        ) : (
-                            <p className={styles.emptyMessage}>No challenges selected.</p>
-                        )}
-                    </section>
+                        </section>
+                    )}
                 </div>
 
                 <aside className={styles.sidebar}>
@@ -249,43 +253,45 @@ const ShowcasePostPreview: FC<ShowcasePostPreviewProps> = props => {
                         )}
                     </div>
 
-                    <div className={styles.panel}>
-                        <h5 className={styles.panelTitle}>Stats</h5>
-                        <ul className={styles.statsList}>
-                            <li>
-                                <strong>{data.challengeCount}</strong>
-                                <span>Challenges</span>
-                            </li>
-                            <li>
-                                <strong>{data.registrantsCount}</strong>
-                                <span>Registrants</span>
-                            </li>
-                            <li>
-                                <strong>{data.countriesCount}</strong>
-                                <span>Countries</span>
-                            </li>
-                        </ul>
-                    </div>
+                    {data.challengeCount > 0 && (
+                        <div className={styles.panel}>
+                            <h5 className={styles.panelTitle}>Stats</h5>
+                            <ul className={styles.statsList}>
+                                <li>
+                                    <strong>{data.challengeCount}</strong>
+                                    <span>Challenges</span>
+                                </li>
+                                <li>
+                                    <strong>{data.registrantsCount}</strong>
+                                    <span>Registrants</span>
+                                </li>
+                                <li>
+                                    <strong>{data.countriesCount}</strong>
+                                    <span>Countries</span>
+                                </li>
+                            </ul>
+                        </div>
+                    )}
 
-                    <div className={styles.panel}>
-                        <h5 className={styles.panelTitle}>Skills</h5>
-                        <p className={styles.skillsSummary}>
-                            This showcase includes
-                            {' '}
-                            <strong>
-                                {data.skills.length}
+                    {data.skills.length > 0 && (
+                        <div className={styles.panel}>
+                            <h5 className={styles.panelTitle}>Skills</h5>
+                            <p className={styles.skillsSummary}>
+                                This showcase includes
                                 {' '}
-                                skills.
-                            </strong>
-                        </p>
-                        {data.skills.length > 0 && (
+                                <strong>
+                                    {data.skills.length}
+                                    {' '}
+                                    skills.
+                                </strong>
+                            </p>
                             <ul className={styles.skillsList}>
                                 {data.skills.map(skill => (
                                     <li key={skill.id}>{skill.name}</li>
                                 ))}
                             </ul>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </aside>
             </div>
         </div>

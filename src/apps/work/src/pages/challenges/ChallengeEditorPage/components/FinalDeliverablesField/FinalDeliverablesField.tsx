@@ -5,7 +5,6 @@ import {
     MouseEvent,
     useCallback,
     useMemo,
-    useState,
 } from 'react'
 import {
     useFormContext,
@@ -23,75 +22,21 @@ import {
     getMetadataValue,
     setMetadataValue,
 } from '../../../../../lib/utils/metadata.utils'
+import {
+    FILE_TYPES_METADATA_NAME,
+    normalizeFileTypeValue,
+    parseFileTypesMetadata,
+} from '../../../../../lib/utils/final-deliverables.utils'
 
 import styles from './FinalDeliverablesField.module.scss'
-
-const FILE_TYPES_METADATA_NAME = 'fileTypes'
-
-/**
- * Normalizes a single final-deliverable label coming from either user input or saved metadata.
- *
- * @param value raw file-type value from the input or metadata payload.
- * @returns the trimmed file-type label, or `undefined` when the value is empty.
- */
-function normalizeFileTypeValue(value: unknown): string | undefined {
-    if (typeof value !== 'string') {
-        return undefined
-    }
-
-    const normalizedValue = value.trim()
-
-    return normalizedValue || undefined
-}
-
-/**
- * Parses the persisted `fileTypes` challenge metadata into a unique, display-ready list.
- *
- * @param value serialized challenge metadata entry for final deliverables.
- * @returns normalized file-type labels in the saved order, excluding empty or duplicate values.
- */
-function parseFileTypesMetadata(value: string | undefined): string[] {
-    if (!value) {
-        return []
-    }
-
-    try {
-        const parsedValue = JSON.parse(value) as unknown
-
-        if (!Array.isArray(parsedValue)) {
-            return []
-        }
-
-        const addedFileTypes = new Set<string>()
-
-        return parsedValue
-            .map(item => normalizeFileTypeValue(item))
-            .filter((item): item is string => {
-                if (!item) {
-                    return false
-                }
-
-                const normalizedKey = item.toLowerCase()
-
-                if (addedFileTypes.has(normalizedKey)) {
-                    return false
-                }
-
-                addedFileTypes.add(normalizedKey)
-
-                return true
-            })
-    } catch {
-        return []
-    }
-}
 
 /**
  * Edits the design challenge final-deliverables metadata stored under `fileTypes`.
  *
  * The field mirrors the legacy work-manager behavior used on design challenge drafts:
  * users can add or remove deliverable file types, and the component persists them as the
- * JSON-serialized `fileTypes` metadata entry on the challenge form.
+ * JSON-serialized `fileTypes` metadata entry on the challenge form. The pending input
+ * also belongs to the form so create and save actions can include it without an Add click.
  *
  * @returns the final-deliverables editor UI.
  */
@@ -102,7 +47,10 @@ export const FinalDeliverablesField: FC = () => {
         control: dynamicFormControl,
         name: 'metadata',
     }) as ChallengeMetadata[] | undefined
-    const [newFileType, setNewFileType] = useState<string>('')
+    const newFileType = useWatch({
+        control: dynamicFormControl,
+        name: 'finalDeliverable',
+    }) as string | undefined
 
     const fileTypes = useMemo(
         () => parseFileTypesMetadata(getMetadataValue(metadata, FILE_TYPES_METADATA_NAME)),
@@ -129,8 +77,8 @@ export const FinalDeliverablesField: FC = () => {
     }, [formContext, metadata])
 
     const handleInputChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-        setNewFileType(event.target.value)
-    }, [])
+        formContext.setValue('finalDeliverable', event.target.value, { shouldDirty: true })
+    }, [formContext])
 
     const handleAddFileType = useCallback((): void => {
         if (!normalizedNewFileType || isDuplicateValue) {
@@ -141,9 +89,10 @@ export const FinalDeliverablesField: FC = () => {
             ...fileTypes,
             normalizedNewFileType,
         ])
-        setNewFileType('')
+        formContext.setValue('finalDeliverable', '', { shouldDirty: true })
     }, [
         fileTypes,
+        formContext,
         isDuplicateValue,
         normalizedNewFileType,
         updateFileTypes,
@@ -213,7 +162,7 @@ export const FinalDeliverablesField: FC = () => {
                     onKeyDown={handleInputKeyDown}
                     placeholder='Add final deliverable file type'
                     type='text'
-                    value={newFileType}
+                    value={newFileType || ''}
                 />
                 <Button
                     disabled={!normalizedNewFileType || isDuplicateValue}

@@ -1,0 +1,101 @@
+@import '@libs/ui/styles/2026/tokens';
+
+.page {
+    width: 100%;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 40px 48px 64px;
+    min-height: 70vh;
+}
+
+.header, .headerActions, .panelHeader, .status, .pagination, .pageControls, .filterActions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header, .panelHeader, .status, .pagination { justify-content: space-between; }
+
+.eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: $tc-2026-muted;
+    margin-bottom: 8px;
+}
+
+.subtitle { margin-top: 8px; font-size: 16px; color: $tc-2026-muted; }
+.readOnly, .count { border-radius: 20px; background: $tc-2026-canvas; padding: 6px 12px; font-weight: 700; }
+.readOnly { border: 1px solid $tc-2026-border; color: $tc-2026-muted; }
+.refresh { background: $tc-2026-teal !important; border-color: $tc-2026-teal !important; }
+.status { margin: 24px 0; color: $tc-2026-muted; font-size: 13px; flex-wrap: wrap; gap: 8px; }
+.panel { background: $tc-2026-surface; border: 1px solid $tc-2026-border; border-radius: $tc-2026-radius-lg; overflow: hidden; box-shadow: $tc-2026-shadow-card; }
+.panelHeader { padding: 24px; border-bottom: 1px solid $tc-2026-border; }
+.panelHeader h2 { font-size: $tc-2026-h4-size; line-height: 32px; }
+.panelHeader p { margin-top: 4px; color: $tc-2026-muted; }
+.filters { padding: 24px; display: flex; align-items: flex-end; flex-wrap: wrap; gap: 16px; background: $tc-2026-canvas; }
+.filterField { display: flex; flex-direction: column; gap: 8px; flex: 1 1 220px; min-width: 160px; }
+.filterField label { font-size: 16px; line-height: 24px; font-weight: 700; }
+.filterField input, .filterField select, .pageControls select { background: $tc-2026-surface; border: 1px solid $tc-2026-border-strong; padding: 10px 12px; min-height: 40px; color: $tc-2026-body; font-weight: 400; max-width: 100%; }
+.filterField input, .filterField select { width: 100%; height: 48px; box-sizing: border-box; font-size: 16px; line-height: 24px; }
+.filterField input::placeholder { color: $tc-2026-muted; opacity: 1; }
+.filterField input:disabled { background: $tc-2026-border; cursor: not-allowed; }
+.filterActions { min-height: 48px; }
+.dateFilters { margin-bottom: 24px; }
+.dateFieldset { background: $tc-2026-surface; border: 1px solid $tc-2026-border; border-radius: $tc-2026-radius-lg; box-shadow: $tc-2026-shadow-card; padding: 24px; margin: 0; }
+.dateLegend { font-size: $tc-2026-h4-size; line-height: 32px; font-weight: 700; padding: 0; }
+.dateHint { margin-top: 4px; color: $tc-2026-muted; max-width: 820px; }
+.dateControls { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 16px; margin-top: 20px; }
+.dateStatus { margin-top: 16px; font-size: 13px; color: $tc-2026-muted; }
+.dateError { color: $tc-2026-danger; font-weight: 700; }
+.summary { margin-bottom: 24px; display: flex; flex-direction: column; gap: 16px; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.metric { background: $tc-2026-surface; border: 1px solid $tc-2026-border; border-radius: $tc-2026-radius-lg; box-shadow: $tc-2026-shadow-card; padding: 20px 24px; }
+.metricLabel { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: $tc-2026-muted; }
+.metricValue { font-size: 32px; line-height: 40px; font-weight: 700; margin-top: 8px; overflow-wrap: anywhere; }
+.metricNote { margin-top: 8px; font-size: 13px; color: $tc-2026-muted; }
+.breakdown { background: $tc-2026-surface; border: 1px solid $tc-2026-border; border-radius: $tc-2026-radius-lg; box-shadow: $tc-2026-shadow-card; padding: 20px 24px; }
+.breakdown h3 { font-size: 20px; line-height: 28px; }
+.breakdown ul { list-style: none; margin-top: 12px; }
+.breakdown li { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 10px 0; border-bottom: 1px solid $tc-2026-border; }
+.breakdown li:last-child { border-bottom: 0; }
+.bucketLabel { font-weight: 700; flex: 1 1 200px; overflow-wrap: anywhere; }
+.bucketCount { color: $tc-2026-muted; font-size: 13px; }
+.bucketTotal { font-weight: 700; min-width: 120px; text-align: right; }
+.tableScroll { overflow-x: auto; width: 100%; }
+.table { width: 100%; border-collapse: collapse; text-align: left; }
+.table th { background: $tc-2026-canvas; white-space: nowrap; border-bottom: 1px solid $tc-2026-border; }
+.table th button { padding: 16px 20px; width: 100%; text-align: left; color: $tc-2026-body; font-weight: 700; border: 0; background: transparent; cursor: pointer; }
+.table th button:hover { color: $tc-2026-teal; }
+.table td { border-bottom: 1px solid $tc-2026-border; padding: 16px 20px; min-width: 140px; max-width: 420px; overflow-wrap: anywhere; vertical-align: top; }
+.table tr:last-child td { border-bottom: 0; }
+.opportunityButton { padding: 0; border: 0; background: transparent; text-align: left; color: $tc-2026-teal; font-weight: 700; text-decoration: underline; cursor: pointer; overflow-wrap: anywhere; }
+.opportunityButton:hover, .opportunityButton:focus-visible { color: $tc-2026-body; }
+.table tbody tr:hover { background: $tc-2026-canvas; }
+.pagination { padding: 20px 24px; border-top: 1px solid $tc-2026-border; flex-wrap: wrap; font-size: 13px; }
+.pageControls { flex-wrap: wrap; gap: 12px; }
+.error, .warning { padding: 20px 24px; margin-bottom: 24px; border-radius: $tc-2026-radius-md; background: $tc-2026-surface; }
+.error { display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid $tc-2026-danger; color: $tc-2026-danger; }
+.warning { border: 1px solid $tc-2026-warning; color: $tc-2026-body; }
+.empty { padding: 48px 24px; min-height: 180px; text-align: center; position: relative; }
+.empty h3 { font-size: 24px; }
+.empty p { color: $tc-2026-muted; margin-top: 8px; }
+.visuallyHidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+@media (max-width: 900px) {
+    .page { padding: 24px; }
+    .header { align-items: flex-start; flex-wrap: wrap; }
+    .pageControls { gap: 8px; }
+}
+
+@media (max-width: 600px) {
+    .page { padding: 20px 12px 40px; }
+    .header h1 { font-size: 36px; line-height: 44px; }
+    .headerActions { width: 100%; justify-content: space-between; }
+    .panelHeader, .filters, .pagination, .dateFieldset, .metric, .breakdown { padding: 16px; }
+    .panelHeader { align-items: flex-start; flex-direction: column; }
+    .filterField { flex-basis: 100%; }
+    .filterActions { width: 100%; }
+    .bucketTotal { text-align: left; min-width: 0; }
+    .error { align-items: flex-start; flex-direction: column; }
+}

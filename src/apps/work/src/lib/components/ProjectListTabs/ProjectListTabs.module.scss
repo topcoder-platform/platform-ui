@@ -9,25 +9,18 @@
     border-bottom: 1px solid #d5d5d5;
 }
 
-.tabLink {
+.container .tabLink {
     display: inline-block;
     padding: 10px 0;
     border-bottom: 2px solid transparent;
-    color: $black-60;
+    color: $black-100;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 400;
     text-decoration: none;
-}
 
-.tabLink:hover {
-    color: $black-60;
-}
-
-.active {
-    color: #2a62d5;
-    border-bottom-color: #2a62d5;
-
-    &:hover {
-        color: #2a62d5;
+    &.active {
+        color: var(--tc-2026-teal, #00797a);
+        border-bottom-color: var(--tc-2026-teal, #00797a);
+        font-weight: 700;
     }
 }

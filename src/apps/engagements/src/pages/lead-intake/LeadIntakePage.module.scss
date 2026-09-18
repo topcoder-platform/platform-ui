@@ -9,19 +9,49 @@ $placeholder-color: #6F6F6F;
 $border-light: #E0E0E0;
 $brand-teal: #007D79;
 
-.pageOuter {
-    max-width: none;
+.pageContent {
+    overflow-x: clip;
+    padding-bottom: 0;
+    width: 100%;
+
+    > :global([class*='content-outer']) {
+        background-color: $tc-2026-canvas;
+        margin: 0;
+        max-width: none;
+        padding-bottom: 48px;
+        padding-left: 0;
+        padding-right: 0;
+        padding-top: 0;
+        width: 100%;
+    }
 }
 
 .pageInner {
     max-width: none;
+    padding: 0;
+    width: 100%;
 }
 
 .pageHeader {
-    @include substractPagePaddings;
     background: $brand-teal;
     margin-bottom: 24px;
-    padding: 48px $sp-8;
+    padding: 48px $sp-10;
+    width: 100%;
+
+    @include ltemd {
+        padding-left: $sp-6;
+        padding-right: $sp-6;
+    }
+
+    @include ltesm {
+        padding-left: $sp-4;
+        padding-right: $sp-4;
+    }
+}
+
+.pageBody {
+    padding: 0 $sp-8;
+    width: 100%;
 
     @include ltemd {
         padding-left: $sp-6;
@@ -42,7 +72,6 @@ $brand-teal: #007D79;
     letter-spacing: 0;
     line-height: $tc-2026-h2-line-height;
     margin: 0;
-    padding-left: $sp-8;
     text-transform: none;
 }
 
@@ -82,6 +111,7 @@ $brand-teal: #007D79;
 
 .section {
     background: $tc-2026-surface;
+    border: none;
     border-radius: $tc-2026-radius-lg;
     display: grid;
     gap: 16px;
@@ -189,7 +219,7 @@ $brand-teal: #007D79;
 }
 
 .selectInputPlaceholder :global([class*='textSelected']) {
-    color: $placeholder-color;
+    color: $placeholder-color !important;
 }
 
 .selectInputWrapper:not(.selectInputPlaceholder) :global([class*='textSelected']) {
@@ -204,6 +234,7 @@ $brand-teal: #007D79;
 .textareaField::placeholder {
     color: $placeholder-color;
     font-size: 16px;
+    opacity: 1;
 }
 
 .inputField:focus,
@@ -338,7 +369,8 @@ $brand-teal: #007D79;
     }
 
     :global([class*='__placeholder']) {
-        color: $placeholder-color;
+        color: $placeholder-color !important;
+        opacity: 1 !important;
     }
 
     :global([class*='__single-value']) {

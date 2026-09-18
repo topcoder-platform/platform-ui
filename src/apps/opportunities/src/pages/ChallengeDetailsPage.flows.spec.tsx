@@ -1124,6 +1124,10 @@ describe('ChallengeDetailsPage member flows', () => {
         mockRegistration = { id: 'resource-id' }
 
         renderPage()
+        const panel = screen.getByRole('tabpanel')
+        const scrollIntoView = jest.fn()
+        panel.scrollIntoView = scrollIntoView
+        expect(scrollIntoView).not.toHaveBeenCalled()
         fireEvent.click(screen.getByRole('button', { name: 'Submit a solution' }))
 
         await waitFor(() => expect(screen.getByRole('tab', { name: 'My Submissions' }))
@@ -1132,9 +1136,19 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveBeenCalledTimes(1)
         expect(screen.getByText('Submission upload form'))
             .toBeInTheDocument()
+        expect(scrollIntoView)
+            .toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
+        expect(panel)
+            .toHaveAttribute('id', 'challenge-panel-mine')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Submit a solution' }))
+        await waitFor(() => expect(scrollIntoView)
+            .toHaveBeenCalledTimes(2))
         fireEvent.click(screen.getByRole('button', { name: 'Back to submissions' }))
         expect(screen.getByText('You have no submissions yet'))
             .toBeInTheDocument()
+        expect(scrollIntoView)
+            .toHaveBeenCalledTimes(2)
     })
 
     it('keeps the upload mounted and challenge tabs locked until an active upload finishes', async () => {
@@ -1920,7 +1934,6 @@ describe('ChallengeDetailsPage member flows', () => {
         const headers = [
             'Current Test Process',
             'Test Status',
-            'Test Progress',
             'Final Score',
             'Provisional Score',
         ]
@@ -1928,8 +1941,10 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument())
         expect(screen.getByText('System'))
             .toBeInTheDocument()
-        expect(screen.getByText('In progress'))
-            .toBeInTheDocument()
+        expect(screen.queryByRole('columnheader', { name: 'Test Progress' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('progressbar', { name: 'Test progress for submission submission-1' }))
+            .toHaveAttribute('aria-valuenow', '50')
         expect(screen.getByText('50%'))
             .toBeInTheDocument()
         const finalScore = screen.getByRole('cell', { name: '99.31399426811394' })
@@ -1988,6 +2003,8 @@ describe('ChallengeDetailsPage member flows', () => {
         fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
         expect(screen.getByText('Cancelled'))
             .toHaveClass('testStatusCancelled')
+        expect(screen.queryByRole('progressbar'))
+            .not.toBeInTheDocument()
         expect(screen.queryByText('Failed'))
             .not.toBeInTheDocument()
         expect(screen.queryByRole('cell', { name: '-1' }))
@@ -2002,7 +2019,7 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(challengeDetailStyles)
             .toMatch(/\.myMarathonTable\s*\{[\s\S]*?th,\s*td\s*\{\s*padding-inline: 8px;/)
         expect(challengeDetailStyles)
-            .toMatch(/\.myMarathonTableCard\s*\{[\s\S]*?\.myMarathonTable\s*\{\s*min-width: 1200px;/)
+            .toMatch(/\.myMarathonTableCard\s*\{[\s\S]*?\.myMarathonTable\s*\{\s*min-width: 1040px;/)
         expect(challengeDetailStyles)
             .not.toContain('min-width: 1280px;')
     })

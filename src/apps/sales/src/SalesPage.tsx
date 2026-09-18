@@ -1,0 +1,587 @@
+/* Handlers capture the active report column or control value. */
+/* eslint react/jsx-no-bind: ["error", { "allowArrowFunctions": true, "allowFunctions": true }] */
+/* The horizontal report viewport must be focusable for keyboard scrolling. */
+/* eslint jsx-a11y/no-noninteractive-tabindex: ["error", { "roles": ["region"] }] */
+import { FC, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+
+import { Button, IconOutline, LoadingSpinner, PageTitle } from '~/libs/ui'
+
+import { OpportunityModal } from './OpportunityModal'
+import { SalesQuery, SalesReport, toOpportunityId } from './sales.models'
+import { fetchSalesReport, salesErrorMessage } from './sales.service'
+import {
+    dateColumns,
+    dateRangeError,
+    defaultDateColumn,
+    formatSummaryAmount,
+    withDateRange,
+} from './sales.utils'
+import styles from './SalesPage.module.scss'
+import './sales.scss'
+
+const initialQuery: SalesQuery = { page: 1, perPage: 25 }
+const filterDebounceMs = 400
+
+interface SelectedOpportunity {
+    id: string
+    name: string
+}
+
+/**
+ * Merges search and column filter controls into the report query.
+ * @param current Active report query.
+ * @param search Raw search input.
+ * @param filterColumn Selected filter column ID.
+ * @param filterValue Raw column filter input.
+ * @returns The current query when nothing changed, otherwise a new query reset to page one. Does not throw.
+ */
+function withFilters(current: SalesQuery, search: string, filterColumn: string, filterValue: string): SalesQuery {
+    const value = filterValue.trim()
+    const next = {
+        filterColumn: filterColumn && value ? filterColumn : undefined,
+        filterValue: filterColumn && value ? value : undefined,
+        search: search.trim() || undefined,
+    }
+    if (
+        next.search === (current.search || undefined)
+        && next.filterColumn === current.filterColumn
+        && next.filterValue === current.filterValue
+    ) {
+        return current
+    }
+
+    return { ...current, ...next, page: 1 }
+}
+
+/**
+ * Read-only Sales workspace, used on the dedicated host and inside Work.
+ * @returns An accessible metadata-driven report with a Created/Close date range filter,
+ * snapshot-wide totals, server-side view controls and live refresh.
+ * @throws Does not throw request failures; shows inline recovery and stale-data status.
+ */
+const SalesPage: FC = () => {
+    const [query, setQuery] = useState<SalesQuery>(initialQuery)
+    const [search, setSearch] = useState('')
+    const [filterColumn, setFilterColumn] = useState('')
+    const [filterValue, setFilterValue] = useState('')
+    const [dateColumn, setDateColumn] = useState('')
+    const [dateFrom, setDateFrom] = useState('')
+    const [dateTo, setDateTo] = useState('')
+    const [dateError, setDateError] = useState('')
+    const [report, setReport] = useState<SalesReport>()
+    const [error, setError] = useState('')
+    const [loading, setLoading] = useState(true)
+    const [refreshVersion, setRefreshVersion] = useState(0)
+    const [openedOpportunity, setOpenedOpportunity] = useState<SelectedOpportunity>()
+    const forceRefresh = useRef(false)
+    const busy = useRef(false)
+
+    /**
+     * Schedules a manual server refresh without resetting active filters or sorting.
+     * @returns Nothing; increments the request version. Does not throw.
+     */
+    const refresh = useCallback((): void => {
+        if (busy.current) return
+        forceRefresh.current = true
+        setRefreshVersion(value => value + 1)
+    }, [])
+
+    useEffect(() => {
+        const controller = new AbortController()
+        const shouldRefresh = forceRefresh.current
+        forceRefresh.current = false
+        busy.current = true
+        setLoading(true)
+        setError('')
+        fetchSalesReport({ ...query, refresh: shouldRefresh }, controller.signal)
+            .then(result => {
+                if (!controller.signal.aborted) setReport(result)
+            })
+            .catch(failure => {
+                if (controller.signal.aborted) return
+                const status = failure?.response?.status
+                // Do not retain protected data if the session or role is no longer valid.
+                if (status === 401 || status === 403) setReport(undefined)
+                setError(salesErrorMessage(failure))
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) {
+                    busy.current = false
+                    setLoading(false)
+                }
+            })
+        return () => {
+            controller.abort()
+            busy.current = false
+        }
+    }, [query, refreshVersion])
+
+    useEffect(() => {
+        /** Refreshes a visible, idle page on the timer or on return to the tab; returns void and does not throw. */
+        function refreshVisible(): void {
+            if (document.visibilityState !== 'visible' || busy.current) return
+            refresh()
+        }
+
+        const timer = window.setInterval(refreshVisible, Math.max(60, report?.refreshAfterSeconds ?? 60) * 1000)
+        document.addEventListener('visibilitychange', refreshVisible)
+        return () => {
+            window.clearInterval(timer)
+            document.removeEventListener('visibilitychange', refreshVisible)
+        }
+    }, [refresh, report?.refreshAfterSeconds])
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            setQuery(current => withFilters(current, search, filterColumn, filterValue))
+        }, filterDebounceMs)
+        return () => window.clearTimeout(timer)
+    }, [search, filterColumn, filterValue])
+
+    /** @param event Filter form submission. @returns Nothing; applies pending controls immediately. Does not throw. */
+    function applyFilters(event: FormEvent<HTMLFormElement>): void {
+        event.preventDefault()
+        setQuery(current => withFilters(current, search, filterColumn, filterValue))
+    }
+
+    /** Clears filters and sorting after a schema change or empty search; returns void and does not throw. */
+    function clearFilters(): void {
+        setSearch('')
+        setFilterColumn('')
+        setFilterValue('')
+        // The date range is its own section with its own reset, so clearing the
+        // report filters must not empty it behind the user's back.
+        setQuery(current => ({
+            ...initialQuery,
+            dateColumn: current.dateColumn,
+            dateFrom: current.dateFrom,
+            dateTo: current.dateTo,
+            perPage: current.perPage,
+        }))
+    }
+
+    /** @param id Report column ID. @returns Nothing; toggles global sorting and resets pagination. Does not throw. */
+    function sortBy(id: string): void {
+        setQuery(current => ({
+            ...current,
+            page: 1,
+            sortBy: id,
+            sortOrder: current.sortBy === id && current.sortOrder === 'asc' ? 'desc' : 'asc',
+        }))
+    }
+
+    const availableDates = useMemo(() => dateColumns(report), [report])
+
+    useEffect(() => {
+        // The report defines its own date fields, so the selection follows the
+        // live schema instead of hard-coded Salesforce column IDs.
+        if (!availableDates.length) return
+        if (availableDates.some(column => column.id === dateColumn)) return
+        setDateColumn(defaultDateColumn(availableDates))
+    }, [availableDates, dateColumn])
+
+    /** @param event Date range submission. @returns Nothing; applies a valid range. Does not throw. */
+    function applyDateRange(event: FormEvent<HTMLFormElement>): void {
+        event.preventDefault()
+        const invalid = dateRangeError(dateColumn, dateFrom, dateTo)
+        setDateError(invalid)
+        if (invalid) return
+        setQuery(current => withDateRange(current, dateColumn, dateFrom, dateTo))
+    }
+
+    /** Clears the date range without disturbing search, column filters or sorting. Does not throw. */
+    function resetDateRange(): void {
+        setDateFrom('')
+        setDateTo('')
+        setDateError('')
+        setDateColumn(defaultDateColumn(availableDates))
+        setQuery(current => withDateRange(current, '', '', ''))
+    }
+
+    const rangeApplied = !!query.dateColumn
+    const summary = report?.summary
+    const firstRow = report?.total ? (report.page - 1) * report.perPage + 1 : 0
+    const lastRow = report ? Math.min(report.page * report.perPage, report.total) : 0
+    const updatedAt = report ? new Date(report.refreshedAt)
+        .toLocaleString() : ''
+
+    return (
+        <div className={`sales-app ${styles.page}`}>
+            <PageTitle>Sales</PageTitle>
+            <header className={styles.header}>
+                <div>
+                    <p className={styles.eyebrow}>WORK / SALES</p>
+                    <h1>Sales</h1>
+                    <p className={styles.subtitle}>Your sales pipeline, directly from Salesforce.</p>
+                </div>
+                <div className={styles.headerActions}>
+                    <span className={styles.readOnly}>Read only</span>
+                    <Button
+                        className={styles.refresh}
+                        disabled={loading}
+                        icon={IconOutline.RefreshIcon}
+                        iconToLeft
+                        noCaps
+                        onClick={refresh}
+                        primary
+                    >
+                        {loading && report ? 'Refreshing…' : 'Refresh'}
+                    </Button>
+                </div>
+            </header>
+
+            <div className={styles.status} aria-live='polite' role='status'>
+                <span>
+                    {report ? `Last updated ${updatedAt}` : 'Connecting to Salesforce'}
+                </span>
+                <span>Refreshes every minute while this page is visible</span>
+            </div>
+
+            {error && (
+                <div className={styles.error} role='alert'>
+                    <div>
+                        <strong>{report ? 'Showing previously loaded data' : 'Unable to load sales data'}</strong>
+                        <p>{error}</p>
+                    </div>
+                    <Button disabled={loading} noCaps onClick={refresh} secondary>Try again</Button>
+                </div>
+            )}
+
+            {report && !report.allData && (
+                <div className={styles.warning} role='status'>
+                    Salesforce returned a limited set of records. Search, filters and totals apply to the
+                    {' '}
+                    {report.sourceRowCount.toLocaleString()}
+                    {' '}
+                    received records. Refine the source report in Salesforce to view a complete result.
+                </div>
+            )}
+
+            <form className={styles.dateFilters} onSubmit={applyDateRange}>
+                <fieldset className={styles.dateFieldset}>
+                    <legend className={styles.dateLegend}>Date range filter</legend>
+                    <p className={styles.dateHint}>
+                        Filter by Created Date for pipeline generation, or by Close Date for revenue
+                        projections. Counts and totals below cover every matching record, not just this page.
+                    </p>
+                    <div className={styles.dateControls}>
+                        <div className={styles.filterField}>
+                            <label htmlFor='sales-date-column'>Filter type</label>
+                            <select
+                                disabled={!availableDates.length}
+                                id='sales-date-column'
+                                onChange={event => setDateColumn(event.target.value)}
+                                value={dateColumn}
+                            >
+                                {!availableDates.length && <option value=''>No date fields available</option>}
+                                {availableDates.map(column => (
+                                    <option key={column.id} value={column.id}>{column.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className={styles.filterField}>
+                            <label htmlFor='sales-date-from'>From date</label>
+                            <input
+                                disabled={!availableDates.length}
+                                id='sales-date-from'
+                                name='sales-date-from'
+                                onChange={event => setDateFrom(event.target.value)}
+                                type='date'
+                                value={dateFrom}
+                            />
+                        </div>
+                        <div className={styles.filterField}>
+                            <label htmlFor='sales-date-to'>To date</label>
+                            <input
+                                disabled={!availableDates.length}
+                                id='sales-date-to'
+                                name='sales-date-to'
+                                onChange={event => setDateTo(event.target.value)}
+                                type='date'
+                                value={dateTo}
+                            />
+                        </div>
+                        <div className={styles.filterActions}>
+                            <Button
+                                disabled={!availableDates.length}
+                                noCaps
+                                primary
+                                type='submit'
+                            >
+                                Apply filter
+                            </Button>
+                            <Button
+                                disabled={!rangeApplied && !dateFrom && !dateTo}
+                                noCaps
+                                onClick={resetDateRange}
+                                secondary
+                            >
+                                Reset filter
+                            </Button>
+                        </div>
+                    </div>
+                    <p className={styles.dateStatus} aria-live='polite' role='status'>
+                        {dateError && <span className={styles.dateError}>{dateError}</span>}
+                        {!dateError && rangeApplied && (
+                            <span>
+                                {`Showing records by ${availableDates
+                                    .find(column => column.id === query.dateColumn)?.label ?? query.dateColumn}`}
+                                {query.dateFrom ? ` from ${query.dateFrom}` : ''}
+                                {query.dateTo ? ` through ${query.dateTo}` : ''}
+                                .
+                            </span>
+                        )}
+                        {!dateError && !rangeApplied && <span>No date range applied.</span>}
+                    </p>
+                </fieldset>
+            </form>
+
+            {summary && (
+                <section className={styles.summary} aria-label='Filtered sales totals'>
+                    <div className={styles.metrics}>
+                        <div className={styles.metric}>
+                            <p className={styles.metricLabel}>Opportunities</p>
+                            <p className={styles.metricValue}>{summary.recordCount.toLocaleString()}</p>
+                            <p className={styles.metricNote}>Matching records</p>
+                        </div>
+                        {summary.amounts.map(amount => (
+                            <div className={styles.metric} key={amount.columnId}>
+                                <p className={styles.metricLabel}>{amount.label}</p>
+                                <p className={styles.metricValue}>{formatSummaryAmount(amount)}</p>
+                                <p className={styles.metricNote}>
+                                    {`${amount.count.toLocaleString()} of `}
+                                    {`${summary.recordCount.toLocaleString()} records with a value`}
+                                    {amount.mixedCurrency ? ' · totals mixed currencies' : ''}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                    {summary.groups.map(group => (
+                        <div className={styles.breakdown} key={group.columnId}>
+                            <h3>{`${group.label} breakdown`}</h3>
+                            <ul>
+                                {group.buckets.map(bucket => (
+                                    <li key={bucket.label || '—'}>
+                                        <span className={styles.bucketLabel}>{bucket.label || '—'}</span>
+                                        <span className={styles.bucketCount}>
+                                            {`${bucket.count.toLocaleString()} records`}
+                                        </span>
+                                        <span className={styles.bucketTotal}>
+                                            {formatSummaryAmount({
+                                                columnId: group.columnId,
+                                                count: bucket.count,
+                                                currencyCode: group.currencyCode,
+                                                label: bucket.label,
+                                                mixedCurrency: group.mixedCurrency,
+                                                total: bucket.total,
+                                            })}
+                                        </span>
+                                    </li>
+                                ))}
+                                {!group.buckets.length && <li><span>No matching records.</span></li>}
+                            </ul>
+                            {group.mixedCurrency && (
+                                <p className={styles.metricNote}>Totals mix currencies.</p>
+                            )}
+                            {group.otherBuckets > 0 && (
+                                <p className={styles.metricNote}>
+                                    {`${group.otherBuckets.toLocaleString()} further values not shown.`}
+                                </p>
+                            )}
+                        </div>
+                    ))}
+                </section>
+            )}
+
+            <section className={styles.panel} aria-label='Sales report'>
+                <div className={styles.panelHeader}>
+                    <div>
+                        <h2>{report?.reportName || 'Sales report'}</h2>
+                        <p>Salesforce is the source of truth. Changes are made there.</p>
+                    </div>
+                    {report && (
+                        <span className={styles.count}>
+                            {report.total.toLocaleString()}
+                            {' '}
+                            records
+                        </span>
+                    )}
+                </div>
+
+                <form className={styles.filters} onSubmit={applyFilters}>
+                    <div className={styles.filterField}>
+                        <label htmlFor='sales-search'>Search sales</label>
+                        <input
+                            id='sales-search'
+                            maxLength={200}
+                            name='sales-search'
+                            onChange={event => setSearch(event.target.value)}
+                            placeholder='Search all report fields'
+                            spellCheck={false}
+                            type='text'
+                            value={search}
+                        />
+                    </div>
+                    <div className={styles.filterField}>
+                        <label htmlFor='sales-filter-column'>Filter field</label>
+                        <select
+                            id='sales-filter-column'
+                            onChange={event => setFilterColumn(event.target.value)}
+                            value={filterColumn}
+                        >
+                            <option value=''>Choose a field</option>
+                            {report?.columns.map(column => (
+                                <option key={column.id} value={column.id}>{column.label}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className={styles.filterField}>
+                        <label htmlFor='sales-filter-value'>Contains</label>
+                        <input
+                            disabled={!filterColumn}
+                            id='sales-filter-value'
+                            maxLength={200}
+                            name='sales-filter-value'
+                            onChange={event => setFilterValue(event.target.value)}
+                            placeholder='Filter value'
+                            spellCheck={false}
+                            type='text'
+                            value={filterValue}
+                        />
+                    </div>
+                    <div className={styles.filterActions}>
+                        <Button noCaps onClick={clearFilters} link>Clear</Button>
+                    </div>
+                </form>
+
+                {loading && !report && (
+                    <div className={styles.empty}><LoadingSpinner message='Loading sales report…' /></div>
+                )}
+                {report && (
+                    <>
+                        <div
+                            aria-busy={loading}
+                            aria-label='Sales records, scroll horizontally for more columns'
+                            className={styles.tableScroll}
+                            role='region'
+                            tabIndex={0}
+                        >
+                            <table className={styles.table}>
+                                <caption className={styles.visuallyHidden}>{report.reportName}</caption>
+                                <thead>
+                                    <tr>
+                                        {report.columns.map(column => (
+                                            <th
+                                                aria-sort={query.sortBy === column.id
+                                                    ? query.sortOrder === 'asc' ? 'ascending' : 'descending'
+                                                    : 'none'}
+                                                key={column.id}
+                                                scope='col'
+                                            >
+                                                <button
+                                                    disabled={loading}
+                                                    onClick={() => sortBy(column.id)}
+                                                    type='button'
+                                                >
+                                                    {column.label}
+                                                    <span aria-hidden='true'>
+                                                        {query.sortBy === column.id
+                                                            ? query.sortOrder === 'asc' ? ' ↑' : ' ↓'
+                                                            : ' ↕'}
+                                                    </span>
+                                                </button>
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {report.rows.map(row => (
+                                        <tr key={row.id}>
+                                            {row.cells.map((cell, index) => {
+                                                const opportunityId = toOpportunityId(cell.value)
+                                                const label = cell.label || '—'
+
+                                                return (
+                                                    <td key={report.columns[index].id}>
+                                                        {opportunityId && cell.label ? (
+                                                            <button
+                                                                className={styles.opportunityButton}
+                                                                onClick={() => setOpenedOpportunity({
+                                                                    id: opportunityId,
+                                                                    name: label,
+                                                                })}
+                                                                type='button'
+                                                            >
+                                                                {label}
+                                                            </button>
+                                                        ) : label}
+                                                    </td>
+                                                )
+                                            })}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {report.total === 0 && (
+                            <div className={styles.empty}>
+                                <h3>No sales records found</h3>
+                                <p>
+                                    {query.search || query.filterValue
+                                        ? 'Try a different search or clear the filters.'
+                                        : 'The Salesforce report does not contain any records yet.'}
+                                </p>
+                            </div>
+                        )}
+                        <div className={styles.pagination}>
+                            <p aria-live='polite'>
+                                {`Showing ${firstRow}–${lastRow} of ${report.total.toLocaleString()} records`}
+                            </p>
+                            <div className={styles.pageControls}>
+                                <label htmlFor='sales-page-size'>Rows per page</label>
+                                <select
+                                    disabled={loading}
+                                    id='sales-page-size'
+                                    onChange={event => setQuery(current => ({
+                                        ...current, page: 1, perPage: Number(event.target.value),
+                                    }))}
+                                    value={query.perPage}
+                                >
+                                    {[25, 50, 100, 200].map(size => <option key={size} value={size}>{size}</option>)}
+                                </select>
+                                <Button
+                                    disabled={loading || report.page <= 1}
+                                    noCaps
+                                    onClick={() => setQuery(current => ({ ...current, page: report.page - 1 }))}
+                                    secondary
+                                >
+                                    Previous
+                                </Button>
+                                <span>{`Page ${report.page} of ${Math.max(1, report.totalPages)}`}</span>
+                                <Button
+                                    disabled={loading || report.page >= report.totalPages}
+                                    noCaps
+                                    onClick={() => setQuery(current => ({ ...current, page: report.page + 1 }))}
+                                    secondary
+                                >
+                                    Next
+                                </Button>
+                            </div>
+                        </div>
+                    </>
+                )}
+            </section>
+
+            {openedOpportunity && (
+                <OpportunityModal
+                    onClose={() => setOpenedOpportunity(undefined)}
+                    open
+                    opportunityId={openedOpportunity.id}
+                    opportunityName={openedOpportunity.name}
+                />
+            )}
+        </div>
+    )
+}
+
+export default SalesPage

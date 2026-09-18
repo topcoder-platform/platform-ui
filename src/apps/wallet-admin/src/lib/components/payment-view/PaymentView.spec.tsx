@@ -36,10 +36,8 @@ jest.mock('~/libs/ui', () => ({
         </button>
     ),
     IconOutline: {
-        CheckIcon: () => <span>check-icon</span>,
-    },
-    IconSolid: {
-        ExclamationIcon: () => <span>exclamation-icon</span>,
+        CheckCircleIcon: () => <span>check-icon</span>,
+        ExclamationCircleIcon: () => <span>exclamation-icon</span>,
         XCircleIcon: () => <span>x-icon</span>,
     },
 }), { virtual: true })
@@ -125,6 +123,41 @@ describe('PaymentView', () => {
     afterEach(() => {
         jest.clearAllMocks()
     })
+
+    it.each(['PAID', 'CANCELLED'])(
+        'shows the gross total and individual installment amounts/statuses when installment 2 is %s',
+        async secondStatus => {
+            const splitPayment: Winning = {
+                ...payment,
+                details: [2760, 920].map((amount, index) => ({
+                    currency: 'USD',
+                    datePaid: '2024-03-20T14:19:07.000Z',
+                    grossAmount: String(amount),
+                    id: `installment-${index + 1}`,
+                    installmentNumber: index + 1,
+                    status: index === 0 ? 'PAID' : secondStatus,
+                    totalAmount: '3680',
+                })),
+                grossAmount: '$3,680.00',
+                grossAmountNumber: 3680,
+                status: 'Paid',
+                type: 'task payment',
+            }
+
+            render(<PaymentView payment={splitPayment} onClose={jest.fn()} />)
+
+            expect(await screen.findByText('Installments'))
+                .toBeTruthy()
+            expect(screen.getByText('$3,680.00'))
+                .toBeTruthy()
+            expect(screen.getByText('Installment 1: $2,760.00 — paid'))
+                .toBeTruthy()
+            expect(screen.getByText(`Installment 2: $920.00 — ${secondStatus.toLowerCase()}`))
+                .toBeTruthy()
+            await waitFor(() => expect(mockedFetchWinningPaymentDetails)
+                .toHaveBeenCalled())
+        },
+    )
 
     it('renders engagement payment details with tabs and agreement match banner', async () => {
         render(<PaymentView payment={payment} onClose={jest.fn()} />)

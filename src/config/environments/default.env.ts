@@ -212,10 +212,21 @@ export const URLS = {
     ACCOUNT_SETTINGS: `https://account-settings.${TC_DOMAIN}/#account`,
     CHALLENGES_PAGE: `${TOPCODER_URL}/challenges`,
     TERMS_OF_USE: 'https://www.topcoder.com/community/how-it-works/terms/',
+    TOPGEAR_TERMS: 'https://topgear.topcoder.com/challenges/terms/detail/f1d8cca9-ac24-473c-998d-02f499a829cb',
     UNIVERSAL_NAV: `https://uni-nav.${TC_DOMAIN}/v1/tc-universal-nav.js`,
     USER_PROFILE: `https://profiles.${TC_DOMAIN}`,
     WORK_APP: `https://work.${TC_DOMAIN}`,
 }
+
+// Preserve community-app's pipe-separated Topgear submission host allowlist.
+export const TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS: string[] = getReactEnv<string>(
+    'TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS',
+    'wipro365.sharepoint.com|wipro365-my.sharepoint.com|wipro365-my.sharepoint.com.mcas.ms',
+)
+    .split('|')
+    .map(domain => domain.trim()
+        .toLowerCase())
+    .filter(Boolean)
 
 export const MEMBER_VERIFY_LOOKER = getReactEnv<number>(
     'MEMBER_VERIFY_LOOKER',

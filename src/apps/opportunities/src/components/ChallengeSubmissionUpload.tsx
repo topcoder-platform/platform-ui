@@ -29,6 +29,9 @@ import { challengeCatalogKey } from './challenge-card.utils'
 import styles from './ChallengeSubmissionUpload.module.scss'
 
 const MAX_SUBMISSION_BYTES = 500 * 1024 * 1024
+const WIPRO_SUBMISSION_LINK_GUIDANCE = 'Ensure that you submit a valid Wipro SharePoint link only. '
+    + 'The link should point to the outcome/deliverable of the challenge and should reflect the work done. '
+    + 'Please check the challenge submission guidelines.'
 
 interface ChallengeSubmissionUploadProps {
     challenge: ChallengeOpportunity
@@ -80,10 +83,12 @@ export function validateChallengeSubmissionFile(file: File): string | undefined 
 }
 
 /**
- * Validates a member-authored challenge deliverable URL.
+ * Validates a member-authored deliverable URL against community-app's Topgear rules.
+ * The Opportunities URL form requires HTTP(S), an allowed Wipro SharePoint host,
+ * and a deliverable path, without embedded credentials or a nonstandard port.
  *
  * @param value URL entered in the submission form.
- * @returns member-facing validation failure, or undefined for an absolute HTTP(S) URL.
+ * @returns member-facing validation failure, or undefined for an allowed deliverable URL.
  * @throws Does not throw; malformed URLs are returned as validation failures.
  */
 export function validateChallengeSubmissionUrl(value: string): string | undefined {
@@ -92,11 +97,16 @@ export function validateChallengeSubmissionUrl(value: string): string | undefine
 
     try {
         const url = new URL(normalizedValue)
-        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        if (!/^https?:\/\//i.test(normalizedValue)) {
             return 'Enter a URL beginning with http:// or https://.'
         }
 
         if (!url.hostname) return 'Enter a valid submission URL.'
+        if (!EnvironmentConfig.TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS.includes(url.hostname)
+            || url.username || url.password || url.port || url.pathname === '/') {
+            return WIPRO_SUBMISSION_LINK_GUIDANCE
+        }
+
         return undefined
     } catch {
         return 'Enter a valid submission URL.'
@@ -115,11 +125,11 @@ function formatFileSize(bytes: number): string {
 }
 
 /**
- * Renders the Figma upload, progress, declaration, and confirmation states inside
- * the active My Submissions challenge tab.
+ * Renders ZIP uploads or the Topgear URL submission flow inside My Submissions,
+ * using Opportunities styling and the corresponding instructions and declaration.
  *
  * @param props challenge identity, member identity, navigation, legal, support, and cache callbacks.
- * @returns accessible DMZ-to-Review-API submission workflow.
+ * @returns accessible ZIP-to-DMZ or direct-URL Review API submission workflow.
  * @throws Does not throw; upload and clipboard failures are rendered or toasted in place.
  */
 export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = props => {
@@ -270,8 +280,8 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
     }
 
     /**
-     * Revalidates challenge registration, uploads the accepted archive, and advances
-     * to the immutable confirmation state.
+     * Revalidates challenge registration, uploads the accepted archive or submits
+     * the confirmed URL, and advances to the immutable confirmation state.
      *
      * @returns promise settled after the Review API response and cache refresh callback.
      * @throws Does not throw; request failures restore the ready state with an error message.
@@ -355,7 +365,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
     }
 
     return (
-        <div className={styles.uploadFlow}>
+        <div className={classNames(styles.uploadFlow, { [styles.urlFlow]: urlMode })}>
             <header className={styles.header}>
                 <div>
                     <button
@@ -370,7 +380,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                 </div>
                 <p>
                     {urlMode
-                        ? 'Submit the URL to your solution as described in the requirements.'
+                        ? 'Enter the URL to your submission.'
                         : 'Upload your solution files as described in the requirements.'}
                 </p>
             </header>
@@ -378,14 +388,46 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                 <aside className={styles.leftPanel}>
                     <section className={styles.infoCard}>
                         <h3>
-                            <IconOutline.DocumentAddIcon aria-hidden='true' />
-                            {urlMode ? 'Required Link' : 'Required Files'}
+                            {urlMode
+                                ? <IconOutline.LinkIcon aria-hidden='true' />
+                                : <IconOutline.DocumentAddIcon aria-hidden='true' />}
+                            {urlMode ? 'Steps for Submission:' : 'Required Files'}
                         </h3>
                         {urlMode ? (
-                            <p>
-                                Provide a direct link to the solution requested in the Requirements tab and keep it
-                                accessible throughout review.
-                            </p>
+                            <div className={styles.submissionInstructions}>
+                                <ol>
+                                    <li>
+                                        Upload the outcome/asset/deliverable of the challenge to the repository
+                                        {' ('}
+                                        <strong>Wipro SharePoint folder</strong>
+                                        ) as specified by the project team/challenge creator.
+                                    </li>
+                                    <li>
+                                        Copy the link of the outcome/asset/deliverable that was uploaded.
+                                        Enter this link in the text box and click on “SET URL”.
+                                    </li>
+                                    <li>Please check the acceptance/confirmation box at the bottom left corner.</li>
+                                    <li>Click on the ‘Submit’ option at the bottom right.</li>
+                                </ol>
+                                <p className={styles.submissionWarning}>
+                                    Ensure that the submission link always reflects the outcome
+                                    that was delivered as part of the challenge.
+                                    {' '}
+                                    <span>Do not submit any irrelevant links</span>
+                                    {' '}
+                                    as the submission link is proof of the work done.
+                                </p>
+                                <p>
+                                    Note: All deliverables/outcomes should be uploaded to the Wipro SharePoint directory
+                                    {' '}
+                                    <strong>ONLY</strong>
+                                    . For work done directly on customer environment and involving a customer
+                                    SharePoint/drive/folder link, create a word document and include a brief summary
+                                    of the work done and list the deliverables/assets created along with the link to the
+                                    customer SharePoint/drive/folder link and upload the word document to a Wipro
+                                    SharePoint folder. And submit the link to this Word document as the submission link.
+                                </p>
+                            </div>
                         ) : designChallenge ? (
                             <ul className={styles.requiredFiles}>
                                 <li>
@@ -421,66 +463,52 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                             <IconOutline.ArrowRightIcon aria-hidden='true' />
                         </button>
                     </section>
-                    <section className={styles.infoCard}>
-                        <h3>
-                            <IconOutline.BadgeCheckIcon aria-hidden='true' />
-                            Submission tips
-                        </h3>
-                        <ul className={styles.tips}>
-                            {urlMode ? (
-                                <>
-                                    <li>
-                                        <IconOutline.SunIcon aria-hidden='true' />
-                                        Link directly to your challenge deliverable
-                                    </li>
-                                    <li>
-                                        <IconOutline.SunIcon aria-hidden='true' />
-                                        Use a link that challenge reviewers can access
-                                    </li>
-                                    <li>
-                                        <IconOutline.SunIcon aria-hidden='true' />
-                                        Keep access available throughout review
-                                    </li>
-                                    <li>
-                                        <IconOutline.SunIcon aria-hidden='true' />
-                                        Follow all challenge submission guidelines
-                                    </li>
-                                </>
-                            ) : (
-                                <>
-                                    <li>
-                                        <IconOutline.SunIcon aria-hidden='true' />
-                                        Upload a single ZIP file only
-                                    </li>
-                                    <li>
-                                        <IconOutline.SunIcon aria-hidden='true' />
-                                        Do not password protect the files
-                                    </li>
-                                    <li>
-                                        <IconOutline.SunIcon aria-hidden='true' />
-                                        Include all files as per guidelines
-                                    </li>
-                                    <li>
-                                        <IconOutline.SunIcon aria-hidden='true' />
-                                        Keep your handle out of your files and file names
-                                    </li>
-                                </>
-                            )}
-                        </ul>
-                    </section>
+                    {!urlMode && (
+                        <section className={styles.infoCard}>
+                            <h3>
+                                <IconOutline.BadgeCheckIcon aria-hidden='true' />
+                                Submission tips
+                            </h3>
+                            <ul className={styles.tips}>
+                                <li>
+                                    <IconOutline.SunIcon aria-hidden='true' />
+                                    Upload a single ZIP file only
+                                </li>
+                                <li>
+                                    <IconOutline.SunIcon aria-hidden='true' />
+                                    Do not password protect the files
+                                </li>
+                                <li>
+                                    <IconOutline.SunIcon aria-hidden='true' />
+                                    Include all files as per guidelines
+                                </li>
+                                <li>
+                                    <IconOutline.SunIcon aria-hidden='true' />
+                                    Keep your handle out of your files and file names
+                                </li>
+                            </ul>
+                        </section>
+                    )}
                     <section className={styles.infoCard}>
                         <h3>
                             <IconOutline.QuestionMarkCircleIcon aria-hidden='true' />
                             Need help?
                         </h3>
-                        <p>
-                            Having issues with submitting your solution? To get assistance contact
-                            {' '}
-                            <button className={styles.inlineButton} onClick={props.onContactSupport} type='button'>
-                                Topcoder Support
-                            </button>
-                            .
-                        </p>
+                        {urlMode ? (
+                            <p>
+                                If you are having trouble with the submission or have any queries, please raise a
+                                Service Now (SNOW) ticket under the TopGear category.
+                            </p>
+                        ) : (
+                            <p>
+                                Having issues with submitting your solution? To get assistance contact
+                                {' '}
+                                <button className={styles.inlineButton} onClick={props.onContactSupport} type='button'>
+                                    Topcoder Support
+                                </button>
+                                .
+                            </p>
+                        )}
                     </section>
                 </aside>
                 <section className={classNames(styles.mainPanel, {
@@ -537,7 +565,8 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                             disabled={uploading}
                                             id='challenge-submission-url'
                                             onChange={changeUrl}
-                                            placeholder='https://example.com/your-solution'
+                                            placeholder='URL'
+                                            required
                                             type='url'
                                             value={urlInput}
                                         />
@@ -551,7 +580,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                         </button>
                                     </div>
                                     <small id='challenge-submission-url-help'>
-                                        Enter an absolute URL beginning with http:// or https://.
+                                        {WIPRO_SUBMISSION_LINK_GUIDANCE}
                                     </small>
                                     {error && (
                                         <p className={styles.error} id='challenge-submission-url-error' role='alert'>
@@ -663,19 +692,29 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                     {' '}
                                     <a
                                         className={styles.inlineButton}
-                                        href={EnvironmentConfig.URLS.TERMS_OF_USE}
-                                        rel='noreferrer'
+                                        href={urlMode
+                                            ? EnvironmentConfig.URLS.TOPGEAR_TERMS
+                                            : EnvironmentConfig.URLS.TERMS_OF_USE}
+                                        rel='noreferrer noopener'
                                         target='_blank'
                                     >
-                                        Topcoder Terms of Use
+                                        {urlMode ? 'TopGear terms and conditions' : 'Topcoder Terms of Use'}
                                     </a>
                                     {' '}
-                                    {urlMode
-                                        ? 'and to the extent your linked solution wins a Topcoder competition, '
-                                        : 'and to the extent your uploaded file wins a Topcoder competition, '}
-                                    you hereby assign, grant and transfer and agree to assign, grant and transfer to
-                                    Topcoder all right and title in and to the Winning Submission (as further described
-                                    in the terms of use).
+                                    {urlMode ? (
+                                        <>
+                                            and to the extent your submission wins a TopGear challenge,
+                                            you hereby agree to assign, grant, and transfer to TopGear all right
+                                            and title to the Winning Submission.
+                                        </>
+                                    ) : (
+                                        <>
+                                            and to the extent your uploaded file wins a Topcoder competition,
+                                            you hereby assign, grant and transfer and agree to assign, grant and
+                                            transfer to Topcoder all right and title in and to the Winning Submission
+                                            (as further described in the terms of use).
+                                        </>
+                                    )}
                                 </p>
                             </div>
                             <label className={styles.agreement}>
