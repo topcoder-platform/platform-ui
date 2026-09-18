@@ -71,15 +71,52 @@ export function withDateRange(current: SalesQuery, column: string, from: string,
 }
 
 /**
+ * Currency shown for a single-currency total the report leaves uncoded. The converted
+ * columns arrive coded in US dollars while Amount and Expected Revenue arrive uncoded,
+ * so this keeps every tile reading the same way.
+ */
+const defaultCurrencyCode = 'USD'
+
+/** Column ID and label suffixes Salesforce gives a currency column converted to the corporate currency. */
+const convertedIdPattern = /_CONVERTED$/i
+const convertedLabelPattern = /\s*\(converted\)$/i
+
+/**
+ * Drops each total whose converted counterpart the report also provides, such as Amount beside
+ * Amount (converted), because the converted total already states the figure in one currency.
+ * @param amounts Summary totals in report order.
+ * @returns The totals to show, in the same order; all of them when none has a converted counterpart.
+ * @throws Does not throw.
+ */
+export function displayedAmounts(amounts: SalesSummaryAmount[]): SalesSummaryAmount[] {
+    const converted = new Set<string>()
+    amounts.forEach(amount => {
+        if (convertedIdPattern.test(amount.columnId)) {
+            converted.add(amount.columnId.replace(convertedIdPattern, '')
+                .toLowerCase())
+        }
+
+        if (convertedLabelPattern.test(amount.label)) {
+            converted.add(amount.label.replace(convertedLabelPattern, '')
+                .toLowerCase())
+        }
+    })
+    return amounts.filter(amount => !converted.has(amount.columnId.toLowerCase())
+        && !converted.has(amount.label.toLowerCase()))
+}
+
+/**
  * Formats a snapshot-wide total for display, using the currency the matching rows agree on.
  * @param amount Summary entry for one numeric column.
- * @returns A localized currency amount, or a plain number when the rows mix currencies.
+ * @returns A localized currency amount, in the shared currency or in US dollars when the
+ * report leaves a single-currency total uncoded; a plain number when the rows mix currencies.
  * @throws Does not throw for an unexpected currency code; falls back to a plain number.
  */
 export function formatSummaryAmount(amount: SalesSummaryAmount): string {
+    const currency = amount.currencyCode ?? (amount.mixedCurrency ? undefined : defaultCurrencyCode)
     try {
-        return amount.total.toLocaleString(undefined, amount.currencyCode
-            ? { currency: amount.currencyCode, maximumFractionDigits: 0, style: 'currency' }
+        return amount.total.toLocaleString(undefined, currency
+            ? { currency, maximumFractionDigits: 0, style: 'currency' }
             : { maximumFractionDigits: 0 })
     } catch {
         return amount.total.toLocaleString(undefined, { maximumFractionDigits: 0 })
