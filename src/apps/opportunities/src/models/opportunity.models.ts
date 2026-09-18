@@ -303,6 +303,7 @@ export interface OpportunityPage<T> {
 
 export interface OpportunityFilters {
     applied?: boolean
+    groups?: string[]
     memberId?: string
     page: number
     perPage: number

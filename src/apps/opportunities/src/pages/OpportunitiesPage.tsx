@@ -7,7 +7,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import useSWR, { SWRResponse } from 'swr'
 
 import {
@@ -23,6 +23,7 @@ import {
     OpportunityPagination,
     OpportunitySortSelect,
     OpportunityViewToggle,
+    TopgearHero,
 } from '../components'
 import {
     OpportunityFilters,
@@ -47,6 +48,11 @@ import {
     opportunitySortOptions,
     sortOpportunityItems,
 } from '../utils/opportunity-listing.utils'
+import {
+    isTopgearCommunity,
+    OPPORTUNITIES_ROOT_ROUTE,
+    topgearGroupIds,
+} from '../utils/topgear.utils'
 import { opportunityViewContext, OpportunityViewContextData } from '../opportunities.context'
 
 import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
@@ -180,9 +186,17 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
     const [role, setRole] = useState('')
     const [status, setStatus] = useState(defaultStatus(kind))
     const [sort, setSort] = useState(defaultSort())
+    const topgear = isTopgearCommunity()
+    // The TopGear host lists only its community group's challenges, matching
+    // community-app's Wipro community listing.
+    const groups = useMemo<string[] | undefined>(
+        () => (topgear && kind === 'competitions' ? topgearGroupIds() : undefined),
+        [kind, topgear],
+    )
 
     const filters = useMemo<OpportunityFilters>(() => ({
         applied,
+        groups,
         memberId: profile?.userId === undefined ? undefined : String(profile.userId),
         page,
         perPage,
@@ -192,7 +206,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         statuses: status ? [status] : undefined,
         tracks: tracks.length ? tracks : undefined,
         types: types.length ? types : undefined,
-    }), [applied, deferredSearch, page, perPage, profile?.userId, role, sort, status, tracks, types])
+    }), [applied, deferredSearch, groups, page, perPage, profile?.userId, role, sort, status, tracks, types])
 
     const pageResponse: SWRResponse<OpportunityPage<OpportunityItem>, Error> = useSWR(
         ['opportunities:list', kind, filters],
@@ -419,17 +433,20 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
 /**
  * Resolves the route domain and keys the stateful listing by its domain.
  * The listing key resets every filter before a request to a different owning
- * API begins.
+ * API begins. The TopGear community host only offers competitions: it renders
+ * the TopGear banner instead of the masthead and category cells, skips the
+ * public summary request, and sends other categories back to the listing.
  *
  * @returns the active Opportunities category page.
  * @throws Does not throw; list request errors are handled by the child page.
  */
 export const OpportunitiesPage: FC = () => {
     const params = useParams<{ kind?: string }>()
-    const kind = resolveOpportunityKind(params.kind)
+    const topgear = isTopgearCommunity()
+    const kind = topgear ? 'competitions' : resolveOpportunityKind(params.kind)
     const viewContext: OpportunityViewContextData = useContext(opportunityViewContext)
     const summaryResponse: SWRResponse<OpportunitySummary, Error> = useSWR(
-        'opportunities:summary',
+        topgear ? undefined : 'opportunities:summary',
         getOpportunitySummary,
         { revalidateOnFocus: false },
     )
@@ -444,15 +461,23 @@ export const OpportunitiesPage: FC = () => {
             .catch(() => undefined)
     }
 
+    if (topgear && params.kind && params.kind !== 'competitions') {
+        return <Navigate replace to={OPPORTUNITIES_ROOT_ROUTE} />
+    }
+
     return (
         <main className={styles.page}>
-            <OpportunityHero
-                active={kind}
-                error={!!summaryResponse.error}
-                loading={summaryResponse.isValidating && !summaryResponse.data}
-                onRetry={retrySummaries}
-                summary={summaryResponse.data}
-            />
+            {topgear ? (
+                <TopgearHero />
+            ) : (
+                <OpportunityHero
+                    active={kind}
+                    error={!!summaryResponse.error}
+                    loading={summaryResponse.isValidating && !summaryResponse.data}
+                    onRetry={retrySummaries}
+                    summary={summaryResponse.data}
+                />
+            )}
             <OpportunityListing
                 key={kind}
                 kind={kind}

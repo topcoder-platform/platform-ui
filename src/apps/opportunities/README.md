@@ -6,6 +6,26 @@ is `/opportunities`; domain tabs use `/opportunities/:kind`, challenge details
 use `/opportunities/challenge/:challengeId`, and review details use
 `/opportunities/review/:reviewOpportunityId`.
 
+## TopGear community host
+
+Community-app's Wipro community (`topgear.<domain>`, formerly also served at
+`wipro.<domain>`) is replaced by this app on the `topgear` host. When the
+first hostname label is `topgear`:
+
+- the host root redirects to `/opportunities`, and the legacy `/challenges`
+  aliases continue to redirect to the Opportunities routes;
+- the listing renders community-app's TopGear challenge-listing banner
+  (`assets/topgear-challenges-banner.png`) instead of the masthead, the four
+  category cells, and the public summary request;
+- only competitions are offered. `/opportunities/:kind` for any other category
+  redirects to `/opportunities`, and Browse Competitions with its filters,
+  sorting, and pagination is unchanged;
+- competitions are limited to the TopGear Topcoder group through the Challenge
+  API `groups[]` parameter. The group defaults to community-app's
+  `b7f7c0f8-8ee8-409e-9e5c-33404983b635` and is configurable with
+  `REACT_APP_TOPGEAR_GROUP_ID`. Members outside the group receive an empty
+  listing from the API, matching community-app's group-restricted community.
+
 The four headline metrics come from one `GET /v6/opportunities/summary`
 request. List content is requested lazily from its owning API as members switch
 tabs, filter, sort, or paginate. Do not prefetch bucket-sized list payloads.

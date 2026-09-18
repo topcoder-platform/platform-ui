@@ -1,0 +1,25 @@
+.hero {
+    background: #b9b3ab;
+    line-height: 0;
+}
+
+.banner {
+    display: block;
+    height: 350px;
+    object-fit: cover;
+    object-position: 50% 0;
+    width: 100%;
+}
+
+@media (max-width: 1199px) {
+    .banner {
+        height: 260px;
+    }
+}
+
+@media (max-width: 640px) {
+    .banner {
+        height: 180px;
+        object-position: 30% 0;
+    }
+}
