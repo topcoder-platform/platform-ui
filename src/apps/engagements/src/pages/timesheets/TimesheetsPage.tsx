@@ -7,6 +7,8 @@ import type { TimesheetView } from '../../lib/models'
 import { TimesheetViewerRole } from '../../lib/models'
 import { getTimesheet } from '../../lib/services'
 
+import AdminTimesheetView from './AdminTimesheetView'
+import ManagerTimesheetView from './ManagerTimesheetView'
 import MemberTimesheetView from './MemberTimesheetView'
 import TimesheetHeader from './TimesheetHeader'
 import styles from './TimesheetsPage.module.scss'
@@ -127,21 +129,27 @@ const TimesheetsPage: FC = () => {
                     managers={timesheet.managers}
                 />
 
-                {timesheet.viewerRole === TimesheetViewerRole.MEMBER
-                    ? (
-                        <MemberTimesheetView
-                            onDirtyChange={setIsDirty}
-                            onTimesheetChange={setTimesheet}
-                            timesheet={timesheet}
-                        />
-                    )
-                    : (
-                        // TS-5 fills in the manager and administrator views; until then the header and
-                        // the read-only grid below still show what the API returned for this role.
-                        <p className={styles.pending}>
-                            The manager and administrator timesheet views are not available yet.
-                        </p>
-                    )}
+                {timesheet.viewerRole === TimesheetViewerRole.MEMBER && (
+                    <MemberTimesheetView
+                        onDirtyChange={setIsDirty}
+                        onTimesheetChange={setTimesheet}
+                        timesheet={timesheet}
+                    />
+                )}
+
+                {timesheet.viewerRole === TimesheetViewerRole.MANAGER && (
+                    <ManagerTimesheetView
+                        onTimesheetChange={setTimesheet}
+                        timesheet={timesheet}
+                    />
+                )}
+
+                {timesheet.viewerRole === TimesheetViewerRole.ADMINISTRATOR && (
+                    <AdminTimesheetView
+                        onTimesheetChange={setTimesheet}
+                        timesheet={timesheet}
+                    />
+                )}
             </div>
         </ContentLayout>
     )

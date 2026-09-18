@@ -130,3 +130,27 @@ export interface TimesheetEngagementQuery {
     title?: string
     toDate?: string
 }
+
+export interface TimesheetAuditRecord {
+    action: string
+    actorHandle: string | null
+    actorRole: string
+    actorUserId: string
+    comment: string | null
+    createdAt: string
+    id: string
+    previousValues: unknown
+    updatedValues: unknown
+}
+
+export interface TimesheetEngagementListResponse {
+    data: TimesheetEngagementRow[]
+    meta: {
+        page: number
+        perPage: number
+        totalCount: number
+        totalPages: number
+        /** The caller's own role, so the client never infers it from JWT roles. */
+        viewerRole: TimesheetViewerRole
+    }
+}

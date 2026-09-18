@@ -72,3 +72,105 @@
     margin: 0;
     color: $black-60;
 }
+
+.statusField {
+    display: grid;
+    gap: 6px;
+
+    select {
+        padding: 8px;
+        border: 1px solid $black-40;
+        border-radius: 6px;
+    }
+}
+
+.partialResult {
+    margin: 0;
+    color: $turq-160;
+}
+
+.adminActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+    padding: 16px 18px;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    background: $tc-white;
+
+    label {
+        display: grid;
+        gap: 4px;
+    }
+
+    input,
+    select {
+        padding: 8px;
+        border: 1px solid $black-40;
+        border-radius: 6px;
+    }
+}
+
+.filterActions {
+    display: flex;
+    gap: 8px;
+}
+
+.listTable {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid $black-10;
+    }
+
+    th {
+        @include font-weight-bold;
+    }
+}
+
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+@include ltemd {
+    .listTable {
+        thead {
+            display: none;
+        }
+
+        tr {
+            display: grid;
+            gap: 4px;
+            padding: 8px 0;
+            border-bottom: 1px solid $black-10;
+        }
+
+        td {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 0;
+
+            &::before {
+                content: attr(data-label);
+                @include font-weight-bold;
+            }
+        }
+    }
+}

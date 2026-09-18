@@ -1,4 +1,4 @@
-import { FC, FocusEvent, useMemo } from 'react'
+import { FC, FocusEvent, useCallback, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { TimesheetEntryStatus } from '../../lib/models'
@@ -25,8 +25,24 @@ export interface TimesheetGridProps {
     standardHoursPerDay?: number | null
     /** Hides hours and remarks inputs even for editable rows: the manager view reviews, not edits. */
     readOnly?: boolean
-    /** Rows that cannot be selected, e.g. days with nothing entered yet. */
+    /**
+     * Decides which rows can be selected, replacing the default rule entirely.
+     *
+     * The default excludes approved rows, which is right for the member and manager views. The
+     * administrator view overrides it, because selecting approved rows is how reopening and correcting
+     * them starts.
+     */
     isRowSelectable?: (row: TimesheetRow) => boolean
+    /**
+     * Keeps hours and remarks editable on approved rows. Administrator view only: for everyone else an
+     * approved entry is frozen, and the API refuses the change anyway.
+     */
+    canEditApproved?: boolean
+    /**
+     * Renders the selected-totals footer. Off by default: every role view shows its own totals next to
+     * its action button, and two copies of the same numbers on one screen is worse than none.
+     */
+    showTotals?: boolean
     emptyMessage?: string
 }
 
@@ -55,11 +71,15 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
     const readOnly = props.readOnly ?? false
     const selected = useMemo(() => new Set(props.selectedDates), [props.selectedDates])
 
+    const isSelectable = useCallback(
+        (row: TimesheetRow) => (
+            props.isRowSelectable ? props.isRowSelectable(row) : !isRowReadOnly(row)
+        ),
+        [props.isRowSelectable],
+    )
     const selectableRows = useMemo(
-        () => props.rows.filter(row => (
-            !isRowReadOnly(row) && (props.isRowSelectable?.(row) ?? true)
-        )),
-        [props.isRowSelectable, props.rows],
+        () => props.rows.filter(isSelectable),
+        [isSelectable, props.rows],
     )
     const selectedRows = useMemo(
         () => props.rows.filter(row => selected.has(row.workDate)),
@@ -122,9 +142,9 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                 </thead>
                 <tbody>
                     {props.rows.map(row => {
-                        const rowReadOnly = readOnly || isRowReadOnly(row)
-                        const selectable = !isRowReadOnly(row)
-                            && (props.isRowSelectable?.(row) ?? true)
+                        const rowReadOnly = readOnly
+                            || (isRowReadOnly(row) && !props.canEditApproved)
+                        const selectable = isSelectable(row)
                         const hoursCheck = validateHours(row.hoursWorked, props.standardHoursPerDay)
                         const isSelected = selected.has(row.workDate)
 
@@ -240,22 +260,24 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                         )
                     })}
                 </tbody>
-                <tfoot>
-                    <tr>
-                        <td className={styles.totalsCell} colSpan={6}>
-                            <span className={styles.total}>
-                                Total Selected Days:
-                                {' '}
-                                <strong>{totals.days}</strong>
-                            </span>
-                            <span className={styles.total}>
-                                Total Selected Hours:
-                                {' '}
-                                <strong>{formatHoursLabel(totals.hours)}</strong>
-                            </span>
-                        </td>
-                    </tr>
-                </tfoot>
+                {props.showTotals && (
+                    <tfoot>
+                        <tr>
+                            <td className={styles.totalsCell} colSpan={6}>
+                                <span className={styles.total}>
+                                    Total Selected Days:
+                                    {' '}
+                                    <strong>{totals.days}</strong>
+                                </span>
+                                <span className={styles.total}>
+                                    Total Selected Hours:
+                                    {' '}
+                                    <strong>{formatHoursLabel(totals.hours)}</strong>
+                                </span>
+                            </td>
+                        </tr>
+                    </tfoot>
+                )}
             </table>
         </div>
     )

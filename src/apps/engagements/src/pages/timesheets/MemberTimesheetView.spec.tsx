@@ -168,9 +168,9 @@ describe('MemberTimesheetView', () => {
         expect(screen.getByText('11-09-2026'))
             .toBeInTheDocument()
         expect(screen.getAllByRole('row')
-            // header row, five day rows, totals row
+            // header row plus five day rows; totals live in the summary, not the grid footer
             .length)
-            .toBe(7)
+            .toBe(6)
     })
 
     it('blocks a to date earlier than the from date', async () => {

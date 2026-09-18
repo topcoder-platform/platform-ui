@@ -6,8 +6,9 @@ import type {
     ApproveTimesheetEntriesResult,
     ReopenTimesheetEntriesRequest,
     SubmitTimesheetEntriesRequest,
+    TimesheetAuditRecord,
+    TimesheetEngagementListResponse,
     TimesheetEngagementQuery,
-    TimesheetEngagementRow,
     TimesheetQuery,
     TimesheetView,
     UpsertTimesheetEntriesRequest,
@@ -114,14 +115,9 @@ export const reopenTimesheetEntries = async (
 /** The manager and administrator landing list: one row per (engagement, assignee). */
 export const getTimesheetEngagements = async (
     query: TimesheetEngagementQuery = {},
-): Promise<{ data: TimesheetEngagementRow[], meta: {
-    page: number
-    perPage: number
-    totalCount: number
-    totalPages: number
-} }> => (
+): Promise<TimesheetEngagementListResponse> => (
     xhrGetAsync(
-        `${EnvironmentConfig.API.V6}/engagements/timesheets/engagements${toQueryString({
+        `${ENGAGEMENTS_URL}/timesheets/engagements${toQueryString({
             assignee: query.assignee,
             fromDate: query.fromDate,
             manager: query.manager,
@@ -131,5 +127,18 @@ export const getTimesheetEngagements = async (
             title: query.title,
             toDate: query.toDate,
         })}`,
+    )
+)
+
+/**
+ * Audit history for one entry, newest first. Administrators only - the API refuses anyone else.
+ */
+export const getTimesheetEntryAudit = async (
+    engagementId: string,
+    assignmentId: string,
+    entryId: string,
+): Promise<TimesheetAuditRecord[]> => (
+    xhrGetAsync<TimesheetAuditRecord[]>(
+        `${timesheetUrl(engagementId, assignmentId)}/entries/${entryId}/audit`,
     )
 )

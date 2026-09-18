@@ -193,7 +193,17 @@ describe('TimesheetGrid', () => {
             .toBeInTheDocument()
     })
 
-    it('totals only the selected rows', () => {
+    it('renders no totals footer unless asked, so a view can show its own', () => {
+        render(
+            <TimesheetGrid onSelectionChange={noop} rows={[row()]} selectedDates={[]} />,
+        )
+
+        expect(screen.getByRole('table')
+            .querySelector('tfoot'))
+            .toBeNull()
+    })
+
+    it('totals only the selected rows when the footer is enabled', () => {
         render(
             <TimesheetGrid
                 onSelectionChange={noop}
@@ -203,6 +213,7 @@ describe('TimesheetGrid', () => {
                     row({ displayDate: '09-09-2026', hoursWorked: '9', workDate: '2026-09-09' }),
                 ]}
                 selectedDates={['2026-09-07', '2026-09-08']}
+                showTotals
             />,
         )
 

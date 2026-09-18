@@ -1,0 +1,54 @@
+@import '@libs/ui/styles/includes';
+
+.records {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.record {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid $black-10;
+    border-radius: 12px;
+}
+
+.recordHeader {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: baseline;
+}
+
+.actor,
+.timestamp {
+    color: $black-60;
+}
+
+.values {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+
+    dt {
+        @include font-weight-bold;
+    }
+
+    dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+}
+
+.empty {
+    margin: 0;
+    color: $black-60;
+}
+
+.error {
+    margin: 0;
+    color: $red-100;
+}
