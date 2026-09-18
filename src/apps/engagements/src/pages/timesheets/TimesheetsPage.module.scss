@@ -1,0 +1,74 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    display: grid;
+    gap: 20px;
+    padding: 16px 0;
+}
+
+.header {
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    background: $tc-white;
+}
+
+.title {
+    margin: 0;
+}
+
+.headerFacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin: 0;
+}
+
+.fact {
+    display: grid;
+    gap: 2px;
+
+    dt {
+        @include font-weight-bold;
+    }
+
+    dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+}
+
+.view {
+    display: grid;
+    gap: 16px;
+}
+
+.rangeSection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+    padding: 16px 18px;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    background: $tc-white;
+}
+
+.error {
+    margin: 0;
+    color: $red-100;
+}
+
+.pending {
+    margin: 0;
+    color: $black-60;
+}

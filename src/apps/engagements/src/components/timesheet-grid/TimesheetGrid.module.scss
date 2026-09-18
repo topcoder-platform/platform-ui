@@ -1,0 +1,144 @@
+@import '@libs/ui/styles/includes';
+
+.gridWrapper {
+    overflow-x: auto;
+}
+
+.grid {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+        border-bottom: 1px solid $black-10;
+    }
+
+    th {
+        @include font-weight-bold;
+
+        white-space: nowrap;
+    }
+}
+
+// .caption {
+//     @include sr-only;
+// }
+
+.selectColumn {
+    width: 40px;
+}
+
+.row.selectedRow {
+    background: $blue-25;
+}
+
+.row.approvedRow {
+    background: $black-5;
+}
+
+.hoursInput {
+    width: 90px;
+}
+
+.remarksInput {
+    width: 100%;
+    min-width: 160px;
+}
+
+.hoursInput,
+.remarksInput {
+    padding: 6px 8px;
+    border: 1px solid $black-40;
+    border-radius: 6px;
+}
+
+.inputError {
+    border-color: $red-100;
+}
+
+.error {
+    display: block;
+    margin-top: 4px;
+    color: $red-100;
+}
+
+.warning {
+    display: block;
+    margin-top: 4px;
+    color: $turq-160;
+}
+
+.outsideWindow {
+    display: block;
+    margin-top: 4px;
+    color: $black-60;
+}
+
+.readOnlyValue {
+    overflow-wrap: anywhere;
+}
+
+.status {
+    white-space: nowrap;
+}
+
+.reopenedBadge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: $turq-25;
+    white-space: nowrap;
+}
+
+.approvalDetail {
+    display: block;
+    margin-top: 4px;
+    color: $black-60;
+}
+
+.totalsCell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.total {
+    white-space: nowrap;
+}
+
+.emptyState {
+    margin: 0;
+    color: $black-60;
+}
+
+@include ltemd {
+    .grid {
+        thead {
+            display: none;
+        }
+
+        tr {
+            display: grid;
+            gap: 4px;
+            padding: 8px 0;
+            border-bottom: 1px solid $black-10;
+        }
+
+        td {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 0;
+
+            &::before {
+                content: attr(data-label);
+                @include font-weight-bold;
+            }
+        }
+    }
+}
