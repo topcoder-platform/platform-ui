@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { ButtonHTMLAttributes, ReactNode } from 'react'
 
 import SalesPage from './SalesPage'
@@ -71,12 +71,30 @@ function fixture(): SalesReport {
         sourceRowCount: 30,
         summary: {
             amounts: [{
-                columnId: 'AMOUNT',
+                columnId: 'AMOUNT_CONVERTED',
                 count: 28,
                 currencyCode: 'USD',
-                label: 'Amount',
+                label: 'Amount (converted)',
                 mixedCurrency: false,
                 total: 1234567,
+            }, {
+                columnId: 'AMOUNT',
+                count: 28,
+                label: 'Amount',
+                mixedCurrency: false,
+                total: 987654,
+            }, {
+                columnId: 'EXP_AMOUNT',
+                count: 28,
+                label: 'Expected Revenue',
+                mixedCurrency: false,
+                total: 555555,
+            }, {
+                columnId: 'LOCAL_FEE',
+                count: 3,
+                label: 'Local fee',
+                mixedCurrency: true,
+                total: 2468,
             }],
             groups: [{
                 amountColumnId: 'AMOUNT',
@@ -92,6 +110,12 @@ function fixture(): SalesReport {
         total: 30,
         totalPages: 2,
     }
+}
+
+/** @returns The Clear control of the named section, keeping the two Clear buttons apart. Does not throw. */
+function clearButton(section: string): HTMLElement {
+    return within(screen.getByRole('region', { name: section }))
+        .getByRole('button', { name: 'Clear' })
 }
 
 describe('Sales page', () => {
@@ -213,7 +237,7 @@ describe('Sales page', () => {
         jest.useRealTimers()
     })
 
-    it('offers the report date fields, defaults to Created Date and applies an inclusive range', async () => {
+    it('offers the report date fields, defaults to Created Date and applies a range as it changes', async () => {
         render(<SalesPage />)
         await screen.findByText('Example opportunity')
         const field = screen.getByLabelText('Filter type') as HTMLSelectElement
@@ -226,37 +250,39 @@ describe('Sales page', () => {
         fireEvent.change(screen.getByLabelText('To date'), { target: { value: '2026-09-30' } })
         expect(fetchReport)
             .toHaveBeenCalledTimes(1)
-        fireEvent.click(screen.getByRole('button', { name: 'Apply filter' }))
+        expect(screen.queryByRole('button', { name: 'Apply filter' })).not.toBeInTheDocument()
         await waitFor(() => expect(fetchReport)
             .toHaveBeenLastCalledWith(expect.objectContaining({
                 dateColumn: 'CLOSE_DATE', dateFrom: '2026-07-01', dateTo: '2026-09-30', page: 1,
             }), expect.any(AbortSignal)))
+        // The three changes within one pause are sent as a single request.
+        expect(fetchReport)
+            .toHaveBeenCalledTimes(2)
         await screen.findByText(/Showing records by Close Date from 2026-07-01 through 2026-09-30/)
     })
 
-    it('refuses an inverted range without sending a request and clears the error on reset', async () => {
+    it('refuses an inverted range without sending a request and clears the error on Clear', async () => {
         render(<SalesPage />)
         await screen.findByText('Example opportunity')
         fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2026-09-30' } })
         fireEvent.change(screen.getByLabelText('To date'), { target: { value: '2026-09-01' } })
-        fireEvent.click(screen.getByRole('button', { name: 'Apply filter' }))
         await screen.findByText('The From date must be on or before the To date.')
         expect(fetchReport)
             .toHaveBeenCalledTimes(1)
-        fireEvent.click(screen.getByRole('button', { name: 'Reset filter' }))
+        fireEvent.click(clearButton('Date range filter'))
         await waitFor(() => expect(screen.queryByText('The From date must be on or before the To date.'))
             .not.toBeInTheDocument())
         expect(screen.getByLabelText('From date'))
             .toHaveValue('')
+        await screen.findByText('No date range applied.')
         expect(fetchReport)
             .toHaveBeenCalledTimes(1)
     })
 
-    it('resets an applied range and keeps the range when report filters are cleared', async () => {
+    it('clears an applied range and keeps the range when report filters are cleared', async () => {
         render(<SalesPage />)
         await screen.findByText('Example opportunity')
         fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2026-09-01' } })
-        fireEvent.click(screen.getByRole('button', { name: 'Apply filter' }))
         await waitFor(() => expect(fetchReport)
             .toHaveBeenLastCalledWith(
                 expect.objectContaining({ dateColumn: 'CREATED_DATE', dateFrom: '2026-09-01' }),
@@ -269,7 +295,7 @@ describe('Sales page', () => {
                 expect.any(AbortSignal),
             ))
         // Clearing the report filters must not silently empty the separate date range.
-        fireEvent.click(screen.getByRole('button', { name: 'Clear' }))
+        fireEvent.click(clearButton('Sales report'))
         await waitFor(() => expect(fetchReport)
             .toHaveBeenLastCalledWith(
                 expect.not.objectContaining({ search: 'Example' }),
@@ -280,7 +306,7 @@ describe('Sales page', () => {
                 expect.objectContaining({ dateColumn: 'CREATED_DATE', dateFrom: '2026-09-01' }),
                 expect.any(AbortSignal),
             )
-        fireEvent.click(screen.getByRole('button', { name: 'Reset filter' }))
+        fireEvent.click(clearButton('Date range filter'))
         await waitFor(() => expect(fetchReport)
             .toHaveBeenLastCalledWith(
                 expect.objectContaining({ dateColumn: undefined, dateFrom: undefined, dateTo: undefined }),
@@ -289,13 +315,25 @@ describe('Sales page', () => {
         await screen.findByText('No date range applied.')
     })
 
-    it('shows totals for every matching record rather than the returned page', async () => {
+    it('shows totals for every matching record without per-tile record counts', async () => {
         render(<SalesPage />)
         await screen.findByText('Example opportunity')
         expect(screen.getByText('$1,234,567'))
             .toBeInTheDocument()
-        expect(screen.getByText('28 of 30 records with a value'))
+        // The plain Amount is redundant beside Amount (converted), so its tile is hidden.
+        expect(screen.queryByText('$987,654'))
+            .not.toBeInTheDocument()
+        // An uncoded single-currency total reads in dollars like the converted columns.
+        expect(screen.getByText('$555,555'))
             .toBeInTheDocument()
+        expect(screen.getByText('2,468'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Totals mix currencies.'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Matching records'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText(/records with a value/))
+            .not.toBeInTheDocument()
         expect(screen.getByText('Stage breakdown'))
             .toBeInTheDocument()
         expect(screen.getByText('18 records'))
@@ -315,7 +353,7 @@ describe('Sales page', () => {
         await screen.findByText('Example opportunity')
         expect(screen.getByLabelText('Filter type'))
             .toBeDisabled()
-        expect(screen.getByRole('button', { name: 'Apply filter' }))
+        expect(screen.getByLabelText('From date'))
             .toBeDisabled()
         expect(screen.queryByText('Opportunities'))
             .not.toBeInTheDocument()

@@ -13,6 +13,7 @@ import {
     dateColumns,
     dateRangeError,
     defaultDateColumn,
+    displayedAmounts,
     formatSummaryAmount,
     withDateRange,
 } from './sales.utils'
@@ -180,13 +181,25 @@ const SalesPage: FC = () => {
         setDateColumn(defaultDateColumn(availableDates))
     }, [availableDates, dateColumn])
 
-    /** @param event Date range submission. @returns Nothing; applies a valid range. Does not throw. */
-    function applyDateRange(event: FormEvent<HTMLFormElement>): void {
-        event.preventDefault()
+    /** Applies the pending range when it is valid, otherwise shows why it cannot be sent. Does not throw. */
+    const applyDateRange = useCallback((): void => {
         const invalid = dateRangeError(dateColumn, dateFrom, dateTo)
         setDateError(invalid)
         if (invalid) return
         setQuery(current => withDateRange(current, dateColumn, dateFrom, dateTo))
+    }, [dateColumn, dateFrom, dateTo])
+
+    useEffect(() => {
+        // The range applies as its controls change, after the same pause as the
+        // report filters, so a date typed segment by segment is not sent per keystroke.
+        const timer = window.setTimeout(applyDateRange, filterDebounceMs)
+        return () => window.clearTimeout(timer)
+    }, [applyDateRange])
+
+    /** @param event Date range submission. @returns Nothing; applies a valid range at once. Does not throw. */
+    function submitDateRange(event: FormEvent<HTMLFormElement>): void {
+        event.preventDefault()
+        applyDateRange()
     }
 
     /** Clears the date range without disturbing search, column filters or sorting. Does not throw. */
@@ -200,6 +213,7 @@ const SalesPage: FC = () => {
 
     const rangeApplied = !!query.dateColumn
     const summary = report?.summary
+    const shownAmounts = displayedAmounts(summary?.amounts ?? [])
     const firstRow = report?.total ? (report.page - 1) * report.perPage + 1 : 0
     const lastRow = report ? Math.min(report.page * report.perPage, report.total) : 0
     const updatedAt = report ? new Date(report.refreshedAt)
@@ -257,68 +271,55 @@ const SalesPage: FC = () => {
                 </div>
             )}
 
-            <form className={styles.dateFilters} onSubmit={applyDateRange}>
-                <fieldset className={styles.dateFieldset}>
-                    <legend className={styles.dateLegend}>Date range filter</legend>
-                    <p className={styles.dateHint}>
-                        Filter by Created Date for pipeline generation, or by Close Date for revenue
-                        projections. Counts and totals below cover every matching record, not just this page.
-                    </p>
-                    <div className={styles.dateControls}>
-                        <div className={styles.filterField}>
-                            <label htmlFor='sales-date-column'>Filter type</label>
-                            <select
-                                disabled={!availableDates.length}
-                                id='sales-date-column'
-                                onChange={event => setDateColumn(event.target.value)}
-                                value={dateColumn}
-                            >
-                                {!availableDates.length && <option value=''>No date fields available</option>}
-                                {availableDates.map(column => (
-                                    <option key={column.id} value={column.id}>{column.label}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className={styles.filterField}>
-                            <label htmlFor='sales-date-from'>From date</label>
-                            <input
-                                disabled={!availableDates.length}
-                                id='sales-date-from'
-                                name='sales-date-from'
-                                onChange={event => setDateFrom(event.target.value)}
-                                type='date'
-                                value={dateFrom}
-                            />
-                        </div>
-                        <div className={styles.filterField}>
-                            <label htmlFor='sales-date-to'>To date</label>
-                            <input
-                                disabled={!availableDates.length}
-                                id='sales-date-to'
-                                name='sales-date-to'
-                                onChange={event => setDateTo(event.target.value)}
-                                type='date'
-                                value={dateTo}
-                            />
-                        </div>
-                        <div className={styles.filterActions}>
-                            <Button
-                                disabled={!availableDates.length}
-                                noCaps
-                                primary
-                                type='submit'
-                            >
-                                Apply filter
-                            </Button>
-                            <Button
-                                disabled={!rangeApplied && !dateFrom && !dateTo}
-                                noCaps
-                                onClick={resetDateRange}
-                                secondary
-                            >
-                                Reset filter
-                            </Button>
-                        </div>
+            <section aria-labelledby='sales-date-heading' className={`${styles.panel} ${styles.dateFilters}`}>
+                <div className={styles.panelHeader}>
+                    <div>
+                        <h2 id='sales-date-heading'>Date range filter</h2>
+                        <p className={styles.dateHint}>
+                            Filter by Created Date for pipeline generation, or by Close Date for revenue
+                            projections. Counts and totals below cover every matching record, not just this page.
+                        </p>
+                    </div>
+                </div>
+                <form className={styles.filters} onSubmit={submitDateRange}>
+                    <div className={styles.filterField}>
+                        <label htmlFor='sales-date-column'>Filter type</label>
+                        <select
+                            disabled={!availableDates.length}
+                            id='sales-date-column'
+                            onChange={event => setDateColumn(event.target.value)}
+                            value={dateColumn}
+                        >
+                            {!availableDates.length && <option value=''>No date fields available</option>}
+                            {availableDates.map(column => (
+                                <option key={column.id} value={column.id}>{column.label}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className={styles.filterField}>
+                        <label htmlFor='sales-date-from'>From date</label>
+                        <input
+                            disabled={!availableDates.length}
+                            id='sales-date-from'
+                            name='sales-date-from'
+                            onChange={event => setDateFrom(event.target.value)}
+                            type='date'
+                            value={dateFrom}
+                        />
+                    </div>
+                    <div className={styles.filterField}>
+                        <label htmlFor='sales-date-to'>To date</label>
+                        <input
+                            disabled={!availableDates.length}
+                            id='sales-date-to'
+                            name='sales-date-to'
+                            onChange={event => setDateTo(event.target.value)}
+                            type='date'
+                            value={dateTo}
+                        />
+                    </div>
+                    <div className={styles.filterActions}>
+                        <Button noCaps onClick={resetDateRange} link>Clear</Button>
                     </div>
                     <p className={styles.dateStatus} aria-live='polite' role='status'>
                         {dateError && <span className={styles.dateError}>{dateError}</span>}
@@ -333,8 +334,8 @@ const SalesPage: FC = () => {
                         )}
                         {!dateError && !rangeApplied && <span>No date range applied.</span>}
                     </p>
-                </fieldset>
-            </form>
+                </form>
+            </section>
 
             {summary && (
                 <section className={styles.summary} aria-label='Filtered sales totals'>
@@ -342,17 +343,14 @@ const SalesPage: FC = () => {
                         <div className={styles.metric}>
                             <p className={styles.metricLabel}>Opportunities</p>
                             <p className={styles.metricValue}>{summary.recordCount.toLocaleString()}</p>
-                            <p className={styles.metricNote}>Matching records</p>
                         </div>
-                        {summary.amounts.map(amount => (
+                        {shownAmounts.map(amount => (
                             <div className={styles.metric} key={amount.columnId}>
                                 <p className={styles.metricLabel}>{amount.label}</p>
                                 <p className={styles.metricValue}>{formatSummaryAmount(amount)}</p>
-                                <p className={styles.metricNote}>
-                                    {`${amount.count.toLocaleString()} of `}
-                                    {`${summary.recordCount.toLocaleString()} records with a value`}
-                                    {amount.mixedCurrency ? ' · totals mixed currencies' : ''}
-                                </p>
+                                {amount.mixedCurrency && (
+                                    <p className={styles.metricNote}>Totals mix currencies.</p>
+                                )}
                             </div>
                         ))}
                     </div>
