@@ -23,7 +23,8 @@ export enum AppSubdomain {
     procurement = 'procurement',
     status = 'status',
     support = 'support',
-    opportunities = 'opportunities'
+    opportunities = 'opportunities',
+    topgear = 'topgear'
 }
 
 export enum ToolTitle {

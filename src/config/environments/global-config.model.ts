@@ -68,6 +68,9 @@ export interface GlobalConfig {
         WORK_APP: string
     }
     TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS: string[]
+    TOPGEAR: {
+        GROUP_ID: string
+    }
     TERMS_URL?: string
     NDA_TERMS_URL?: string
     DEFAULT_NDA_UUID: string
