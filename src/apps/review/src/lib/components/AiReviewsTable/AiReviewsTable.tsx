@@ -397,7 +397,9 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         setRebuildingDecision(true)
         try {
             await rebuildSubmissionDecision(props.submission.id)
-            await mutate(getAiReviewDecisionsCacheKey(aiReviewConfig?.id))
+            if (aiReviewConfig?.id) {
+                 await mutate(getAiReviewDecisionsCacheKey(aiReviewConfig.id))
+             }
             await mutate(getAiWorkflowRunsCacheKey(props.submission.id))
             toast.success('AI decision rebuild triggered successfully.')
         } catch (error) {
@@ -668,23 +670,13 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             type='button'
                             onClick={handleRebuildDecision}
                             disabled={rebuildingDecision}
-                            className={styles.reRunIcon}
-                            style={{
-                                alignItems: 'center',
-                                background: '#fff',
-                                border: '1px solid #d1d5db',
-                                borderRadius: 6,
-                                cursor: rebuildingDecision ? 'not-allowed' : 'pointer',
-                                display: 'inline-flex',
-                                justifyContent: 'center',
-                                padding: 6,
-                            }}
+                            className={classNames(styles.decisionRebuildButton, rebuildingDecision && styles.disabled)}
                             aria-label={rebuildingDecision ? 'Rebuilding decision' : 'Rebuild decision'}
                         >
                             {rebuildingDecision ? (
-                                <IconOutline.RefreshIcon className='icon-lg' style={{ opacity: 0.5 }} />
+                                <IconOutline.RefreshIcon className={classNames('icon-lg', styles.decisionRebuildIcon)} />
                             ) : (
-                                <IconOutline.RefreshIcon className='icon-lg' />
+                                <IconOutline.RefreshIcon className={classNames('icon-lg', styles.decisionRebuildIcon)} />
                             )}
                         </button>
                     </Tooltip>
