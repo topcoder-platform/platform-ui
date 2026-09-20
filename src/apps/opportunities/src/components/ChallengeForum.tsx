@@ -1554,6 +1554,21 @@ const ForumTopicView: FC<{
 }
 
 /**
+ * Returns the viewport to the top of the challenge page.
+ *
+ * Forum navigation swaps the panel's contents without changing the route, so the
+ * browser keeps the previous scroll offset. A member who opens a topic from far
+ * down the list would otherwise land in the middle of — or past the end of — the
+ * discussion they just opened.
+ *
+ * @returns void after resetting the vertical scroll offset.
+ * @throws Does not throw; environments without `scrollTo` are ignored.
+ */
+function resetForumScroll(): void {
+    window.scrollTo?.({ left: 0, top: 0 })
+}
+
+/**
  * Renders the authenticated Challenge Discussion experience against forums-api-v6.
  *
  * The component keeps every communication workflow inside Opportunities:
@@ -1676,9 +1691,16 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         setCreatingTopic(false)
         setSelectedTopicId(topicId)
         setMutationError(undefined)
+        resetForumScroll()
         markForumTopicRead(topicId)
             .then(() => response.mutate())
             .catch(() => undefined)
+    }
+
+    /** Closes the open discussion and returns the member to the topic list. */
+    const closeTopic = (): void => {
+        setSelectedTopicId(undefined)
+        resetForumScroll()
     }
 
     /**
@@ -1707,6 +1729,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
             setCreateAsAnnouncement(false)
             setCreatingTopic(false)
             setSelectedTopicId(created.topic.id)
+            resetForumScroll()
             return true
         } catch (error) {
             setMutationError(forumErrorMessage(error))
@@ -1829,7 +1852,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         if (detailResponse.error || !detailResponse.data) {
             return (
                 <div className={styles.detailError}>
-                    <button onClick={() => setSelectedTopicId(undefined)} type='button'>Back to topics</button>
+                    <button onClick={closeTopic} type='button'>Back to topics</button>
                     <ForumFallback
                         externalUrl={externalUrl}
                         text='This topic could not be loaded from the v6 Forums API.'
@@ -1844,7 +1867,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 canDeletePosts={!!props.canDeleteTopics}
                 detail={detailResponse.data}
                 memberId={props.memberId}
-                onBack={() => setSelectedTopicId(undefined)}
+                onBack={closeTopic}
                 onChanged={refreshForum}
                 profilesByMemberId={profilesByMemberId}
             />
