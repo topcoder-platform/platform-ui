@@ -7,10 +7,17 @@ interface EngagementAssignmentSummary {
     updatedAt?: string
 }
 
+/**
+ * Authored pill labels for engagement application and assignment statuses.
+ *
+ * A member who has been taken onto an engagement reads as "Accepted", matching
+ * the Aug 2026 Opportunities design and the label My Work already used for the
+ * same state (PM-6335).
+ */
 const STATUS_LABELS: Record<string, string> = {
-    accepted: 'Selected',
+    accepted: 'Accepted',
     applied: 'Applied',
-    approved: 'Selected',
+    approved: 'Accepted',
     assigned: 'Assigned',
     completed: 'Completed',
     offerdeclined: 'Offer Declined',
@@ -18,7 +25,7 @@ const STATUS_LABELS: Record<string, string> = {
     onhold: 'On Hold',
     pendingassignment: 'On Hold',
     rejected: 'Rejected',
-    selected: 'Selected',
+    selected: 'Accepted',
     shortlisted: 'Shortlisted',
     submitted: 'Applied',
     terminated: 'Terminated',

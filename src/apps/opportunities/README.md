@@ -69,7 +69,9 @@ application` and `My engagements`. The separate ownership checkbox is therefore
 omitted for that domain only; the other domains keep it. `My engagements` is an
 ownership filter wearing a status label, so it deliberately applies no lifecycle
 status and returns the member's open, in-progress, and completed engagements in
-one list, each card carrying its own Applied, Selected, or Completed state pill.
+one list, each card carrying its own Applied, Accepted, or Completed state pill.
+An accepted, approved, or selected application or assignment all read as
+`Accepted`, matching the design and the label My Work already used.
 Anonymous visitors never see the option because they own no engagements.
 
 On narrow layouts, Browse keeps the member's decision flow in document order:

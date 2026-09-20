@@ -160,7 +160,7 @@ describe('My Work normalization', () => {
             id: 'engagement',
             title: 'Engagement',
         } as EngagementOpportunity)))
-            .toBe('Selected')
+            .toBe('Accepted')
         expect(myWorkState(workItem('engagements', {
             applicationStatus: 'UNDER_REVIEW',
             id: 'engagement-review',
