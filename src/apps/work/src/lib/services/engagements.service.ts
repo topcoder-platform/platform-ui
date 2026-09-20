@@ -21,6 +21,7 @@ import {
     EngagementManager,
     PaginationModel,
     Skill,
+    TimesheetPaymentSummary,
 } from '../models'
 import {
     fromEngagementAnticipatedStartApi,
@@ -933,6 +934,54 @@ export async function createMemberExperience(
         )
     } catch (error) {
         throw normalizeError(error, 'Failed to create member experience')
+    }
+}
+
+/**
+ * Approved, unpaid hours for a payment period.
+ *
+ * Only approved entries count, and entries a payment already consumed are excluded from the totals and
+ * reported separately, so the operator can see why the total is lower than the member's logged hours.
+ */
+export async function fetchTimesheetPaymentSummary(
+    engagementId: number | string,
+    assignmentId: number | string,
+    fromDate: string,
+    toDate: string,
+): Promise<TimesheetPaymentSummary> {
+    try {
+        const query = new URLSearchParams({ fromDate, toDate })
+
+        return xhrGetAsync<TimesheetPaymentSummary>(
+            `${ENGAGEMENTS_ROOT_API_URL}/${engagementId}/assignments/${assignmentId}`
+            + `/timesheets/summary?${query.toString()}`,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to load approved timesheet hours')
+    }
+}
+
+/**
+ * Records that a payment consumed these approved entries.
+ *
+ * Called after the payment exists. A crash in between leaves the entries unmarked, which is visible and
+ * recoverable; marking first and then failing to create the payment would strand approved hours as
+ * permanently unpayable.
+ */
+export async function linkTimesheetEntriesToPayment(
+    engagementId: number | string,
+    assignmentId: number | string,
+    entryIds: string[],
+    paymentReference: string,
+): Promise<void> {
+    try {
+        await xhrPostAsync<{ entryIds: string[], paymentReference: string }, unknown>(
+            `${ENGAGEMENTS_ROOT_API_URL}/${engagementId}/assignments/${assignmentId}`
+            + '/timesheets/entries/payments',
+            { entryIds, paymentReference },
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to link the payment to the approved timesheet entries')
     }
 }
 

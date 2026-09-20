@@ -9,6 +9,7 @@ import { getTimesheetEngagements } from '../../lib/services'
 import { rootRoute } from '../../engagements.routes'
 
 import styles from './TimesheetsPage.module.scss'
+import { EngagementsTabs } from '../../components'
 
 const PER_PAGE = 20
 
@@ -22,7 +23,7 @@ interface Filters {
 const EMPTY_FILTERS: Filters = {
     assignee: '',
     manager: '',
-    status: '',
+    status: 'Pending Approval',
     title: '',
 }
 
@@ -115,27 +116,28 @@ const TimesheetEngagementsPage: FC = () => {
 
     return (
         <ContentLayout title='Timesheets'>
+            <EngagementsTabs activeTab='timesheets' />
             <div className={styles.page}>
-                {isAdministrator && (
-                    <section className={styles.filters}>
-                        <label htmlFor='timesheet-filter-title'>
-                            Engagement title
-                            <input
-                                id='timesheet-filter-title'
-                                onChange={handleFilterChange('title')}
-                                type='text'
-                                value={filters.title}
-                            />
-                        </label>
-                        <label htmlFor='timesheet-filter-assignee'>
-                            Assignee
-                            <input
-                                id='timesheet-filter-assignee'
-                                onChange={handleFilterChange('assignee')}
-                                type='text'
-                                value={filters.assignee}
-                            />
-                        </label>
+                <section className={styles.filters}>
+                    <label htmlFor='timesheet-filter-title'>
+                        Engagement title
+                        <input
+                            id='timesheet-filter-title'
+                            onChange={handleFilterChange('title')}
+                            type='text'
+                            value={filters.title}
+                        />
+                    </label>
+                    <label htmlFor='timesheet-filter-assignee'>
+                        Assignee
+                        <input
+                            id='timesheet-filter-assignee'
+                            onChange={handleFilterChange('assignee')}
+                            type='text'
+                            value={filters.assignee}
+                        />
+                    </label>
+                    {isAdministrator && (
                         <label htmlFor='timesheet-filter-manager'>
                             Manager
                             <input
@@ -145,24 +147,24 @@ const TimesheetEngagementsPage: FC = () => {
                                 value={filters.manager}
                             />
                         </label>
-                        <label htmlFor='timesheet-filter-status'>
-                            Timesheet status
-                            <select
-                                id='timesheet-filter-status'
-                                onChange={handleFilterChange('status')}
-                                value={filters.status}
-                            >
-                                <option value=''>All</option>
-                                <option value='Pending Approval'>Pending Approval</option>
-                                <option value='Approved'>Approved</option>
-                            </select>
-                        </label>
-                        <div className={styles.filterActions}>
-                            <Button label='Apply' onClick={handleApplyFilters} primary size='sm' />
-                            <Button label='Clear' onClick={handleClearFilters} secondary size='sm' />
-                        </div>
-                    </section>
-                )}
+                    )}
+                    <label htmlFor='timesheet-filter-status'>
+                        Timesheet status
+                        <select
+                            id='timesheet-filter-status'
+                            onChange={handleFilterChange('status')}
+                            value={filters.status}
+                        >
+                            <option value=''>All</option>
+                            <option value='Pending Approval'>Pending Approval</option>
+                            <option value='Approved'>Approved</option>
+                        </select>
+                    </label>
+                    <div className={styles.filterActions}>
+                        <Button label='Apply' onClick={handleApplyFilters} primary size='sm' />
+                        <Button label='Clear' onClick={handleClearFilters} secondary size='sm' />
+                    </div>
+                </section>
 
                 {isLoading && <LoadingSpinner />}
 
@@ -172,9 +174,7 @@ const TimesheetEngagementsPage: FC = () => {
 
                 {!isLoading && !error && rows.length === 0 && (
                     <p className={styles.pending}>
-                        {isAdministrator
-                            ? 'No timesheets match these filters.'
-                            : 'You have no engagements with timesheet approval authority.'}
+                        No timesheets match these filters.
                     </p>
                 )}
 

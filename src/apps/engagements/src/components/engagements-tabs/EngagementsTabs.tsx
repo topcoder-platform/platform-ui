@@ -7,8 +7,9 @@ import { TabsNavbar, TabsNavItem } from '~/libs/ui'
 import { rootRoute } from '../../engagements.routes'
 
 import styles from './EngagementsTabs.module.scss'
+import { hasAdminRole, hasManagerRole, useFetchEngagementManagers, useFetchEngagementTimesheets } from '~/apps/work/src/lib'
 
-export type EngagementsTab = 'opportunities' | 'applications' | 'assignments'
+export type EngagementsTab = 'opportunities' | 'applications' | 'assignments' | 'timesheets'
 
 interface EngagementsTabsProps {
     activeTab: EngagementsTab
@@ -18,6 +19,9 @@ const EngagementsTabs: FC<EngagementsTabsProps> = (props: EngagementsTabsProps) 
     const navigate = useNavigate()
     const profileContext = useProfileContext()
     const isLoggedIn = profileContext.isLoggedIn
+    const userRoles = profileContext.profile?.roles ?? []
+    const { timesheets } = useFetchEngagementTimesheets()
+    const isAdminOrManager = hasAdminRole(userRoles) || hasManagerRole(userRoles) || timesheets.length
 
     const tabsConfig = useMemo<TabsNavItem<EngagementsTab>[]>(() => {
         const tabs: TabsNavItem<EngagementsTab>[] = [
@@ -29,6 +33,13 @@ const EngagementsTabs: FC<EngagementsTabsProps> = (props: EngagementsTabsProps) 
                 { id: 'applications', title: 'My Applications' },
                 { id: 'assignments', title: 'My Assignments' },
             )
+        }
+
+        if (isAdminOrManager) {
+            tabs.push({
+                id: 'timesheets',
+                title: 'Timesheets',
+            })
         }
 
         return tabs
@@ -47,6 +58,11 @@ const EngagementsTabs: FC<EngagementsTabsProps> = (props: EngagementsTabsProps) 
 
         if (tabId === 'applications') {
             navigate(`${rootRoute}/my-applications`)
+            return
+        }
+
+        if (tabId === 'timesheets') {
+            navigate(`${rootRoute}/timesheets`)
             return
         }
 

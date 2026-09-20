@@ -130,6 +130,20 @@ export interface Engagement {
     workload: EngagementWorkload | string
 }
 
+/**
+ * Approved, unpaid hours available for a payment period.
+ *
+ * `totalHours` is an exact decimal string: it is multiplied by the hourly rate to produce money, so it
+ * never travels as a float.
+ */
+export interface TimesheetPaymentSummary {
+    alreadyPaidEntryIds: string[]
+    entryIds: string[]
+    ratePerHour: string | null
+    totalDays: number
+    totalHours: string
+}
+
 export interface EngagementFilters {
     countries?: string[]
     includePrivate?: boolean

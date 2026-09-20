@@ -22,7 +22,11 @@ import {
 } from '../../constants'
 import {
     Assignment,
+    TimesheetPaymentSummary,
 } from '../../models'
+import {
+    fetchTimesheetPaymentSummary,
+} from '../../services'
 import {
     calculatePaymentAmount,
     getAssignmentPaymentCycle,
@@ -39,6 +43,8 @@ import styles from './PaymentFormModal.module.scss'
 
 export interface PaymentFormData {
     amount: number
+    /** Approved entries this payment consumes, linked once the payment exists. */
+    entryIds: string[]
     hoursWorked: number
     remarks?: string
     title: string
@@ -47,6 +53,8 @@ export interface PaymentFormData {
 interface PaymentFormModalProps {
     billingAccountId?: number | string
     billingAccountMarkup?: number
+    /** Engagement the assignment belongs to, needed to look up approved hours. */
+    engagementId?: number | string
     engagementName?: string
     isSubmitting?: boolean
     member: Assignment | undefined
@@ -112,6 +120,17 @@ function normalizePositiveValue(value: unknown): string {
         .toString()
 }
 
+/** Formats a picked date as the YYYY-MM-DD the timesheet API speaks. */
+function formatWorkDate(date: Date): string {
+    return [
+        date.getFullYear(),
+        String(date.getMonth() + 1)
+            .padStart(2, '0'),
+        String(date.getDate())
+            .padStart(2, '0'),
+    ].join('-')
+}
+
 const DateInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
     (props, ref): JSX.Element => (
         <input
@@ -134,9 +153,18 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
 
     const [errors, setErrors] = useState<ValidationErrors>({})
     const [fromDate, setFromDate] = useState<Date | undefined>(undefined)
-    const [hoursWorked, setHoursWorked] = useState<string>('')
     const [remarks, setRemarks] = useState<string>('')
     const [toDate, setToDate] = useState<Date | undefined>(undefined)
+    const [summary, setSummary] = useState<TimesheetPaymentSummary | undefined>(undefined)
+    const [isLoadingSummary, setIsLoadingSummary] = useState<boolean>(false)
+    const [summaryError, setSummaryError] = useState<string | undefined>(undefined)
+
+    /**
+     * Hours come from approved timesheet entries, never from the keyboard. That is what enforces
+     * "payment only against approved hours" and "payment hours cannot exceed approved hours": an
+     * operator has no field to type a larger number into, so no ceiling check is needed downstream.
+     */
+    const hoursWorked = summary?.totalHours ?? ''
 
     const ratePerHour = useMemo(
         () => getAssignmentRatePerHour(props.member || {}),
@@ -186,10 +214,11 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
     const resetState = useCallback((): void => {
         setErrors({})
         setFromDate(undefined)
-        setHoursWorked('')
         setRemarks('')
         setToDate(undefined)
-    }, [props.member])
+        setSummary(undefined)
+        setSummaryError(undefined)
+    }, [])
 
     useEffect(() => {
         if (!props.open) {
@@ -198,6 +227,56 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
 
         resetState()
     }, [props.member?.id, props.member?.memberId, props.open, resetState])
+
+    // Approved hours for the picked period. Refetched on every range change, because the totals are
+    // period-specific and an already-paid day must drop out of them.
+    useEffect(() => {
+        let mounted = true
+
+        if (!props.open || !fromDate || !toDate || fromDate.getTime() > toDate.getTime()) {
+            setSummary(undefined)
+            return () => undefined
+        }
+
+        const engagementId = props.engagementId
+        const assignmentId = props.member?.id
+
+        if (!engagementId || !assignmentId) {
+            setSummary(undefined)
+            setSummaryError('Approved timesheet hours cannot be looked up for this assignment.')
+            return () => undefined
+        }
+
+        setIsLoadingSummary(true)
+        setSummaryError(undefined)
+
+        fetchTimesheetPaymentSummary(
+            engagementId,
+            assignmentId,
+            formatWorkDate(fromDate),
+            formatWorkDate(toDate),
+        )
+            .then(loaded => {
+                if (mounted) {
+                    setSummary(loaded)
+                }
+            })
+            .catch((error: Error) => {
+                if (mounted) {
+                    setSummary(undefined)
+                    setSummaryError(error.message || 'Failed to load approved timesheet hours.')
+                }
+            })
+            .finally(() => {
+                if (mounted) {
+                    setIsLoadingSummary(false)
+                }
+            })
+
+        return () => {
+            mounted = false
+        }
+    }, [fromDate, props.engagementId, props.member?.id, props.open, toDate])
 
     const handleCancel = useCallback((): void => {
         resetState()
@@ -226,7 +305,9 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         }
 
         if (!Number.isFinite(parsedHoursWorked) || parsedHoursWorked <= 0) {
-            nextErrors.hoursWorked = 'Hours worked must be greater than 0.'
+            nextErrors.hoursWorked = summary && summary.alreadyPaidEntryIds.length > 0
+                ? 'Every approved entry in this period has already been paid.'
+                : 'There are no approved timesheet entries in this period.'
         }
 
         if (ratePerHour === undefined || ratePerHour <= 0) {
@@ -264,13 +345,25 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
 
         await props.onConfirm({
             amount,
+            entryIds: summary?.entryIds ?? [],
             hoursWorked: parsedHoursWorked,
             remarks: remarks.trim() || undefined,
             title: paymentTitle.trim(),
         })
 
         resetState()
-    }, [amount, fromDate, hoursWorked, paymentTitle, props, ratePerHour, remarks, resetState, toDate])
+    }, [
+        amount,
+        fromDate,
+        hoursWorked,
+        paymentTitle,
+        props,
+        ratePerHour,
+        remarks,
+        resetState,
+        summary,
+        toDate,
+    ])
 
     return (
         <BaseModal
@@ -397,18 +490,32 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                     <input
                         id='payment-hours-worked'
                         className={styles.input}
-                        inputMode='decimal'
-                        onChange={event => {
-                            setHoursWorked(event.target.value)
-                            setErrors(previous => ({
-                                ...previous,
-                                hoursWorked: undefined,
-                            }))
-                        }}
-                        pattern='[0-9.]*'
-                        type='number'
-                        value={hoursWorked}
+                        readOnly
+                        type='text'
+                        value={isLoadingSummary ? 'Loading...' : hoursWorked}
                     />
+                    <p className={styles.helperText}>
+                        {summary
+                            ? `${summary.totalDays} approved `
+                                + `${summary.totalDays === 1 ? 'day' : 'days'} in this period`
+                            : 'Hours come from approved timesheet entries for the selected period.'}
+                    </p>
+                    {summary && summary.alreadyPaidEntryIds.length > 0
+                        ? (
+                            <p className={styles.helperText}>
+                                {`${summary.alreadyPaidEntryIds.length} approved `}
+                                {summary.alreadyPaidEntryIds.length === 1 ? 'entry' : 'entries'}
+                                {' in this period '}
+                                {summary.alreadyPaidEntryIds.length === 1 ? 'was' : 'were'}
+                                {' already paid and '}
+                                {summary.alreadyPaidEntryIds.length === 1 ? 'is' : 'are'}
+                                {' excluded.'}
+                            </p>
+                        )
+                        : undefined}
+                    {summaryError
+                        ? <p className={styles.error}>{summaryError}</p>
+                        : undefined}
                     {errors.hoursWorked
                         ? <p className={styles.error}>{errors.hoursWorked}</p>
                         : undefined}

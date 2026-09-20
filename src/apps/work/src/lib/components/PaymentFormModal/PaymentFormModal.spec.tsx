@@ -5,15 +5,47 @@ import {
 } from '@testing-library/react'
 
 import type { Assignment } from '../../models'
+import { fetchTimesheetPaymentSummary } from '../../services'
 
 import PaymentFormModal from './PaymentFormModal'
 
-const mockDatePicker = jest.fn((props: unknown) => (
-    <div
-        data-has-props={String(props !== undefined)}
-        data-testid='payment-week-ending-picker'
-    />
-))
+interface MockDatePickerProps {
+    onChange?: (date: Date | null) => void
+    selected?: Date
+}
+
+/**
+ * Stands in for react-datepicker. Reports a whole date at once, the way the real picker does, so the
+ * modal's period-change effect fires exactly once per selection.
+ */
+const mockDatePicker = jest.fn((props: unknown) => {
+    const typedProps = props as MockDatePickerProps
+
+    return (
+        <input
+            data-has-props={String(props !== undefined)}
+            data-testid='payment-date-picker'
+            onChange={event => {
+                const [year, month, day] = event.target.value.split('-')
+                    .map(Number)
+
+                typedProps.onChange?.(
+                    year && month && day ? new Date(year, month - 1, day) : null,
+                )
+            }}
+            type='text'
+            value={typedProps.selected
+                ? [
+                    typedProps.selected.getFullYear(),
+                    String(typedProps.selected.getMonth() + 1)
+                        .padStart(2, '0'),
+                    String(typedProps.selected.getDate())
+                        .padStart(2, '0'),
+                ].join('-')
+                : ''}
+        />
+    )
+})
 
 jest.mock('react-datepicker', () => ({
     __esModule: true,
@@ -48,8 +80,15 @@ jest.mock('~/libs/ui', () => ({
 
 jest.mock('../../utils', () => ({
     calculatePaymentAmount: jest.fn(() => 821.2),
+    getAssignmentPaymentCycle: jest.fn(() => 'WEEKLY'),
     getAssignmentRatePerHour: jest.fn(() => 20.53),
+    getAssignmentStandardHoursPerDay: jest.fn(() => 8),
     getAssignmentStandardHoursPerWeek: jest.fn(() => 40),
+    getExpectedHoursLabel: jest.fn(() => '40 hours per week'),
+}))
+
+jest.mock('../../services', () => ({
+    fetchTimesheetPaymentSummary: jest.fn(),
 }))
 
 jest.mock('../../constants', () => ({

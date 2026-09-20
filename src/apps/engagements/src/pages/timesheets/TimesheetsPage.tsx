@@ -6,6 +6,7 @@ import { ContentLayout, LoadingSpinner } from '~/libs/ui'
 import type { TimesheetView } from '../../lib/models'
 import { TimesheetViewerRole } from '../../lib/models'
 import { getTimesheet } from '../../lib/services'
+import { EngagementsTabs } from '../../components'
 
 import AdminTimesheetView from './AdminTimesheetView'
 import ManagerTimesheetView from './ManagerTimesheetView'
@@ -104,53 +105,55 @@ const TimesheetsPage: FC = () => {
         }
     }, [isDirty])
 
-    if (isLoading) {
-        return (
-            <ContentLayout>
-                <LoadingSpinner />
-            </ContentLayout>
-        )
-    }
-
-    if (error || !timesheet) {
-        return (
-            <ContentLayout title='Timesheet'>
-                <p className={styles.error} role='alert'>{error ?? ACCESS_DENIED_MESSAGE}</p>
-            </ContentLayout>
-        )
-    }
+    const canRenderContent = !isLoading && !error && timesheet
 
     return (
-        <ContentLayout title='Timesheet'>
-            <div className={styles.page}>
-                <TimesheetHeader
-                    assignment={timesheet.assignment}
-                    engagementTitle={timesheet.engagementTitle}
-                    managers={timesheet.managers}
-                />
+        <ContentLayout title='Timesheets' contentClass={styles.pageContent}>
+            {isLoading && (
+                <LoadingSpinner />
+            )}
 
-                {timesheet.viewerRole === TimesheetViewerRole.MEMBER && (
-                    <MemberTimesheetView
-                        onDirtyChange={setIsDirty}
-                        onTimesheetChange={setTimesheet}
-                        timesheet={timesheet}
-                    />
-                )}
+            {error || !timesheet && (
+                <p className={styles.error} role='alert'>{error ?? ACCESS_DENIED_MESSAGE}</p>
+            )}
 
-                {timesheet.viewerRole === TimesheetViewerRole.MANAGER && (
-                    <ManagerTimesheetView
-                        onTimesheetChange={setTimesheet}
-                        timesheet={timesheet}
-                    />
-                )}
+            <EngagementsTabs
+                activeTab={
+                    timesheet?.viewerRole === TimesheetViewerRole.MEMBER ? 'assignments' : 'timesheets'
+                }
+            />
 
-                {timesheet.viewerRole === TimesheetViewerRole.ADMINISTRATOR && (
-                    <AdminTimesheetView
-                        onTimesheetChange={setTimesheet}
-                        timesheet={timesheet}
+            {canRenderContent && (
+                <div className={styles.page}>
+                    <TimesheetHeader
+                        assignment={timesheet.assignment}
+                        engagementTitle={timesheet.engagementTitle}
+                        managers={timesheet.managers}
                     />
-                )}
-            </div>
+
+                    {timesheet.viewerRole === TimesheetViewerRole.MEMBER && (
+                        <MemberTimesheetView
+                            onDirtyChange={setIsDirty}
+                            onTimesheetChange={setTimesheet}
+                            timesheet={timesheet}
+                        />
+                    )}
+
+                    {timesheet.viewerRole === TimesheetViewerRole.MANAGER && (
+                        <ManagerTimesheetView
+                            onTimesheetChange={setTimesheet}
+                            timesheet={timesheet}
+                        />
+                    )}
+
+                    {timesheet.viewerRole === TimesheetViewerRole.ADMINISTRATOR && (
+                        <AdminTimesheetView
+                            onTimesheetChange={setTimesheet}
+                            timesheet={timesheet}
+                        />
+                    )}
+                </div>
+            )}
         </ContentLayout>
     )
 }
