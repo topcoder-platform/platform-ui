@@ -2017,11 +2017,40 @@ describe('ChallengeDetailsPage member flows', () => {
 
     it('keeps the Marathon Match submissions table compact on desktop', () => {
         expect(challengeDetailStyles)
-            .toMatch(/\.myMarathonTable\s*\{[\s\S]*?th,\s*td\s*\{\s*padding-inline: 8px;/)
+            .toMatch(/\.myMarathonTable\s*\{[\s\S]*?th,\s*td\s*\{\s*padding-inline: 12px;/)
         expect(challengeDetailStyles)
             .toMatch(/\.myMarathonTableCard\s*\{[\s\S]*?\.myMarathonTable\s*\{\s*min-width: 1040px;/)
         expect(challengeDetailStyles)
             .not.toContain('min-width: 1280px;')
+    })
+
+    it('gives the Marathon Match submission id and date columns breathing room', () => {
+        const marathonBlock = (challengeDetailStyles.match(/\.myMarathonTable\s*\{[\s\S]*?\n\}/g) ?? [])
+            .find(block => block.includes('th:first-child')) ?? ''
+        const widthFor = (selector: string): number => Number(
+            new RegExp(`${selector}\\s*\\{\\s*width: (\\d+)px;`)
+                .exec(marathonBlock)?.[1] ?? '0',
+        )
+        const submissionIdWidth = widthFor('th:first-child')
+        const submissionDateWidth = widthFor('th:nth-child\\(2\\)')
+        const columnWidths = [
+            submissionIdWidth,
+            submissionDateWidth,
+            widthFor('th:nth-child\\(3\\)'),
+            widthFor('th:nth-child\\(4\\)'),
+            widthFor('th:nth-child\\(5\\)'),
+            widthFor('th:nth-child\\(6\\)'),
+            widthFor('th:nth-child\\(7\\)'),
+        ]
+
+        expect(submissionIdWidth)
+            .toBeGreaterThanOrEqual(170)
+        expect(submissionDateWidth)
+            .toBeGreaterThanOrEqual(194)
+        // The fixed layout scales these proportionally, so the total must stay at the
+        // scroll-free budget proven in PM-6311.
+        expect(columnWidths.reduce((total, width) => total + width, 0))
+            .toBe(1040)
     })
 
     it('preserves full precision for both Marathon Match score phases in Submissions', () => {

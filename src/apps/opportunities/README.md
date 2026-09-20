@@ -225,8 +225,12 @@ contract. Every track-specific field and action receives a visible mobile key,
 while Submission Date sorting stays above the card and continues to request
 owner-sorted pages.
 Marathon My Submissions uses compact column spacing so the complete scorer table
-fits within its desktop card. Narrow table layouts retain contained horizontal
-overflow until phone record cards take over at the mobile breakpoint.
+fits within its desktop card. The Submission ID and Submission Date columns keep
+a wider share of that budget, and cells use 12px horizontal padding, so long
+submission IDs and long month names stay clearly separated instead of running
+together. The column budget itself is unchanged, so the desktop scrollbar stays
+gone. Narrow table layouts retain contained horizontal overflow until phone
+record cards take over at the mobile breakpoint.
 
 The My Submissions heading keeps its Review App handoff, but phone layouts
 stack that action below the heading copy at full content width so neither the
