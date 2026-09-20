@@ -98,7 +98,45 @@ function fixture(): SalesReport {
             }],
             groups: [{
                 amountColumnId: 'AMOUNT',
-                buckets: [{ count: 18, label: 'Proposal', total: 900000 }],
+                buckets: [{
+                    amounts: [{
+                        columnId: 'AMOUNT',
+                        count: 18,
+                        currencyCode: 'USD',
+                        label: 'Amount',
+                        mixedCurrency: false,
+                        total: 900000,
+                    }, {
+                        columnId: 'EXP_AMOUNT',
+                        count: 18,
+                        currencyCode: 'USD',
+                        label: 'Expected Revenue',
+                        mixedCurrency: false,
+                        total: 450000,
+                    }],
+                    count: 18,
+                    label: 'Proposal',
+                    total: 900000,
+                }, {
+                    amounts: [{
+                        columnId: 'AMOUNT',
+                        count: 6,
+                        currencyCode: 'USD',
+                        label: 'Amount',
+                        mixedCurrency: false,
+                        total: 87654,
+                    }, {
+                        columnId: 'EXP_AMOUNT',
+                        count: 6,
+                        currencyCode: 'USD',
+                        label: 'Expected Revenue',
+                        mixedCurrency: false,
+                        total: 87654,
+                    }],
+                    count: 6,
+                    label: 'Won - SOW Signed',
+                    total: 87654,
+                }],
                 columnId: 'STAGE_NAME',
                 currencyCode: 'USD',
                 label: 'Stage',
@@ -315,31 +353,106 @@ describe('Sales page', () => {
         await screen.findByText('No date range applied.')
     })
 
-    it('shows totals for every matching record without per-tile record counts', async () => {
+    it('shows the four summary cards over every matching record', async () => {
         render(<SalesPage />)
         await screen.findByText('Example opportunity')
+        const cards = ['Total Opportunities', 'Total Amount', 'Total Expected Revenue', 'Total WON SOW Signed']
+        cards.forEach(card => expect(screen.getByText(card))
+            .toBeInTheDocument())
+        expect(screen.getByText('30'))
+            .toBeInTheDocument()
+        // The plain Amount is redundant beside Amount (converted), so the card reads the converted total.
         expect(screen.getByText('$1,234,567'))
             .toBeInTheDocument()
-        // The plain Amount is redundant beside Amount (converted), so its tile is hidden.
         expect(screen.queryByText('$987,654'))
             .not.toBeInTheDocument()
         // An uncoded single-currency total reads in dollars like the converted columns.
         expect(screen.getByText('$555,555'))
             .toBeInTheDocument()
-        expect(screen.getByText('2,468'))
-            .toBeInTheDocument()
-        expect(screen.getByText('Totals mix currencies.'))
-            .toBeInTheDocument()
-        expect(screen.queryByText('Matching records'))
+        // The WON SOW Signed card reports the signed Amount from the stage breakdown.
+        expect(screen.getAllByText('$87,654').length)
+            .toBeGreaterThan(0)
+        // The removed columns no longer earn a tile of their own.
+        expect(screen.queryByText('Local fee'))
             .not.toBeInTheDocument()
-        expect(screen.queryByText(/records with a value/))
-            .not.toBeInTheDocument()
+    })
+
+    it('breaks the pipeline down by stage with both totals, in pipeline order', async () => {
+        render(<SalesPage />)
+        await screen.findByText('Example opportunity')
         expect(screen.getByText('Stage breakdown'))
             .toBeInTheDocument()
-        expect(screen.getByText('18 records'))
-            .toBeInTheDocument()
+        const stages = screen.getAllByRole('button', { pressed: false })
+            .filter(button => button.textContent?.includes('Opportunities'))
+        expect(stages.map(button => button.textContent))
+            .toEqual([
+                expect.stringContaining('Proposal'),
+                expect.stringContaining('Won - SOW Signed'),
+            ])
+        expect(stages[0].textContent)
+            .toContain('$450,000')
         expect(screen.getByText('2 further values not shown.'))
             .toBeInTheDocument()
+    })
+
+    it('drills the table into a stage and releases it when the stage is clicked again', async () => {
+        render(<SalesPage />)
+        await screen.findByText('Example opportunity')
+        const stage = screen.getAllByRole('button', { pressed: false })
+            .find(button => button.textContent?.includes('Won - SOW Signed')) as HTMLElement
+        fireEvent.click(stage)
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({
+                drilldownColumn: 'STAGE_NAME', drilldownValue: 'Won - SOW Signed', page: 1,
+            }), expect.any(AbortSignal)))
+        expect(await screen.findByRole('button', { name: /Won - SOW Signed/, pressed: true }))
+            .toBeInTheDocument()
+        // The breakdown is still complete, because the drilldown never narrows the summary.
+        expect(screen.getAllByRole('button', { pressed: false })
+            .some(button => button.textContent?.includes('Proposal')))
+            .toBe(true)
+        fireEvent.click(screen.getByRole('button', { name: /Won - SOW Signed/, pressed: true }))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({
+                drilldownColumn: undefined, drilldownValue: undefined,
+            }), expect.any(AbortSignal)))
+    })
+
+    it('shows only the PM-6392 columns, in order, without disturbing the row data', async () => {
+        fetchReport.mockResolvedValue({
+            ...fixture(),
+            columns: [
+                { dataType: 'string', id: 'ACCOUNT', label: 'Reporting Account' },
+                { dataType: 'date', id: 'CLOSE_DATE', label: 'Close Date' },
+                { dataType: 'picklist', id: 'STAGE_NAME', label: 'Stage' },
+                { dataType: 'currency', id: 'AMOUNT', label: 'Amount' },
+            ],
+            rows: [{
+                cells: [
+                    { label: 'Hidden account', value: 'Hidden account' },
+                    { label: '9/30/2026', value: '2026-09-30' },
+                    { label: 'Proposal', value: 'Proposal' },
+                    { currencyCode: 'USD', label: '$1,000', value: 1000 },
+                ],
+                id: '0:0',
+            }],
+        })
+        render(<SalesPage />)
+        await screen.findByText('$1,000')
+        expect(screen.getAllByRole('columnheader')
+            .map(header => header.textContent?.replace(/[\u2191\u2193\u2195]/g, '')
+                .trim()))
+            .toEqual(['Stage', 'Amount', 'Close Date'])
+        expect(screen.queryByText('Hidden account'))
+            .not.toBeInTheDocument()
+        // The cells still follow their own column, not the header position.
+        const cells = screen.getAllByRole('cell')
+            .map(cell => cell.textContent)
+        expect(cells)
+            .toEqual(['Proposal', '$1,000', '9/30/2026'])
+        // A removed column is no longer offered as a filter field either.
+        expect([...(screen.getByLabelText('Filter field') as HTMLSelectElement).options].map(o => o.text))
+            .toEqual(['Choose a field', 'Stage', 'Amount', 'Close Date'])
     })
 
     it('disables the range and hides totals for a report that provides neither', async () => {
@@ -355,7 +468,9 @@ describe('Sales page', () => {
             .toBeDisabled()
         expect(screen.getByLabelText('From date'))
             .toBeDisabled()
-        expect(screen.queryByText('Opportunities'))
+        expect(screen.queryByText('Total Opportunities'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Stage breakdown'))
             .not.toBeInTheDocument()
     })
 

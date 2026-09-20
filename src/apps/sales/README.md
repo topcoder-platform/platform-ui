@@ -1,4 +1,4 @@
-# Sales (PM-6343, PM-6363, PM-6364)
+# Sales (PM-6343, PM-6363, PM-6364, PM-6392)
 
 Read-only Salesforce reporting for Administrators and Talent Managers. Available
 at `sales.topcoder.com` / `sales.topcoder-dev.com`, `/sales` on the combined host,
@@ -17,11 +17,76 @@ opportunity description first, followed by the customer, SMU, close date and
 stage when Salesforce provides them, plus a link to the record. The popup closes
 with its Close button or the X icon; obsolete lookups are aborted.
 
-## Date range filter (PM-6364)
+## Dashboard layout (PM-6392)
 
-A date range panel at the top of the page, headed inside its box like the
-report panel, filters the report by **Created Date** for pipeline generation,
-or by **Close Date** for revenue projection.
+The page reads as an executive dashboard rather than one long column:
+
+1. Page title and refresh controls.
+2. Four summary statistic cards, left to right.
+3. A two-column row: the stage breakdown on the left, the date range filter on
+   the right, each about half the width. Below 1100px they stack.
+4. The opportunity table.
+
+## Summary statistic cards (PM-6392)
+
+The four cards report **Total Opportunities**, **Total Amount**, **Total
+Expected Revenue** and **Total WON SOW Signed**, in that fixed order. They read
+the API's snapshot-wide `summary`, so they describe every record the current
+search, column filter and date range match, not the visible page.
+
+Total Amount and Total Expected Revenue resolve their column by label, accepting
+the converted variant so a report that provides only `Amount (converted)` still
+fills the card with the single-currency figure `displayedAmounts` prefers. Total
+Amount falls back to the report's first non-converted total if no column is
+named Amount. Total WON SOW Signed is the Amount total of the `Won - SOW Signed`
+stage taken from the breakdown. A card whose column the report does not provide
+shows an em dash rather than disappearing, so the row stays four wide.
+
+The cards deliberately ignore the selected stage: they are the overview the
+stage tiles are read against. See the drilldown note below.
+
+## Stage breakdown (PM-6392)
+
+The stage breakdown is a compact grid of clickable tiles, one per stage, each
+showing that stage's opportunity count, Amount and Expected Revenue. The stages
+are ordered down the pipeline — Prospecting, Qualification, Proposal, Contracts,
+Closing, Won SOW Signed — and a stage the pipeline adds later follows them,
+ordered by value as the API returned it.
+
+Clicking a tile filters the table below to that stage; the tile is highlighted
+and carries `aria-pressed`. Clicking it again, or the **Clear stage** control in
+the panel header, removes the filter. The selection travels as the Reports API
+`drilldownColumn`/`drilldownValue` pair, which narrows the returned rows only,
+so `summary` still covers every stage and the breakdown does not collapse to the
+one stage being examined. The stage selection is independent of the report's own
+search and Filter field controls, and clearing those leaves it in place, exactly
+as it leaves the date range in place.
+
+## Table columns (PM-6392)
+
+The table shows ten columns, in this order: Stage, Opportunity Name, Account
+Name, Subcontracting End Customer, Reporting SMU, Amount, Expected Revenue,
+Created Date, Close Date, Opportunity Owner. Reporting Account, Close Month,
+Expected Revenue (Converted), Amount (Converted) and Forecast Alert are not
+shown.
+
+Selection and ordering are a **display** concern in `sales.utils.ts`: columns are
+matched by label, the API response and the WIN contract are unchanged, and a
+column the Salesforce report adds later is kept and shown behind the ordered
+ones rather than silently dropped. Each displayed column keeps the cell index it
+has in `row.cells`, so reordering headers never reorders row data. The Filter
+field dropdown offers the displayed columns only.
+
+Currency and numeric cells are right-aligned and never wrap, date cells never
+wrap, and padding and font sizes are tightened so the ten columns fit a standard
+laptop width. The focusable horizontal scroll region remains as a fallback for
+narrow windows and unusually wide values.
+
+## Date range filter (PM-6364, moved in PM-6392)
+
+The date range panel, now the right half of the two-column row, filters the
+report by **Created Date** for pipeline generation, or by **Close Date** for
+revenue projection.
 The Filter type dropdown lists the report's own `date`/`datetime` columns rather
 than hard-coded Salesforce field IDs, and opens on the Created Date column when
 the report has one. From date and To date are inclusive and either may be left
@@ -37,24 +102,22 @@ The Reports API applies the range across the whole received snapshot before
 paginating, so a filtered count is the real matching count and not a per-page
 figure.
 
-## Filtered totals (PM-6364)
+## Filtered totals (PM-6364, restated in PM-6392)
 
-Summary tiles above the report show the metrics the current filters produce over
-every matching record: opportunity count, a total per numeric column (pipeline
-value and revenue projections), and a breakdown per category column such as
-Stage. The API computes them, so they never describe only the visible page.
-Each tile shows only its label and value. A total whose converted counterpart
-the report also provides, such as Amount beside Amount (converted), is hidden
-for now as redundant. Totals show their shared currency, and a single-currency
-total the report leaves uncoded is shown in US dollars to match the converted
-columns; a total that sums different currencies is rendered as a plain number
-and labelled as mixed. Tiles are hidden when the API
-returns no `summary`, which keeps the page working against an API that predates
-this feature.
+The API computes every total over all matching records, so they never describe
+only the visible page. A total whose converted counterpart the report also
+provides, such as Amount beside Amount (converted), is treated as redundant and
+the converted figure is used. Totals show their shared currency, and a
+single-currency total the report leaves uncoded is shown in US dollars to match
+the converted columns; a total that sums different currencies is rendered as a
+plain number and labelled as mixed. The cards and the stage breakdown are hidden
+when the API returns no `summary`, and a `summary` whose buckets predate the
+PM-6392 per-bucket `amounts` still renders, using the primary bucket total.
 
-Report metadata determines every displayed column, including grouped Stage.
-Search and column substring filters apply automatically as the user types (debounced); headers sort globally
-before server pagination. Changing a filter, sort or page size starts at page
+Report metadata determines every available column, including grouped Stage.
+Search and column substring filters apply automatically as the user types
+(debounced); a stage tile applies at once, because a click is already a
+deliberate single action. Headers sort globally before server pagination. Changing a filter, sort or page size starts at page
 one. Clear resets filters and sorting. Null display values use an em dash.
 Search sales, Filter field and Contains use persistent labels above equal-height
 controls, aligned in the desktop filter row and stacked on mobile.
