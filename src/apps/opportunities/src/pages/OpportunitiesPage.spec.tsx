@@ -52,11 +52,17 @@ jest.mock('~/libs/ui', () => {
 }, { virtual: true })
 
 jest.mock('../components', () => ({
-    OpportunityFiltersPanel: (props: { onAppliedChange: (checked: boolean) => void }) => {
+    MY_ENGAGEMENTS_STATUS: 'MINE',
+    OpportunityFiltersPanel: (props: {
+        onAppliedChange: (checked: boolean) => void
+        onStatusChange: (status: string) => void
+    }) => {
         const selectMyCompetitions = (): void => props.onAppliedChange(true)
+        const selectMyEngagements = (): void => props.onStatusChange('MINE')
         return (
             <aside aria-label='Opportunity filters'>
                 <button onClick={selectMyCompetitions} type='button'>My competitions</button>
+                <button onClick={selectMyEngagements} type='button'>My engagements</button>
             </aside>
         )
     },
@@ -420,6 +426,46 @@ describe('OpportunitiesPage', () => {
             .toHaveBeenLastCalledWith('competitions', expect.objectContaining({ applied: true })))
         expect(await screen.findByTestId('registration-managed-challenge'))
             .toHaveTextContent('false')
+    })
+
+    it('lists every owned engagement lifecycle behind the My engagements status', async () => {
+        mockedGetOpportunitySummary.mockResolvedValue({
+            competitions: { count: 0 },
+            copilots: { count: 0 },
+            engagements: { count: 2 },
+            reviews: { count: 0 },
+        })
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [],
+            page: 1,
+            perPage: 10,
+            total: 0,
+            totalPages: 0,
+        })
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/engagements']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        await waitFor(() => expect(mockedGetOpportunityPage)
+            .toHaveBeenLastCalledWith('engagements', expect.objectContaining({
+                applied: false,
+                statuses: ['OPEN'],
+            })))
+
+        fireEvent.click(screen.getByRole('button', { name: 'My engagements' }))
+
+        await waitFor(() => expect(mockedGetOpportunityPage)
+            .toHaveBeenLastCalledWith('engagements', expect.objectContaining({
+                applied: true,
+                statuses: undefined,
+            })))
     })
 
     it('links the copilot learning card to the published Thrive article', async () => {

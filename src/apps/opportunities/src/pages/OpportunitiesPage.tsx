@@ -17,6 +17,7 @@ import {
 import { IconOutline } from '~/libs/ui'
 
 import {
+    MY_ENGAGEMENTS_STATUS,
     OpportunityFiltersPanel,
     OpportunityHero,
     OpportunityListCard,
@@ -194,8 +195,12 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         [kind, topgear],
     )
 
+    // "My engagements" is an ownership filter wearing a status label: it must not
+    // narrow the lifecycle, so the member sees open, in-progress, and completed rows.
+    const myEngagements = kind === 'engagements' && status === MY_ENGAGEMENTS_STATUS
+
     const filters = useMemo<OpportunityFilters>(() => ({
-        applied,
+        applied: applied || myEngagements,
         groups,
         memberId: profile?.userId === undefined ? undefined : String(profile.userId),
         page,
@@ -203,10 +208,23 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         role: role || undefined,
         search: deferredSearch || undefined,
         sort,
-        statuses: status ? [status] : undefined,
+        statuses: status && !myEngagements ? [status] : undefined,
         tracks: tracks.length ? tracks : undefined,
         types: types.length ? types : undefined,
-    }), [applied, deferredSearch, groups, page, perPage, profile?.userId, role, sort, status, tracks, types])
+    }), [
+        applied,
+        deferredSearch,
+        groups,
+        myEngagements,
+        page,
+        perPage,
+        profile?.userId,
+        role,
+        sort,
+        status,
+        tracks,
+        types,
+    ])
 
     const pageResponse: SWRResponse<OpportunityPage<OpportunityItem>, Error> = useSWR(
         ['opportunities:list', kind, filters],
@@ -407,7 +425,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
                             item={item}
                             key={item.id}
                             kind={kind}
-                            memberApplied={applied}
+                            memberApplied={applied || myEngagements}
                             onSkillClick={updateSearch}
                             registered={kind === 'competitions'
                                 && registrationIds.has(item.id)}

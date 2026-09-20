@@ -64,6 +64,16 @@ On mobile, Search, ownership, and Status remain immediately visible while the
 Track, Type, or Role facets sit behind the accessible More filters control.
 Desktop keeps every available facet expanded.
 
+Engagements state their two authored Status choices directly: `Open for
+application` and `My engagements`. The separate ownership checkbox is therefore
+omitted for that domain only; the other domains keep it. `My engagements` is an
+ownership filter wearing a status label, so it deliberately applies no lifecycle
+status and returns the member's open, in-progress, and completed engagements in
+one list, each card carrying its own Applied, Accepted, or Completed state pill.
+An accepted, approved, or selected application or assignment all read as
+`Accepted`, matching the design and the label My Work already used.
+Anonymous visitors never see the option because they own no engagements.
+
 On narrow layouts, Browse keeps the member's decision flow in document order:
 the title is followed by filters, then the sort/view toolbar, and finally the
 results. Desktop presents the same controls in the authored two-column grid,
@@ -282,8 +292,9 @@ field is present for the caller.
   title/description search resolves matching standardized skill IDs and retries
   through the API's `requiredSkills` filter so skill and technology terms stay
   discoverable without weakening normal project search. The authored `My
-  engagements` view sends both `appliedByMe=true` and `includePrivate=true` so
-  accepted or assigned private work remains visible to the current member.
+  engagements` Status choice sends both `appliedByMe=true` and
+  `includePrivate=true`, and no `status`, so accepted or assigned private work
+  and finished engagements all remain visible to the current member.
   Public engagement cards hydrate the caller's status from that same complete
   member-scoped feed, retaining terminal rejected-offer assignments that the
   narrower `my-assignments` collection intentionally excludes.

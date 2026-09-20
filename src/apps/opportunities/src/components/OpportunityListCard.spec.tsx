@@ -590,7 +590,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toContain('stateApplied')
     })
 
-    it('shows selected and applied states for member engagement results', () => {
+    it('shows accepted and applied states for member engagement results', () => {
         const selected: EngagementOpportunity = {
             applicationStatus: 'ACCEPTED',
             id: 'selected-engagement',
@@ -609,7 +609,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByText('Selected').className)
+        expect(screen.getByText('Accepted').className)
             .toContain('stateAccepted')
         rerender(
             <MemoryRouter>
@@ -633,7 +633,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByText('Selected').className)
+        expect(screen.getByText('Accepted').className)
             .toContain('stateAccepted')
         expect(screen.queryByText('Application closed'))
             .not.toBeInTheDocument()
@@ -731,7 +731,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
 
         expect(screen.getByText('Terminated').className)
             .toContain('stateClosed')
-        expect(screen.queryByText('Selected'))
+        expect(screen.queryByText('Accepted'))
             .not.toBeInTheDocument()
     })
 
@@ -753,11 +753,11 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
 
         expect(screen.getByText('Offer Declined'))
             .toBeInTheDocument()
-        expect(screen.queryByText('Selected'))
+        expect(screen.queryByText('Accepted'))
             .not.toBeInTheDocument()
     })
 
-    it('lets My Work override the owning API state with the selected treatment', () => {
+    it('lets My Work override the owning API state with the accepted treatment', () => {
         const item: EngagementOpportunity = {
             id: 'accepted-engagement',
             status: 'OPEN',
@@ -766,14 +766,14 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         render(
             <MemoryRouter>
                 <OpportunityListCard
-                    applicationState='Selected'
+                    applicationState='Accepted'
                     item={item}
                     kind='engagements'
                 />
             </MemoryRouter>,
         )
 
-        const state = screen.getByText('Selected')
+        const state = screen.getByText('Accepted')
         expect(state.className)
             .toContain('stateAccepted')
         expect(state.querySelector('svg'))
