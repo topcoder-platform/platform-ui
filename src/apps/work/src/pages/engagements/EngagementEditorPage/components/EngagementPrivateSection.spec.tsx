@@ -4,6 +4,7 @@ import type {
     PropsWithChildren,
 } from 'react'
 import {
+    fireEvent,
     render,
     screen,
 } from '@testing-library/react'
@@ -16,6 +17,26 @@ import { MemoryRouter } from 'react-router-dom'
 import {
     EngagementPrivateSection,
 } from './EngagementPrivateSection'
+
+jest.mock('~/config', () => ({
+    AppSubdomain: { work: 'work' },
+    EnvironmentConfig: {
+        API: {
+            V5: 'https://example.com/v5',
+            V6: 'https://example.com/v6',
+        },
+        CHALLENGE_API_URL: 'https://example.com/challenges',
+        CHALLENGE_API_VERSION: 'v5',
+        COMMUNITY_APP_URL: 'https://example.com/community',
+        DIRECT_PROJECT_URL: 'https://example.com/direct-project',
+        ENGAGEMENTS_URL: 'https://example.com/engagements',
+        REVIEW_APP_URL: 'https://example.com/review',
+        SUBDOMAIN: 'platform',
+        TC_DOMAIN: 'example.com',
+        TC_FINANCE_API: 'https://example.com/finance',
+        TOPCODER_URL: 'https://example.com/topcoder',
+    },
+}), { virtual: true })
 
 jest.mock('../../../../lib/components/form', () => {
     const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
@@ -87,7 +108,18 @@ jest.mock('../../../../lib/utils/payment.utils', () => ({
 }))
 
 jest.mock('./AssignmentDetailsModal', () => ({
-    AssignmentDetailsModal: (): JSX.Element => <></>,
+    AssignmentDetailsModal: (props: {
+        memberHandle?: string
+        onCancel: () => void
+        open: boolean
+    }): JSX.Element => (props.open
+        ? (
+            <div>
+                <span data-testid='assignment-modal-member'>{props.memberHandle || '-'}</span>
+                <button onClick={props.onCancel} type='button'>Close Assignment Details</button>
+            </div>
+        )
+        : <></>),
 }))
 
 interface TestFormValues {
@@ -121,6 +153,7 @@ function renderPrivateSection(
     props: {
         assignmentManagementPath?: string
         lockedAssignedMemberHandles?: string[]
+        onAssignmentEditorOpenChange?: (isOpen: boolean) => void
     } = {},
 ): void {
     const FormWrapper: FC<PropsWithChildren> = (wrapperProps: PropsWithChildren) => {
@@ -170,6 +203,37 @@ describe('EngagementPrivateSection', () => {
         expect(screen.getByRole('link', { name: 'Assignments' })
             .getAttribute('href'))
             .toBe('/projects/123/engagements/engagement-1/assignments')
+    })
+
+    it('reports the assignment dialog state so the editor can pause autosave', () => {
+        const onAssignmentEditorOpenChange = jest.fn()
+
+        renderPrivateSection({
+            assignedMemberHandles: ['assigned_member', ''],
+            assignmentDetails: [defaultAssignmentDetails],
+            isPrivate: true,
+            requiredMemberCount: 2,
+        }, {
+            lockedAssignedMemberHandles: ['assigned_member'],
+            onAssignmentEditorOpenChange,
+        })
+
+        expect(onAssignmentEditorOpenChange)
+            .toHaveBeenLastCalledWith(false)
+
+        fireEvent.change(screen.getByLabelText('Assign to Member 2'), {
+            target: { value: 'new_member' },
+        })
+
+        expect(onAssignmentEditorOpenChange)
+            .toHaveBeenLastCalledWith(true)
+        expect(screen.getByTestId('assignment-modal-member').textContent)
+            .toBe('new_member')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Close Assignment Details' }))
+
+        expect(onAssignmentEditorOpenChange)
+            .toHaveBeenLastCalledWith(false)
     })
 
     it('keeps empty member slots editable before a member is assigned', () => {
