@@ -570,7 +570,11 @@ summaries expose bounded starter excerpts, participant snapshots, unique
 authenticated view counts, and current-member watch state. The
 environment-specific Vanilla URL is retained only as a recovery link when the
 v6 API is unavailable or the member is signed out. Forum counts come from the
-complete API result, including topics created by the current member.
+complete API result, including topics created by the current member. Opening a
+topic, creating one, and returning to the topic list all swap the panel without
+changing the route, so each of those transitions resets the page scroll offset;
+otherwise a member who opened a topic from far down the list would land in the
+middle of the discussion they just opened.
 Unregistered administrators
 receive the registered read and monitoring tabs, including Submissions, the
 metadata-enabled Marathon Dashboard, and Forum, while My Submissions and upload

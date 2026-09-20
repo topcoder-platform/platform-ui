@@ -321,6 +321,31 @@ describe('ChallengeForum', () => {
             .toHaveBeenCalledWith('topic-1')
     })
 
+    it('resets the viewport when a topic is opened and closed', async () => {
+        const scrollTo = jest.spyOn(window, 'scrollTo')
+            .mockImplementation()
+
+        try {
+            render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+            expect(scrollTo)
+                .not.toHaveBeenCalled()
+
+            await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+            expect(scrollTo)
+                .toHaveBeenCalledWith({ left: 0, top: 0 })
+
+            scrollTo.mockClear()
+            // Inside a discussion the same accessible name belongs to the back control.
+            await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+            expect(scrollTo)
+                .toHaveBeenCalledWith({ left: 0, top: 0 })
+            expect(screen.getByRole('button', { name: /Create new topic/ }))
+                .toBeInTheDocument()
+        } finally {
+            scrollTo.mockRestore()
+        }
+    })
+
     it('creates a challenge topic without leaving Opportunities', async () => {
         render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
         fireEvent.click(screen.getByRole('button', { name: /Create new topic/ }))
