@@ -400,6 +400,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             if (aiReviewConfig?.id) {
                 await mutate(getAiReviewDecisionsCacheKey(aiReviewConfig.id))
             }
+
             await mutate(getAiWorkflowRunsCacheKey(props.submission.id))
             toast.success('AI decision rebuild triggered successfully.')
         } catch (error) {
