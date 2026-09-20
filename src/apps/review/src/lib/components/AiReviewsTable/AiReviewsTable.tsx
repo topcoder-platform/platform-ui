@@ -22,6 +22,7 @@ import {
     getAiWorkflowRunsCacheKey,
     queueAiWorkflowRuns,
     QueueAiWorkflowRunsResponse,
+    rebuildSubmissionDecision,
     retriggerAiWorkflowRun,
     useFetchAiWorkflowsRuns,
     useRolePermissions,
@@ -39,6 +40,7 @@ import {
     ChallengeDetailContextModel,
 } from '../../models'
 import { ChallengeDetailContext } from '../../contexts'
+import { getAiReviewDecisionsCacheKey } from '../../services/aiReview.service'
 
 import { AiWorkflowRunStatus } from './AiWorkflowRunStatus'
 import styles from './AiReviewsTable.module.scss'
@@ -334,6 +336,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
     const { mutate }: FullConfiguration = useSWRConfig()
     const [, setRerunningRunId] = useState<string | undefined>(undefined)
     const [queueingRuns, setQueueingRuns] = useState<boolean>(false)
+    const [rebuildingDecision, setRebuildingDecision] = useState<boolean>(false)
 
     /**
      * Only Copilot, Project Manager, and Admin can see WHO performed the action.
@@ -386,6 +389,25 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
      * - a workflow with no run at all can be queued manually
      * - an existing (finished) run can be re-run
      */
+    const handleRebuildDecision = useCallback(async (): Promise<void> => {
+        if (!isAdmin || !props.submission.id) {
+            return
+        }
+
+        setRebuildingDecision(true)
+        try {
+            await rebuildSubmissionDecision(props.submission.id)
+            await mutate(getAiReviewDecisionsCacheKey(aiReviewConfig?.id))
+            await mutate(getAiWorkflowRunsCacheKey(props.submission.id))
+            toast.success('AI decision rebuild triggered successfully.')
+        } catch (error) {
+            handleError(error as Error)
+            toast.error('Failed to trigger AI decision rebuild.')
+        } finally {
+            setRebuildingDecision(false)
+        }
+    }, [aiReviewConfig?.id, isAdmin, mutate, props.submission.id])
+
     const buildRowAction = useCallback((row: AiReviewerRow): ReactNode => {
         if (!isAdmin || row.run?.id === '-1') {
             return undefined
@@ -639,6 +661,36 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
 
     return (
         <div className={styles.wrap} onClick={stopPropagation}>
+            {isAdmin && currentDecision && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                    <Tooltip content={rebuildingDecision ? 'Rebuilding decision...' : 'Rebuild decision'}>
+                        <button
+                            type='button'
+                            onClick={handleRebuildDecision}
+                            disabled={rebuildingDecision}
+                            className={styles.reRunIcon}
+                            style={{
+                                alignItems: 'center',
+                                background: '#fff',
+                                border: '1px solid #d1d5db',
+                                borderRadius: 6,
+                                cursor: rebuildingDecision ? 'not-allowed' : 'pointer',
+                                display: 'inline-flex',
+                                justifyContent: 'center',
+                                padding: 6,
+                            }}
+                            aria-label={rebuildingDecision ? 'Rebuilding decision' : 'Rebuild decision'}
+                        >
+                            {rebuildingDecision ? (
+                                <IconOutline.RefreshIcon className='icon-lg' style={{ opacity: 0.5 }} />
+                            ) : (
+                                <IconOutline.RefreshIcon className='icon-lg' />
+                            )}
+                        </button>
+                    </Tooltip>
+                </div>
+            )}
+
             {currentDecision?.submissionLocked && lockMessage && (
                 <div className={styles.lockedBanner}>
                     <IconOutline.LockClosedIcon className='icon-xl' />
