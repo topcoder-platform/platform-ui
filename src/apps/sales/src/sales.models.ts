@@ -14,6 +14,12 @@ export interface SalesSummaryBucket {
     label: string
     count: number
     total: number
+    /**
+     * Every numeric column totalled inside this bucket, in the same order as
+     * `SalesSummary.amounts`. Optional so a response from an API that predates
+     * PM-6392 still renders, using `total` alone.
+     */
+    amounts?: SalesSummaryAmount[]
 }
 
 /** A category column broken down into its distinct values, largest total first. */
@@ -60,6 +66,14 @@ export interface SalesQuery {
     search?: string
     filterColumn?: string
     filterValue?: string
+    /** Column the returned page drills into; requires drilldownValue. */
+    drilldownColumn?: string
+    /**
+     * Exact displayed value the page drills into, such as a pipeline stage.
+     * The drilldown narrows the rows only, so the summary still describes every
+     * bucket and the stage breakdown stays on screen while one stage is selected.
+     */
+    drilldownValue?: string
     /** Date or datetime column the range applies to, such as Created Date or Close Date. */
     dateColumn?: string
     /** Inclusive YYYY-MM-DD lower bound; requires dateColumn. */
