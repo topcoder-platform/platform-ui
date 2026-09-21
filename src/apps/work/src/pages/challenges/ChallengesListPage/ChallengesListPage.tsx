@@ -33,6 +33,7 @@ import {
 import {
     ChallengesFilter,
     ChallengesTable,
+    CopilotOpportunitiesModal,
     ErrorMessage,
     Pagination,
     ProjectBillingAccountExpiredNotice,
@@ -148,26 +149,48 @@ function renderHeaderActions(params: RenderHeaderActionsParams): JSX.Element {
     )
 }
 
-function renderRequestCopilotAction(projectId: string): JSX.Element {
+/**
+ * Renders the copilot actions shown beside the challenge create button.
+ *
+ * "Request Copilot" opens the Copilots app request form for the project, while
+ * "View Request" opens a modal listing the copilot opportunities already raised
+ * for it.
+ *
+ * @param projectId project the copilot actions apply to.
+ * @param onViewRequest opens the copilot opportunities modal.
+ * @returns the copilot action links.
+ * @throws Does not throw.
+ */
+function renderCopilotActions(projectId: string, onViewRequest: () => void): JSX.Element {
     const requestCopilotUrl = `${COPILOTS_APP_URL.replace(/\/$/, '')}/requests/new?projectId=${
         encodeURIComponent(projectId)
     }`
 
     return (
-        <a
-            className={styles.requestCopilotLink}
-            href={requestCopilotUrl}
-            rel='noreferrer noopener'
-            target='_blank'
-        >
-            Request Copilot
-        </a>
+        <>
+            <a
+                className={styles.requestCopilotLink}
+                href={requestCopilotUrl}
+                rel='noreferrer noopener'
+                target='_blank'
+            >
+                Request Copilot
+            </a>
+            <button
+                className={styles.viewRequestButton}
+                onClick={onViewRequest}
+                type='button'
+            >
+                View Request
+            </button>
+        </>
     )
 }
 
 interface RenderContextualActionsParams {
     canRequestCopilot: boolean
     disabled: boolean
+    onViewCopilotRequests: () => void
     projectId: string
 }
 
@@ -175,7 +198,7 @@ function renderContextualActions(params: RenderContextualActionsParams): JSX.Ele
     return (
         <div className={styles.contextualActionRow}>
             {params.canRequestCopilot
-                ? renderRequestCopilotAction(params.projectId)
+                ? renderCopilotActions(params.projectId, params.onViewCopilotRequests)
                 : undefined}
             {renderCreateActionButton({
                 actionPath: `/projects/${params.projectId}/challenges/new`,
@@ -266,24 +289,25 @@ function renderBillingAccountNotice(params: RenderBillingAccountNoticeParams): J
     )
 }
 
-function hasBillingAccountId(value: unknown): boolean {
-    return value !== undefined
-        && value !== null
-        && String(value)
-            .trim()
-            .length > 0
-}
-
 interface CanRequestCopilotParams {
-    billingAccountId?: number | string
     isAdmin: boolean
     isManager: boolean
     projectStatus?: ProjectStatusValue
 }
 
+/**
+ * Returns whether the copilot actions should render for the current project.
+ *
+ * Onboarding a copilot is needed during the initial phase of a project, before a
+ * Salesforce opportunity or billing account exists, so the actions are gated on
+ * the caller's role and the project lifecycle only.
+ *
+ * @param params caller privileges and the loaded project status.
+ * @returns `true` when an admin or manager may request a copilot for the project.
+ * @throws Does not throw.
+ */
 function canRequestCopilot(params: CanRequestCopilotParams): boolean {
-    return hasBillingAccountId(params.billingAccountId)
-        && (params.isAdmin || params.isManager)
+    return (params.isAdmin || params.isManager)
         && params.projectStatus !== PROJECT_STATUS.CANCELLED
         && params.projectStatus !== PROJECT_STATUS.COMPLETED
 }
@@ -354,6 +378,7 @@ function getRightHeader(params: GetRightHeaderParams): JSX.Element | undefined {
 interface GetContextualActionsParams {
     canRequestCopilot: boolean
     disabled: boolean
+    onViewCopilotRequests: () => void
     projectId?: string
 }
 
@@ -365,6 +390,7 @@ function getContextualActions(params: GetContextualActionsParams): JSX.Element |
     return renderContextualActions({
         canRequestCopilot: params.canRequestCopilot,
         disabled: params.disabled,
+        onViewCopilotRequests: params.onViewCopilotRequests,
         projectId: params.projectId,
     })
 }
@@ -522,6 +548,7 @@ export const ChallengesListPage: FC = () => {
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
     const [sortBy, setSortBy] = useState<string>(DEFAULT_SORT_BY)
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(DEFAULT_SORT_ORDER)
+    const [isCopilotRequestsModalOpen, setIsCopilotRequestsModalOpen] = useState<boolean>(false)
     const isPrivilegedUser = isAdmin || isManager
     const selectedProjectId = projectIdFromRoute || filters.projectId
     const projectResult: UseFetchProjectResult = useFetchProject(projectIdFromRoute)
@@ -631,6 +658,14 @@ export const ChallengesListPage: FC = () => {
             .catch(() => undefined)
     }, [challengesResult])
 
+    const handleOpenCopilotRequests = useCallback(() => {
+        setIsCopilotRequestsModalOpen(true)
+    }, [])
+
+    const handleCloseCopilotRequests = useCallback(() => {
+        setIsCopilotRequestsModalOpen(false)
+    }, [])
+
     const totalChallenges = challengesResult.metadata.total ?? 0
     const shouldShowPagination = canRenderPagination(!!challengesResult.error, totalChallenges)
 
@@ -722,7 +757,6 @@ export const ChallengesListPage: FC = () => {
     const isCreateActionDisabled = !!projectIdFromRoute && !isProjectActive
     const canCreateProjectEngagement = canCreateEngagement(userRoles)
     const shouldShowRequestCopilot = canRequestCopilot({
-        billingAccountId: projectResult.project?.billingAccountId,
         isAdmin,
         isManager,
         projectStatus: projectResult.project?.status,
@@ -736,6 +770,7 @@ export const ChallengesListPage: FC = () => {
     const contextualActions = getContextualActions({
         canRequestCopilot: shouldShowRequestCopilot,
         disabled: isCreateActionDisabled,
+        onViewCopilotRequests: handleOpenCopilotRequests,
         projectId: projectIdFromRoute,
     })
 
@@ -824,6 +859,15 @@ export const ChallengesListPage: FC = () => {
                 sortOrder,
                 totalChallenges,
             })}
+
+            {isCopilotRequestsModalOpen && projectIdFromRoute
+                ? (
+                    <CopilotOpportunitiesModal
+                        onClose={handleCloseCopilotRequests}
+                        projectId={projectIdFromRoute}
+                    />
+                )
+                : undefined}
         </PageWrapper>
     )
 }
