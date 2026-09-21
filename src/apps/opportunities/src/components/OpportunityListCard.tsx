@@ -64,7 +64,7 @@ import {
     ChallengeDetailTab,
     challengeDetailPath,
 } from '../utils/challenge-detail-route.utils'
-import { htmlToPlainText } from '../utils/html-text.utils'
+import { decodeHtmlEntities, htmlToPlainText } from '../utils/html-text.utils'
 import styles from './OpportunityListCard.module.scss'
 
 interface OpportunityListCardProps {
@@ -518,7 +518,7 @@ function engagementView(item: EngagementOpportunity, memberApplied: boolean): Ca
             memberApplied,
             challengeCatalogKey(item.status) === 'open',
         ),
-        title: item.title,
+        title: decodeHtmlEntities(item.title),
     }
 }
 
@@ -543,7 +543,9 @@ function copilotView(item: CopilotOpportunity): CardViewModel {
         ],
         skills: (item.skills ?? []).map((skill: OpportunitySkill) => skill.name),
         state: applicationState(!!item.hasApplied, challengeCatalogKey(item.status) === 'active'),
-        title: item.opportunityTitle || item.projectName || item.project?.name || 'Copilot Opportunity',
+        title: decodeHtmlEntities(
+            item.opportunityTitle || item.projectName || item.project?.name,
+        ) || 'Copilot Opportunity',
         type: opportunityTrackLabel(item.type || item.projectType || 'Copilot'),
     }
 }
@@ -602,7 +604,9 @@ function reviewView(item: ReviewOpportunity): CardViewModel {
             item,
             item.canApply === true || challengeCatalogKey(item.status) === 'open',
         ),
-        title: item.challengeName || String(item.challengeData?.name ?? 'Review Opportunity'),
+        title: decodeHtmlEntities(
+            item.challengeName || String(item.challengeData?.name ?? ''),
+        ) || 'Review Opportunity',
         type: String(item.challengeData?.type ?? item.type ?? ''),
     }
 }
@@ -632,6 +636,7 @@ function toViewModel(kind: OpportunityKind, item: OpportunityItem, memberApplied
  */
 const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const item = props.item
+    const title = decodeHtmlEntities(item.name)
     const type = challengeTypePresentation(item)
     const TypeIcon = type.icon
     const trackKey = challengeCatalogKey(item.track)
@@ -723,7 +728,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                     </div>
                     <Tooltip
                         className={styles.cardTooltip}
-                        content={item.name}
+                        content={title}
                         place='bottom'
                         strategy='fixed'
                     >
@@ -732,7 +737,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                                 className={styles.titleLink}
                                 to={challengeDetailPath(item.id)}
                             >
-                                {item.name}
+                                {title}
                             </Link>
                         </h3>
                     </Tooltip>

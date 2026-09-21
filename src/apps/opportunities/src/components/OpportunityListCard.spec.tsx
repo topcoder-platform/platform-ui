@@ -234,6 +234,30 @@ describe('OpportunityListCard competition presentation', () => {
             .toBe(false)
     })
 
+    it('renders ampersands in engagement copy rather than their character reference', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={{
+                        description: '<p>Engagement Model: Time &amp; Material (T&amp;M)</p>',
+                        id: 'engagement-id',
+                        role: 'SOFTWARE_DEVELOPER',
+                        status: 'OPEN',
+                        title: 'Product Manager &amp; Analyst',
+                    }}
+                    kind='engagements'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('link', { name: 'Product Manager & Analyst' }))
+            .toBeInTheDocument()
+        expect(screen.getByText(/Engagement Model: Time & Material T&M/))
+            .toBeInTheDocument()
+        expect(screen.queryByText(/&amp;/))
+            .not.toBeInTheDocument()
+    })
+
     it('deep-links every active competition metric without nesting card links', () => {
         render(
             <MemoryRouter>
