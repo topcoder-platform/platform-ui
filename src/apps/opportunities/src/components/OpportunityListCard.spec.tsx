@@ -721,9 +721,43 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByText('Accepted').className)
+        expect(screen.getByText('Selected').className)
             .toContain('stateAccepted')
         expect(screen.queryByText('Application closed'))
+            .not.toBeInTheDocument()
+    })
+
+    it('keeps a pending offer on Selected until the member accepts it', () => {
+        const pendingOffer: EngagementOpportunity = {
+            assignments: [{ status: 'SELECTED' }],
+            id: 'pending-offer-engagement',
+            status: 'OPEN',
+            title: 'Pending offer engagement',
+        }
+        const acceptedOffer: EngagementOpportunity = {
+            assignments: [{ status: 'ASSIGNED' }],
+            id: 'accepted-offer-engagement',
+            status: 'OPEN',
+            title: 'Accepted offer engagement',
+        }
+        const { rerender }: RenderResult = render(
+            <MemoryRouter>
+                <OpportunityListCard item={pendingOffer} kind='engagements' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Selected'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Accepted'))
+            .not.toBeInTheDocument()
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard item={acceptedOffer} kind='engagements' />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('Assigned'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Selected'))
             .not.toBeInTheDocument()
     })
 
@@ -819,7 +853,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
 
         expect(screen.getByText('Terminated').className)
             .toContain('stateClosed')
-        expect(screen.queryByText('Accepted'))
+        expect(screen.queryByText('Selected'))
             .not.toBeInTheDocument()
     })
 
@@ -841,7 +875,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
 
         expect(screen.getByText('Offer Declined'))
             .toBeInTheDocument()
-        expect(screen.queryByText('Accepted'))
+        expect(screen.queryByText('Selected'))
             .not.toBeInTheDocument()
     })
 
