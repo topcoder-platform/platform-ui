@@ -64,6 +64,7 @@ import {
     ChallengeDetailTab,
     challengeDetailPath,
 } from '../utils/challenge-detail-route.utils'
+import { htmlToPlainText } from '../utils/html-text.utils'
 import styles from './OpportunityListCard.module.scss'
 
 interface OpportunityListCardProps {
@@ -387,19 +388,16 @@ function formatPrize(prize: ChallengePlacementPrize): string {
 /**
  * Produces a plain excerpt from Markdown or HTML description content.
  *
+ * Character references such as `&ndash;` and `&nbsp;` are resolved so they do
+ * not surface as literal text in the card excerpt.
+ *
  * @param value rich text from the API.
  * @returns short plain-text excerpt.
  * @throws Does not throw.
  */
 function descriptionExcerpt(value?: string): string | undefined {
     if (!value) return undefined
-    const plain = value
-        .replace(/<[^>]*>/g, ' ')
-        .replace(/[#*_>`~()]/g, '')
-        .replace(/\[/g, '')
-        .replace(/]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
+    const plain = htmlToPlainText(value)
     return plain.length > 180 ? `${plain.slice(0, 177)}…` : plain
 }
 

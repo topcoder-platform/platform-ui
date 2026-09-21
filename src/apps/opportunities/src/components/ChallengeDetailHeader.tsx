@@ -6,6 +6,10 @@ import classNames from 'classnames'
 import { ChallengeOpportunity, ChallengePhase } from '../models'
 import { isTaskChallenge } from '../utils/challenge-type.utils'
 import { challengeTrackLabel } from '../utils/challenge-winner.utils'
+import {
+    formatOpportunityDateRange,
+    formatOpportunityDateTime,
+} from '../utils/opportunity-date.utils'
 import challengeCalendarIcon from '../assets/challenge-calendar.svg'
 import challengeChevronIcon from '../assets/challenge-chevron.svg'
 import challengeClockIcon from '../assets/challenge-clock.svg'
@@ -37,11 +41,13 @@ import timelineWinnersIcon from '../assets/timeline-winners.svg'
 import {
     challengeCatalogKey,
     challengeCurrentPhase,
+    challengeIsCancelled,
     ChallengePlacementPrize,
     challengePlacementPrizes,
     challengeRegistrationIsOpen,
     challengeSubmissionIsOpen,
     FUN_CHALLENGE_PRIZE_LABEL,
+    isPostMortemPhase,
 } from './challenge-card.utils'
 import styles from './ChallengeDetailHeader.module.scss'
 
@@ -94,14 +100,7 @@ function catalogName(value: string | { name?: string } | undefined, fallback: st
  * @throws Does not throw; malformed dates use the fallback label.
  */
 function dateRange(startValue?: string, endValue?: string): string {
-    const start = startValue ? new Date(startValue) : undefined
-    const end = endValue ? new Date(endValue) : undefined
-    if (!start || Number.isNaN(start.getTime())) return 'Schedule to be announced'
-    const month = new Intl.DateTimeFormat('en-US', { month: 'long' })
-    const startLabel = `${start.getDate()} ${month.format(start)}`
-    if (!end || Number.isNaN(end.getTime())) return `${startLabel}, ${start.getFullYear()}`
-    const endLabel = `${end.getDate()} ${month.format(end)}, ${end.getFullYear()}`
-    return `${startLabel} - ${endLabel}`
+    return formatOpportunityDateRange(startValue, endValue, 'Schedule to be announced')
 }
 
 /**
@@ -332,6 +331,8 @@ function challengeTimelineEnd(challenge: ChallengeOpportunity): string | undefin
  * Builds the Figma timeline sequence from Challenge API boundaries and phases.
  * Authored phases stay chronological, with Registration first when valid starts match.
  * Task timelines omit Iterative Review because that phase is not member-facing for Tasks.
+ * Every timeline omits Post-Mortem, which Autopilot opens for the copilot after a
+ * cancellation and which community-app never showed to members.
  *
  * @param challenge Challenge API detail response.
  * @param selected API-authoritative current phase.
@@ -348,8 +349,9 @@ function challengeTimelineItems(
     const endTimestamp = timelineTimestamp(endDate)
     const taskChallenge = isTaskChallenge(challenge)
     const authoredPhases = (challenge.phases ?? []).filter(item => (
-        !taskChallenge || !challengeCatalogKey(item.name)
-            .includes('iterativereview')
+        !isPostMortemPhase(item)
+        && (!taskChallenge || !challengeCatalogKey(item.name)
+            .includes('iterativereview'))
     ))
     const phases = authoredPhases
         .map((item, index) => ({ index, item }))
@@ -434,27 +436,14 @@ function timelineConnectorState(
  * Formats one timeline timestamp as the two-row Figma date content expects.
  *
  * @param value ISO timestamp returned by Challenge API.
- * @returns local day, month, year, hour, and minute, or the schedule fallback.
+ * @returns local `day month year, hour:minute` such as `17 Sep 2026, 14:39`, or the schedule fallback.
  * @throws Does not throw; malformed dates use the fallback label.
  */
 function timelineDate(value?: string): string {
     const timestamp = timelineTimestamp(value)
     if (timestamp === undefined) return 'To be announced'
-    const parts = new Intl.DateTimeFormat('en-GB', {
-        day: 'numeric',
-        hour: '2-digit',
-        hour12: false,
-        minute: '2-digit',
-        month: 'long',
-        year: 'numeric',
-    })
-        .formatToParts(new Date(timestamp))
-    const day = parts.find(part => part.type === 'day')?.value
-    const month = parts.find(part => part.type === 'month')?.value
-    const year = parts.find(part => part.type === 'year')?.value
-    const hour = parts.find(part => part.type === 'hour')?.value
-    const minute = parts.find(part => part.type === 'minute')?.value
-    return `${day} ${month}, ${year}, ${hour}:${minute}`
+    return formatOpportunityDateTime(new Date(timestamp)
+        .toISOString(), 'To be announced')
 }
 
 /**
@@ -476,6 +465,9 @@ function timelineTimezone(): string {
  * context, prizes, and competition member actions. Tags precede skills and read
  * as outlined pills so they are distinct from the filled skill chips, with
  * blank and duplicate labels omitted. Assignment-only Task challenges omit actions.
+ * Featured placement prizes shrink to a compact size for long or point-based
+ * labels and to a dense size once lower placement prizes are also shown, and the
+ * row wraps so wide amounts stay inside the prize frame.
  *
  * @param props challenge and registration state.
  * @returns dark challenge detail masthead with Task-aware action visibility.
@@ -483,7 +475,11 @@ function timelineTimezone(): string {
  */
 export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const [timelineOpen, setTimelineOpen] = useState(false)
-    const phase = challengeCurrentPhase(props.challenge)
+    const cancelled = challengeIsCancelled(props.challenge)
+    const currentPhase = challengeCurrentPhase(props.challenge)
+    // A cancelled challenge keeps its Post-Mortem phase open for the copilot. The
+    // masthead must read the cancellation, not a countdown to that phase's close.
+    const phase = cancelled || isPostMortemPhase(currentPhase) ? undefined : currentPhase
     const phaseCopy = phaseSummary(phase, props.challenge.status)
     const challengePrizes = challengePlacementPrizes(props.challenge)
     const type = catalogName(props.challenge.type, 'Challenge')
@@ -493,14 +489,10 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const registrationOpen = challengeRegistrationIsOpen(props.challenge)
     const submissionOpen = challengeSubmissionIsOpen(props.challenge)
     const challengeStatusKey = challengeCatalogKey(props.challenge.status)
-    const showInactiveActions = [
-        'canceled',
-        'canceledclientrequest',
-        'cancelled',
-        'cancelledclientrequest',
-        'completed',
-        'draft',
-    ].includes(challengeStatusKey)
+    // Every cancellation reason reads as a cancelled challenge, including the
+    // `CANCELLED_ZERO_SUBMISSIONS` status Autopilot sets when a challenge closes
+    // with nothing submitted.
+    const showInactiveActions = cancelled || ['completed', 'draft'].includes(challengeStatusKey)
     const registrationUnavailable = props.registrationLoading || props.registrationError
     const canUnregister = props.isRegistered
         && !props.hasSubmitted
@@ -528,6 +520,9 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
             .toUpperCase()
         return prizeType === 'POINT' || prizeType === 'POINTS' || featuredPrizeLabels[index].length > 8
     })
+    // Per design, the top tier drops to 22px once the card also has to carry
+    // lower placement prizes, so the three featured amounts stay inside the frame.
+    const denseFeaturedPrizes = challengePrizes.length > 3
     const labels = challengeLabels(props.challenge)
     const expandedTimeline = challengeTimelineItems(props.challenge, phase)
     const displayedTimelinePhases = expandedTimeline.slice(1, -1)
@@ -621,6 +616,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                             <>
                                                 <div className={classNames(styles.featuredPrizes, {
                                                     [styles.compactFeaturedPrizes]: compactFeaturedPrizes,
+                                                    [styles.denseFeaturedPrizes]: denseFeaturedPrizes,
                                                 })}
                                                 >
                                                     {featuredPrizes.map((prize, index) => {
@@ -629,6 +625,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                                             <strong
                                                                 className={classNames({
                                                                     [styles.compactPrize]: compactFeaturedPrizes,
+                                                                    [styles.densePrize]: denseFeaturedPrizes,
                                                                 })}
                                                                 key={`placement-${prize.placement}`}
                                                             >

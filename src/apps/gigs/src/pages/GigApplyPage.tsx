@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-no-bind */
-import { FC, useContext } from 'react'
+import { FC, useContext, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import useSWR, { SWRResponse } from 'swr'
 
@@ -12,7 +12,11 @@ import { getCandidate, getGig, RecruitError } from '../gigs.service'
 import { GIGS_PATH, isOpenGig } from '../gigs.utils'
 import GigApplicationForm from '../components/GigApplicationForm'
 
-/** Loads the selected gig and signed-in candidate before mounting a form keyed to both member and job. */
+/**
+ * Loads the selected gig and signed-in candidate before mounting a form keyed to both member and job.
+ * Mounting the page resets the window scroll position so the scroll offset carried over from the gig
+ * details page cannot hide the application header.
+ */
 const GigApplyPage: FC = () => {
     const { slug = '' }: { slug?: string } = useParams<{ slug: string }>()
     const { profile, initialized }: ProfileContextData = useContext(profileContext)
@@ -35,6 +39,11 @@ const GigApplyPage: FC = () => {
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
     const missing = error instanceof RecruitError && [400, 404].includes(error.status)
+
+    useEffect(() => {
+        window.scrollTo({ left: 0, top: 0 })
+    }, [slug])
+
     return (
         <main className='gigs-container gigs-main'>
             <PageTitle>{`Apply${job?.name ? ` to ${job.name}` : ''} | Gigs | Topcoder`}</PageTitle>
