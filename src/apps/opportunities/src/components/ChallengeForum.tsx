@@ -561,6 +561,10 @@ const DiscussionInfo: FC<{
 /**
  * Renders one topic summary card with watch and owner mutation actions.
  *
+ * The upper area of the card — title, byline, excerpt, and the metrics rail —
+ * opens the topic. The footer row is reserved for the Edit, Delete, and Watch
+ * actions, and member links stay clickable throughout.
+ *
  * @param props topic data, current member, projections, and mutation callbacks.
  * @returns Figma-aligned topic card.
  * @throws Does not throw; callbacks own API error handling.
@@ -584,6 +588,18 @@ const ForumTopicCard: FC<{
         : styles.topicCard
     return (
         <article className={cardClass}>
+            {/*
+              * Aria-hidden and unreachable by keyboard on purpose: it duplicates the
+              * title button so the whole upper card opens the topic, while the title
+              * stays the single control announced to assistive technology.
+              */}
+            <button
+                aria-hidden='true'
+                className={styles.topicOverlay}
+                onClick={() => props.onSelect(props.topic.id)}
+                tabIndex={-1}
+                type='button'
+            />
             <div className={styles.topicMain}>
                 <div className={styles.tags}>
                     {props.topic.isAnnouncement && <span className={styles.announcement}>Announcement</span>}
