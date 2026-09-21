@@ -6,6 +6,10 @@ import classNames from 'classnames'
 import { ChallengeOpportunity, ChallengePhase } from '../models'
 import { isTaskChallenge } from '../utils/challenge-type.utils'
 import { challengeTrackLabel } from '../utils/challenge-winner.utils'
+import {
+    formatOpportunityDateRange,
+    formatOpportunityDateTime,
+} from '../utils/opportunity-date.utils'
 import challengeCalendarIcon from '../assets/challenge-calendar.svg'
 import challengeChevronIcon from '../assets/challenge-chevron.svg'
 import challengeClockIcon from '../assets/challenge-clock.svg'
@@ -94,14 +98,7 @@ function catalogName(value: string | { name?: string } | undefined, fallback: st
  * @throws Does not throw; malformed dates use the fallback label.
  */
 function dateRange(startValue?: string, endValue?: string): string {
-    const start = startValue ? new Date(startValue) : undefined
-    const end = endValue ? new Date(endValue) : undefined
-    if (!start || Number.isNaN(start.getTime())) return 'Schedule to be announced'
-    const month = new Intl.DateTimeFormat('en-US', { month: 'long' })
-    const startLabel = `${start.getDate()} ${month.format(start)}`
-    if (!end || Number.isNaN(end.getTime())) return `${startLabel}, ${start.getFullYear()}`
-    const endLabel = `${end.getDate()} ${month.format(end)}, ${end.getFullYear()}`
-    return `${startLabel} - ${endLabel}`
+    return formatOpportunityDateRange(startValue, endValue, 'Schedule to be announced')
 }
 
 /**
@@ -402,27 +399,14 @@ function timelineConnectorState(
  * Formats one timeline timestamp as the two-row Figma date content expects.
  *
  * @param value ISO timestamp returned by Challenge API.
- * @returns local day, month, year, hour, and minute, or the schedule fallback.
+ * @returns local `day month year, hour:minute` such as `17 Sep 2026, 14:39`, or the schedule fallback.
  * @throws Does not throw; malformed dates use the fallback label.
  */
 function timelineDate(value?: string): string {
     const timestamp = timelineTimestamp(value)
     if (timestamp === undefined) return 'To be announced'
-    const parts = new Intl.DateTimeFormat('en-GB', {
-        day: 'numeric',
-        hour: '2-digit',
-        hour12: false,
-        minute: '2-digit',
-        month: 'long',
-        year: 'numeric',
-    })
-        .formatToParts(new Date(timestamp))
-    const day = parts.find(part => part.type === 'day')?.value
-    const month = parts.find(part => part.type === 'month')?.value
-    const year = parts.find(part => part.type === 'year')?.value
-    const hour = parts.find(part => part.type === 'hour')?.value
-    const minute = parts.find(part => part.type === 'minute')?.value
-    return `${day} ${month}, ${year}, ${hour}:${minute}`
+    return formatOpportunityDateTime(new Date(timestamp)
+        .toISOString(), 'To be announced')
 }
 
 /**

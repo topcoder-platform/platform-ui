@@ -41,6 +41,7 @@ import {
     challengeForumUrl,
     memberProfileUrl,
 } from '../utils'
+import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 import { ChallengeMarkdown } from './ChallengeMarkdown'
 import { OpportunityPagination } from './OpportunityPagination'
 import styles from './ChallengeForum.module.scss'
@@ -121,23 +122,14 @@ const COMMENT_CHARACTER_LIMIT = 500
 const TOPIC_CHARACTER_LIMIT = 16000
 
 /**
- * Formats a Forums API timestamp in the authored day-month-year presentation.
+ * Formats a Forums API timestamp in the shared Community app presentation.
  *
  * @param value optional ISO timestamp.
- * @returns formatted local date and time, or an em dash.
+ * @returns formatted local date and time such as `17 Sep 2026, 14:39`, or an em dash.
  * @throws Does not throw.
  */
 export function formatForumDate(value?: string): string {
-    if (!value) return '—'
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return '—'
-    const month = new Intl.DateTimeFormat('en-US', { month: 'long' })
-        .format(date)
-    const hour = String(date.getHours())
-        .padStart(2, '0')
-    const minute = String(date.getMinutes())
-        .padStart(2, '0')
-    return `${date.getDate()} ${month}, ${date.getFullYear()}, ${hour}:${minute}`
+    return formatOpportunityDateTime(value, '—')
 }
 
 /**

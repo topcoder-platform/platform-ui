@@ -102,6 +102,7 @@ import {
     ChallengeDetailTab,
     challengeDetailTabFromSearch,
 } from '../utils/challenge-detail-route.utils'
+import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
 import { ReactComponent as SortIcon } from '../assets/sort.svg'
 import medal1 from '../assets/medal-1.svg'
@@ -317,20 +318,11 @@ function challengeMetadataFlag(challenge: ChallengeOpportunity, name: string): b
  * Formats an API timestamp used in submission and phase tables.
  *
  * @param value optional ISO timestamp.
- * @returns localized date and time, or an em dash.
+ * @returns localized date and time such as `17 Sep 2026, 14:39`, or an em dash.
  * @throws Does not throw.
  */
 function formatTimestamp(value?: string): string {
-    if (!value) return '—'
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return '—'
-    const month = new Intl.DateTimeFormat('en-US', { month: 'long' })
-        .format(date)
-    const hours = String(date.getHours())
-        .padStart(2, '0')
-    const minutes = String(date.getMinutes())
-        .padStart(2, '0')
-    return `${date.getDate()} ${month}, ${date.getFullYear()}, ${hours}:${minutes}`
+    return formatOpportunityDateTime(value, '—')
 }
 
 /**

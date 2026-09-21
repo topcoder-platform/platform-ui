@@ -15,6 +15,7 @@ import {
     formatMarathonScore,
     marathonSubmissionScores,
 } from '../utils/marathon-match.utils'
+import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 
 import styles from './SubmissionHistoryModal.module.scss'
 
@@ -33,22 +34,11 @@ interface SubmissionHistoryModalProps {
  * Formats a Review API timestamp for the submission history table.
  *
  * @param value optional ISO timestamp.
- * @returns localized timestamp, or an em dash for invalid input.
+ * @returns localized timestamp such as `17 Sep 2026, 14:39`, or an em dash for invalid input.
  * @throws Does not throw.
  */
 function formatTimestamp(value?: string): string {
-    if (!value) return '—'
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return '—'
-    return new Intl.DateTimeFormat('en-US', {
-        day: 'numeric',
-        hour: '2-digit',
-        hour12: false,
-        minute: '2-digit',
-        month: 'long',
-        year: 'numeric',
-    })
-        .format(date)
+    return formatOpportunityDateTime(value, '—')
 }
 
 /**
