@@ -443,6 +443,9 @@ function timelineTimezone(): string {
  * Renders the Figma challenge title, authored tags, standardized skills, phase
  * context, prizes, and competition member actions. Tags precede skills, with
  * blank and duplicate labels omitted. Assignment-only Task challenges omit actions.
+ * Featured placement prizes shrink to a compact size for long or point-based
+ * labels and to a dense size once lower placement prizes are also shown, and the
+ * row wraps so wide amounts stay inside the prize frame.
  *
  * @param props challenge and registration state.
  * @returns dark challenge detail masthead with Task-aware action visibility.
@@ -495,6 +498,9 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
             .toUpperCase()
         return prizeType === 'POINT' || prizeType === 'POINTS' || featuredPrizeLabels[index].length > 8
     })
+    // Per design, the top tier drops to 22px once the card also has to carry
+    // lower placement prizes, so the three featured amounts stay inside the frame.
+    const denseFeaturedPrizes = challengePrizes.length > 3
     const labels = Array.from(new Set([
         ...(props.challenge.tags ?? []),
         ...(props.challenge.skills ?? []).map(skill => skill.name),
@@ -593,6 +599,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                             <>
                                                 <div className={classNames(styles.featuredPrizes, {
                                                     [styles.compactFeaturedPrizes]: compactFeaturedPrizes,
+                                                    [styles.denseFeaturedPrizes]: denseFeaturedPrizes,
                                                 })}
                                                 >
                                                     {featuredPrizes.map((prize, index) => {
@@ -601,6 +608,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                                             <strong
                                                                 className={classNames({
                                                                     [styles.compactPrize]: compactFeaturedPrizes,
+                                                                    [styles.densePrize]: denseFeaturedPrizes,
                                                                 })}
                                                                 key={`placement-${prize.placement}`}
                                                             >
