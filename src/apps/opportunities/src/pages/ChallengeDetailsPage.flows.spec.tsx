@@ -291,6 +291,7 @@ jest.mock('../utils', () => ({
         type?: string
     }): boolean => challenge.type === 'Marathon Match'
         && challenge.metadata?.some(item => item.name === 'show_data_dashboard' && item.value === true) === true,
+    marathonLeaderboardIsPublic: (challenge: { type?: string }): boolean => challenge.type === 'Marathon Match',
     marathonSubmissionScores: (submission: {
         aiDecisionScore?: number
         finalScore?: number
@@ -553,6 +554,73 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(screen.queryByRole('tab', { name: /^Submissions/ }))
             .not.toBeInTheDocument()
         expect(screen.queryByRole('tab', { name: 'Forum' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('publishes the Marathon Match leaderboard to signed out visitors', () => {
+        mockChallenge = {
+            ...mockChallenge,
+            type: 'Marathon Match',
+        }
+        mockSubmissions = [{
+            id: 'submission-1',
+            submittedDate: '2026-06-03T09:30:00.000Z',
+            submitterHandle: 'coder',
+            submitterMaxRating: 1500,
+        }]
+        mockReviewSummations = [{
+            aggregateScore: 88.5,
+            id: 'summation-1',
+            isProvisional: true,
+            submissionId: 'submission-1',
+        }]
+
+        renderPage()
+
+        expect(screen.getAllByRole('tab')
+            .map(tab => tab.textContent))
+            .toEqual(['Requirements', 'Registrants8', 'Submissions5', 'Winners'])
+
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        expect(screen.getByRole('columnheader', { name: 'Provisional Score' }))
+            .toBeInTheDocument()
+        expect(screen.getByText('88.5'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: /Sign in/ }))
+            .not.toBeInTheDocument()
+    })
+
+    it('publishes the gated Marathon Match dashboard to signed out visitors', () => {
+        mockChallenge = {
+            ...mockChallenge,
+            metadata: [{ name: 'show_data_dashboard', value: true }],
+            type: 'Marathon Match',
+        }
+        mockReviewSummations = [{
+            aggregateScore: 88.5,
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'summation-1',
+            isProvisional: true,
+            reviewedDate: '2026-06-03T09:30:00.000Z',
+            submissionId: 'submission-1',
+            submitterHandle: 'coder',
+        }]
+
+        renderPage('/opportunities/challenge/challenge-id?tab=dashboard')
+
+        expect(screen.getAllByRole('tab')
+            .map(tab => tab.textContent))
+            .toEqual(['Requirements', 'Registrants8', 'Submissions5', 'Dashboard', 'Winners'])
+        expect(screen.getByText('Challenge Activity'))
+            .toBeInTheDocument()
+    })
+
+    it('keeps non-Marathon submissions behind sign in for signed out visitors', () => {
+        renderPage('/opportunities/challenge/challenge-id?tab=submissions')
+
+        expect(screen.queryByRole('tab', { name: /^Submissions/ }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('tab', { name: 'Dashboard' }))
             .not.toBeInTheDocument()
     })
 
