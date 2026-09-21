@@ -415,7 +415,7 @@ const ForumOverview: FC<{
         <section className={styles.overview}>
             <h2>Challenge Forum</h2>
             <div className={styles.overviewStats}>
-                <span className={styles.newCount}>
+                <span className={unread > 0 ? `${styles.newCount} ${styles.hasUnread}` : styles.newCount}>
                     {unread}
                     {' '}
                     new

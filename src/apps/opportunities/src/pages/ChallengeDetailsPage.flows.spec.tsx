@@ -42,6 +42,11 @@ let mockAiWorkflowRunErrors: Record<string, Error>
 let mockMemberProfiles: Record<string, unknown>[]
 let mockMemberResource: { id: string; roleName?: string } | undefined
 let mockMySubmissionCount: number | undefined
+let mockForumTopics: {
+    data: Array<{ unread: boolean }>
+    sourceTotalCount: number
+    truncated: boolean
+} | undefined
 let mockProjectResults: Record<string, unknown>[]
 let mockPreviewSubmissions: Record<string, unknown>[]
 let mockRegistrants: Record<string, unknown>[]
@@ -429,6 +434,7 @@ describe('ChallengeDetailsPage member flows', () => {
         mockMemberProfiles = []
         mockMemberResource = undefined
         mockMySubmissionCount = undefined
+        mockForumTopics = undefined
         mockProjectResults = []
         mockPreviewSubmissions = []
         mockRegistrants = []
@@ -504,6 +510,10 @@ describe('ChallengeDetailsPage member flows', () => {
                     ...swrResponse(mockAiWorkflowRuns[submissionId] ?? []),
                     error: mockAiWorkflowRunErrors[submissionId],
                 }
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:forum-topics') {
+                return swrResponse(mockForumTopics)
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:my-submission-count') {
@@ -877,6 +887,46 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.queryByText(/topic deletion/))
             .not.toBeInTheDocument()
+    })
+
+    it('marks the Forum tab count while topics are unread', () => {
+        mockProfile = { handle: 'copilot', roles: ['Copilot'], userId: 123 }
+        mockMemberResource = { id: 'copilot-resource', roleName: 'Copilot' }
+        mockForumTopics = {
+            data: [{ unread: false }, { unread: true }],
+            sourceTotalCount: 14,
+            truncated: false,
+        }
+
+        renderPage()
+
+        expect(within(screen.getByRole('tab', { name: 'Forum 14' }))
+            .getByText('14'))
+            .toHaveClass('unreadBadge')
+    })
+
+    it('leaves the Forum tab count unmarked when every topic has been read', () => {
+        mockProfile = { handle: 'copilot', roles: ['Copilot'], userId: 123 }
+        mockMemberResource = { id: 'copilot-resource', roleName: 'Copilot' }
+        mockForumTopics = {
+            data: [{ unread: false }],
+            sourceTotalCount: 14,
+            truncated: false,
+        }
+
+        renderPage()
+
+        expect(within(screen.getByRole('tab', { name: 'Forum 14' }))
+            .getByText('14'))
+            .not.toHaveClass('unreadBadge')
+    })
+
+    it('gives the unread tab badge a red dot over the teal count', () => {
+        const tabsBlock = (challengeDetailStyles.match(/\.tabs\s*\{[\s\S]*?\n\}/) ?? [''])[0]
+        expect(tabsBlock)
+            .toContain('span.unreadBadge')
+        expect(tabsBlock)
+            .toContain('background: #c1294f')
     })
 
     it('keeps the metadata-gated Design submissions gallery public', () => {
