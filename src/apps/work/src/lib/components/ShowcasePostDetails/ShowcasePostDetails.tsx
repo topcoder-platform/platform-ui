@@ -15,6 +15,8 @@ export interface ShowcasePostDetailItem {
 export interface ShowcasePostStorySection {
     label: string
     value: string
+    /** True when the value is markdown/HTML that must be rendered with `renderRichTextToHtml`. */
+    isRichText: boolean
 }
 
 /**
@@ -55,7 +57,6 @@ export function getShowcaseDetailItems(data: ShowcaseMetadata): ShowcasePostDeta
         { label: 'Customer', value: data.customer },
         { label: 'SMU', value: smu },
         { label: 'Deal Close Date', value: formatDealCloseDate(data.dealCloseDate) },
-        { label: 'Key Win', value: data.keyWin },
         { label: 'Current Status', value: data.currentStatus },
         { label: 'Owner', value: data.owner },
     ]
@@ -65,17 +66,22 @@ export function getShowcaseDetailItems(data: ShowcaseMetadata): ShowcasePostDeta
 
 /**
  * Collects the populated long-form showcase sections in display order.
- * @param data Showcase rich text fields; content is The Solution.
- * @returns Section labels and rich text values with blank sections removed.
+ *
+ * Key Win is a plain text field rendered as a body section after Business Impact Realised, so
+ * consumers must check `isRichText` before passing a value through `renderRichTextToHtml`.
+ *
+ * @param data Showcase rich text fields plus the plain text Key Win; content is The Solution.
+ * @returns Section labels and values with blank sections removed.
  * @throws Does not throw.
  */
 export function getShowcaseStorySections(
-    data: Pick<ShowcaseMetadata, 'challenge' | 'businessImpact'> & { content?: string },
+    data: Pick<ShowcaseMetadata, 'challenge' | 'businessImpact' | 'keyWin'> & { content?: string },
 ): ShowcasePostStorySection[] {
     return [
-        { label: 'The Challenge', value: data.challenge },
-        { label: 'The Solution', value: data.content },
-        { label: 'Business Impact Realised', value: data.businessImpact },
+        { isRichText: true, label: 'The Challenge', value: data.challenge },
+        { isRichText: true, label: 'The Solution', value: data.content },
+        { isRichText: true, label: 'Business Impact Realised', value: data.businessImpact },
+        { isRichText: false, label: 'Key Win', value: data.keyWin?.trim() },
     ]
         .filter((item): item is ShowcasePostStorySection => !!item.value?.trim())
 }

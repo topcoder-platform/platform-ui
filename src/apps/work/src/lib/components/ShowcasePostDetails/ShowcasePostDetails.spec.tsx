@@ -29,21 +29,30 @@ describe('Showcase post details', () => {
                 { label: 'Customer', value: 'Wipro' },
                 { label: 'SMU', value: 'LATAM' },
                 { label: 'Deal Close Date', value: expectedDate },
-                { label: 'Key Win', value: 'Win-win' },
             ])
     })
 
-    it('returns only populated story sections', () => {
-        expect(getShowcaseStorySections({ businessImpact: 'Impact', challenge: '', content: 'Solution' })
+    it('returns only populated story sections, with Key Win last', () => {
+        expect(getShowcaseStorySections({
+            businessImpact: 'Impact',
+            challenge: '',
+            content: 'Solution',
+            keyWin: 'Win-win',
+        })
             .map(section => section.label))
-            .toEqual(['The Solution', 'Business Impact Realised'])
+            .toEqual(['The Solution', 'Business Impact Realised', 'Key Win'])
+    })
+
+    it('marks Key Win as plain text so it is not parsed as markdown', () => {
+        expect(getShowcaseStorySections({ keyWin: ' 50% _faster_ delivery ' }))
+            .toEqual([{ isRichText: false, label: 'Key Win', value: '50% _faster_ delivery' }])
     })
 
     it('renders labelled values and nothing when no fields are populated', () => {
         const view = render(<ShowcasePostDetails data={{}} />)
         expect(view.container)
             .toBeEmptyDOMElement()
-        view.rerender(<ShowcasePostDetails data={{ owner: 'oww', smu: 'Americas1' }} />)
+        view.rerender(<ShowcasePostDetails data={{ keyWin: 'Win-win', owner: 'oww', smu: 'Americas1' }} />)
         expect(screen.getByText('SMU'))
             .toBeInTheDocument()
         // Projects stored before the Salesforce naming alignment render the current label.
@@ -52,5 +61,7 @@ describe('Showcase post details', () => {
         expect(screen.getByText('Owner'))
             .toBeInTheDocument()
         expect(screen.queryByText('Customer')).not.toBeInTheDocument()
+        // Key Win moved out of the summary grid into the body sections.
+        expect(screen.queryByText('Key Win')).not.toBeInTheDocument()
     })
 })
