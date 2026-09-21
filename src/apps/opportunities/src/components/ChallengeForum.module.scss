@@ -82,7 +82,7 @@
 }
 
 .overview > a,
-.overview > button,
+.overviewActions > button,
 .fallback > a {
     align-items: center;
     background: #007d79;
@@ -117,6 +117,31 @@
     }
 }
 
+.overviewActions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 24px;
+
+    > button {
+        cursor: pointer;
+        font-family: inherit;
+        margin-top: 0;
+        width: 100%;
+    }
+
+    > button + button {
+        background: #fff;
+        color: #007d79;
+
+        &:hover,
+        &:focus-visible {
+            background: #e8f6f6;
+            color: #006b68;
+        }
+    }
+}
+
 .filters header {
     align-items: center;
     display: flex;
@@ -134,7 +159,7 @@
         color: #007d79;
         cursor: pointer;
         font: inherit;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 700;
         line-height: 20px;
         padding: 0;
@@ -231,7 +256,7 @@
         color: #161616;
         cursor: pointer;
         display: flex;
-        font-size: 14px;
+        font-size: 16px;
         gap: 8px;
         line-height: 32px;
         min-height: 32px;
@@ -332,6 +357,11 @@
     }
 }
 
+.discussionInfo dl > div {
+    font-size: 14px;
+    line-height: 20px;
+}
+
 .member {
     align-items: center;
     display: inline-flex;
@@ -425,7 +455,7 @@
 }
 
 .newPost {
-    background: #fff;
+    background: #ffe5ec;
     border: 1px solid #c1294f;
     color: #c1294f;
 }
@@ -524,8 +554,13 @@
         }
     }
 
+    p strong {
+        font-weight: 700;
+    }
+
     > strong {
         font-size: 14px;
+        font-weight: 700;
         line-height: 20px;
         margin-top: 16px;
     }
@@ -565,10 +600,11 @@
     > svg {
         background: #e9ecef;
         border-radius: 50%;
+        box-sizing: content-box;
         color: #161616;
-        height: 20px;
-        padding: 6px;
-        width: 20px;
+        height: 24px;
+        padding: 8px;
+        width: 24px;
     }
 
     h2 {
@@ -635,7 +671,8 @@
     gap: 8px;
 }
 
-.authorBadge {
+.authorBadge,
+.copilotBadge {
     align-items: center;
     background: #e9ecef;
     border-radius: 2px;
@@ -801,12 +838,6 @@
     }
 }
 
-.overview > button {
-    cursor: pointer;
-    font-family: inherit;
-    width: 100%;
-}
-
 .member > .ratingGray {
     color: #555555;
 }
@@ -854,12 +885,33 @@
 .topicExcerpt {
     color: #161616;
     display: -webkit-box;
-    font-size: 14px;
+    font-size: 16px;
     -webkit-line-clamp: 3;
-    line-height: 20px;
+    line-height: 22px;
     margin: 20px 0 0;
     overflow: hidden;
     -webkit-box-orient: vertical;
+
+    article {
+        font-size: inherit;
+        line-height: inherit;
+
+        h1,
+        h2,
+        h3,
+        h4,
+        p,
+        ul,
+        ol,
+        blockquote,
+        pre {
+            margin: 0 0 4px;
+        }
+
+        h1 { font-size: 22px; line-height: 30px; }
+        h2 { font-size: 20px; line-height: 28px; }
+        h3 { font-size: 18px; line-height: 26px; }
+    }
 }
 
 .topicFooter {
@@ -891,7 +943,7 @@
         color: #007d79;
         display: inline-flex;
         font: inherit;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 700;
         gap: 5px;
         line-height: 20px;
@@ -1250,6 +1302,68 @@
     }
 }
 
+.editModal {
+    border-radius: 8px !important;
+    box-sizing: border-box;
+    color: #161616;
+    font-family: 'Nunito Sans', sans-serif;
+    max-height: calc(100vh - 32px) !important;
+    max-width: calc(100vw - 24px) !important;
+    padding: 32px !important;
+    width: 720px !important;
+}
+
+.modalTitle {
+    color: #161616;
+    font-family: 'Figtree', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 38px;
+    margin: 0 0 24px;
+    text-transform: none;
+}
+
+.editModalBody {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+.previewButton,
+.modalPrimary,
+.modalSecondary {
+    align-items: center;
+    border: 1px solid #007d79;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    font: 700 16px/20px 'Nunito Sans', sans-serif;
+    height: 38px;
+    justify-content: center;
+    padding: 8px 24px;
+
+    &:disabled {
+        cursor: wait;
+        opacity: .6;
+    }
+}
+
+.previewButton,
+.modalSecondary {
+    background: #fff;
+    color: #007d79;
+}
+
+.previewButton {
+    align-self: flex-start;
+}
+
+.modalPrimary {
+    background: #007d79;
+    color: #fff;
+}
+
 .post,
 .replyPost {
     min-height: 0;
@@ -1300,8 +1414,8 @@
 
 .postContent {
     color: #161616;
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 16px;
+    line-height: 22px;
     min-height: 80px;
 }
 

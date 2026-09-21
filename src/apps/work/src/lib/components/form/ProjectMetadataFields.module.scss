@@ -1,0 +1,22 @@
+@import '@libs/ui/styles/includes';
+
+.opportunityStatus {
+    color: $black-60;
+    font-size: 12px;
+    line-height: 1.5;
+    margin-top: -4px;
+}
+
+.opportunityError {
+    color: $red-100;
+}
+
+.opportunityLink {
+    color: $blue-100;
+    font-weight: 500;
+    text-decoration: underline;
+}
+
+.opportunityName {
+    color: $black-80;
+}

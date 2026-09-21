@@ -8,7 +8,10 @@ import {
 } from '@testing-library/react'
 import { PropsWithChildren, ReactNode } from 'react'
 
-import { uploadReviewAttachment } from '~/apps/review/src/lib/services/file-upload.service'
+import {
+    SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES,
+    uploadSupportAttachment,
+} from '~/apps/support/src/lib/services/support-attachment.service'
 import { createSupportTicket } from '~/apps/support/src/lib/services/support.service'
 
 import {
@@ -20,8 +23,10 @@ jest.mock('react-toastify', () => ({
     toast: { success: jest.fn() },
 }))
 
-jest.mock('~/apps/review/src/lib/services/file-upload.service', () => ({
-    uploadReviewAttachment: jest.fn(),
+jest.mock('~/apps/support/src/lib/services/support-attachment.service', () => ({
+    MAX_SUPPORT_ATTACHMENT_BYTES: 2 * 1024 * 1024,
+    SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES: ['.png', 'image/png'],
+    uploadSupportAttachment: jest.fn(),
 }), { virtual: true })
 
 jest.mock('~/apps/support/src/lib/services/support.service', () => ({
@@ -58,7 +63,7 @@ jest.mock('~/libs/ui', () => {
 }, { virtual: true })
 
 const mockedCreateSupportTicket = createSupportTicket as jest.Mock
-const mockedUploadAttachment = uploadReviewAttachment as jest.MockedFunction<typeof uploadReviewAttachment>
+const mockedUploadAttachment = uploadSupportAttachment as jest.MockedFunction<typeof uploadSupportAttachment>
 
 describe('ReportIssueModal', () => {
     beforeEach(() => {
@@ -85,10 +90,46 @@ describe('ReportIssueModal', () => {
             .toHaveAttribute('maxlength', '1000')
         expect(screen.getByText('Attach Files'))
             .toBeInTheDocument()
+        expect(screen.queryByText('Attach Files *'))
+            .not.toBeInTheDocument()
         expect(screen.getByText('Max. 2 MB per file'))
             .toBeInTheDocument()
+        expect(screen.getByLabelText('Attach files'))
+            .toHaveAttribute('accept', SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES.join(','))
         expect(screen.getByRole('button', { name: 'Send report' }))
             .toBeDisabled()
+    })
+
+    it('submits the required fields without an attachment', async () => {
+        render(<ReportIssueModal challengeId='challenge-id' onClose={jest.fn()} open />)
+
+        fireEvent.change(screen.getByPlaceholderText('Enter the subject of your issue'), {
+            target: { value: 'Submission timeout' },
+        })
+        fireEvent.change(screen.getByRole('combobox', { name: /Category/ }), {
+            target: { value: 'Submission' },
+        })
+        fireEvent.change(screen.getByPlaceholderText('Explain your issue'), {
+            target: { value: 'I tried to submit several times, but it always reaches a timeout error.' },
+        })
+
+        const submit = screen.getByRole('button', { name: 'Send report' })
+        await waitFor(() => expect(submit)
+            .toBeEnabled())
+        fireEvent.click(submit)
+
+        await waitFor(() => expect(mockedCreateSupportTicket)
+            .toHaveBeenCalledWith({
+                challengeId: 'challenge-id',
+                description: [
+                    '**Subject:** Submission timeout',
+                    '**Category:** Submission',
+                    '',
+                    'I tried to submit several times, but it always reaches a timeout error.',
+                ].join('\n'),
+            }))
+        expect(mockedUploadAttachment)
+            .not.toHaveBeenCalled()
     })
 
     it('uploads the authored file row and submits every field through the support contract', async () => {
@@ -135,6 +176,21 @@ describe('ReportIssueModal', () => {
             }))
         expect(await screen.findByText('Thank you for reporting this issue.'))
             .toBeInTheDocument()
+        expect(mockedUploadAttachment)
+            .toHaveBeenCalledWith(file)
+    })
+
+    it('uses the same authenticated Support upload without a draft context outside a challenge', async () => {
+        render(<ReportIssueModal onClose={jest.fn()} open />)
+        const file = new File(['screenshot'], 'Screenshot.png', { type: 'image/png' })
+        Object.defineProperty(file, 'size', { value: 1153434 })
+
+        fireEvent.change(screen.getByLabelText('Attach files'), {
+            target: { files: [file] },
+        })
+
+        await waitFor(() => expect(mockedUploadAttachment)
+            .toHaveBeenCalledWith(file))
     })
 
     it('rejects files larger than the authored two-megabyte limit', async () => {
@@ -150,6 +206,53 @@ describe('ReportIssueModal', () => {
             .toHaveTextContent('large.zip is larger than the 2 MB attachment limit.')
         expect(mockedUploadAttachment)
             .not.toHaveBeenCalled()
+    })
+
+    it('keeps a failed dropped file visible and requires its removal before sending', async () => {
+        const message = 'Attachment uploads are temporarily unavailable. Please try again.'
+        mockedUploadAttachment.mockRejectedValueOnce(new Error(message))
+        render(<ReportIssueModal onClose={jest.fn()} open />)
+        fireEvent.change(screen.getByPlaceholderText('Enter the subject of your issue'), {
+            target: { value: 'Submission timeout' },
+        })
+        fireEvent.change(screen.getByRole('combobox', { name: /Category/ }), {
+            target: { value: 'Submission' },
+        })
+        fireEvent.change(screen.getByPlaceholderText('Explain your issue'), {
+            target: { value: 'The submission failed.' },
+        })
+        const file = new File(['screenshot'], 'Screenshot.png', { type: 'image/png' })
+        fireEvent.drop(screen.getByRole('button', { name: /Drop your file/ }), {
+            dataTransfer: { files: [file] },
+        })
+
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent(message)
+        expect(mockedUploadAttachment)
+            .toHaveBeenCalledWith(file)
+        expect(screen.getByPlaceholderText('Explain your issue'))
+            .toHaveValue('The submission failed.')
+        expect(screen.getByRole('button', { name: 'Send report' }))
+            .toBeDisabled()
+        expect(mockedCreateSupportTicket)
+            .not.toHaveBeenCalled()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Remove Screenshot.png' }))
+        expect(screen.queryByRole('alert'))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Send report' }))
+            .toBeEnabled()
+
+        fireEvent.drop(screen.getByRole('button', { name: /Drop your file/ }), {
+            dataTransfer: { files: [file] },
+        })
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Send report' }))
+            .toBeEnabled())
+        fireEvent.click(screen.getByRole('button', { name: 'Send report' }))
+        await waitFor(() => expect(mockedCreateSupportTicket)
+            .toHaveBeenCalledWith(expect.objectContaining({
+                description: expect.stringContaining('[Screenshot.png](https://files.example/Screenshot.png)'),
+            })))
     })
 
     it('builds stable Markdown for multiple uploaded attachments', () => {

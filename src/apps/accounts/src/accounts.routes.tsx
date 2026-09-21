@@ -29,6 +29,12 @@ export const accountsRoutes: ReadonlyArray<PlatformRoute> = [
                 children: [],
                 element: <ChangeEmailVerificationPage />,
                 id: 'Change Email Verification',
+                route: 'email-change/verify',
+            },
+            {
+                children: [],
+                element: <ChangeEmailVerificationPage />,
+                id: 'Legacy Change Email Verification',
                 route: 'changeEmail',
             },
         ],

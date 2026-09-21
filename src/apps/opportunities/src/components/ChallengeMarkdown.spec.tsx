@@ -6,11 +6,24 @@ import {
     isHtmlDescriptionFormat,
 } from './ChallengeMarkdown'
 
-jest.mock('react-markdown', () => function MarkdownMock(props: { children?: string }) {
-    return <div data-testid='markdown-renderer'>{props.children}</div>
+const mockMarkdownProps: Array<Record<string, unknown>> = []
+
+jest.mock('react-markdown', () => function MarkdownMock(props: Record<string, unknown>) {
+    mockMarkdownProps.push(props)
+    return <div data-testid='markdown-renderer'>{props.children as string}</div>
 })
+jest.mock('rehype-raw', () => jest.fn())
+jest.mock('rehype-sanitize', () => ({
+    __esModule: true,
+    default: jest.fn(),
+    defaultSchema: { tagNames: ['p'] },
+}))
 jest.mock('remark-breaks', () => jest.fn())
 jest.mock('remark-gfm', () => jest.fn())
+
+beforeEach(() => {
+    mockMarkdownProps.length = 0
+})
 
 describe('ChallengeDescription', () => {
     it('sanitizes case-insensitive HTML descriptions and omits a Markdown interpretation', () => {
@@ -37,6 +50,34 @@ describe('ChallengeDescription', () => {
 
         expect(screen.getByTestId('markdown-renderer').textContent)
             .toBe('## Markdown requirements')
+    })
+
+    it('parses and sanitizes safe inline forum HTML such as underline markup', () => {
+        render(<ChallengeDescription content='A <u>formatted</u> note' format='markdown' />)
+
+        expect(mockMarkdownProps)
+            .toEqual(expect.arrayContaining([expect.objectContaining({
+                rehypePlugins: expect.arrayContaining([
+                    expect.any(Function),
+                    [expect.any(Function), expect.objectContaining({
+                        tagNames: expect.arrayContaining(['p', 'u']),
+                    })],
+                ]),
+            })]))
+    })
+
+    it('preserves authored bold and italic elements in sanitized HTML', () => {
+        const container = render(
+            <ChallengeDescription
+                content='<p><strong>Bold</strong> and <em>Italic</em></p>'
+                format='html'
+            />,
+        ).container
+
+        expect(container.querySelector('strong')?.textContent)
+            .toBe('Bold')
+        expect(container.querySelector('em')?.textContent)
+            .toBe('Italic')
     })
 
     it('shows API-authorized private details and omits an empty private section', () => {

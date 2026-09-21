@@ -15,8 +15,8 @@ interface UseSubmissionHistoryParams {
     filteredAll: SubmissionInfo[]
     /** Whether the consuming table supports submission-history actions. */
     isSubmissionTab: boolean
-    /** Positive latest-submission count per member/type group. Defaults to one. */
-    maxVisibleSubmissions?: number
+    /** Positive count per member/type group, or undefined for unlimited Design submissions without history actions. */
+    maxVisibleSubmissions: number | undefined
 }
 
 export interface UseSubmissionHistoryResult {
@@ -32,6 +32,7 @@ export interface UseSubmissionHistoryResult {
 
 /**
  * Encapsulate submission-history ranking and modal state for Review tables.
+ * Hide history actions when unlimited Design submissions are already displayed separately.
  *
  * @param params - Primary rows, complete matching history, table mode, and visible count.
  * @returns Latest selected rows and IDs, older member/type history, and modal callbacks.
@@ -57,8 +58,8 @@ export function useSubmissionHistory({
     }: SubmissionHistoryPartition = submissionHistory
 
     const shouldShowHistoryActions = useMemo<boolean>(
-        () => isSubmissionTab && hasIsLatestFlag(datas),
-        [datas, isSubmissionTab],
+        () => maxVisibleSubmissions !== undefined && isSubmissionTab && hasIsLatestFlag(datas),
+        [datas, isSubmissionTab, maxVisibleSubmissions],
     )
 
     const [historyKey, setHistoryKey] = useState<string | undefined>(undefined)

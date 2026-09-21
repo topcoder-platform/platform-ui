@@ -1,15 +1,16 @@
-/* eslint-disable no-alert, no-use-before-define, ordered-imports/ordered-imports, react/jsx-no-bind */
+/* eslint-disable no-use-before-define, ordered-imports/ordered-imports, react/jsx-no-bind */
 import {
     ChangeEvent,
     FC,
     FormEvent,
+    KeyboardEvent,
     useMemo,
     useRef,
     useState,
 } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
-import { IconOutline } from '~/libs/ui'
+import { BaseModal, ConfirmModal, IconOutline } from '~/libs/ui'
 
 import {
     ChallengeOpportunity,
@@ -50,6 +51,7 @@ type ForumRatingClass = 'ratingBlue' | 'ratingGray' | 'ratingGreen' | 'ratingRed
 
 interface ChallengeForumProps {
     canCreateAnnouncements?: boolean
+    canDeleteTopics?: boolean
     challenge: ChallengeOpportunity
     memberId?: string
 }
@@ -64,10 +66,53 @@ interface ForumParticipant {
     memberId: string
 }
 
-interface MarkdownSelectionResult {
+export interface MarkdownSelectionResult {
     selectionEnd: number
     selectionStart: number
     value: string
+}
+
+/**
+ * Continues the Markdown list marker on the current line when Enter is pressed.
+ * An empty marker exits the list, matching conventional Markdown editors.
+ *
+ * @param value complete editor value.
+ * @param selectionStart inclusive selection start.
+ * @param selectionEnd exclusive selection end.
+ * @returns updated value/caret, or undefined when the current line is not a list item.
+ * @throws Does not throw; selection bounds are clamped to the input length.
+ */
+export function continueMarkdownList(
+    value: string,
+    selectionStart: number,
+    selectionEnd: number,
+): MarkdownSelectionResult | undefined {
+    const start = Math.max(0, Math.min(selectionStart, value.length))
+    const end = Math.max(start, Math.min(selectionEnd, value.length))
+    const lineStart = value.lastIndexOf('\n', start - 1) + 1
+    const lineBeforeCaret = value.slice(lineStart, start)
+    const unordered = /^(\s*)([-+*])\s+(.*)$/.exec(lineBeforeCaret)
+    const ordered = /^(\s*)(\d+)\.\s+(.*)$/.exec(lineBeforeCaret)
+    const match = unordered ?? ordered
+    if (!match) return undefined
+
+    if (!match[3].trim()) {
+        const nextValue = `${value.slice(0, lineStart)}${value.slice(end)}`
+        return {
+            selectionEnd: lineStart,
+            selectionStart: lineStart,
+            value: nextValue,
+        }
+    }
+
+    const marker = unordered ? match[2] : `${Number(match[2]) + 1}.`
+    const insertion = `\n${match[1]}${marker} `
+    const nextSelection = start + insertion.length
+    return {
+        selectionEnd: nextSelection,
+        selectionStart: nextSelection,
+        value: `${value.slice(0, start)}${insertion}${value.slice(end)}`,
+    }
 }
 
 type MemberProfilesById = ReadonlyMap<string, MemberProfileSummary>
@@ -96,7 +141,7 @@ export function formatForumDate(value?: string): string {
 }
 
 /**
- * Flattens a Forums API reply tree while retaining visual thread depth.
+ * Flattens a Forums API reply tree chronologically while retaining visual thread depth.
  *
  * @param posts nested visible posts.
  * @param depth current recursive nesting depth.
@@ -104,10 +149,17 @@ export function formatForumDate(value?: string): string {
  * @throws Does not throw.
  */
 export function flattenForumPosts(posts: ForumPost[], depth: number = 0): FlatForumPost[] {
-    return posts.flatMap(post => [
-        { depth, post },
-        ...flattenForumPosts(post.replies ?? [], depth + 1),
-    ])
+    return [...posts]
+        .sort((left, right) => {
+            const createdAtDelta = new Date(left.createdAt)
+                .getTime() - new Date(right.createdAt)
+                .getTime()
+            return createdAtDelta || left.id.localeCompare(right.id)
+        })
+        .flatMap(post => [
+            { depth, post },
+            ...flattenForumPosts(post.replies ?? [], depth + 1),
+        ])
 }
 
 /**
@@ -318,14 +370,14 @@ const ParticipantGroup: FC<{
 
 interface ForumFallbackProps {
     externalUrl?: string
-    text: string
+    text?: string
     title: string
 }
 
 /**
  * Preserves a safe recovery path when embedded API access is unavailable.
  *
- * @param props fallback copy and optional legacy destination.
+ * @param props fallback title, optional description, and optional legacy destination.
  * @returns forum fallback state.
  * @throws Does not throw.
  */
@@ -333,7 +385,7 @@ const ForumFallback: FC<ForumFallbackProps> = props => (
     <div className={styles.fallback}>
         <IconOutline.ChatAlt2Icon aria-hidden='true' />
         <h2>{props.title}</h2>
-        <p>{props.text}</p>
+        {props.text && <p>{props.text}</p>}
         {props.externalUrl && (
             <a href={props.externalUrl} rel='noreferrer' target='_blank'>
                 Open legacy forum
@@ -344,14 +396,16 @@ const ForumFallback: FC<ForumFallbackProps> = props => (
 )
 
 /**
- * Renders challenge forum counters and the in-page create-topic action.
+ * Renders challenge forum counters and the available in-page creation actions.
  *
- * @param props visible topics, source total, and create callback.
+ * @param props visible topics, source total, ordinary creation, and administrator announcement creation.
  * @returns authored forum overview rail.
  * @throws Does not throw.
  */
 const ForumOverview: FC<{
+    canCreateAnnouncements: boolean
     onCreate: () => void
+    onCreateAnnouncement: () => void
     topics: ForumTopicSummary[]
     total: number
 }> = props => {
@@ -379,10 +433,18 @@ const ForumOverview: FC<{
                     posts
                 </span>
             </div>
-            <button onClick={props.onCreate} type='button'>
-                <IconOutline.PlusCircleIcon aria-hidden='true' />
-                Create new topic
-            </button>
+            <div className={styles.overviewActions}>
+                <button onClick={props.onCreate} type='button'>
+                    <IconOutline.PlusCircleIcon aria-hidden='true' />
+                    Create new topic
+                </button>
+                {props.canCreateAnnouncements && (
+                    <button onClick={props.onCreateAnnouncement} type='button'>
+                        <IconOutline.SpeakerphoneIcon aria-hidden='true' />
+                        Create announcement
+                    </button>
+                )}
+            </div>
         </section>
     )
 }
@@ -504,6 +566,7 @@ const DiscussionInfo: FC<{
  * @throws Does not throw; callbacks own API error handling.
  */
 const ForumTopicCard: FC<{
+    canDelete: boolean
     memberId: string
     onDelete: (topic: ForumTopicSummary) => void
     onEdit: (topic: ForumTopicSummary) => void
@@ -514,7 +577,7 @@ const ForumTopicCard: FC<{
     topic: ForumTopicSummary
 }> = props => {
     const participants = topicParticipants(props.topic)
-    const excerpt = plainForumExcerpt(props.topic.starterPostExcerpt)
+    const excerpt = props.topic.starterPostExcerpt?.trim()
     const owner = props.topic.authorMemberId === props.memberId
     const cardClass = props.topic.isAnnouncement
         ? `${styles.topicCard} ${styles.announcementCard}`
@@ -547,7 +610,11 @@ const ForumTopicCard: FC<{
                         {formatForumDate(props.topic.createdAt)}
                     </span>
                 </div>
-                {excerpt && <p className={styles.topicExcerpt}>{excerpt}</p>}
+                {excerpt && (
+                    <div className={styles.topicExcerpt}>
+                        <ChallengeMarkdown markdown={excerpt} />
+                    </div>
+                )}
                 <div className={styles.topicFooter}>
                     <span>
                         Last post at
@@ -556,16 +623,16 @@ const ForumTopicCard: FC<{
                     </span>
                     <div className={styles.topicActions}>
                         {owner && !props.topic.locked && (
-                            <>
-                                <button onClick={() => props.onEdit(props.topic)} type='button'>
-                                    <IconOutline.PencilIcon aria-hidden='true' />
-                                    Edit
-                                </button>
-                                <button onClick={() => props.onDelete(props.topic)} type='button'>
-                                    <IconOutline.TrashIcon aria-hidden='true' />
-                                    Delete
-                                </button>
-                            </>
+                            <button onClick={() => props.onEdit(props.topic)} type='button'>
+                                <IconOutline.PencilIcon aria-hidden='true' />
+                                Edit
+                            </button>
+                        )}
+                        {props.canDelete && !props.topic.locked && (
+                            <button onClick={() => props.onDelete(props.topic)} type='button'>
+                                <IconOutline.TrashIcon aria-hidden='true' />
+                                Delete
+                            </button>
                         )}
                         <button
                             disabled={props.pendingAction === `watch:${props.topic.id}`}
@@ -653,6 +720,25 @@ const MarkdownEditor: FC<MarkdownEditorProps> = props => {
         ['Quote', '> ', ''],
     ]
 
+    /** Continues or exits the active Markdown list without a toolbar round trip. */
+    const continueList = (event: KeyboardEvent<HTMLTextAreaElement>): void => {
+        if (event.key !== 'Enter' || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+        const result = continueMarkdownList(
+            props.value,
+            event.currentTarget.selectionStart,
+            event.currentTarget.selectionEnd,
+        )
+        if (!result) return
+        event.preventDefault()
+        const value = result.value.slice(0, props.maxLength)
+        const selection = Math.min(result.selectionStart, value.length)
+        props.onChange(value)
+        window.setTimeout(() => {
+            textareaRef.current?.focus()
+            textareaRef.current?.setSelectionRange(selection, selection)
+        })
+    }
+
     return (
         <div className={styles.markdownField}>
             <label htmlFor={props.id}>{props.label}</label>
@@ -691,6 +777,7 @@ const MarkdownEditor: FC<MarkdownEditorProps> = props => {
                             id={props.id}
                             maxLength={props.maxLength}
                             onChange={event => props.onChange(event.target.value)}
+                            onKeyDown={continueList}
                             placeholder={props.placeholder}
                             ref={textareaRef}
                             value={props.value}
@@ -719,12 +806,13 @@ const MarkdownEditor: FC<MarkdownEditorProps> = props => {
 const ForumCreateTopicView: FC<{
     canCreateAnnouncements: boolean
     challenge: ChallengeOpportunity
+    initialIsAnnouncement: boolean
     onBack: () => void
     onCreate: (title: string, content: string, isAnnouncement: boolean) => Promise<boolean>
 }> = props => {
     const [content, setContent] = useState('')
     const [error, setError] = useState<string>()
-    const [isAnnouncement, setIsAnnouncement] = useState(false)
+    const [isAnnouncement, setIsAnnouncement] = useState(props.initialIsAnnouncement)
     const [pending, setPending] = useState(false)
     const [preview, setPreview] = useState(false)
     const [title, setTitle] = useState('')
@@ -823,6 +911,207 @@ const ForumCreateTopicView: FC<{
     )
 }
 
+interface ForumTopicEditModalProps {
+    detail: ForumTopicDetail
+    onClose: () => void
+    onSave: (title: string, content: string, starterPost: ForumPost) => Promise<void>
+}
+
+/**
+ * Renders an in-app topic editor for both the title and starter-post content.
+ *
+ * @param props loaded topic detail and controlled save/close actions.
+ * @returns modal Markdown form for an owned discussion.
+ * @throws Does not throw; mutation failures remain visible inside the modal.
+ */
+const ForumTopicEditModal: FC<ForumTopicEditModalProps> = props => {
+    const starterPost = props.detail.posts.find(post => (
+        post.parentType === 'TOPIC' && post.parentId === props.detail.topic.id
+    )) ?? props.detail.posts[0]
+    const [content, setContent] = useState(starterPost?.content ?? '')
+    const [error, setError] = useState<string>()
+    const [pending, setPending] = useState(false)
+    const [preview, setPreview] = useState(false)
+    const [title, setTitle] = useState(props.detail.topic.title)
+
+    /** Validates and saves both editable topic fields. */
+    const save = async (): Promise<void> => {
+        if (!title.trim() || !content.trim() || !starterPost) {
+            setError('Add a topic title and description before saving your changes.')
+            return
+        }
+
+        setError(undefined)
+        setPending(true)
+        try {
+            await props.onSave(title.trim(), content.trim(), starterPost)
+            props.onClose()
+        } catch (mutationError) {
+            setError(forumErrorMessage(mutationError))
+        } finally {
+            setPending(false)
+        }
+    }
+
+    return (
+        <BaseModal
+            ariaLabelledby='forum-edit-topic-title'
+            buttons={(
+                <>
+                    <button
+                        className={styles.modalSecondary}
+                        disabled={pending}
+                        onClick={props.onClose}
+                        type='button'
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        className={styles.modalPrimary}
+                        disabled={pending}
+                        onClick={save}
+                        type='button'
+                    >
+                        {pending ? 'Saving…' : 'Save changes'}
+                    </button>
+                </>
+            )}
+            center
+            classNames={{ modal: styles.editModal }}
+            onClose={props.onClose}
+            open
+            showCloseIcon={!pending}
+            size='md'
+            spacer={false}
+            title={<h2 className={styles.modalTitle} id='forum-edit-topic-title'>Edit topic</h2>}
+        >
+            <div className={styles.editModalBody}>
+                <label className={styles.titleField}>
+                    <span>Topic Title</span>
+                    <input
+                        disabled={pending}
+                        maxLength={255}
+                        onChange={event => setTitle(event.target.value)}
+                        value={title}
+                    />
+                </label>
+                <MarkdownEditor
+                    id='forum-edit-topic-content'
+                    label='Topic Content'
+                    maxLength={TOPIC_CHARACTER_LIMIT}
+                    onChange={setContent}
+                    placeholder='Describe your topic'
+                    preview={preview}
+                    value={content}
+                />
+                <button
+                    className={styles.previewButton}
+                    disabled={pending}
+                    onClick={() => setPreview(value => !value)}
+                    type='button'
+                >
+                    {preview ? 'Write' : 'Preview'}
+                </button>
+                {error && <p className={styles.actionError} role='alert'>{error}</p>}
+            </div>
+        </BaseModal>
+    )
+}
+
+interface ForumPostEditModalProps {
+    onClose: () => void
+    onSave: (content: string) => Promise<void>
+    post: ForumPost
+}
+
+/**
+ * Renders an in-app Markdown editor for an owned forum post.
+ *
+ * @param props selected post and controlled save/close actions.
+ * @returns modal comment editor.
+ * @throws Does not throw; mutation failures remain visible inside the modal.
+ */
+const ForumPostEditModal: FC<ForumPostEditModalProps> = props => {
+    const [content, setContent] = useState(props.post.content ?? '')
+    const [error, setError] = useState<string>()
+    const [pending, setPending] = useState(false)
+    const [preview, setPreview] = useState(false)
+
+    /** Validates and saves the replacement post content. */
+    const save = async (): Promise<void> => {
+        if (!content.trim()) {
+            setError('Add comment text before saving your changes.')
+            return
+        }
+
+        setError(undefined)
+        setPending(true)
+        try {
+            await props.onSave(content.trim())
+            props.onClose()
+        } catch (mutationError) {
+            setError(forumErrorMessage(mutationError))
+        } finally {
+            setPending(false)
+        }
+    }
+
+    return (
+        <BaseModal
+            ariaLabelledby='forum-edit-post-title'
+            buttons={(
+                <>
+                    <button
+                        className={styles.modalSecondary}
+                        disabled={pending}
+                        onClick={props.onClose}
+                        type='button'
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        className={styles.modalPrimary}
+                        disabled={pending}
+                        onClick={save}
+                        type='button'
+                    >
+                        {pending ? 'Saving…' : 'Save changes'}
+                    </button>
+                </>
+            )}
+            center
+            classNames={{ modal: styles.editModal }}
+            onClose={props.onClose}
+            open
+            showCloseIcon={!pending}
+            size='md'
+            spacer={false}
+            title={<h2 className={styles.modalTitle} id='forum-edit-post-title'>Edit comment</h2>}
+        >
+            <div className={styles.editModalBody}>
+                <MarkdownEditor
+                    id='forum-edit-post-content'
+                    label='Comment'
+                    maxLength={COMMENT_CHARACTER_LIMIT}
+                    onChange={setContent}
+                    placeholder='Type here'
+                    preview={preview}
+                    value={content}
+                />
+                <button
+                    className={styles.previewButton}
+                    disabled={pending}
+                    onClick={() => setPreview(value => !value)}
+                    type='button'
+                >
+                    {preview ? 'Write' : 'Preview'}
+                </button>
+                {error && <p className={styles.actionError} role='alert'>{error}</p>}
+            </div>
+        </BaseModal>
+    )
+}
+
 /**
  * Builds a bounded Markdown quote for a selected post.
  *
@@ -848,6 +1137,7 @@ function quoteForumPost(post: ForumPost): string {
  * @throws Does not throw; mutation callbacks own API error handling.
  */
 const ForumPostCard: FC<{
+    canDelete: boolean
     detail: ForumTopicDetail
     item: FlatForumPost
     memberId: string
@@ -873,6 +1163,12 @@ const ForumPostCard: FC<{
                         handle={post.authorHandle}
                         profile={props.profilesByMemberId.get(post.authorMemberId)}
                     />
+                    {post.authorIsCopilot && (
+                        <span className={styles.copilotBadge}>
+                            <IconOutline.StarIcon aria-hidden='true' />
+                            Copilot
+                        </span>
+                    )}
                     {post.authorMemberId === props.detail.topic.authorMemberId && (
                         <span className={styles.authorBadge}>
                             <IconOutline.PencilIcon aria-hidden='true' />
@@ -948,16 +1244,16 @@ const ForumPostCard: FC<{
                         </>
                     )}
                     {owner && !props.detail.topic.locked && (
-                        <>
-                            <button onClick={() => props.onEdit(post)} type='button'>
-                                <IconOutline.PencilIcon aria-hidden='true' />
-                                Edit
-                            </button>
-                            <button onClick={() => props.onDelete(post)} type='button'>
-                                <IconOutline.TrashIcon aria-hidden='true' />
-                                Delete
-                            </button>
-                        </>
+                        <button onClick={() => props.onEdit(post)} type='button'>
+                            <IconOutline.PencilIcon aria-hidden='true' />
+                            Edit
+                        </button>
+                    )}
+                    {props.canDelete && !props.detail.topic.locked && (
+                        <button onClick={() => props.onDelete(post)} type='button'>
+                            <IconOutline.TrashIcon aria-hidden='true' />
+                            Delete
+                        </button>
                     )}
                 </footer>
             )}
@@ -974,6 +1270,7 @@ const ForumPostCard: FC<{
  * @throws Does not throw; API failures render beside the affected workflow.
  */
 const ForumTopicView: FC<{
+    canDeletePosts: boolean
     detail: ForumTopicDetail
     memberId: string
     onBack: () => void
@@ -981,11 +1278,14 @@ const ForumTopicView: FC<{
     profilesByMemberId: MemberProfilesById
 }> = props => {
     const [comment, setComment] = useState('')
+    const [commentError, setCommentError] = useState<string>()
     const [error, setError] = useState<string>()
     const [pending, setPending] = useState(false)
     const [preview, setPreview] = useState(false)
     const [reactionPendingPostId, setReactionPendingPostId] = useState<string>()
     const [replyTarget, setReplyTarget] = useState<ForumPost>()
+    const [postToDelete, setPostToDelete] = useState<ForumPost>()
+    const [postToEdit, setPostToEdit] = useState<ForumPost>()
     const flatPosts = flattenForumPosts(props.detail.posts)
     const postById = new Map(flatPosts.map(item => [item.post.id, item.post]))
     const participants = topicParticipants(props.detail.topic)
@@ -996,46 +1296,58 @@ const ForumTopicView: FC<{
             ?.focus())
     }
 
-    /** Selects a post as the nested reply target. */
+    /**
+     * Selects a post as the nested reply target and clears stale composer errors.
+     *
+     * @param post visible post receiving the reply.
+     * @returns void after updating controlled composer state.
+     * @throws Does not throw.
+     */
     const reply = (post: ForumPost): void => {
+        setCommentError(undefined)
         setReplyTarget(post)
         setPreview(false)
         focusComposer()
     }
 
-    /** Adds an attributed bounded quote and selects the quoted post as parent. */
+    /**
+     * Adds an attributed bounded quote and selects the quoted post as parent.
+     *
+     * @param post visible post quoted into the controlled composer.
+     * @returns void after updating and focusing composer state.
+     * @throws Does not throw.
+     */
     const quote = (post: ForumPost): void => {
+        setCommentError(undefined)
         setReplyTarget(post)
         setComment(value => `${value}${value ? '\n\n' : ''}${quoteForumPost(post)}`.slice(0, COMMENT_CHARACTER_LIMIT))
         setPreview(false)
         focusComposer()
     }
 
-    /** Updates an owned post after native confirmation of the replacement copy. */
-    const editPost = async (post: ForumPost): Promise<void> => {
-        const content = window.prompt('Edit your comment', post.content ?? '')
-            ?.trim()
-        if (!content || content === post.content) return
+    /** Opens the in-app editor for an owned post. */
+    const editPost = (post: ForumPost): void => setPostToEdit(post)
+
+    /** Persists replacement content from the in-app post editor. */
+    const savePost = async (content: string): Promise<void> => {
+        if (!postToEdit || content === postToEdit.content) return
         setError(undefined)
-        setPending(true)
-        try {
-            await updateForumPost(post.id, content)
-            await props.onChanged()
-        } catch (mutationError) {
-            setError(forumErrorMessage(mutationError))
-        } finally {
-            setPending(false)
-        }
+        await updateForumPost(postToEdit.id, content)
+        await props.onChanged()
     }
 
-    /** Soft-deletes an owned post after explicit member confirmation. */
-    const removePost = async (post: ForumPost): Promise<void> => {
-        if (!window.confirm('Delete this comment? Replies will remain in the discussion.')) return
+    /** Opens the administrator delete confirmation for a post. */
+    const removePost = (post: ForumPost): void => setPostToDelete(post)
+
+    /** Soft-deletes the selected post after administrator confirmation. */
+    const confirmRemovePost = async (): Promise<void> => {
+        if (!postToDelete) return
         setError(undefined)
         setPending(true)
         try {
-            await deleteForumPost(post.id)
+            await deleteForumPost(postToDelete.id)
             await props.onChanged()
+            setPostToDelete(undefined)
         } catch (mutationError) {
             setError(forumErrorMessage(mutationError))
         } finally {
@@ -1063,15 +1375,21 @@ const ForumTopicView: FC<{
         }
     }
 
-    /** Creates a top-level comment or nested reply from the controlled composer. */
+    /**
+     * Creates a top-level comment or nested reply from the controlled composer.
+     *
+     * @param event comment-form submission event.
+     * @returns promise settled after validation or the API write and refresh complete.
+     * @throws Does not throw; validation and API errors render beside the editor.
+     */
     const submitComment = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
         event.preventDefault()
         if (!comment.trim()) {
-            setError('Write a comment before posting.')
+            setCommentError('Write a comment before posting.')
             return
         }
 
-        setError(undefined)
+        setCommentError(undefined)
         setPending(true)
         try {
             await createForumPost(props.detail.topic.id, replyTarget
@@ -1086,7 +1404,7 @@ const ForumTopicView: FC<{
             setPreview(false)
             await props.onChanged()
         } catch (mutationError) {
-            setError(forumErrorMessage(mutationError))
+            setCommentError(forumErrorMessage(mutationError))
         } finally {
             setPending(false)
         }
@@ -1149,6 +1467,7 @@ const ForumTopicView: FC<{
                     {error && <p className={styles.actionError} role='alert'>{error}</p>}
                     {flatPosts.map(item => (
                         <ForumPostCard
+                            canDelete={props.canDeletePosts}
                             detail={props.detail}
                             item={item}
                             key={item.post.id}
@@ -1193,6 +1512,9 @@ const ForumTopicView: FC<{
                                 preview={preview}
                                 value={comment}
                             />
+                            {commentError && (
+                                <p className={styles.actionError} role='alert'>{commentError}</p>
+                            )}
                             <div className={styles.formActions}>
                                 <button disabled={pending} type='submit'>
                                     {pending ? 'Posting…' : 'Post comment'}
@@ -1208,8 +1530,42 @@ const ForumTopicView: FC<{
                     )}
                 </div>
             </div>
+            {postToEdit && (
+                <ForumPostEditModal
+                    key={postToEdit.id}
+                    onClose={() => setPostToEdit(undefined)}
+                    onSave={savePost}
+                    post={postToEdit}
+                />
+            )}
+            <ConfirmModal
+                action='Delete comment'
+                isLoading={pending}
+                isProcessing={pending}
+                onClose={() => setPostToDelete(undefined)}
+                onConfirm={confirmRemovePost}
+                open={!!postToDelete}
+                title='Delete comment?'
+            >
+                <p>Replies will remain in the discussion. This action cannot be undone.</p>
+            </ConfirmModal>
         </div>
     )
+}
+
+/**
+ * Returns the viewport to the top of the challenge page.
+ *
+ * Forum navigation swaps the panel's contents without changing the route, so the
+ * browser keeps the previous scroll offset. A member who opens a topic from far
+ * down the list would otherwise land in the middle of — or past the end of — the
+ * discussion they just opened.
+ *
+ * @returns void after resetting the vertical scroll offset.
+ * @throws Does not throw; environments without `scrollTo` are ignored.
+ */
+function resetForumScroll(): void {
+    window.scrollTo?.({ left: 0, top: 0 })
 }
 
 /**
@@ -1220,13 +1576,15 @@ const ForumTopicView: FC<{
  * watch state, and read state. A legacy link is retained only as recovery when
  * the v6 API cannot be reached or the member is signed out.
  *
- * @param props challenge context, optional authenticated member ID, and administrator announcement access.
+ * @param props challenge context, optional member ID, and administrator announcement/delete access.
  * @returns embedded topic list, creation form, detail discussion, or recovery state.
  * @throws Does not throw; API failures render stable, actionable UI states.
  */
 export const ChallengeForum: FC<ChallengeForumProps> = props => {
     const externalUrl = challengeForumUrl(props.challenge)
+    const [createAsAnnouncement, setCreateAsAnnouncement] = useState(false)
     const [creatingTopic, setCreatingTopic] = useState(false)
+    const [editingTopicDetail, setEditingTopicDetail] = useState<ForumTopicDetail>()
     const [mutationError, setMutationError] = useState<string>()
     const [page, setPage] = useState(1)
     const [pendingAction, setPendingAction] = useState<string>()
@@ -1235,6 +1593,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
     const [search, setSearch] = useState('')
     const [selectedTopicId, setSelectedTopicId] = useState<string>()
     const [sort, setSort] = useState<ForumSort>('recent')
+    const [topicToDelete, setTopicToDelete] = useState<ForumTopicSummary>()
     const response: SWRResponse<ForumTopicCollection, Error> = useSWR(
         props.memberId ? ['opportunities:forum-topics', props.challenge.id] : undefined,
         () => getChallengeForumTopics(props.challenge.id),
@@ -1320,17 +1679,39 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         ])
     }
 
-    /** Opens a topic and records its current activity as read without blocking navigation. */
+    /**
+     * Opens a topic and records its current activity as read without blocking navigation.
+     *
+     * @param topicId selected topic identifier.
+     * @returns void after updating local navigation state and scheduling read-state refresh.
+     * @throws Does not throw; read-state failures are intentionally non-blocking.
+     */
     const openTopic = (topicId: string): void => {
+        setCreateAsAnnouncement(false)
         setCreatingTopic(false)
         setSelectedTopicId(topicId)
         setMutationError(undefined)
+        resetForumScroll()
         markForumTopicRead(topicId)
             .then(() => response.mutate())
             .catch(() => undefined)
     }
 
-    /** Creates a challenge topic and opens its new detail view. */
+    /** Closes the open discussion and returns the member to the topic list. */
+    const closeTopic = (): void => {
+        setSelectedTopicId(undefined)
+        resetForumScroll()
+    }
+
+    /**
+     * Creates a challenge topic and opens its new detail view.
+     *
+     * @param title authored topic title.
+     * @param content authored starter-post Markdown.
+     * @param isAnnouncement whether the administrator selected announcement presentation.
+     * @returns true after creation and navigation, otherwise false after rendering the API error.
+     * @throws Does not throw; command failures are converted to visible mutation state.
+     */
     const createTopic = async (
         title: string,
         content: string,
@@ -1345,8 +1726,10 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 title,
             })
             await response.mutate()
+            setCreateAsAnnouncement(false)
             setCreatingTopic(false)
             setSelectedTopicId(created.topic.id)
+            resetForumScroll()
             return true
         } catch (error) {
             setMutationError(forumErrorMessage(error))
@@ -1354,16 +1737,12 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         }
     }
 
-    /** Updates one owned topic title through the v6 API. */
+    /** Loads an owned topic into the in-app title and Markdown editor. */
     const editTopic = async (topic: ForumTopicSummary): Promise<void> => {
-        const title = window.prompt('Edit topic title', topic.title)
-            ?.trim()
-        if (!title || title === topic.title) return
         setPendingAction(`edit:${topic.id}`)
         setMutationError(undefined)
         try {
-            await updateForumTopic(topic.id, title)
-            await refreshForum()
+            setEditingTopicDetail(await getForumTopicDetail(topic.id))
         } catch (error) {
             setMutationError(forumErrorMessage(error))
         } finally {
@@ -1371,15 +1750,38 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         }
     }
 
-    /** Soft-deletes one owned topic after explicit confirmation. */
-    const removeTopic = async (topic: ForumTopicSummary): Promise<void> => {
-        if (!window.confirm(`Delete “${topic.title}” and its discussion?`)) return
-        setPendingAction(`delete:${topic.id}`)
+    /** Saves the editable topic title and starter-post body through their owning endpoints. */
+    const saveTopic = async (
+        title: string,
+        content: string,
+        starterPost: ForumPost,
+    ): Promise<void> => {
+        if (!editingTopicDetail) return
+
+        if (title !== editingTopicDetail.topic.title) {
+            await updateForumTopic(editingTopicDetail.topic.id, title)
+        }
+
+        if (content !== starterPost.content) {
+            await updateForumPost(starterPost.id, content)
+        }
+
+        await refreshForum()
+    }
+
+    /** Opens the in-app delete confirmation for an owned topic. */
+    const removeTopic = (topic: ForumTopicSummary): void => setTopicToDelete(topic)
+
+    /** Soft-deletes the selected owned topic after in-app confirmation. */
+    const confirmRemoveTopic = async (): Promise<void> => {
+        if (!topicToDelete) return
+        setPendingAction(`delete:${topicToDelete.id}`)
         setMutationError(undefined)
         try {
-            await deleteForumTopic(topic.id)
-            if (selectedTopicId === topic.id) setSelectedTopicId(undefined)
+            await deleteForumTopic(topicToDelete.id)
+            if (selectedTopicId === topicToDelete.id) setSelectedTopicId(undefined)
             await response.mutate()
+            setTopicToDelete(undefined)
         } catch (error) {
             setMutationError(forumErrorMessage(error))
         } finally {
@@ -1419,7 +1821,6 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         return (
             <ForumFallback
                 externalUrl={externalUrl}
-                text='The embedded discussion could not be loaded. No communication action was attempted.'
                 title='Forum temporarily unavailable'
             />
         )
@@ -1432,7 +1833,11 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 <ForumCreateTopicView
                     canCreateAnnouncements={!!props.canCreateAnnouncements}
                     challenge={props.challenge}
-                    onBack={() => setCreatingTopic(false)}
+                    initialIsAnnouncement={createAsAnnouncement}
+                    onBack={() => {
+                        setCreateAsAnnouncement(false)
+                        setCreatingTopic(false)
+                    }}
                     onCreate={createTopic}
                 />
             </>
@@ -1447,7 +1852,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         if (detailResponse.error || !detailResponse.data) {
             return (
                 <div className={styles.detailError}>
-                    <button onClick={() => setSelectedTopicId(undefined)} type='button'>Back to topics</button>
+                    <button onClick={closeTopic} type='button'>Back to topics</button>
                     <ForumFallback
                         externalUrl={externalUrl}
                         text='This topic could not be loaded from the v6 Forums API.'
@@ -1459,9 +1864,10 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
 
         return (
             <ForumTopicView
+                canDeletePosts={!!props.canDeleteTopics}
                 detail={detailResponse.data}
                 memberId={props.memberId}
-                onBack={() => setSelectedTopicId(undefined)}
+                onBack={closeTopic}
                 onChanged={refreshForum}
                 profilesByMemberId={profilesByMemberId}
             />
@@ -1480,12 +1886,19 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         <div className={styles.forumLayout}>
             <aside className={styles.leftPanel}>
                 <ForumOverview
+                    canCreateAnnouncements={!!props.canCreateAnnouncements}
                     onCreate={() => {
                         setMutationError(undefined)
+                        setCreateAsAnnouncement(false)
+                        setCreatingTopic(true)
+                    }}
+                    onCreateAnnouncement={() => {
+                        setMutationError(undefined)
+                        setCreateAsAnnouncement(true)
                         setCreatingTopic(true)
                     }}
                     topics={topics}
-                    total={topics.length}
+                    total={response.data?.sourceTotalCount ?? topics.length}
                 />
                 <ForumFilters
                     onReset={resetFilters}
@@ -1525,6 +1938,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 )}
                 {visibleTopics.map(topic => (
                     <ForumTopicCard
+                        canDelete={!!props.canDeleteTopics}
                         key={topic.id}
                         memberId={props.memberId as string}
                         onDelete={removeTopic}
@@ -1561,6 +1975,29 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                     />
                 )}
             </section>
+            {editingTopicDetail && (
+                <ForumTopicEditModal
+                    detail={editingTopicDetail}
+                    key={editingTopicDetail.topic.id}
+                    onClose={() => setEditingTopicDetail(undefined)}
+                    onSave={saveTopic}
+                />
+            )}
+            <ConfirmModal
+                action='Delete topic'
+                isLoading={pendingAction === `delete:${topicToDelete?.id}`}
+                isProcessing={pendingAction === `delete:${topicToDelete?.id}`}
+                onClose={() => setTopicToDelete(undefined)}
+                onConfirm={confirmRemoveTopic}
+                open={!!topicToDelete}
+                title='Delete topic?'
+            >
+                <p>
+                    <span>Delete “</span>
+                    <strong>{topicToDelete?.title}</strong>
+                    <span>” and its discussion? This action cannot be undone.</span>
+                </p>
+            </ConfirmModal>
         </div>
     )
 }

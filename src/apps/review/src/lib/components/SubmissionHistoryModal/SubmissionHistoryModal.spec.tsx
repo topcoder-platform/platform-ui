@@ -61,6 +61,12 @@ jest.mock('../AiReviewsTable', () => ({
     AiWorkflowRunStatus: () => <span />,
 }))
 
+jest.mock('../SubmissionArtifactsButton/SubmissionArtifactsButton', () => ({
+    SubmissionArtifactsButton: (props: { submissionId: string }) => (
+        <span data-testid='artifact-action'>{props.submissionId}</span>
+    ),
+}))
+
 jest.mock('./SubmissionHistoryModal.module.scss', () => new Proxy({}, {
     get: (_target, property) => String(property),
 }))
@@ -118,6 +124,14 @@ function renderModal(
 }
 
 describe('SubmissionHistoryModal duplicates', () => {
+    it('passes every historical submission to the artifact access control', () => {
+        renderModal({})
+
+        expect(screen.getAllByTestId('artifact-action')
+            .map(action => action.textContent))
+            .toEqual(['submission-1', 'submission-2'])
+    })
+
     it('badges only the history rows that have duplicates', () => {
         renderModal({ 'submission-1': [duplicate], 'submission-2': [] })
 

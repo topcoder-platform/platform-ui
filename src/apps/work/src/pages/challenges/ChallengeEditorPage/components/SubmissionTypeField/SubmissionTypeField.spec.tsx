@@ -3,6 +3,7 @@ import {
     FC,
 } from 'react'
 import {
+    act,
     render,
     screen,
     waitFor,
@@ -186,6 +187,84 @@ describe('SubmissionTypeField', () => {
                 name: 'submission_type',
                 value: 'zip',
             }]))
+    })
+
+    it('stops looking up a group the Groups API cannot return', async () => {
+        mockedFetchGroupById.mockRejectedValue(new Error('Failed to fetch group'))
+
+        render(
+            <TestHarness defaultGroups={['unreadable-group-id']} />,
+        )
+
+        await waitFor(() => {
+            expect(mockedFetchGroupById)
+                .toHaveBeenCalledWith('unreadable-group-id')
+        })
+
+        // The unresolved group must not be requested again, or the editor spins on the Groups API
+        // and locks up the challenge edit page.
+        await act(async () => {
+            await new Promise(resolve => {
+                setTimeout(resolve, 200)
+            })
+        })
+
+        expect(mockedFetchGroupById)
+            .toHaveBeenCalledTimes(1)
+        expect(screen.getByRole('radio', { name: 'Zip file' }))
+            .toBeChecked()
+    })
+
+    it('stops looking up a group the Groups API resolves as missing', async () => {
+        mockedFetchGroupById.mockResolvedValue(undefined)
+
+        render(
+            <TestHarness defaultGroups={['missing-group-id']} />,
+        )
+
+        await waitFor(() => {
+            expect(mockedFetchGroupById)
+                .toHaveBeenCalledWith('missing-group-id')
+        })
+
+        await act(async () => {
+            await new Promise(resolve => {
+                setTimeout(resolve, 200)
+            })
+        })
+
+        expect(mockedFetchGroupById)
+            .toHaveBeenCalledTimes(1)
+    })
+
+    it('looks up each selected group only once', async () => {
+        mockedFetchGroupById.mockImplementation(async (groupId: string) => ({
+            id: groupId,
+            name: 'Topgear - Internal',
+        }))
+
+        render(
+            <TestHarness
+                defaultGroups={[
+                    'topgear-group-id',
+                    'other-group-id',
+                ]}
+            />,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByRole('radio', { name: 'URL' }))
+                .toBeChecked()
+        })
+
+        await act(async () => {
+            await new Promise(resolve => {
+                setTimeout(resolve, 200)
+            })
+        })
+
+        expect(mockedFetchGroupById)
+            .toHaveBeenCalledTimes(2)
     })
 
     it('writes submission_type metadata when the selected radio changes', async () => {

@@ -6,6 +6,7 @@ export * from './applications.service'
 export * from './billing-accounts.service'
 export * from './challenges.service'
 export * from './engagements.service'
+export * from './engagement-leads.service'
 export * from './gitea-teams.service'
 export {
     addGroupMember,
@@ -35,6 +36,7 @@ export type {
     ProjectSummary,
 } from './projects.service'
 export * from './resources.service'
+export * from './salesforce-opportunities.service'
 export * from './reviews.service'
 export * from './skills.service'
 export * from './submissions.service'

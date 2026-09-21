@@ -48,7 +48,7 @@
     flex-direction: column;
     font-family: 'Nunito Sans', sans-serif;
     font-size: 16px;
-    gap: 16px;
+    gap: 12px;
     line-height: 22px;
 
     p,
@@ -98,6 +98,13 @@
     }
 }
 
+.progress {
+    color: #6f7787;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+}
+
 .modalAction {
     border-radius: 4px !important;
     font-family: 'Nunito Sans', sans-serif !important;
@@ -141,16 +148,16 @@
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 16px;
     max-height: 532px;
     overflow: auto;
-    padding: 24px;
+    padding: 16px 24px 24px;
 }
 
 .term {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 
     h3,
     h1,
@@ -159,36 +166,85 @@
         color: #161616;
         font-family: 'Figtree', sans-serif;
         font-size: 20px;
-        line-height: 32px;
-        margin: 0 0 8px;
+        line-height: 28px;
+        font-weight: 600;
+        margin: 0;
         text-transform: none;
     }
 
-    p {
-        margin: 0 0 24px;
+    > div {
+        color: #161616;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 16px;
+        line-height: 22px;
+
+        p,
+        li,
+        a,
+        span {
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+        }
+    }
+
+    > div > :first-child {
+        margin-top: 0;
+    }
+
+    p,
+    ul,
+    ol {
+        margin: 0 0 12px;
+    }
+
+    ul,
+    ol {
+        padding-left: 24px;
     }
 
     small {
         color: #137d60;
         font-weight: 700;
     }
+
+    > a {
+        align-items: center;
+        display: inline-flex;
+        gap: 4px;
+
+        svg {
+            height: 16px;
+            width: 16px;
+        }
+    }
 }
 
-.externalButton {
-    align-self: flex-start;
-    background: #007d79;
-    border: 0;
-    border-radius: 4px;
-    color: #fff;
-    cursor: pointer;
-    font: inherit;
-    font-weight: 700;
-    padding: 8px 24px;
+.docuSign {
+    min-height: min(532px, 60vh);
+    position: relative;
+    width: 100%;
+}
 
-    &:disabled {
-        cursor: wait;
-        opacity: .6;
-    }
+.docuSignFrame {
+    border: 0;
+    display: block;
+    height: min(532px, 60vh);
+    width: 100%;
+}
+
+.docuSignStatus {
+    align-items: center;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    inset: 0;
+    justify-content: center;
+    min-height: min(532px, 60vh);
+    position: absolute;
+    text-align: center;
+    z-index: 1;
 }
 
 @media (max-width: 700px) {

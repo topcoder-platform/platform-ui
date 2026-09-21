@@ -5,7 +5,6 @@ import classNames from 'classnames'
 
 import {
     OpportunityKind,
-    OpportunityMode,
     OpportunitySummary,
 } from '../models'
 
@@ -19,13 +18,8 @@ interface OpportunityHeroProps {
     active: OpportunityKind
     error?: boolean
     loading?: boolean
-    mode: OpportunityMode
-    onModeChange: (mode: OpportunityMode) => void
     onRetry?: () => void
-    onWorkKindSelect?: (kind: OpportunityKind) => void
     summary?: OpportunitySummary
-    workCount?: number
-    workCounts?: Partial<Record<OpportunityKind, number>>
 }
 
 interface CellConfig {
@@ -33,7 +27,6 @@ interface CellConfig {
     icon: FC
     kind: OpportunityKind
     label: string
-    workLabel: string
 }
 
 const cells: CellConfig[] = [
@@ -42,28 +35,24 @@ const cells: CellConfig[] = [
         icon: CompetitionIcon,
         kind: 'competitions',
         label: 'Competitions',
-        workLabel: 'Competitions',
     },
     {
         description: 'Contract work with clients',
         icon: EngagementIcon,
         kind: 'engagements',
         label: 'Engagements',
-        workLabel: 'Engagements',
     },
     {
         description: 'Lead & coordinate competitions',
         icon: CopilotIcon,
         kind: 'copilots',
         label: 'Copilot Opportunities',
-        workLabel: 'Copilot Opportunities',
     },
     {
         description: 'Evaluate submissions to earn',
         icon: ReviewIcon,
         kind: 'reviews',
         label: 'Review Opportunities',
-        workLabel: 'Review Opportunities',
     },
 ]
 
@@ -87,11 +76,11 @@ function formatCompactCurrency(value?: number): string | undefined {
 }
 
 /**
- * Renders the canonical August 2026 Opportunities masthead, its Browse/My Work
- * tabs, and the category selector authored for the active destination.
+ * Renders the canonical Opportunities masthead and compact category selector.
+ * Member-owned results remain available through each category's filters.
  *
- * @param props active category, destination, summaries, and navigation callbacks.
- * @returns dark masthead followed by browse or member-work category cards.
+ * @param props active category, public summaries, and retry callback.
+ * @returns dark masthead followed by the four opportunity category cards.
  * @throws Does not throw.
  */
 export const OpportunityHero: FC<OpportunityHeroProps> = props => (
@@ -119,50 +108,26 @@ export const OpportunityHero: FC<OpportunityHeroProps> = props => (
                         <button onClick={props.onRetry} type='button'>Try again</button>
                     </div>
                 )}
-                <div aria-label='Opportunity destination' className={styles.modeTabs} role='tablist'>
-                    <button
-                        aria-selected={props.mode === 'browse'}
-                        className={classNames({ [styles.activeTab]: props.mode === 'browse' })}
-                        onClick={() => props.onModeChange('browse')}
-                        role='tab'
-                        type='button'
-                    >
-                        Browse Opportunities
-                    </button>
-                    <button
-                        aria-selected={props.mode === 'work'}
-                        className={classNames({ [styles.activeTab]: props.mode === 'work' })}
-                        onClick={() => props.onModeChange('work')}
-                        role='tab'
-                        type='button'
-                    >
-                        My Work
-                        <span aria-live='polite' className={styles.workBadge}>
-                            {props.workCount ?? '—'}
-                        </span>
-                    </button>
-                    <span aria-hidden='true' className={styles.tabRule} />
-                </div>
             </div>
         </section>
-        {props.mode === 'browse' ? (
-            <section className={styles.browseTypes}>
-                <div className={styles.map} aria-hidden='true' />
-                <nav aria-label='Opportunity types' className={styles.cells}>
-                    {cells.map((cell: CellConfig) => {
-                        const Icon = cell.icon
-                        const summary = props.summary?.[cell.kind]
-                        const amount = summary?.amountLabel ?? formatCompactCurrency(summary?.amount)
-                        return (
-                            <NavLink
-                                aria-current={props.active === cell.kind ? 'page' : undefined}
-                                className={classNames(styles.cell, {
-                                    [styles.active]: props.active === cell.kind,
-                                })}
-                                key={cell.kind}
-                                to={`/opportunities/${cell.kind}`}
-                            >
-                                <Icon aria-hidden='true' />
+        <section className={styles.browseTypes}>
+            <div className={styles.map} aria-hidden='true' />
+            <nav aria-label='Opportunity types' className={styles.cells}>
+                {cells.map((cell: CellConfig) => {
+                    const Icon = cell.icon
+                    const summary = props.summary?.[cell.kind]
+                    const amount = summary?.amountLabel ?? formatCompactCurrency(summary?.amount)
+                    return (
+                        <NavLink
+                            aria-current={props.active === cell.kind ? 'page' : undefined}
+                            className={classNames(styles.cell, {
+                                [styles.active]: props.active === cell.kind,
+                            })}
+                            key={cell.kind}
+                            to={`/opportunities/${cell.kind}`}
+                        >
+                            <Icon aria-hidden='true' />
+                            <span className={styles.cellContent}>
                                 <span className={styles.cellCopy}>
                                     <strong>{cell.label}</strong>
                                     <span>{cell.description}</span>
@@ -180,32 +145,11 @@ export const OpportunityHero: FC<OpportunityHeroProps> = props => (
                                     )}
                                     {summary?.tag && <small>{summary.tag}</small>}
                                 </span>
-                            </NavLink>
-                        )
-                    })}
-                </nav>
-            </section>
-        ) : (
-            <section aria-label='My Work categories' className={styles.workTypes}>
-                <div className={styles.workCells}>
-                    {cells.map((cell: CellConfig) => {
-                        const Icon = cell.icon
-                        return (
-                            <button
-                                key={cell.kind}
-                                onClick={() => props.onWorkKindSelect?.(cell.kind)}
-                                type='button'
-                            >
-                                <span className={styles.workIcon}><Icon aria-hidden='true' /></span>
-                                <span className={styles.workCopy}>
-                                    <strong>{props.workCounts?.[cell.kind] ?? '—'}</strong>
-                                    <span>{cell.workLabel}</span>
-                                </span>
-                            </button>
-                        )
-                    })}
-                </div>
-            </section>
-        )}
+                            </span>
+                        </NavLink>
+                    )
+                })}
+            </nav>
+        </section>
     </div>
 )

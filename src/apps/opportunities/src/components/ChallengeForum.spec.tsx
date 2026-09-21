@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, unicorn/no-null */
 import '@testing-library/jest-dom'
 import { readFileSync } from 'fs'
-import { act } from 'react'
+import { act, PropsWithChildren } from 'react'
 import {
     fireEvent,
     render,
@@ -19,6 +19,7 @@ import {
 } from '../models'
 import {
     ChallengeForum,
+    continueMarkdownList,
     flattenForumPosts,
     forumRatingClass,
     formatForumDate,
@@ -30,6 +31,7 @@ const mockCreateForumPost = jest.fn()
 const mockCreateForumTopic = jest.fn()
 const mockDeleteForumPost = jest.fn()
 const mockDeleteForumTopic = jest.fn()
+const mockGetForumTopicDetail = jest.fn()
 const mockMarkForumTopicRead = jest.fn()
 const mockSetForumPostReaction = jest.fn()
 const mockSetForumTopicWatching = jest.fn()
@@ -49,6 +51,32 @@ jest.mock('swr', () => ({
 jest.mock('~/libs/ui', () => {
     const Icon = (): JSX.Element => <svg />
     return {
+        BaseModal: (props: PropsWithChildren<{
+            buttons?: JSX.Element
+            onClose: () => void
+            open: boolean
+            title?: JSX.Element
+        }>): JSX.Element => (props.open ? (
+            <div role='dialog'>
+                {props.title}
+                {props.children}
+                {props.buttons}
+                <button aria-label='Close modal' onClick={props.onClose} type='button' />
+            </div>
+        ) : <></>),
+        ConfirmModal: (props: PropsWithChildren<{
+            action?: string
+            onClose: () => void
+            onConfirm: () => void
+            open: boolean
+            title: string
+        }>): JSX.Element => (props.open ? (
+            <div aria-label={props.title} role='dialog'>
+                {props.children}
+                <button onClick={props.onClose} type='button'>Cancel</button>
+                <button onClick={props.onConfirm} type='button'>{props.action ?? 'Confirm'}</button>
+            </div>
+        ) : <></>),
         IconOutline: new Proxy({}, { get: () => Icon }),
         LoadingSpinner: (): JSX.Element => <span>Loading forum</span>,
     }
@@ -60,7 +88,7 @@ jest.mock('../services', () => ({
     deleteForumPost: (...args: unknown[]) => mockDeleteForumPost(...args),
     deleteForumTopic: (...args: unknown[]) => mockDeleteForumTopic(...args),
     getChallengeForumTopics: jest.fn(),
-    getForumTopicDetail: jest.fn(),
+    getForumTopicDetail: (...args: unknown[]) => mockGetForumTopicDetail(...args),
     getMemberProfilesByUserIds: jest.fn(),
     markForumTopicRead: (...args: unknown[]) => mockMarkForumTopicRead(...args),
     setForumPostReaction: (...args: unknown[]) => mockSetForumPostReaction(...args),
@@ -124,6 +152,7 @@ const discussion: ForumTopicSummary = {
 
 const starterPost: ForumPost = {
     authorHandle: 'DaraK',
+    authorIsCopilot: true,
     authorMemberId: '1',
     authorPostsCount: 123,
     content: 'Welcome **competitors**.',
@@ -134,6 +163,7 @@ const starterPost: ForumPost = {
     parentType: 'TOPIC',
     replies: [{
         authorHandle: 'Yoki',
+        authorIsCopilot: false,
         authorMemberId: '2',
         authorPostsCount: 12,
         content: 'Thanks for the clarification.',
@@ -167,6 +197,7 @@ describe('ChallengeForum', () => {
             topic: { id: 'topic-3' },
         })
         mockMarkForumTopicRead.mockResolvedValue(undefined)
+        mockGetForumTopicDetail.mockResolvedValue(topicDetail)
         mockSetForumPostReaction.mockResolvedValue({
             postId: 'post-1',
             thumbsDownCount: 1,
@@ -186,6 +217,7 @@ describe('ChallengeForum', () => {
             truncated: false,
         }
         topicDetail = { posts: [starterPost], topic: announcement }
+        mockGetForumTopicDetail.mockResolvedValue(topicDetail)
         mockUseSWR.mockImplementation((key: unknown) => {
             if (Array.isArray(key) && key[0] === 'opportunities:forum-topics') {
                 return {
@@ -249,6 +281,19 @@ describe('ChallengeForum', () => {
             .not.toBeInTheDocument()
     })
 
+    it('uses the API source total for topic counters', () => {
+        topicCollection = {
+            data: [announcement, discussion],
+            sourceTotalCount: 4,
+            truncated: true,
+        }
+
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+
+        expect(screen.getByText('4 topics'))
+            .toBeInTheDocument()
+    })
+
     it('opens an embedded post tree and keeps replies and comments in-page', async () => {
         render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
         await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
@@ -261,6 +306,8 @@ describe('ChallengeForum', () => {
             .toBeInTheDocument()
         expect(screen.getAllByText('Author'))
             .toHaveLength(2)
+        expect(screen.getByText('Copilot'))
+            .toBeInTheDocument()
         expect(screen.getAllByRole('button', { name: 'Reply' }))
             .toHaveLength(2)
         fireEvent.change(screen.getByPlaceholderText('Type here'), {
@@ -272,6 +319,31 @@ describe('ChallengeForum', () => {
             .toHaveBeenCalledWith('topic-1', { content: 'A new in-page comment' }))
         expect(mockMarkForumTopicRead)
             .toHaveBeenCalledWith('topic-1')
+    })
+
+    it('resets the viewport when a topic is opened and closed', async () => {
+        const scrollTo = jest.spyOn(window, 'scrollTo')
+            .mockImplementation()
+
+        try {
+            render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+            expect(scrollTo)
+                .not.toHaveBeenCalled()
+
+            await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+            expect(scrollTo)
+                .toHaveBeenCalledWith({ left: 0, top: 0 })
+
+            scrollTo.mockClear()
+            // Inside a discussion the same accessible name belongs to the back control.
+            await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+            expect(scrollTo)
+                .toHaveBeenCalledWith({ left: 0, top: 0 })
+            expect(screen.getByRole('button', { name: /Create new topic/ }))
+                .toBeInTheDocument()
+        } finally {
+            scrollTo.mockRestore()
+        }
     })
 
     it('creates a challenge topic without leaving Opportunities', async () => {
@@ -295,6 +367,79 @@ describe('ChallengeForum', () => {
             }))
     })
 
+    it('edits topic titles and starter content in an in-app modal', async () => {
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='1' />)
+
+        await act(async () => fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]))
+        await waitFor(() => expect(screen.getByRole('heading', { name: 'Edit topic' }))
+            .toBeInTheDocument())
+        fireEvent.change(screen.getByLabelText('Topic Title'), {
+            target: { value: 'Updated announcement' },
+        })
+        fireEvent.change(screen.getByLabelText('Topic Content'), {
+            target: { value: 'Updated **formatted** content.' },
+        })
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Save changes' })))
+
+        expect(mockUpdateForumTopic)
+            .toHaveBeenCalledWith('topic-1', 'Updated announcement')
+        expect(mockUpdateForumPost)
+            .toHaveBeenCalledWith('post-1', 'Updated **formatted** content.')
+    })
+
+    it('allows only an administrator to delete a topic inside the application', async () => {
+        const ownerView = render(
+            <ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='1' />,
+        )
+        expect(screen.queryByRole('button', { name: 'Delete' }))
+            .not.toBeInTheDocument()
+        ownerView.unmount()
+
+        render(
+            <ChallengeForum
+                canDeleteTopics
+                challenge={{ id: 'challenge-id', name: 'Challenge' }}
+                memberId='10'
+            />,
+        )
+
+        fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0])
+        expect(screen.getByRole('dialog', { name: 'Delete topic?' }))
+            .toBeInTheDocument()
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Delete topic' })))
+
+        expect(mockDeleteForumTopic)
+            .toHaveBeenCalledWith('topic-1')
+    })
+
+    it('allows only an administrator to delete a post while preserving author editing', async () => {
+        const ownerView = render(
+            <ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='1' />,
+        )
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+        expect(screen.getByRole('button', { name: 'Edit' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Delete' }))
+            .not.toBeInTheDocument()
+        ownerView.unmount()
+
+        render(
+            <ChallengeForum
+                canDeleteTopics
+                challenge={{ id: 'challenge-id', name: 'Challenge' }}
+                memberId='10'
+            />,
+        )
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+        fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0])
+        expect(screen.getByRole('dialog', { name: 'Delete comment?' }))
+            .toBeInTheDocument()
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Delete comment' })))
+
+        expect(mockDeleteForumPost)
+            .toHaveBeenCalledWith('post-1')
+    })
+
     it('lets an administrator create a challenge announcement', async () => {
         render(
             <ChallengeForum
@@ -303,14 +448,15 @@ describe('ChallengeForum', () => {
                 memberId='10'
             />,
         )
-        fireEvent.click(screen.getByRole('button', { name: /Create new topic/ }))
+        fireEvent.click(screen.getByRole('button', { name: /Create announcement/ }))
+        expect(screen.getByRole('checkbox', { name: /Post as announcement/ }))
+            .toBeChecked()
         fireEvent.change(screen.getByPlaceholderText(/clear, descriptive title/), {
             target: { value: 'Submission deadline extended' },
         })
         fireEvent.change(screen.getByPlaceholderText(/Describe your question/), {
             target: { value: 'The submission deadline is now Friday at 18:00 UTC.' },
         })
-        fireEvent.click(screen.getByRole('checkbox', { name: /Post as announcement/ }))
         await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Create topic' })))
 
         await waitFor(() => expect(mockCreateForumTopic)
@@ -320,6 +466,21 @@ describe('ChallengeForum', () => {
                 isAnnouncement: true,
                 title: 'Submission deadline extended',
             }))
+    })
+
+    it('shows comment validation next to the editor', async () => {
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+
+        fireEvent.click(screen.getByRole('button', { name: 'Post comment' }))
+
+        const alert = await screen.findByRole('alert')
+        expect(alert)
+            .toHaveTextContent('Write a comment before posting.')
+        expect(screen.getByPlaceholderText('Type here')
+            .closest('form')
+            ?.contains(alert))
+            .toBe(true)
     })
 
     it('toggles topic watches through forums-api-v6', async () => {
@@ -438,6 +599,44 @@ describe('forum presentation helpers', () => {
             .toEqual([['post-1', 0], ['post-2', 1]])
     })
 
+    it('orders comments and replies from oldest to newest without mutating API data', () => {
+        const newest = {
+            ...starterPost,
+            createdAt: '2026-06-08T00:00:00.000Z',
+            id: 'post-newest',
+            replies: [
+                {
+                    ...starterPost.replies[0],
+                    createdAt: '2026-06-10T00:00:00.000Z',
+                    id: 'reply-newest',
+                },
+                {
+                    ...starterPost.replies[0],
+                    createdAt: '2026-06-09T00:00:00.000Z',
+                    id: 'reply-oldest',
+                },
+            ],
+        }
+        const oldest = {
+            ...starterPost,
+            createdAt: '2026-06-07T00:00:00.000Z',
+            id: 'post-oldest',
+            replies: [],
+        }
+        const apiPosts = [newest, oldest]
+
+        expect(flattenForumPosts(apiPosts)
+            .map(item => [item.post.id, item.depth]))
+            .toEqual([
+                ['post-oldest', 0],
+                ['post-newest', 0],
+                ['reply-oldest', 1],
+                ['reply-newest', 1],
+            ])
+        expect(apiPosts.map(post => post.id))
+            .toEqual(['post-newest', 'post-oldest'])
+    })
+
     it('handles absent and invalid forum dates safely', () => {
         expect(formatForumDate())
             .toBe('—')
@@ -454,6 +653,29 @@ describe('forum presentation helpers', () => {
                 selectionStart: 8,
                 value: 'hello **world**',
             })
+    })
+
+    it('continues ordered and unordered Markdown lists and exits an empty marker', () => {
+        expect(continueMarkdownList('- first', 7, 7))
+            .toEqual({
+                selectionEnd: 10,
+                selectionStart: 10,
+                value: '- first\n- ',
+            })
+        expect(continueMarkdownList('3. third', 8, 8))
+            .toEqual({
+                selectionEnd: 12,
+                selectionStart: 12,
+                value: '3. third\n4. ',
+            })
+        expect(continueMarkdownList('intro\n- ', 8, 8))
+            .toEqual({
+                selectionEnd: 6,
+                selectionStart: 6,
+                value: 'intro\n',
+            })
+        expect(continueMarkdownList('plain text', 10, 10))
+            .toBeUndefined()
     })
 
     it('maps public ratings to the August 2026 handle palette', () => {

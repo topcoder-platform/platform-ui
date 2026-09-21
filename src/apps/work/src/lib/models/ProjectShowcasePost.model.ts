@@ -1,6 +1,7 @@
 import { SortOrder } from '../utils/sorting.utils'
 
 import { PaginationModel } from './Pagination.model'
+import { ProjectMetadata } from './Project.model'
 
 export interface ProjectShowcasePostTaxonomyItem {
     id: string
@@ -28,7 +29,17 @@ export interface ProjectShowcasePostChallengeMetadataItem {
     countries: string[]
 }
 
-export interface ProjectShowcasePost {
+export interface ShowcaseMetadata extends ProjectMetadata {
+    type?: string
+    challenge?: string
+    businessImpact?: string
+    keyWin?: string
+    currentStatus?: string
+    owner?: string
+    sendToWin?: boolean
+}
+
+export interface ProjectShowcasePost extends ShowcaseMetadata {
     id: string
     title: string
     content?: string
@@ -38,7 +49,7 @@ export interface ProjectShowcasePost {
     createdAt: string
     createdById: number
     createdByHandle?: string
-    publishedAt?: number
+    publishedAt?: number | string
     publishedBy?: string
     industries: ProjectShowcasePostTaxonomyItem[]
     categories: ProjectShowcasePostTaxonomyItem[]

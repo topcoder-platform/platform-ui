@@ -36,6 +36,7 @@ import {
     metadataToBoolean,
     metadataToGiteaTeams,
 } from './metadata.utils'
+import { commitPendingFinalDeliverable } from './final-deliverables.utils'
 
 interface BillingInfo {
     billingAccountId?: number | string
@@ -1031,6 +1032,7 @@ export function transformChallengeToFormData(
         createdBy: normalizeOptionalString(challenge?.createdBy),
         description,
         discussionForum: normalizeOptionalBoolean(challenge?.discussionForum),
+        finalDeliverable: '',
         funChallenge: normalizeOptionalBoolean(challenge?.funChallenge) || false,
         giteaTeams: metadataToGiteaTeams(metadata, GITEA_METADATA_FIELD),
         groups: normalizeStringArray(challenge?.groups),
@@ -1087,7 +1089,7 @@ export function transformFormDataToChallenge(
         && formData.phases.length > 0
     const isSchedulingEnabled = isSchedulingApiEnabled(formData.legacy?.useSchedulingAPI)
         || hasEditableSchedule
-    const metadataWithoutMilestone = normalizeMetadataEntries(formData.metadata)
+    const metadataWithoutMilestone = normalizeMetadataEntries(commitPendingFinalDeliverable(formData).metadata)
         .filter(metadataEntry => !MILESTONE_METADATA_KEYS.includes(metadataEntry.name))
     const metadataWithTestChallenge = booleanToMetadata(
         metadataWithoutMilestone,

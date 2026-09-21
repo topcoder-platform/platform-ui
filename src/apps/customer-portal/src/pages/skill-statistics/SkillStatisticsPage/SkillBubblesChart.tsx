@@ -4,7 +4,6 @@ import {
     FC,
     KeyboardEvent,
     RefObject,
-    SVGProps,
     useCallback,
     useEffect,
     useLayoutEffect,
@@ -17,7 +16,6 @@ import classNames from 'classnames'
 import useSWR, { SWRResponse } from 'swr'
 
 import { getRatingColor } from '~/libs/core'
-import { IconOutline } from '~/libs/ui'
 
 import {
     ExpertSkillCategory,
@@ -56,6 +54,60 @@ type ChartRect = {
     left: number
     top: number
     width: number
+}
+
+function normalizeCategoryName(value: string): string {
+    return value
+        .toLowerCase()
+        .replace(/&/g, 'and')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim()
+}
+
+const CATEGORY_ICON_BY_NAME: Record<string, string> = {
+    blockchain: 'hub',
+    'cloud computing': 'desktop_cloud_stack',
+    cybersecurity: 'shield_lock',
+    'data analysis and big data': 'analytics',
+    'database management': 'database',
+    'databases and data warehousing': 'data_table',
+    'devops and automation': 'rule_settings',
+    'geospatial information systems': 'map',
+    'geospatial information systems gis': 'map',
+    'hardware and systems administration': 'install_desktop',
+    'iot internet of things': 'devices_other',
+    'machine learning and ai': 'psychology',
+    'mathematics and statistics': 'calculate',
+    'mobile app development': 'mobile_gear',
+    'networking and telecommunications': 'cell_tower',
+    'operating systems': 'memory',
+    'programming and development': 'terminal',
+    'project management': 'assignment',
+    'scripting and automation': 'integration_instructions',
+    sdlc: 'cloud_sync',
+    'software development lifecycle': 'cloud_sync',
+    'software development lifecycle sdlc': 'cloud_sync',
+    'software testing and qa': 'fact_check',
+    'software testing and quality assurance': 'fact_check',
+    'user experience design and multimedia': 'design_services',
+    'ux design and multimedia': 'design_services',
+    virtualization: 'layers',
+    'web development': 'language',
+}
+
+function getCategoryIconName(iconName?: string, categoryName?: string): string {
+    if (categoryName) {
+        const mapped = CATEGORY_ICON_BY_NAME[normalizeCategoryName(categoryName)]
+        if (mapped) {
+            return mapped
+        }
+    }
+
+    if (iconName && /^[a-z0-9_]+$/.test(iconName)) {
+        return iconName
+    }
+
+    return 'terminal'
 }
 
 function getPopoverLayout(
@@ -155,19 +207,10 @@ function getAnchoredPopoverLayout(
     return layout
 }
 
-type SkillCategoryIcon = FC<SVGProps<SVGSVGElement>>
-
 interface SkillBubblesChartProps {
     categories: ExpertSkillCategory[]
     onSelect: (categoryId: string) => void
     selectedCategoryId?: string
-}
-
-function getCategoryIcon(iconName?: string): SkillCategoryIcon {
-    const icons = IconOutline as Record<string, SkillCategoryIcon | undefined>
-    const icon = iconName ? icons[iconName] : undefined
-
-    return icon || IconOutline.CodeIcon
 }
 
 function radiusForSize(size: number): number {
@@ -357,7 +400,7 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
                     return undefined
                 }
 
-                const Icon = getCategoryIcon(category.icon)
+                const iconName = getCategoryIconName(category.icon, category.name)
                 const isSelected = category.id === props.selectedCategoryId
                     || category.id === previewedCategoryId
                 const fontSize = fontSizeForRadius(
@@ -401,7 +444,13 @@ const SkillBubblesChart: FC<SkillBubblesChartProps> = props => {
                         type='button'
                     >
                         <span className={styles.bubbleInner}>
-                            <Icon aria-hidden='true' height={iconSize} width={iconSize} />
+                            <span
+                                aria-hidden='true'
+                                className={styles.materialIcon}
+                                style={{ fontSize: iconSize }}
+                            >
+                                {iconName}
+                            </span>
                             <span className={styles.label}>{category.name}</span>
                         </span>
                     </button>

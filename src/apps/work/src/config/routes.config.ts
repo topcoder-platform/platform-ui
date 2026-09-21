@@ -6,6 +6,7 @@ export const rootRoute: string
         : `/${AppSubdomain.work}`
 
 export const challengesRouteId = 'challenges'
+export const salesRouteId = 'sales'
 export const challengeCreateRouteId = 'challenge-create'
 export const challengeEditRouteId = 'challenge-edit'
 export const projectsRouteId = 'projects'
@@ -23,6 +24,8 @@ export const engagementApplicationsRouteId = 'engagement-applications'
 export const engagementAssignmentsRouteId = 'engagement-assignments'
 export const engagementFeedbackRouteId = 'engagement-feedback'
 export const engagementExperienceRouteId = 'engagement-experience'
+export const engagementLeadsRouteId = 'engagement-leads'
+export const engagementLeadDetailRouteId = 'engagement-lead-detail'
 export const projectAssetsRouteId = 'project-assets'
 export const projectShowcaseRouteId = 'project-showcase'
 export const usersRouteId = 'users'

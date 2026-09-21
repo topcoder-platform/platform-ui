@@ -22,8 +22,12 @@
             color: $black-100;
             padding: $sp-2 $sp-4;
 
+            a {
+                color: inherit;
+            }
+
             &:hover:not(.disabled) {
-                background: $turq-160;
+                background: var(--tc-2026-teal, #{$turq-160});
                 color: $tc-white;
                 cursor: pointer;
             }

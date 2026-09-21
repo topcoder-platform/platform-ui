@@ -46,6 +46,11 @@
         margin: 0 auto;
         max-width: 1200px;
         overflow-x: auto;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
     }
 
     button {
@@ -76,6 +81,12 @@
         }
     }
 
+    button:disabled {
+        color: #767676;
+        cursor: not-allowed;
+        opacity: .55;
+    }
+
     .activeTab {
         border-bottom-color: #007d79;
         color: #007d79;
@@ -89,7 +100,7 @@
     gap: 24px;
     grid-template-columns: minmax(0, 792px) 384px;
     margin: 0 auto;
-    max-width: 1200px;
+    max-width: 1280px;
     padding: 32px 40px 40px;
 }
 
@@ -99,6 +110,7 @@
 
 .mainContent {
     min-width: 0;
+    scroll-margin-top: 80px;
 }
 
 .requirements {
@@ -218,39 +230,6 @@
     }
 }
 
-.submissionViewToggle {
-    display: inline-flex;
-    height: 38px;
-
-    button {
-        align-items: center;
-        background: #fff;
-        border: 1px solid #007d79;
-        color: #007d79;
-        cursor: pointer;
-        display: inline-flex;
-        height: 38px;
-        justify-content: center;
-        padding: 8px;
-        width: 38px;
-
-        &:first-child { border-radius: 4px 0 0 4px; }
-        &:last-child { border-radius: 0 4px 4px 0; }
-
-        + button { margin-left: -1px; }
-
-        svg {
-            height: 20px;
-            width: 20px;
-        }
-    }
-
-    .activeView {
-        background: #007d79;
-        color: #fff;
-    }
-}
-
 .sectionDescription,
 .mySubmissionsEmpty > p,
 .winnersSection > p {
@@ -264,7 +243,7 @@
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     box-sizing: border-box;
-    overflow-x: auto;
+    overflow-x: visible;
     padding: 24px;
 
     table {
@@ -349,21 +328,40 @@
     gap: 4px;
     text-decoration: none;
 
-    svg {
-        height: 20px;
-        width: 20px;
+    img {
+        height: 16px;
+        width: 16px;
     }
 }
 
 .sortedHeader {
     align-items: center;
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
     display: inline-flex;
+    font: inherit;
     gap: 4px;
+    justify-content: flex-start;
+    padding: 0;
+    text-align: left;
+    width: 100%;
 
     svg {
         height: 16px;
+        transition: transform 150ms ease;
         width: 16px;
     }
+}
+
+.mobileTableSort {
+    display: none;
+}
+
+.sortAscending {
+    transform: rotate(180deg);
 }
 
 .ratedRegistrantTable,
@@ -375,7 +373,7 @@
 .myCompactSubmissionTable,
 .mySubmissionTable,
 .myMarathonTable {
-    min-width: 1152px;
+    min-width: 0;
 }
 
 .ratedRegistrantTable {
@@ -432,19 +430,45 @@
 }
 
 .myMarathonTable {
-    th:first-child { width: 138px; }
-    th:nth-child(2) { width: 160px; }
-    th:nth-child(3),
-    th:nth-child(4) { width: 168px; }
-    th:nth-child(5) { width: 149px; }
-    th:nth-child(6) { width: 120px; }
-    th:nth-child(7) { width: 141px; }
-    th:nth-child(8) { width: 108px; }
+    th,
+    td {
+        padding-inline: 12px;
+    }
+
+    th:first-child { width: 172px; }
+    th:nth-child(2) { width: 200px; }
+    th:nth-child(3) { width: 156px; }
+    th:nth-child(4) { width: 142px; }
+    th:nth-child(5) { width: 106px; }
+    th:nth-child(6) { width: 150px; }
+    th:nth-child(7) { width: 114px; }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+        white-space: nowrap;
+    }
+
+    .sortedHeader svg {
+        flex-shrink: 0;
+    }
+
+    .scoreColumn {
+        overflow-wrap: anywhere;
+        padding-inline: 12px;
+        text-align: right;
+    }
 }
 
-.submissionIdLink {
-    color: #007d79;
-    text-decoration: none;
+.myMarathonTableCard {
+    overflow-x: auto;
+
+    .myMarathonTable {
+        min-width: 1040px;
+    }
+}
+
+.submissionId {
+    color: #161616;
 }
 
 .currentStatus {
@@ -456,9 +480,16 @@
 }
 
 .testStatus {
+    align-items: center;
     border-radius: 4px;
     display: inline-flex;
+    gap: 4px;
     padding: 2px 4px;
+
+    svg {
+        height: 16px;
+        width: 16px;
+    }
 }
 
 .testStatusInprogress {
@@ -469,6 +500,11 @@
 .testStatusFailed {
     background: #fff1f1;
     color: #da1e28;
+}
+
+.testStatusCancelled {
+    background: #e0e0e0;
+    color: #525252;
 }
 
 .testStatusPassed {
@@ -514,7 +550,7 @@
     }
 
     button:disabled {
-        cursor: wait;
+        cursor: not-allowed;
         opacity: .45;
     }
 
@@ -522,6 +558,25 @@
         height: 20px;
         width: 20px;
     }
+}
+
+.expandedChevron {
+    transform: rotate(180deg);
+}
+
+.aiReviewDetailsRow {
+    > td {
+        height: auto;
+        padding: 0;
+    }
+}
+
+.reviewAppActionIcon {
+    background: currentColor;
+    display: inline-block;
+    height: 20px;
+    mask: url('../assets/sidebar-review.svg') center / contain no-repeat;
+    width: 20px;
 }
 
 .scoreNotice {
@@ -698,16 +753,18 @@
     > svg {
         background: #e9ecef;
         border-radius: 50%;
+        box-sizing: content-box;
         color: #161616;
-        height: 20px;
-        padding: 6px;
-        width: 20px;
+        height: 24px;
+        padding: 8px;
+        width: 24px;
     }
 
     h2,
     > strong {
         font-family: 'Figtree', sans-serif;
         font-size: 16px;
+        font-weight: 700;
         line-height: 22px;
         margin: 12px 0 0;
         text-transform: none;
@@ -823,18 +880,30 @@
         font-size: 30px;
         line-height: 38px;
     }
+
+    .winnerDivider {
+        background: #f1c21b;
+    }
 }
 
 .place2 {
     background: #f7fbff;
     border-color: #82cfff;
     order: 1;
+
+    .winnerDivider {
+        background: #82cfff;
+    }
 }
 
 .place3 {
     background: #fff3eb;
     border-color: #ffb784;
     order: 3;
+
+    .winnerDivider {
+        background: #ffb784;
+    }
 }
 
 .otherPlace {
@@ -856,24 +925,42 @@
     width: 48px;
 
     img {
-        height: 18px;
-        width: 14px;
+        height: 26px;
+        width: 20px;
     }
 }
 
 .place1 .winnerMedal {
     background: #fcf4d6;
+
+    img {
+        height: 31px;
+        width: 24px;
+    }
 }
 
 .winnerPlacement {
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 22px;
+}
+
+.place2 .winnerPlacement {
+    color: #0f3f59;
+}
+
+.place3 .winnerPlacement {
+    color: #5e2900;
 }
 
 .winnerScore {
     font-size: 14px;
     line-height: 20px;
     margin-top: 8px;
+
+    strong {
+        font-weight: 700;
+    }
 }
 
 .winnerPrize {
@@ -937,11 +1024,20 @@
         font-weight: 700;
     }
 
+    th:nth-child(n+3) {
+        text-align: right;
+    }
+
+    th:nth-child(5) .sortedHeader {
+        justify-content: flex-end;
+    }
+
     th:first-child { width: 64px; }
-    th:nth-child(2) { width: 448px; }
-    th:nth-child(3) { width: 176px; }
-    th:nth-child(4),
-    th:nth-child(5) { width: 136px; }
+    th:nth-child(2) { width: 336px; }
+    th:nth-child(3) { width: 152px; }
+    th:nth-child(4) { width: 112px; }
+    th:nth-child(5),
+    th:nth-child(6) { width: 148px; }
 
     td:first-child {
         font-weight: 700;
@@ -949,7 +1045,8 @@
 
     td:nth-child(3),
     td:nth-child(4),
-    td:nth-child(5) {
+    td:nth-child(5),
+    td:nth-child(6) {
         text-align: right;
     }
 }
@@ -988,6 +1085,10 @@
     line-height: 20px;
     margin: 0;
 
+    strong {
+        font-weight: 700;
+    }
+
     img {
         background: #d9fbfb;
         border-radius: 50%;
@@ -1000,7 +1101,20 @@
 }
 
 .mySubmissionsEmpty .emptyTab {
-    min-height: 250px;
+    justify-content: flex-start;
+    min-height: 0;
+    padding-bottom: 120px;
+
+    > svg {
+        background: rgba(22, 22, 22, .1);
+        height: 20px;
+        width: 20px;
+    }
+
+    > strong {
+        font-family: inherit;
+        margin-top: 16px;
+    }
 }
 
 @media (max-width: 1120px) {
@@ -1065,6 +1179,147 @@
     .previewCard,
     .winnersPanel {
         padding: 16px;
+    }
+
+    .tableCard {
+        overflow-x: auto;
+    }
+
+    .tableSection > h2 {
+        margin-bottom: 8px;
+    }
+
+    .mySubmissionHeading {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 24px;
+
+        .reviewAppButton {
+            align-self: stretch;
+            box-sizing: border-box;
+            justify-content: center;
+            width: 100%;
+        }
+    }
+
+    .mobileTableSort {
+        align-items: center;
+        appearance: none;
+        background: transparent;
+        border: 0;
+        color: #161616;
+        cursor: pointer;
+        display: flex;
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 14px;
+        gap: 4px;
+        height: 36px;
+        line-height: 20px;
+        margin: 0 0 12px;
+        padding: 0;
+
+        > svg {
+            flex: 0 0 20px;
+            height: 20px;
+            width: 20px;
+
+            &:last-child {
+                flex-basis: 16px;
+                height: 16px;
+                width: 16px;
+            }
+        }
+
+        strong {
+            font-weight: 700;
+        }
+    }
+
+    .mobileRecordCard {
+        overflow: hidden;
+    }
+
+    .mobileRecordTable {
+        display: block;
+        min-width: 0;
+
+        thead {
+            border: 0;
+            clip: rect(0 0 0 0);
+            clip-path: inset(50%);
+            height: 1px;
+            margin: -1px;
+            overflow: hidden;
+            padding: 0;
+            position: absolute;
+            white-space: nowrap;
+            width: 1px;
+
+            button {
+                display: none;
+            }
+        }
+
+        tbody,
+        tr {
+            display: block;
+        }
+
+        tr:not(:last-child) {
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+        }
+
+        td {
+            align-items: center;
+            border: 0;
+            display: grid;
+            gap: 8px;
+            grid-template-columns: minmax(112px, 42%) minmax(0, 1fr);
+            height: auto;
+            min-height: 30px;
+            padding: 4px 6px;
+            overflow-wrap: anywhere;
+
+            &::before {
+                color: #161616;
+                content: attr(data-mobile-label);
+                font-weight: 700;
+            }
+        }
+
+        .aiReviewDetailsRow {
+            border-bottom: 0;
+            margin-top: -12px;
+            padding-bottom: 0;
+
+            > td {
+                display: block;
+                padding: 0;
+
+                &::before {
+                    content: none;
+                }
+            }
+        }
+    }
+
+    .ratedRegistrantTable,
+    .designRegistrantTable,
+    .developmentSubmissionTable,
+    .designSubmissionTable,
+    .qaSubmissionTable,
+    .marathonTable,
+    .myCompactSubmissionTable,
+    .mySubmissionTable,
+    .myMarathonTable {
+        min-width: 720px;
+    }
+
+    .mobileRecordCard .mobileRecordTable {
+        min-width: 0;
     }
 
     .previewCard {

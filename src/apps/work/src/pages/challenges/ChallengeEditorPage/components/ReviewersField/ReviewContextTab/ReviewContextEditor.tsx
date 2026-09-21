@@ -23,6 +23,7 @@ interface ReviewContextEditorProps {
     reviewContext: ChallengeReviewContext
     onContextSaved: () => Promise<unknown>
     isLocked?: boolean
+    lockMessage?: string
 }
 
 interface RequirementValidationErrors {
@@ -386,7 +387,8 @@ const ReviewContextEditor: FC<ReviewContextEditorProps> = props => {
         <div className={styles.wrap}>
             {props.isLocked && (
                 <div className={styles.infoBanner}>
-                    Review context is locked because this challenge already has submissions.
+                    {props.lockMessage
+                        || 'Review context is locked because this challenge already has submissions.'}
                 </div>
             )}
             <div className={styles.toolbar}>

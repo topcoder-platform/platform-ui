@@ -1,8 +1,11 @@
 import * as yup from 'yup'
 
 import { PROJECT_STATUS } from '../constants'
+import { ProjectMetadata } from '../models/Project.model'
 
-export interface ProjectEditorSchemaData {
+import { projectMetadataSchemaFields } from './project-metadata.schema'
+
+export interface ProjectEditorSchemaData extends ProjectMetadata {
     billingAccountId?: string
     name: string
     description: string
@@ -14,12 +17,20 @@ export interface ProjectEditorSchemaData {
     groups?: string[]
 }
 
+/**
+ * Validates project edits and creation, including optional shared showcase metadata.
+ * @param isEdit Whether an existing project is being edited.
+ * @param canManage Whether the user can change project status.
+ * @returns The project form schema; validation rejects invalid or missing required values.
+ * @throws Does not throw when constructing the schema.
+ */
 export function createProjectEditorSchema(
     isEdit: boolean,
     canManage: boolean,
 ): yup.ObjectSchema<ProjectEditorSchemaData> {
     return yup
         .object({
+            ...projectMetadataSchemaFields(false),
             billingAccountId: yup
                 .string()
                 .optional(),

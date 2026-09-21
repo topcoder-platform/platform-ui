@@ -64,6 +64,7 @@ import {
     pastReviewAssignmentsRouteId,
     rootRoute,
 } from '../../../config/routes.config'
+import challengeLinkStyles from '../../../lib/components/ChallengeLinks/ChallengeLinks.module.scss'
 
 import styles from './ChallengeDetailsPage.module.scss'
 
@@ -1795,6 +1796,12 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         ? formatChallengeStatusLabel(challengeInfo?.status)
         : undefined
     const shouldShowChallengeMetaRow = Boolean(statusLabel) || trackTypePills.length > 0
+    const shouldShowHeaderLinks = Boolean(
+        challengeInfo
+        && !hasChallengeScopedFetchError
+        && !isLoadingAnything
+        && canViewChallenge,
+    )
 
     return (
         <PageWrapper
@@ -1804,6 +1811,9 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 ? `${EnvironmentConfig.REVIEW.CHALLENGE_PAGE_URL}/${challengeId}`
                 : undefined}
             breadCrumb={breadCrumb}
+            rightHeader={shouldShowHeaderLinks ? (
+                <ChallengeLinks className={challengeLinkStyles.headerActions} />
+            ) : undefined}
         >
             {hasChallengeScopedFetchError ? (
                 <ChallengeScopedErrorState onRetry={retryChallengeScopedFetches} />
@@ -1840,7 +1850,6 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                                 variant={isPastReviewDetail ? 'past' : 'active'}
                             />
                         )}
-                        <ChallengeLinks />
                     </div>
 
                     {(!phaseOrderingOptions.isTask || phaseOrderingOptions.isTopgearTask) ? (

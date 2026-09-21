@@ -43,7 +43,8 @@ function numericMetadata(challenge: ChallengeOpportunity, name: string): number 
 
 /**
  * Restores the Marathon Match score-over-time dashboard from community-app on
- * the Opportunities challenge route.
+ * the Opportunities challenge route, preserving full score precision in chart
+ * tooltips and the accessible table.
  *
  * @param props Marathon Match challenge used to load summations and chart thresholds.
  * @returns accessible chart, loading/error state, or empty-score state.
@@ -53,7 +54,7 @@ export const MarathonDashboard: FC<MarathonDashboardProps> = props => {
     const response: SWRResponse<ChallengeReviewSummation[], Error> = useSWR(
         ['opportunities:mm-review-summations', props.challenge.id],
         () => getChallengeReviewSummations(props.challenge.id),
-        { revalidateOnFocus: false },
+        { revalidateOnFocus: false, shouldRetryOnError: false },
     )
     const dashboard = useMemo(
         () => buildMarathonDashboardData(response.data ?? []),
@@ -62,6 +63,7 @@ export const MarathonDashboard: FC<MarathonDashboardProps> = props => {
     const points = dashboard.flatMap(member => member.submissions.map(submission => ({
         color: marathonRatingColor(member.rating),
         custom: {
+            scoreLabel: formatMarathonScore(submission.score, '-'),
             submissionCount: member.submissions.length,
             submissionId: submission.submissionId,
             submissionLabel: `${member.submissions.length} submission${member.submissions.length === 1 ? '' : 's'}`,
@@ -98,6 +100,12 @@ export const MarathonDashboard: FC<MarathonDashboardProps> = props => {
         series: [{
             data: points,
             name: 'Submissions',
+            // Marathon Matches routinely graph more than Highcharts' default
+            // 1000-point turbo threshold. Turbo mode only accepts numeric or
+            // array point configs, so it discards these keyed points and
+            // silently renders an empty chart. community-app disables the
+            // threshold for the same dashboard.
+            turboThreshold: 0,
             type: 'scatter',
         }],
         title: { text: undefined },
@@ -108,7 +116,7 @@ export const MarathonDashboard: FC<MarathonDashboardProps> = props => {
             headerFormat: '',
             pointFormat: '<b>{point.name}</b><br/>'
                 + '{point.custom.submissionLabel}<br/>'
-                + 'Score: <b>{point.y:,.2f}</b><br/>'
+                + 'Score: <b>{point.custom.scoreLabel}</b><br/>'
                 + 'Submitted {point.x:%e %b, %Y}<br/>',
             style: {
                 color: '#fff',

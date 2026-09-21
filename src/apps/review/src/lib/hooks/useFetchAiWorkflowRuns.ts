@@ -15,6 +15,7 @@ export enum AiWorkflowRunStatusEnum {
     IN_PROGRESS = 'IN_PROGRESS',
     CANCELLED = 'CANCELLED',
     FAILURE = 'FAILURE',
+    TIMEOUT = 'TIMEOUT',
     COMPLETED = 'COMPLETED',
     SUCCESS = 'SUCCESS',
 }
@@ -118,6 +119,17 @@ interface RetriggerAiWorkflowRunRequest {
     workflowRunId: string
 }
 
+interface QueueAiWorkflowRunsRequest {
+    submissionId: string
+    ignoreAiPhaseState?: boolean
+}
+
+export interface QueueAiWorkflowRunsResponse {
+    queued: boolean
+    runs: AiWorkflowRun[]
+    message: string
+}
+
 export const aiRunInProgress = (aiRun: Pick<AiWorkflowRun, 'status'>): boolean => [
     AiWorkflowRunStatusEnum.INIT,
     AiWorkflowRunStatusEnum.QUEUED,
@@ -128,6 +140,7 @@ export const aiRunInProgress = (aiRun: Pick<AiWorkflowRun, 'status'>): boolean =
 export const aiRunFailed = (aiRun: Pick<AiWorkflowRun, 'status'>): boolean => [
     AiWorkflowRunStatusEnum.FAILURE,
     AiWorkflowRunStatusEnum.CANCELLED,
+    AiWorkflowRunStatusEnum.TIMEOUT,
 ].includes(aiRun.status)
 
 export function useFetchAiWorkflowsRuns(
@@ -288,5 +301,20 @@ export const retriggerAiWorkflowRun = async (workflowRunId: string): Promise<AiW
     xhrPostAsync<RetriggerAiWorkflowRunRequest, AiWorkflowRun>(
         `${TC_API_BASE_URL}/workflows/runs/retrigger`,
         { workflowRunId },
+    )
+)
+
+/**
+ * Manually queues the AI workflow runs configured for a submission.
+ * Used to recover submissions whose runs were never queued because the
+ * virus scan / AI phase opened event was missed.
+ */
+export const queueAiWorkflowRuns = async (
+    submissionId: string,
+    ignoreAiPhaseState?: boolean,
+): Promise<QueueAiWorkflowRunsResponse> => (
+    xhrPostAsync<QueueAiWorkflowRunsRequest, QueueAiWorkflowRunsResponse>(
+        `${TC_API_BASE_URL}/workflows/runs/queue`,
+        { ignoreAiPhaseState, submissionId },
     )
 )

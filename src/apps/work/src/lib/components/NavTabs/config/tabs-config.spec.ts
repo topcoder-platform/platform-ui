@@ -18,6 +18,16 @@ jest.mock('../../../utils/permissions.utils', () => ({
 }))
 
 describe('getTabsConfig', () => {
+    it.each(['administrator', 'Talent Manager'])('shows sales for %s', role => {
+        expect(getTabsConfig([role], false)
+            .map(tab => tab.id))
+            .toContain('sales')
+    })
+
+    it.each(['copilot', 'Project Manager', 'Topcoder User'])('hides sales for %s', role => {
+        expect(getTabsConfig([role], false)
+            .map(tab => tab.id)).not.toContain('sales')
+    })
     it('shows the engagements tab for talent managers on the common work page', () => {
         expect(getTabsConfig(['talent manager'], false)
             .map(tab => tab.id))

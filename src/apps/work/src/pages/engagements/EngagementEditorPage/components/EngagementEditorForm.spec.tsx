@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
+    act,
     render,
     screen,
     waitFor,
@@ -241,11 +242,60 @@ jest.mock('./EngagementLocationFields', () => ({
     },
 }))
 jest.mock('./EngagementPrivateSection', () => ({
-    EngagementPrivateSection: (props: { hideCheckbox?: boolean }) => (
-        props.hideCheckbox
-            ? <h3>Assigned Members</h3>
-            : <></>
-    ),
+    EngagementPrivateSection: function EngagementPrivateSection(props: {
+        hideCheckbox?: boolean
+        onAssignmentEditorOpenChange?: (isOpen: boolean) => void
+    }) {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const formContext = reactHookForm.useFormContext()
+
+        if (!props.hideCheckbox) {
+            return <></>
+        }
+
+        function assignNewMember(): void {
+            const assignedMemberHandles = [...(formContext.getValues('assignedMemberHandles') || [])]
+            const assignmentDetails = [...(formContext.getValues('assignmentDetails') || [])]
+
+            assignedMemberHandles[1] = 'new_member'
+            assignmentDetails[1] = {
+                agreementRate: '400',
+                durationMonths: '12',
+                memberHandle: 'new_member',
+                paymentCycle: 'WEEKLY',
+                ratePerHour: '10',
+                standardHoursPerDay: '8',
+                standardHoursPerWeek: '40',
+                startDate: '2026-09-17T00:00:00.000Z',
+            }
+
+            formContext.setValue('assignedMemberHandles', assignedMemberHandles, {
+                shouldDirty: true,
+                shouldValidate: true,
+            })
+            formContext.setValue('assignmentDetails', assignmentDetails, {
+                shouldDirty: true,
+                shouldValidate: true,
+            })
+        }
+
+        function openAssignmentEditor(): void {
+            props.onAssignmentEditorOpenChange?.(true)
+        }
+
+        function closeAssignmentEditor(): void {
+            props.onAssignmentEditorOpenChange?.(false)
+        }
+
+        return (
+            <>
+                <h3>Assigned Members</h3>
+                <button onClick={openAssignmentEditor} type='button'>Open Assignment Editor</button>
+                <button onClick={closeAssignmentEditor} type='button'>Close Assignment Editor</button>
+                <button onClick={assignNewMember} type='button'>Assign New Member</button>
+            </>
+        )
+    },
 }))
 jest.mock('./EngagementSkillsField', () => ({
     EngagementSkillsField: function EngagementSkillsField() {
@@ -761,6 +811,109 @@ describe('EngagementEditorForm', () => {
             .toEqual(expect.objectContaining({
                 memberHandle: 'active_member',
             }))
+    })
+
+    it('does not autosave over the assignment dialog and keeps a pending member across resets', async () => {
+        const user = userEvent.setup()
+        const activeAssignment = {
+            agreementRate: '800',
+            durationMonths: 1,
+            endDate: '',
+            engagementId: 'engagement-private',
+            id: 'assignment-active',
+            memberHandle: 'active_member',
+            memberId: '111',
+            ratePerHour: '11',
+            standardHoursPerWeek: 60,
+            startDate: '2026-09-15T00:00:00.000Z',
+            status: 'ASSIGNED',
+            termsAccepted: true,
+        }
+        const savedEngagement = {
+            anticipatedStart: 'Immediate',
+            assignedMemberHandles: ['active_member'],
+            // The API cannot report the new member until its details are saved.
+            assignments: [activeAssignment],
+            compensationRange: '',
+            countries: ['US'],
+            createdAt: '',
+            description: 'Private engagement description',
+            durationWeeks: 4,
+            id: 'engagement-private',
+            isPrivate: true,
+            projectId: '123',
+            requiredMemberCount: 2,
+            role: 'SOFTWARE_DEVELOPER',
+            skills: [{ id: 'skill-1', name: 'React' }],
+            status: 'Open',
+            timezones: ['America/New_York'],
+            title: 'Private engagement',
+            updatedAt: '',
+            workload: 'FULL_TIME',
+        }
+
+        mockedUpdateEngagement.mockResolvedValue(savedEngagement as any)
+
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    engagement={savedEngagement as any}
+                    isEditMode
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        const lastAutosaveArgs = (): {
+            enabled?: boolean
+            formValues: any
+            onSave: (values: any) => Promise<void>
+        } => (
+            mockedUseAutosave.mock.calls[mockedUseAutosave.mock.calls.length - 1][0] as any
+        )
+
+        await user.type(screen.getByLabelText('Title'), '!')
+
+        await waitFor(() => expect(lastAutosaveArgs().enabled)
+            .toBe(true))
+
+        await user.click(screen.getByRole('button', { name: 'Assign New Member' }))
+        await user.click(screen.getByRole('button', { name: 'Open Assignment Editor' }))
+
+        expect(lastAutosaveArgs().enabled)
+            .toBe(false)
+
+        await user.click(screen.getByRole('button', { name: 'Close Assignment Editor' }))
+
+        await waitFor(() => expect(lastAutosaveArgs().enabled)
+            .toBe(true))
+
+        // The autosave round trip comes back without the pending member; the form
+        // must keep the slot instead of silently dropping it (PM-6316).
+        const autosave = lastAutosaveArgs()
+        await act(async () => {
+            await autosave.onSave(autosave.formValues)
+        })
+
+        expect(mockedShowSuccessToast)
+            .not
+            .toHaveBeenCalled()
+
+        mockedUpdateEngagement.mockClear()
+        await user.click(screen.getByRole('button', { name: 'Save Engagement' }))
+
+        await waitFor(() => expect(mockedUpdateEngagement)
+            .toHaveBeenCalled())
+
+        const payload = mockedUpdateEngagement.mock.calls[0][1] as {
+            assignedMemberHandles?: string[]
+            assignmentDetails?: Array<{ memberHandle: string }>
+        }
+
+        expect(payload.assignedMemberHandles)
+            .toEqual(['active_member', 'new_member'])
+        expect(payload.assignmentDetails?.map(detail => detail.memberHandle))
+            .toEqual(['active_member', 'new_member'])
     })
 
     it('saves a private engagement with only terminal assignments without member assignment payload', async () => {

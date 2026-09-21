@@ -16,7 +16,8 @@ import {
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
         API: {
-            V5: 'https://api.topcoder.test',
+            V5: 'https://api.topcoder.test/v5',
+            V6: 'https://api.topcoder.test/v6',
         },
     },
 }), { virtual: true })
@@ -131,7 +132,7 @@ describe('submission reprocess service', () => {
 
         expect(mockedPost)
             .toHaveBeenCalledWith(
-                'https://api.topcoder.test/bus/events',
+                'https://api.topcoder.test/v6/bus/events',
                 {
                     'mime-type': 'application/json',
                     originator: 'review-api-v6',

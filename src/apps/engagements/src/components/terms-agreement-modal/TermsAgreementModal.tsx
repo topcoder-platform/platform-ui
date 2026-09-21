@@ -196,7 +196,10 @@ const renderTermsModalContent = (props: TermsModalContentProps): JSX.Element => 
 }
 
 /**
- * Renders the terms and NDA agreement modal shared by engagement apply and accept-offer flows.
+ * Renders pending terms and NDA agreements during assignment offer acceptance.
+ * @param props Agreement content, signing state, and callbacks supplied by useTermsAgreementGate.
+ * @returns The agreement dialog used before confirming an assignment offer.
+ * @throws Does not throw; agreement failures are displayed from props.termsError.
  */
 const TermsAgreementModal: FC<TermsAgreementModalProps> = (
     props: TermsAgreementModalProps,

@@ -1,0 +1,128 @@
+@import '@libs/ui/styles/2026/tokens';
+
+.page {
+    width: 100%;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 32px 32px 56px;
+    min-height: 70vh;
+}
+
+.header, .headerActions, .panelHeader, .status, .pagination, .pageControls, .filterActions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header, .panelHeader, .status, .pagination { justify-content: space-between; }
+
+.eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: $tc-2026-muted;
+    margin-bottom: 8px;
+}
+
+.subtitle { margin-top: 8px; font-size: 16px; color: $tc-2026-muted; }
+.readOnly, .count { border-radius: 20px; background: $tc-2026-canvas; padding: 6px 12px; font-weight: 700; }
+.readOnly { border: 1px solid $tc-2026-border; color: $tc-2026-muted; }
+.refresh { background: $tc-2026-teal !important; border-color: $tc-2026-teal !important; }
+.status { margin: 16px 0; color: $tc-2026-muted; font-size: 13px; flex-wrap: wrap; gap: 8px; }
+.panel { background: $tc-2026-surface; border: 1px solid $tc-2026-border; border-radius: $tc-2026-radius-lg; overflow: hidden; box-shadow: $tc-2026-shadow-card; }
+.panelHeader { padding: 16px 20px; border-bottom: 1px solid $tc-2026-border; }
+.panelHeader h2 { font-size: 20px; line-height: 28px; }
+.panelHint { margin-top: 4px; color: $tc-2026-muted; font-size: 13px; }
+.panelNote { padding: 0 20px 16px; font-size: 13px; color: $tc-2026-muted; }
+.filters { padding: 16px 20px; display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; background: $tc-2026-canvas; }
+.filterField { display: flex; flex-direction: column; gap: 4px; flex: 1 1 180px; min-width: 140px; }
+.filterField label { font-size: 13px; line-height: 20px; font-weight: 700; }
+.filterField input, .filterField select, .pageControls select { background: $tc-2026-surface; border: 1px solid $tc-2026-border-strong; padding: 6px 10px; min-height: 36px; color: $tc-2026-body; font-weight: 400; max-width: 100%; }
+.filterField input, .filterField select { width: 100%; height: 36px; box-sizing: border-box; font-size: 14px; line-height: 20px; }
+.filterField input::placeholder { color: $tc-2026-muted; opacity: 1; }
+.filterField input:disabled { background: $tc-2026-border; cursor: not-allowed; }
+.filterActions { min-height: 36px; }
+.dateStatus { flex-basis: 100%; font-size: 13px; color: $tc-2026-muted; }
+.dateError { color: $tc-2026-danger; font-weight: 700; }
+
+/* Four summary statistic cards, left to right, immediately below the page title. */
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+.metric { background: $tc-2026-surface; border: 1px solid $tc-2026-border; border-radius: $tc-2026-radius-lg; box-shadow: $tc-2026-shadow-card; padding: 14px 18px; }
+.metricLabel { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: $tc-2026-muted; }
+.metricValue { font-size: 26px; line-height: 34px; font-weight: 700; margin-top: 4px; overflow-wrap: anywhere; }
+.metricNote { margin-top: 4px; font-size: 12px; color: $tc-2026-muted; }
+
+/* Stage breakdown and date range filter share the width beneath the cards. */
+.dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; margin-bottom: 16px; }
+.stages { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 12px; }
+.stage {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: left;
+    padding: 10px 12px;
+    cursor: pointer;
+    background: $tc-2026-canvas;
+    border: 1px solid $tc-2026-border;
+    border-radius: $tc-2026-radius-md;
+    color: $tc-2026-body;
+}
+.stage:hover, .stage:focus-visible { border-color: $tc-2026-teal; }
+.stageSelected { background: $tc-2026-surface; border-color: $tc-2026-teal; box-shadow: inset 3px 0 0 $tc-2026-teal; }
+.stageName { font-weight: 700; font-size: 14px; line-height: 20px; overflow-wrap: anywhere; }
+.stageMetrics { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11px; color: $tc-2026-muted; }
+.stageMetrics > span { display: flex; flex-direction: column; }
+.stageValue { font-size: 14px; line-height: 20px; font-weight: 700; color: $tc-2026-body; }
+
+/* A dense table keeps the ten PM-6392 columns inside a laptop viewport. */
+.tableScroll { overflow-x: auto; width: 100%; }
+.table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+.table th { background: $tc-2026-canvas; white-space: nowrap; border-bottom: 1px solid $tc-2026-border; }
+.table th button { padding: 10px 12px; width: 100%; text-align: left; color: $tc-2026-body; font-weight: 700; font-size: 12px; border: 0; background: transparent; cursor: pointer; }
+.table th button:hover { color: $tc-2026-teal; }
+.table td { border-bottom: 1px solid $tc-2026-border; padding: 8px 12px; max-width: 260px; overflow-wrap: anywhere; vertical-align: top; line-height: 18px; }
+.table th.numeric, .table td.numeric { text-align: right; white-space: nowrap; }
+.table th.numeric button { text-align: right; }
+.table td.nowrap { white-space: nowrap; }
+.table tr:last-child td { border-bottom: 0; }
+.opportunityButton { padding: 0; border: 0; background: transparent; text-align: left; color: $tc-2026-teal; font-weight: 700; text-decoration: underline; cursor: pointer; overflow-wrap: anywhere; }
+.opportunityButton:hover, .opportunityButton:focus-visible { color: $tc-2026-body; }
+.table tbody tr:hover { background: $tc-2026-canvas; }
+.pagination { padding: 12px 20px; border-top: 1px solid $tc-2026-border; flex-wrap: wrap; font-size: 13px; }
+.pageControls { flex-wrap: wrap; gap: 12px; }
+.error, .warning { padding: 16px 20px; margin-bottom: 16px; border-radius: $tc-2026-radius-md; background: $tc-2026-surface; }
+.error { display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid $tc-2026-danger; color: $tc-2026-danger; }
+.warning { border: 1px solid $tc-2026-warning; color: $tc-2026-body; }
+.empty { padding: 48px 24px; min-height: 180px; text-align: center; position: relative; }
+.empty h3 { font-size: 24px; }
+.empty p { color: $tc-2026-muted; margin-top: 8px; }
+.visuallyHidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+@media (max-width: 1300px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 1100px) {
+    .dashboard { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) {
+    .page { padding: 24px 16px 40px; }
+    .header { align-items: flex-start; flex-wrap: wrap; }
+    .pageControls { gap: 8px; }
+}
+
+@media (max-width: 600px) {
+    .page { padding: 20px 12px 40px; }
+    .header h1 { font-size: 36px; line-height: 44px; }
+    .headerActions { width: 100%; justify-content: space-between; }
+    .metrics { grid-template-columns: 1fr; }
+    .stages { grid-template-columns: 1fr; }
+    .panelHeader, .filters, .pagination, .metric { padding: 12px; }
+    .panelHeader { align-items: flex-start; flex-direction: column; }
+    .filterField { flex-basis: 100%; }
+    .filterActions { width: 100%; }
+    .error { align-items: flex-start; flex-direction: column; }
+}

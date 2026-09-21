@@ -52,7 +52,7 @@ describe('email change API service', () => {
             ])
         expect(mockedGet)
             .toHaveBeenCalledWith(
-                'https://api.example.test/v6/users/email-change/verify?token=signed%2Ftoken',
+                'https://api.example.test/v6/users/email-change/verify?code=signed%2Ftoken',
             )
     })
 })

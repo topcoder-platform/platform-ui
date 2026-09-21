@@ -232,6 +232,28 @@
     white-space: pre;
 }
 
+.recoveryBanner {
+    align-items: center;
+    background-color: $tc-2026-canvas;
+    border-top: 1px solid $tc-2026-border;
+    color: $tc-2026-muted;
+    display: flex;
+    flex: 0 0 auto;
+    font-size: 12px;
+    gap: 8px;
+    padding: 8px $sp-4;
+}
+
+.recoveryBannerError {
+    color: $tc-2026-danger;
+}
+
+.recoveryDots {
+    .thinkingDot {
+        background-color: currentcolor;
+    }
+}
+
 .composer {
     align-items: flex-end;
     border-top: 1px solid $tc-2026-border;

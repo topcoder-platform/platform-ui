@@ -60,23 +60,36 @@ const SkillMembersPanel: FC<SkillMembersPanelProps> = props => {
         [props.members],
     )
 
+    const countryRankedMembers = useMemo(() => {
+        if (!props.countryFilter) {
+            return rankedMembers
+        }
+
+        return rankedMembers
+            .filter(rankedMember => rankedMember.member.countryCode === props.countryFilter)
+            .map((rankedMember, index) => ({
+                member: rankedMember.member,
+                rank: index + 1,
+            }))
+    }, [props.countryFilter, rankedMembers])
+
     const visibleMembers = useMemo(() => {
         const query = props.search.trim()
             .toLowerCase()
 
-        return rankedMembers.filter(rankedMember => {
+        if (!query) {
+            return countryRankedMembers
+        }
+
+        return countryRankedMembers.filter(rankedMember => {
             const member = rankedMember.member
-            const matchesSearch = !query
-                || member.handle.toLowerCase()
-                    .includes(query)
+
+            return member.handle.toLowerCase()
+                .includes(query)
                 || member.name.toLowerCase()
                     .includes(query)
-            const matchesCountry = !props.countryFilter
-                || member.countryCode === props.countryFilter
-
-            return matchesSearch && matchesCountry
         })
-    }, [props.countryFilter, props.search, rankedMembers])
+    }, [countryRankedMembers, props.search])
 
     function toggleExpanded(handle: string): void {
         setExpandedHandles(current => {

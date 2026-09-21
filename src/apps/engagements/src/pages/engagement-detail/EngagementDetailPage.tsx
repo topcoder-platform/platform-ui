@@ -6,13 +6,11 @@ import remarkBreaks from 'remark-breaks'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 
-import { EnvironmentConfig } from '~/config'
-import { authUrlLogin, useProfileCompleteness, useProfileContext } from '~/libs/core'
+import { authUrlLogin, useProfileContext } from '~/libs/core'
 import { Button, ContentLayout, IconOutline, IconSolid, LoadingSpinner } from '~/libs/ui'
 
 import { sanitizeRichTextSource } from '../../../../../libs/shared/lib/utils/rich-text'
 import type { Application, Engagement } from '../../lib/models'
-import { useTermsAgreementGate } from '../../lib'
 import { ApplicationStatus, EngagementStatus } from '../../lib/models'
 import {
     checkExistingApplication,
@@ -23,7 +21,7 @@ import {
     formatDuration,
     formatLocation,
 } from '../../lib/utils'
-import { StatusBadge, TermsAgreementModal } from '../../components'
+import { StatusBadge } from '../../components'
 import { rootRoute } from '../../engagements.routes'
 
 import styles from './EngagementDetailPage.module.scss'
@@ -222,9 +220,6 @@ const EngagementDetailPage: FC = () => {
     const isProfileReady = profileContext.initialized
     const isLoggedIn = profileContext.isLoggedIn
     const userId = profileContext.profile?.userId
-    const profileHandle = profileContext.profile?.handle
-    const profileCompleteness = useProfileCompleteness(profileHandle)
-
     const [engagement, setEngagement] = useState<Engagement | undefined>(undefined)
     const [loading, setLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | undefined>(undefined)
@@ -247,17 +242,6 @@ const EngagementDetailPage: FC = () => {
         normalizedUserEmail,
         normalizedUserId,
     })
-    const [profileGateError, setProfileGateError] = useState<string | undefined>()
-    const {
-        isCheckingTerms,
-        isFinalizingAgreement,
-        modalState: termsModalState,
-        startTermsAgreementFlow,
-        termsError,
-    }: ReturnType<typeof useTermsAgreementGate> = useTermsAgreementGate({
-        contextDescription: 'you are applying to an engagement',
-    })
-
     const isPrivateEngagement = Boolean(engagement?.isPrivate)
 
     const fetchEngagement = useCallback(async (): Promise<void> => {
@@ -333,25 +317,8 @@ const EngagementDetailPage: FC = () => {
     }, [nanoId, navigate])
 
     const handleApplyClick = useCallback(() => {
-        setProfileGateError(undefined)
-
-        if (profileCompleteness?.isLoading) {
-            return
-        }
-
-        if (
-            profileCompleteness
-    && typeof profileCompleteness.percent === 'number'
-    && profileCompleteness.percent < 100
-        ) {
-            setProfileGateError(
-                'Your profile must be 100% complete before applying.',
-            )
-            return
-        }
-
-        startTermsAgreementFlow(navigateToApply)
-    }, [navigateToApply, profileCompleteness, startTermsAgreementFlow])
+        navigateToApply()
+    }, [navigateToApply])
 
     const handleBackClick = useCallback(() => navigate(rootRoute || '/'), [navigate])
 
@@ -380,37 +347,6 @@ const EngagementDetailPage: FC = () => {
     })
 
     const applicationStatusLabel = getApplicationStatusLabel(application)
-
-    const renderTermsGate = (): JSX.Element | undefined => {
-        if (isCheckingTerms) {
-            return (
-                <div className={styles.applyMessage}>
-                    <LoadingSpinner className={styles.inlineSpinner} inline />
-                    <span>Checking terms and NDA...</span>
-                </div>
-            )
-        }
-
-        if (isFinalizingAgreement) {
-            return (
-                <div className={styles.applyMessage}>
-                    <LoadingSpinner className={styles.inlineSpinner} inline />
-                    <span>Finalizing your agreement...</span>
-                </div>
-            )
-        }
-
-        if (termsError && !termsModalState.open) {
-            return (
-                <div className={styles.applyMessage}>
-                    <span className={styles.termsError}>{termsError}</span>
-                    <Button label='Try Again' onClick={handleApplyClick} primary />
-                </div>
-            )
-        }
-
-        return undefined
-    }
 
     const renderApplySection = (): JSX.Element => {
         if (!engagement) {
@@ -475,27 +411,6 @@ const EngagementDetailPage: FC = () => {
                     <span>Sign in to apply for this engagement.</span>
                     <a className={styles.signInLink} href={authUrlLogin()}>
                         Sign in
-                    </a>
-                </div>
-            )
-        }
-
-        const termsGate = renderTermsGate()
-        if (termsGate) {
-            return termsGate
-        }
-
-        if (profileGateError) {
-            return (
-                <div className={styles.applyMessage}>
-                    <span className={styles.termsError}>
-                        {profileGateError}
-                    </span>
-                    <a
-                        className={styles.signInLink}
-                        href={`${EnvironmentConfig.URLS.USER_PROFILE}/${profileHandle}`}
-                    >
-                        Please update your profile here.
                     </a>
                 </div>
             )
@@ -713,7 +628,6 @@ const EngagementDetailPage: FC = () => {
             }}
         >
             {renderContent()}
-            <TermsAgreementModal {...termsModalState} />
         </ContentLayout>
     )
 }

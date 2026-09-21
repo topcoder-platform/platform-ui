@@ -3,22 +3,26 @@ import { CSSProperties, FC, Fragment, useState } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { IconOutline } from '~/libs/ui'
-
 import { ChallengeOpportunity, ChallengePhase } from '../models'
+import { isTaskChallenge } from '../utils/challenge-type.utils'
+import { challengeTrackLabel } from '../utils/challenge-winner.utils'
+import challengeCalendarIcon from '../assets/challenge-calendar.svg'
+import challengeChevronIcon from '../assets/challenge-chevron.svg'
+import challengeClockIcon from '../assets/challenge-clock.svg'
 import challengeTypeIcon from '../assets/challenge-type.svg'
+import challengeUploadIcon from '../assets/challenge-upload.svg'
 import first2FinishTypeIcon from '../assets/first2finish-type.svg'
 import marathonTypeIcon from '../assets/marathon-type.svg'
 import medal1 from '../assets/medal-1.svg'
 import medal10 from '../assets/medal-10.svg'
-import medal2 from '../assets/medal-2.svg'
-import medal3 from '../assets/medal-3.svg'
 import medal4 from '../assets/medal-4.svg'
 import medal5 from '../assets/medal-5.svg'
 import medal6 from '../assets/medal-6.svg'
 import medal7 from '../assets/medal-7.svg'
 import medal8 from '../assets/medal-8.svg'
 import medal9 from '../assets/medal-9.svg'
+import prizeMedal2 from '../assets/prize-medal-2.svg'
+import prizeMedal3 from '../assets/prize-medal-3.svg'
 import taskTypeIcon from '../assets/task-type.svg'
 import timelineAiScreeningIcon from '../assets/timeline-ai-screening.svg'
 import timelineAppealsIcon from '../assets/timeline-appeals.svg'
@@ -37,12 +41,14 @@ import {
     challengePlacementPrizes,
     challengeRegistrationIsOpen,
     challengeSubmissionIsOpen,
+    FUN_CHALLENGE_PRIZE_LABEL,
 } from './challenge-card.utils'
 import styles from './ChallengeDetailHeader.module.scss'
 
 interface ChallengeDetailHeaderProps {
     busy: boolean
     challenge: ChallengeOpportunity
+    hasSubmitted?: boolean
     isRegistered: boolean
     onRegister: () => void
     onSubmit: () => void
@@ -61,6 +67,17 @@ interface ChallengeTimelineItem {
     range: boolean
     startDate?: string
     state: ChallengeTimelineState
+}
+
+interface ChallengePhaseSummary {
+    phase: string
+    qualifier?: string
+    remaining?: string
+}
+
+interface IndexedChallengePhase {
+    index: number
+    item: ChallengePhase
 }
 
 /** Returns a catalog name from either v5-compatible or v6 challenge data. */
@@ -109,16 +126,38 @@ function typeIcon(type: string): string {
  * Formats the active phase and remaining time for the masthead metric.
  *
  * @param phase current or next challenge phase.
- * @returns phase deadline summary suitable for a compact metric.
+ * @param challengeStatus challenge lifecycle status used when no phase is active.
+ * @returns phase, regular-weight qualifier, and optional remaining-time segments.
  * @throws Does not throw; absent and malformed dates use stable fallbacks.
  */
-function phaseSummary(phase: ChallengePhase | undefined): string {
-    if (!phase) return 'Timeline complete'
+function phaseSummary(
+    phase: ChallengePhase | undefined,
+    challengeStatus?: string,
+): ChallengePhaseSummary {
+    if (!phase) {
+        const statusKey = challengeCatalogKey(challengeStatus)
+        if (statusKey === 'completed') return { phase: 'Challenge completed' }
+
+        const status = challengeStatus?.trim()
+            .replace(/[_-]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .toLowerCase()
+        return {
+            phase: status
+                ? `${status.charAt(0)
+                    .toUpperCase()}${status.slice(1)}`
+                : 'Schedule to be announced',
+        }
+    }
+
     const endValue = phase.actualEndDate ?? phase.scheduledEndDate
     const end = endValue ? new Date(endValue) : undefined
-    if (!end || Number.isNaN(end.getTime())) return `${phase.name} phase is active`
+    if (!end || Number.isNaN(end.getTime())) {
+        return { phase: phase.name, qualifier: ' phase is active' }
+    }
+
     const remainingMinutes = Math.max(0, Math.ceil((end.getTime() - Date.now()) / 60000))
-    if (remainingMinutes === 0) return `${phase.name} phase is active`
+    if (remainingMinutes === 0) return { phase: phase.name, qualifier: ' phase is active' }
     const days = Math.floor(remainingMinutes / 1440)
     const hours = Math.floor((remainingMinutes % 1440) / 60)
     const minutes = remainingMinutes % 60
@@ -127,7 +166,11 @@ function phaseSummary(phase: ChallengePhase | undefined): string {
         hours > 0 ? `${hours}h` : '',
         days === 0 && minutes > 0 ? `${minutes}m` : '',
     ].filter(Boolean)
-    return `${phase.name} phase closes in ${parts.join(' ')}`
+    return {
+        phase: phase.name,
+        qualifier: ' phase closes in ',
+        remaining: parts.join(' '),
+    }
 }
 
 /**
@@ -255,10 +298,12 @@ function challengeTimelineEnd(challenge: ChallengeOpportunity): string | undefin
 
 /**
  * Builds the Figma timeline sequence from Challenge API boundaries and phases.
+ * Authored phases stay chronological, with Registration first when valid starts match.
+ * Task timelines omit Iterative Review because that phase is not member-facing for Tasks.
  *
  * @param challenge Challenge API detail response.
  * @param selected API-authoritative current phase.
- * @returns Launch, authored phases, and terminal Winners timeline items in display order.
+ * @returns Launch, visible authored phases, and terminal Winners items in display order.
  * @throws Does not throw; absent dates are retained as announced-later labels.
  */
 function challengeTimelineItems(
@@ -269,15 +314,54 @@ function challengeTimelineItems(
     const startTimestamp = timelineTimestamp(challenge.startDate)
     const endDate = challengeTimelineEnd(challenge)
     const endTimestamp = timelineTimestamp(endDate)
-    const phases = (challenge.phases ?? []).map((item, index): ChallengeTimelineItem => ({
-        endDate: item.actualEndDate ?? item.scheduledEndDate,
-        icon: timelinePhaseIcon(item.name),
-        key: item.id ?? `phase-${challengeCatalogKey(item.name)}-${index}`,
-        name: item.name,
-        range: true,
-        startDate: item.actualStartDate ?? item.scheduledStartDate,
-        state: timelineState(item, selected, challenge.currentPhaseNames),
-    }))
+    const taskChallenge = isTaskChallenge(challenge)
+    const authoredPhases = (challenge.phases ?? []).filter(item => (
+        !taskChallenge || !challengeCatalogKey(item.name)
+            .includes('iterativereview')
+    ))
+    const phases = authoredPhases
+        .map((item, index) => ({ index, item }))
+        .sort((left: IndexedChallengePhase, right: IndexedChallengePhase) => {
+            const leftKey = challengeCatalogKey(left.item.name)
+            const rightKey = challengeCatalogKey(right.item.name)
+            const leftIsRegistration = leftKey.includes('registration')
+            const rightIsRegistration = rightKey.includes('registration')
+            if (taskChallenge) {
+                if (leftIsRegistration !== rightIsRegistration) return leftIsRegistration ? -1 : 1
+            }
+
+            const leftStartTimestamp = timelineTimestamp(
+                left.item.actualStartDate ?? left.item.scheduledStartDate,
+            )
+            const rightStartTimestamp = timelineTimestamp(
+                right.item.actualStartDate ?? right.item.scheduledStartDate,
+            )
+            const leftStart = leftStartTimestamp ?? Number.MAX_SAFE_INTEGER
+            const rightStart = rightStartTimestamp ?? Number.MAX_SAFE_INTEGER
+            if (leftStart !== rightStart) return leftStart - rightStart
+            if (leftStartTimestamp !== undefined && leftIsRegistration !== rightIsRegistration) {
+                return leftIsRegistration ? -1 : 1
+            }
+
+            const leftEnd = timelineTimestamp(
+                left.item.actualEndDate ?? left.item.scheduledEndDate,
+            ) ?? Number.MAX_SAFE_INTEGER
+            const rightEnd = timelineTimestamp(
+                right.item.actualEndDate ?? right.item.scheduledEndDate,
+            ) ?? Number.MAX_SAFE_INTEGER
+            if (leftEnd !== rightEnd) return leftEnd - rightEnd
+
+            return left.index - right.index
+        })
+        .map((entry: IndexedChallengePhase): ChallengeTimelineItem => ({
+            endDate: entry.item.actualEndDate ?? entry.item.scheduledEndDate,
+            icon: timelinePhaseIcon(entry.item.name),
+            key: entry.item.id ?? `phase-${challengeCatalogKey(entry.item.name)}-${entry.index}`,
+            name: entry.item.name,
+            range: true,
+            startDate: entry.item.actualStartDate ?? entry.item.scheduledStartDate,
+            state: timelineState(entry.item, selected, challenge.currentPhaseNames),
+        }))
 
     return [{
         icon: timelineLaunchIcon,
@@ -356,31 +440,72 @@ function timelineTimezone(): string {
 }
 
 /**
- * Renders the Figma challenge title, phase context, prizes, and member actions.
+ * Renders the Figma challenge title, authored tags, standardized skills, phase
+ * context, prizes, and competition member actions. Tags precede skills, with
+ * blank and duplicate labels omitted. Assignment-only Task challenges omit actions.
  *
  * @param props challenge and registration state.
- * @returns dark challenge detail masthead.
+ * @returns dark challenge detail masthead with Task-aware action visibility.
  * @throws Does not throw.
  */
 export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const [timelineOpen, setTimelineOpen] = useState(false)
     const phase = challengeCurrentPhase(props.challenge)
+    const phaseCopy = phaseSummary(phase, props.challenge.status)
     const challengePrizes = challengePlacementPrizes(props.challenge)
     const type = catalogName(props.challenge.type, 'Challenge')
-    const track = catalogName(props.challenge.track, 'Competition')
+    const track = challengeTrackLabel(props.challenge.track, 'Competition')
     const trackKey = challengeCatalogKey(props.challenge.track)
+    const taskChallenge = isTaskChallenge(props.challenge)
     const registrationOpen = challengeRegistrationIsOpen(props.challenge)
     const submissionOpen = challengeSubmissionIsOpen(props.challenge)
+    const challengeStatusKey = challengeCatalogKey(props.challenge.status)
+    const showInactiveActions = [
+        'canceled',
+        'canceledclientrequest',
+        'cancelled',
+        'cancelledclientrequest',
+        'completed',
+        'draft',
+    ].includes(challengeStatusKey)
     const registrationUnavailable = props.registrationLoading || props.registrationError
-    const canUnregister = props.isRegistered && registrationOpen && !registrationUnavailable && !props.busy
+    const canUnregister = props.isRegistered
+        && !props.hasSubmitted
+        && registrationOpen
+        && !registrationUnavailable
+        && !props.busy
     const canSubmit = props.isRegistered && submissionOpen && !registrationUnavailable && !props.busy
-    const medalAssets = [medal1, medal2, medal3, medal4, medal5, medal6, medal7, medal8, medal9, medal10]
-    const skills = props.challenge.skills ?? []
+    const medalAssets = [
+        medal1,
+        prizeMedal2,
+        prizeMedal3,
+        medal4,
+        medal5,
+        medal6,
+        medal7,
+        medal8,
+        medal9,
+        medal10,
+    ]
+    const featuredPrizes = challengePrizes.slice(0, 3)
+    const additionalPrizes = challengePrizes.slice(3, medalAssets.length)
+    const featuredPrizeLabels = featuredPrizes.map(prize => formatPrize(prize))
+    const compactFeaturedPrizes = featuredPrizes.some((prize, index) => {
+        const prizeType = prize.type?.trim()
+            .toUpperCase()
+        return prizeType === 'POINT' || prizeType === 'POINTS' || featuredPrizeLabels[index].length > 8
+    })
+    const labels = Array.from(new Set([
+        ...(props.challenge.tags ?? []),
+        ...(props.challenge.skills ?? []).map(skill => skill.name),
+    ].map(label => label.trim())
+        .filter(Boolean)))
     const expandedTimeline = challengeTimelineItems(props.challenge, phase)
+    const displayedTimelinePhases = expandedTimeline.slice(1, -1)
     const timelineGridStyle: CSSProperties = {
         gridTemplateColumns: [
             '88px',
-            ...(props.challenge.phases ?? []).map(() => 'minmax(0, 1fr)'),
+            ...displayedTimelinePhases.map(() => 'minmax(0, 1fr)'),
             '88px',
         ].join(' '),
     }
@@ -397,7 +522,11 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                 </div>
             </div>
             <div className={styles.masthead}>
-                <div className={styles.rings} aria-hidden='true' />
+                <div className={styles.rings} aria-hidden='true'>
+                    <span className={classNames(styles.ring, styles.ringOuter)} />
+                    <span className={classNames(styles.ring, styles.ringMiddle)} />
+                    <span className={classNames(styles.ring, styles.ringInner)} />
+                </div>
                 <div className={styles.layout}>
                     <div className={styles.copy}>
                         <div className={styles.catalog}>
@@ -408,23 +537,35 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                             </span>
                         </div>
                         <h1>{props.challenge.name}</h1>
-                        {skills.length > 0 && (
+                        {labels.length > 0 && (
                             <div className={classNames(styles.skills, {
                                 [styles.designSkills]: trackKey === 'design',
                             })}
                             >
-                                {skills
-                                    .map(skill => <span key={skill.id ?? skill.name}>{skill.name}</span>)}
+                                {labels.map(label => (
+                                    <Link
+                                        key={label}
+                                        to={`/opportunities/competitions?search=${encodeURIComponent(label)}`}
+                                    >
+                                        {label}
+                                    </Link>
+                                ))}
                             </div>
                         )}
                         <div className={styles.timeline}>
                             <span>
-                                <IconOutline.CalendarIcon />
+                                <img alt='' aria-hidden='true' src={challengeCalendarIcon} />
                                 {dateRange(props.challenge.startDate, props.challenge.endDate)}
                             </span>
                             <span>
-                                <IconOutline.ClockIcon />
-                                {phaseSummary(phase)}
+                                <img alt='' aria-hidden='true' src={challengeClockIcon} />
+                                <span>
+                                    <span>{phaseCopy.phase}</span>
+                                    {phaseCopy.qualifier && (
+                                        <span className={styles.phaseQualifier}>{phaseCopy.qualifier}</span>
+                                    )}
+                                    {phaseCopy.remaining && <span>{phaseCopy.remaining}</span>}
+                                </span>
                             </span>
                             <button
                                 aria-controls='challenge-timeline'
@@ -432,130 +573,196 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 onClick={() => setTimelineOpen(value => !value)}
                                 type='button'
                             >
-                                {timelineOpen ? 'Hide full timeline' : 'Show full timeline'}
-                                <IconOutline.ChevronDownIcon />
+                                {timelineOpen ? 'Hide timeline' : 'Show full timeline'}
+                                <img alt='' aria-hidden='true' src={challengeChevronIcon} />
                             </button>
                         </div>
                     </div>
                     <aside className={styles.actionCard}>
-                        <div className={classNames(styles.prizeFrame, {
-                            [styles.extendedPrizeFrame]: challengePrizes.length > 3,
-                        })}
-                        >
-                            <small>Prizes</small>
+                        <div className={styles.prizeFrame}>
+                            <small className={styles.prizeTitle}>Prizes</small>
                             <div className={styles.prizes}>
-                                {challengePrizes.length > 0
-                                    ? challengePrizes.slice(0, medalAssets.length)
-                                        .map(prize => {
-                                            const medal = medalAssets[prize.placement - 1]
-                                            return (
-                                                <strong
-                                                    className={prize.placement <= 3
-                                                        ? styles.primaryPrize
-                                                        : styles.secondaryPrize}
-                                                    key={`placement-${prize.placement}`}
+                                {props.challenge.funChallenge
+                                    ? (
+                                        <strong className={styles.funChallengePrize}>
+                                            {FUN_CHALLENGE_PRIZE_LABEL}
+                                        </strong>
+                                    )
+                                    : challengePrizes.length > 0
+                                        ? (
+                                            <>
+                                                <div className={classNames(styles.featuredPrizes, {
+                                                    [styles.compactFeaturedPrizes]: compactFeaturedPrizes,
+                                                })}
                                                 >
-                                                    <img alt={`${prize.placement} place`} src={medal} />
-                                                    {formatPrize(prize)}
-                                                </strong>
-                                            )
-                                        })
-                                    : <strong>Prize details coming soon</strong>}
+                                                    {featuredPrizes.map((prize, index) => {
+                                                        const medal = medalAssets[prize.placement - 1]
+                                                        return (
+                                                            <strong
+                                                                className={classNames({
+                                                                    [styles.compactPrize]: compactFeaturedPrizes,
+                                                                })}
+                                                                key={`placement-${prize.placement}`}
+                                                            >
+                                                                <img alt={`${prize.placement} place`} src={medal} />
+                                                                {featuredPrizeLabels[index]}
+                                                            </strong>
+                                                        )
+                                                    })}
+                                                </div>
+                                                {additionalPrizes.length > 0 && (
+                                                    <div
+                                                        aria-label='Additional placement prizes'
+                                                        className={styles.additionalPrizes}
+                                                        role='group'
+                                                    >
+                                                        {additionalPrizes.map(prize => {
+                                                            const medal = medalAssets[prize.placement - 1]
+                                                            return (
+                                                                <strong
+                                                                    className={styles.secondaryPrize}
+                                                                    key={`placement-${prize.placement}`}
+                                                                >
+                                                                    <img alt={`${prize.placement} place`} src={medal} />
+                                                                    {formatPrize(prize)}
+                                                                </strong>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </>
+                                        )
+                                        : <strong>Prize details coming soon</strong>}
                             </div>
                         </div>
-                        <div className={styles.actions}>
-                            {props.isRegistered ? (
-                                <>
+                        {!taskChallenge && (
+                            <div className={styles.actions}>
+                                {props.isRegistered || showInactiveActions ? (
+                                    <>
+                                        <button
+                                            className={styles.secondary}
+                                            data-analytics-id={props.isRegistered
+                                                ? 'challenge-unregister'
+                                                : 'challenge-register'}
+                                            data-analytics-placement='challenge-header'
+                                            disabled={props.isRegistered
+                                                ? !canUnregister
+                                                : !registrationOpen || registrationUnavailable || props.busy}
+                                            onClick={props.isRegistered ? props.onUnregister : props.onRegister}
+                                            type='button'
+                                        >
+                                            {props.isRegistered ? 'Unregister' : 'Register'}
+                                        </button>
+                                        <button
+                                            className={styles.primary}
+                                            data-analytics-id='challenge-submit-start'
+                                            data-analytics-placement='challenge-header'
+                                            disabled={!canSubmit}
+                                            onClick={props.onSubmit}
+                                            type='button'
+                                        >
+                                            <img alt='' aria-hidden='true' src={challengeUploadIcon} />
+                                            Submit a solution
+                                        </button>
+                                    </>
+                                ) : (
                                     <button
                                         className={styles.secondary}
-                                        disabled={!canUnregister}
-                                        onClick={props.onUnregister}
+                                        data-analytics-id='challenge-register'
+                                        data-analytics-placement='challenge-header'
+                                        disabled={!registrationOpen || registrationUnavailable || props.busy}
+                                        onClick={props.onRegister}
                                         type='button'
                                     >
-                                        Unregister
+                                        {props.registrationLoading
+                                            ? 'Checking registration…'
+                                            : props.registrationError
+                                                ? 'Registration unavailable'
+                                                : registrationOpen ? 'Register' : 'Registration closed'}
                                     </button>
-                                    <button
-                                        className={styles.primary}
-                                        disabled={!canSubmit}
-                                        onClick={props.onSubmit}
-                                        type='button'
-                                    >
-                                        <IconOutline.UploadIcon />
-                                        Submit a solution
-                                    </button>
-                                </>
-                            ) : (
-                                <button
-                                    className={styles.primary}
-                                    disabled={!registrationOpen || registrationUnavailable || props.busy}
-                                    onClick={props.onRegister}
-                                    type='button'
-                                >
-                                    {props.registrationLoading
-                                        ? 'Checking registration…'
-                                        : props.registrationError
-                                            ? 'Registration unavailable'
-                                            : registrationOpen ? 'Register' : 'Registration closed'}
-                                </button>
-                            )}
-                        </div>
+                                )}
+                            </div>
+                        )}
                     </aside>
-                </div>
-                {timelineOpen && (
-                    <section
-                        aria-label='Challenge timeline'
-                        className={styles.expandedTimeline}
-                        id='challenge-timeline'
-                    >
-                        <div className={styles.timelineGraphic}>
-                            <div aria-hidden='true' className={styles.timelineRail}>
-                                {expandedTimeline.map((item, index) => (
-                                    <Fragment key={item.key}>
-                                        {index > 0 && (
-                                            <span
-                                                className={classNames(
-                                                    styles.timelineConnector,
-                                                    styles[timelineConnectorState(
+                    {timelineOpen && (
+                        <section
+                            aria-label='Challenge timeline'
+                            className={styles.expandedTimeline}
+                            id='challenge-timeline'
+                        >
+                            <small className={styles.timelineTimezone}>
+                                {`Time zone: ${timelineTimezone()}`}
+                            </small>
+                            <div className={styles.timelineGraphic}>
+                                <div aria-hidden='true' className={styles.timelineRail}>
+                                    {expandedTimeline.map((item, index) => (
+                                        <Fragment key={item.key}>
+                                            {index > 0 && (
+                                                <span
+                                                    className={classNames(
+                                                        styles.timelineConnector,
+                                                        styles[timelineConnectorState(
+                                                            expandedTimeline[index - 1].state,
+                                                            item.state,
+                                                        )],
+                                                    )}
+                                                    data-state={timelineConnectorState(
                                                         expandedTimeline[index - 1].state,
                                                         item.state,
-                                                    )],
+                                                    )}
+                                                />
+                                            )}
+                                            <span
+                                                className={classNames(
+                                                    styles.timelineNode,
+                                                    styles[item.state],
                                                 )}
-                                                data-state={timelineConnectorState(
-                                                    expandedTimeline[index - 1].state,
-                                                    item.state,
+                                                data-state={item.state}
+                                            >
+                                                <img alt='' src={item.icon} />
+                                            </span>
+                                        </Fragment>
+                                    ))}
+                                </div>
+                                <ol className={styles.timelineItems} style={timelineGridStyle}>
+                                    {expandedTimeline.map((item, index) => (
+                                        <li className={styles[item.state]} data-state={item.state} key={item.key}>
+                                            <span aria-hidden='true' className={styles.mobileTimelineMarker}>
+                                                <span
+                                                    className={classNames(styles.timelineNode, styles[item.state])}
+                                                >
+                                                    <img alt='' src={item.icon} />
+                                                </span>
+                                                {index < expandedTimeline.length - 1 && (
+                                                    <span
+                                                        className={classNames(
+                                                            styles.timelineConnector,
+                                                            styles[timelineConnectorState(
+                                                                item.state,
+                                                                expandedTimeline[index + 1].state,
+                                                            )],
+                                                        )}
+                                                    />
                                                 )}
-                                            />
-                                        )}
-                                        <span
-                                            className={classNames(styles.timelineNode, styles[item.state])}
-                                            data-state={item.state}
-                                        >
-                                            <img alt='' src={item.icon} />
-                                        </span>
-                                    </Fragment>
-                                ))}
+                                            </span>
+                                            <strong>{item.name}</strong>
+                                            <span className={styles.timelineDates}>
+                                                {item.startDate ? (
+                                                    <time dateTime={item.startDate}>
+                                                        {timelineDate(item.startDate)}
+                                                    </time>
+                                                ) : <span>{timelineDate()}</span>}
+                                                {item.range && (item.endDate ? (
+                                                    <time dateTime={item.endDate}>{timelineDate(item.endDate)}</time>
+                                                ) : <span>{timelineDate()}</span>)}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ol>
                             </div>
-                            <ol className={styles.timelineItems} style={timelineGridStyle}>
-                                {expandedTimeline.map(item => (
-                                    <li className={styles[item.state]} data-state={item.state} key={item.key}>
-                                        <strong>{item.name}</strong>
-                                        <span className={styles.timelineDates}>
-                                            {item.startDate ? (
-                                                <time dateTime={item.startDate}>{timelineDate(item.startDate)}</time>
-                                            ) : <span>{timelineDate()}</span>}
-                                            {item.range && (item.endDate ? (
-                                                <time dateTime={item.endDate}>{timelineDate(item.endDate)}</time>
-                                            ) : <span>{timelineDate()}</span>)}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ol>
-                        </div>
-                        <small className={styles.timelineTimezone}>
-                            {`Time zone: ${timelineTimezone()}`}
-                        </small>
-                    </section>
-                )}
+                        </section>
+                    )}
+                </div>
             </div>
         </header>
     )

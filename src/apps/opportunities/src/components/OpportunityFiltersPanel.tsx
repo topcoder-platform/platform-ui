@@ -1,9 +1,10 @@
 /* eslint-disable ordered-imports/ordered-imports, react/jsx-no-bind */
-import { ChangeEvent, FC } from 'react'
+import { ChangeEvent, FC, useState } from 'react'
 import classNames from 'classnames'
 
 import { OpportunityKind } from '../models'
 
+import { ReactComponent as ChevronDownIcon } from '../assets/chevron-down.svg'
 import { ReactComponent as SearchIcon } from '../assets/filter-search.svg'
 import { OpportunityRoleSelect } from './OpportunityRoleSelect'
 import styles from './OpportunityFiltersPanel.module.scss'
@@ -60,6 +61,7 @@ const COMPETITION_TYPES: FacetOption[] = [
     { label: 'Challenge', value: 'CH' },
     { label: 'First2Finish', value: 'F2F' },
     { label: 'Marathon Match', value: 'MM' },
+    { label: 'Task', value: 'TSK' },
 ]
 
 const ENGAGEMENT_ROLES: FacetOption[] = [
@@ -82,13 +84,28 @@ interface StatusOption {
 }
 
 /**
+ * Sentinel status value for the Engagements "My engagements" filter.
+ *
+ * It is never sent to the Engagements API. `OpportunitiesPage` translates it
+ * into an ownership-scoped, status-unrestricted query so the member sees their
+ * open, in-progress, and completed engagements together.
+ */
+export const MY_ENGAGEMENTS_STATUS = 'MINE'
+
+/**
  * Returns the status values understood by the active owning API.
  *
+ * Engagements replace the public "Completed" bucket with "My engagements",
+ * matching the Aug 2026 Opportunities design: a member browsing engagements
+ * chooses between what is open to apply for and everything they are already
+ * part of.
+ *
  * @param kind opportunity domain.
+ * @param isAuthenticated whether a member profile is available for owner-scoped filters.
  * @returns labeled status filter options.
  * @throws Does not throw.
  */
-function statusOptions(kind: OpportunityKind): StatusOption[] {
+function statusOptions(kind: OpportunityKind, isAuthenticated: boolean): StatusOption[] {
     if (kind === 'competitions') {
         return [
             { label: 'Active competitions', value: 'ACTIVE' },
@@ -104,9 +121,17 @@ function statusOptions(kind: OpportunityKind): StatusOption[] {
         ]
     }
 
+    if (kind === 'engagements') {
+        return [
+            { label: 'Open for application', value: 'OPEN' },
+            // Anonymous visitors have no engagements of their own to list.
+            ...(isAuthenticated ? [{ label: MY_LABELS.engagements, value: MY_ENGAGEMENTS_STATUS }] : []),
+        ]
+    }
+
     return [
         { label: 'Open for application', value: 'OPEN' },
-        { label: 'Completed', value: kind === 'reviews' || kind === 'engagements' ? 'CLOSED' : 'COMPLETED' },
+        { label: 'Completed', value: kind === 'reviews' ? 'CLOSED' : 'COMPLETED' },
     ]
 }
 
@@ -118,8 +143,10 @@ function statusOptions(kind: OpportunityKind): StatusOption[] {
  * @throws Does not throw.
  */
 export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props => {
+    const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false)
     const tracks = TRACKS[props.kind]
-    const statuses = statusOptions(props.kind)
+    const statuses = statusOptions(props.kind, props.isAuthenticated)
+    const advancedFiltersId = `${props.kind}-advanced-filters`
     const searchDescriptionId = `${props.kind}-search-description`
     const roleDescriptionId = `${props.kind}-role-description`
 
@@ -151,7 +178,7 @@ export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props =
                 </label>
                 <small id={searchDescriptionId}>Search skills, technologies, projects</small>
             </div>
-            {props.isAuthenticated && (
+            {props.isAuthenticated && props.kind !== 'engagements' && (
                 <label className={styles.checkRow}>
                     <input
                         checked={props.applied}
@@ -175,48 +202,68 @@ export const OpportunityFiltersPanel: FC<OpportunityFiltersPanelProps> = props =
                     </label>
                 ))}
             </fieldset>
-            {tracks.length > 0 && (
-                <fieldset>
-                    <legend>Track</legend>
-                    {tracks.map((track: FacetOption) => (
-                        <label className={styles.checkRow} key={track.value}>
-                            <input
-                                checked={props.tracks.includes(track.value)}
-                                onChange={event => props.onTrackChange(track.value, event.target.checked)}
-                                type='checkbox'
-                            />
-                            <span>{track.label}</span>
-                        </label>
-                    ))}
-                </fieldset>
-            )}
-            {props.kind === 'competitions' && (
-                <fieldset>
-                    <legend>Type</legend>
-                    {COMPETITION_TYPES.map((type: FacetOption) => (
-                        <label className={styles.checkRow} key={type.value}>
-                            <input
-                                checked={props.types.includes(type.value)}
-                                onChange={event => props.onTypeChange(type.value, event.target.checked)}
-                                type='checkbox'
-                            />
-                            <span>{type.label}</span>
-                        </label>
-                    ))}
-                </fieldset>
-            )}
-            {props.kind === 'engagements' && (
-                <div className={styles.selectGroup}>
-                    <strong>Role</strong>
-                    <OpportunityRoleSelect
-                        describedBy={roleDescriptionId}
-                        onChange={props.onRoleChange}
-                        options={ENGAGEMENT_ROLES}
-                        value={props.selectedRole}
-                    />
-                    <small id={roleDescriptionId}>Select e.g. “Software Engineer”</small>
-                </div>
-            )}
+            <button
+                aria-controls={advancedFiltersId}
+                aria-expanded={advancedFiltersOpen}
+                className={styles.moreFilters}
+                onClick={() => setAdvancedFiltersOpen(current => !current)}
+                type='button'
+            >
+                {advancedFiltersOpen ? 'Less filters' : 'More filters'}
+                <ChevronDownIcon
+                    aria-hidden='true'
+                    className={classNames({ [styles.chevronOpen]: advancedFiltersOpen })}
+                />
+            </button>
+            <div
+                className={classNames(styles.advancedFilters, {
+                    [styles.advancedFiltersOpen]: advancedFiltersOpen,
+                })}
+                id={advancedFiltersId}
+            >
+                {tracks.length > 0 && (
+                    <fieldset>
+                        <legend>Track</legend>
+                        {tracks.map((track: FacetOption) => (
+                            <label className={styles.checkRow} key={track.value}>
+                                <input
+                                    checked={props.tracks.includes(track.value)}
+                                    onChange={event => props.onTrackChange(track.value, event.target.checked)}
+                                    type='checkbox'
+                                />
+                                <span>{track.label}</span>
+                            </label>
+                        ))}
+                    </fieldset>
+                )}
+                {props.kind === 'competitions' && (
+                    <fieldset>
+                        <legend>Type</legend>
+                        {COMPETITION_TYPES.map((type: FacetOption) => (
+                            <label className={styles.checkRow} key={type.value}>
+                                <input
+                                    checked={props.types.includes(type.value)}
+                                    onChange={event => props.onTypeChange(type.value, event.target.checked)}
+                                    type='checkbox'
+                                />
+                                <span>{type.label}</span>
+                            </label>
+                        ))}
+                    </fieldset>
+                )}
+                {props.kind === 'engagements' && (
+                    <div className={styles.selectGroup}>
+                        <strong>Role</strong>
+                        <OpportunityRoleSelect
+                            describedBy={roleDescriptionId}
+                            onChange={props.onRoleChange}
+                            options={ENGAGEMENT_ROLES}
+                            value={props.selectedRole}
+                        />
+                        <small id={roleDescriptionId}>Select e.g. “Software Engineer”</small>
+                    </div>
+                )}
+            </div>
         </aside>
     )
 }

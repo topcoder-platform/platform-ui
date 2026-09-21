@@ -149,29 +149,36 @@
 }
 
 .trackDetails {
-    display: grid;
+    display: flex;
     align-items: center;
-    justify-content: end;
-    grid-template-columns: $sp-6 $sp-3 minmax(58px, max-content) $sp-4 $sp-4;
-    min-width: 136px;
+    flex-shrink: 0;
+    gap: $sp-4;
+    justify-content: flex-end;
+}
+
+.trackStat {
+    display: flex;
+    align-items: flex-start;
+    flex-shrink: 0;
+    gap: $sp-2;
 }
 
 .rightArrowIcon {
     color: rgba($tc-white, 0.9);
-    grid-column: 5;
+    flex-shrink: 0;
 }
 
 .winnerIcon {
     color: #F2C900;
-    grid-column: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
 .trackStats {
     display: flex;
     flex-direction: column;
-    grid-column: 3;
-    text-align: right;
-    min-width: 58px;
+    text-align: center;
+    min-width: 0;
 
     .count {
         font-family: $font-barlow-condensed;
@@ -195,10 +202,12 @@
 
     background: currentColor;
     border-radius: 50%;
-    grid-column: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
 .trackName {
+    flex: 1;
     min-width: 0;
     padding-right: $sp-2;
     overflow: hidden;
@@ -236,13 +245,14 @@
     }
 
     .trackDetails {
-        grid-template-columns: $sp-4 $sp-1 minmax(42px, max-content) $sp-1 $sp-3;
-        min-width: 96px;
+        gap: $sp-2;
+    }
+
+    .trackStat {
+        gap: $sp-1;
     }
 
     .trackStats {
-        min-width: 42px;
-
         .count {
             font-size: 26px;
             line-height: 28px;

@@ -2,6 +2,7 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    justify-self: end;
     width: 384px;
 }
 
@@ -27,7 +28,8 @@
         margin: 0;
         text-transform: none;
 
-        svg {
+        > img,
+        > svg {
             color: #161616;
             flex: 0 0 20px;
             height: 20px;
@@ -77,6 +79,7 @@
         text-align: left;
         text-decoration: none;
 
+        img,
         svg {
             height: 20px;
             width: 20px;
@@ -109,6 +112,10 @@
     p {
         max-width: 280px;
     }
+
+    a.promoLink {
+        margin-top: 16px;
+    }
 }
 
 .promoArt {
@@ -123,6 +130,21 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
+}
+
+.card a.learningLink {
+    display: block;
+    width: fit-content;
+
+    img {
+        display: inline-block;
+        margin-left: 4px;
+        vertical-align: -5px;
+    }
+}
+
+.learningLinkEnd {
+    white-space: nowrap;
 }
 
 .infoSection {
@@ -143,6 +165,32 @@
         font-size: 14px;
         font-weight: 400;
         line-height: 20px;
+    }
+}
+
+.fileNameLabel {
+    font-weight: 700;
+}
+
+.card a.inlineAnchor {
+    display: inline;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    margin-top: 0;
+    text-decoration: underline;
+    white-space: nowrap;
+
+    svg {
+        display: inline-block;
+        height: 14px;
+        margin-left: 3px;
+        vertical-align: -2px;
+        width: 14px;
+    }
+
+    &:hover {
+        text-decoration: none;
     }
 }
 
@@ -176,7 +224,7 @@
     }
 }
 
-.reviewStyleStatus {
+.reviewConfigStatus {
     color: #617178;
     margin: 0;
 }

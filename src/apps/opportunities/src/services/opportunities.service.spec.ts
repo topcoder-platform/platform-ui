@@ -1,19 +1,27 @@
 /* eslint-disable ordered-imports/ordered-imports */
 import {
     xhrDeleteAsync,
+    xhrGetBlobAsync,
     xhrGetAsync,
     xhrGlobalInstance,
     xhrPostAsync,
     xhrRequestAsync,
 } from '~/libs/core'
+import { init } from 'filestack-js'
 import {
+    agreeToChallengeTerms,
     buildOpportunityPageUrl,
     createChallengeSubmission,
+    createChallengeUrlSubmission,
     deleteChallengeSubmission,
+    downloadChallengeSubmissionArtifact,
     getChallengeAiReviewConfig,
+    getChallengeMemberResource,
     getChallengeProjectResults,
     getChallengeReviewSummations,
+    getChallengeSubmissionAiWorkflowRuns,
     getChallengeSubmissionHistory,
+    getChallengeSubmissionArtifacts,
     getChallengeSubmissionPreviews,
     getChallengeSubmissionDownloadUrl,
     getChallengeSubmissions,
@@ -23,19 +31,34 @@ import {
     getChallengeTermDocuSignUrl,
     getChallengeTermDetails,
     getMyWorkCounts,
+    getMemberChallengeRegistrationIds,
     getOpportunityPage,
+    getOpportunitySummary,
+    getReviewOpportunity,
     normalizeOpportunitySummary,
     unregisterFromChallenge,
 } from './opportunities.service'
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
+        ADMIN: { AWS_DMZ_BUCKET: 'submission-dmz' },
         API: { V5: 'https://api.example/v5', V6: 'https://api.example/v6' },
+        FILESTACK: {
+            API_KEY: 'filestack-key',
+            CNAME: 'filestack.example',
+            PROGRESS_INTERVAL: 100,
+            REGION: 'us-east-1',
+            RETRY: 2,
+            SUBMISSION_CONTAINER: 'general-assets-bucket',
+            TIMEOUT: 1000,
+        },
     },
 }), { virtual: true })
+jest.mock('filestack-js', () => ({ init: jest.fn() }))
 jest.mock('~/libs/core', () => ({
     xhrDeleteAsync: jest.fn(),
     xhrGetAsync: jest.fn(),
+    xhrGetBlobAsync: jest.fn(),
     xhrGlobalInstance: { get: jest.fn() },
     xhrPostAsync: jest.fn(),
     xhrRequestAsync: jest.fn(),
@@ -73,18 +96,59 @@ describe('opportunities service normalization', () => {
             })
     })
 
+    it('uses owning list totals for the competition and review hero counts', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockResolvedValueOnce({
+            competitions: { amount: 5500, count: 234 },
+            copilots: { count: 2 },
+            engagements: { count: 3 },
+            reviews: { count: 4 },
+        })
+        globalGet
+            .mockResolvedValueOnce({
+                data: [],
+                headers: {
+                    get: (name: string) => (name === 'x-total' ? '238' : undefined),
+                },
+            })
+            .mockResolvedValueOnce({
+                data: [],
+                headers: {
+                    get: (name: string) => (name === 'x-total' ? '140' : undefined),
+                },
+            })
+
+        await expect(getOpportunitySummary())
+            .resolves.toMatchObject({
+                competitions: { amount: 5500, count: 238 },
+                reviews: { count: 140 },
+            })
+
+        const url = new URL(String(globalGet.mock.calls[0][0]))
+        expect(url.pathname)
+            .toBe('/v6/challenges')
+        expect(url.searchParams.get('hasCurrentPhase'))
+            .toBe('true')
+        expect(url.searchParams.get('perPage'))
+            .toBe('1')
+        const reviewUrl = new URL(String(globalGet.mock.calls[1][0]))
+        expect(reviewUrl.pathname)
+            .toBe('/v6/review-opportunities/search')
+        expect(reviewUrl.searchParams.getAll('status'))
+            .toEqual(['OPEN'])
+        expect(reviewUrl.searchParams.get('limit'))
+            .toBe('1')
+    })
+
     it('loads member-work totals on count-only owner pages', async () => {
         const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
-        const getAsync = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
         const totals: Record<string, number> = {
             '/v6/challenges': 40,
             '/v6/engagements/engagements': 30,
             '/v6/projects/copilots/opportunities': 20,
             '/v6/review-opportunities/search': 15,
         }
-        getAsync.mockResolvedValueOnce([
-            { id: 'submitter-role', name: 'Submitter' },
-        ] as never)
         get.mockImplementation(async requestUrl => {
             const url = new URL(String(requestUrl))
             return {
@@ -114,7 +178,7 @@ describe('opportunities service normalization', () => {
         expect(byPath.get('/v6/challenges')?.searchParams.get('memberId'))
             .toBe('123')
         expect(byPath.get('/v6/challenges')?.searchParams.get('resourceRoleId'))
-            .toBe('submitter-role')
+            .toBeNull()
         expect(byPath.get('/v6/engagements/engagements')?.searchParams.get('perPage'))
             .toBe('1')
         expect(byPath.get('/v6/engagements/engagements')?.searchParams.get('appliedByMe'))
@@ -157,15 +221,80 @@ describe('opportunities service normalization', () => {
             .toBe('startDate')
         expect(url.searchParams.get('sortOrder'))
             .toBe('asc')
+        expect(Date.parse(url.searchParams.get('startDateStart') ?? ''))
+            .toBeGreaterThan(0)
     })
 
-    it('maps My competitions to the Challenge API member and Submitter-role filter', () => {
+    it('maps the clarified competition prize and title sorts to Challenge API fields', () => {
+        const prize = new URL(buildOpportunityPageUrl('competitions', {
+            page: 1,
+            perPage: 10,
+            sort: 'prizeLowToHigh',
+        }))
+        const title = new URL(buildOpportunityPageUrl('competitions', {
+            page: 1,
+            perPage: 10,
+            sort: 'titleAZ',
+        }))
+
+        expect(prize.searchParams.get('sortBy'))
+            .toBe('overview.totalPrizes')
+        expect(prize.searchParams.get('sortOrder'))
+            .toBe('asc')
+        expect(title.searchParams.get('sortBy'))
+            .toBe('name')
+        expect(title.searchParams.get('sortOrder'))
+            .toBe('asc')
+    })
+
+    it('keeps scheduled challenges out of public active results without hiding member competitions', () => {
+        const publicUrl = new URL(buildOpportunityPageUrl('competitions', {
+            page: 1,
+            perPage: 10,
+            statuses: ['ACTIVE'],
+        }))
+        const memberUrl = new URL(buildOpportunityPageUrl('competitions', {
+            applied: true,
+            memberId: '123',
+            page: 1,
+            perPage: 10,
+            resourceRoleId: 'submitter-role',
+            statuses: ['ACTIVE'],
+        }))
+
+        expect(publicUrl.searchParams.get('hasCurrentPhase'))
+            .toBe('true')
+        expect(memberUrl.searchParams.has('hasCurrentPhase'))
+            .toBe(false)
+    })
+
+    it('limits competitions to the requested community groups', () => {
+        const topgear = new URL(buildOpportunityPageUrl('competitions', {
+            groups: ['b7f7c0f8-8ee8-409e-9e5c-33404983b635'],
+            page: 1,
+            perPage: 10,
+            statuses: ['ACTIVE'],
+        }))
+        const everyone = new URL(buildOpportunityPageUrl('competitions', {
+            page: 1,
+            perPage: 10,
+            statuses: ['ACTIVE'],
+        }))
+
+        expect(topgear.searchParams.getAll('groups[]'))
+            .toEqual(['b7f7c0f8-8ee8-409e-9e5c-33404983b635'])
+        expect(topgear.searchParams.has('groups'))
+            .toBe(false)
+        expect(everyone.searchParams.has('groups[]'))
+            .toBe(false)
+    })
+
+    it('maps My competitions to every Challenge API resource role for the member', () => {
         const url = new URL(buildOpportunityPageUrl('competitions', {
             applied: true,
             memberId: '123',
             page: 2,
             perPage: 10,
-            resourceRoleId: '2425bb20-9a2c-4316-9f85-8b24f9ce43b8',
             search: 'design systems',
             sort: 'newest',
             tracks: ['Des'],
@@ -174,7 +303,7 @@ describe('opportunities service normalization', () => {
         expect(url.searchParams.get('memberId'))
             .toBe('123')
         expect(url.searchParams.get('resourceRoleId'))
-            .toBe('2425bb20-9a2c-4316-9f85-8b24f9ce43b8')
+            .toBeNull()
         expect(url.searchParams.get('search'))
             .toBe('design systems')
         expect(url.searchParams.getAll('tracks[]'))
@@ -185,6 +314,19 @@ describe('opportunities service normalization', () => {
             .toBe('2')
         expect(url.searchParams.get('sortOrder'))
             .toBe('desc')
+    })
+
+    it('maps the clarified low-prize sort to Review API payment ordering', () => {
+        const url = new URL(buildOpportunityPageUrl('reviews', {
+            page: 1,
+            perPage: 10,
+            sort: 'prizeLowToHigh',
+        }))
+
+        expect(url.searchParams.get('sortBy'))
+            .toBe('basePayment')
+        expect(url.searchParams.get('sortOrder'))
+            .toBe('asc')
     })
 
     it('maps engagement filters to its scalar status, skill IDs, and semantic sort', () => {
@@ -210,6 +352,183 @@ describe('opportunities service normalization', () => {
             .toBe('asc')
         expect(url.searchParams.get('appliedByMe'))
             .toBe('true')
+        expect(url.searchParams.get('includePrivate'))
+            .toBe('true')
+    })
+
+    it('sorts Engagement prizes across owner pages before applying UI pagination', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                data: {
+                    data: [{ compensationRange: '$100', id: 'lower', title: 'Lower prize' }],
+                    meta: { page: 1, perPage: 1000, totalCount: 1001, totalPages: 2 },
+                },
+                headers: { get: () => undefined },
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    data: [{ compensationRange: '$2,000', id: 'higher', title: 'Higher prize' }],
+                    meta: { page: 2, perPage: 1000, totalCount: 1001, totalPages: 2 },
+                },
+                headers: { get: () => undefined },
+            })
+
+        await expect(getOpportunityPage('engagements', {
+            page: 1,
+            perPage: 1,
+            sort: 'prizeHighToLow',
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({ id: 'higher' })],
+                page: 1,
+                perPage: 1,
+                total: 2,
+                totalPages: 2,
+            })
+
+        expect(get.mock.calls.map(call => {
+            const url = new URL(String(call[0]))
+            return [url.searchParams.get('page'), url.searchParams.get('perPage')]
+        }))
+            .toEqual([['1', '1000'], ['2', '1000']])
+    })
+
+    it('retries an empty engagement text search with matching standardized skill IDs', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        const getAsync = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockReset()
+        getAsync.mockReset()
+        get
+            .mockResolvedValueOnce({
+                data: [],
+                headers: { get: (name: string) => (name === 'x-total' ? '0' : undefined) },
+            })
+            .mockResolvedValueOnce({
+                data: [{ id: 'engagement-id', title: 'Systems engagement' }],
+                headers: { get: (name: string) => (name === 'x-total' ? '1' : undefined) },
+            })
+        getAsync.mockResolvedValueOnce([
+            { id: 'skill-id', name: 'Viable System Model' },
+        ] as never)
+
+        await expect(getOpportunityPage('engagements', {
+            page: 1,
+            perPage: 10,
+            search: 'Viable System Model',
+            statuses: ['OPEN'],
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({ id: 'engagement-id' })],
+                total: 1,
+            })
+
+        const textUrl = new URL(String(get.mock.calls[0][0]))
+        expect(textUrl.searchParams.get('search'))
+            .toBe('Viable System Model')
+        const skillUrl = new URL(String(get.mock.calls[1][0]))
+        expect(skillUrl.searchParams.has('search'))
+            .toBe(false)
+        expect(skillUrl.searchParams.getAll('requiredSkills'))
+            .toEqual(['skill-id'])
+        expect(getAsync)
+            .toHaveBeenCalledWith(
+                'https://api.example/v5/standardized-skills/skills/autocomplete?size=25&term=Viable+System+Model',
+            )
+    })
+
+    it('hydrates public engagement cards with the caller application and assignment states', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                data: {
+                    data: [
+                        { id: 'applied-engagement', status: 'OPEN', title: 'Applied' },
+                        { id: 'assigned-engagement', status: 'OPEN', title: 'Assigned' },
+                    ],
+                    meta: { page: 1, perPage: 10, totalCount: 2, totalPages: 1 },
+                },
+                headers: { get: () => undefined },
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    data: [
+                        {
+                            applicationStatus: 'SHORTLISTED',
+                            id: 'applied-engagement',
+                        },
+                        {
+                            assignments: [{ id: 'assignment', status: 'ASSIGNED' }],
+                            id: 'assigned-engagement',
+                        },
+                    ],
+                    meta: { page: 1, perPage: 200, totalCount: 2, totalPages: 1 },
+                },
+                headers: { get: () => undefined },
+            })
+
+        await expect(getOpportunityPage('engagements', {
+            memberId: '123',
+            page: 1,
+            perPage: 10,
+            statuses: ['OPEN'],
+        }))
+            .resolves.toMatchObject({
+                items: [
+                    { applicationStatus: 'SHORTLISTED', id: 'applied-engagement' },
+                    { assignments: [{ status: 'ASSIGNED' }], id: 'assigned-engagement' },
+                ],
+            })
+        expect(get.mock.calls.map(call => new URL(String(call[0])).pathname))
+            .toEqual([
+                '/v6/engagements/engagements',
+                '/v6/engagements/engagements',
+            ])
+        const memberStateUrl = new URL(String(get.mock.calls[1][0]))
+        expect(memberStateUrl.searchParams.get('appliedByMe'))
+            .toBe('true')
+        expect(memberStateUrl.searchParams.get('includePrivate'))
+            .toBe('true')
+    })
+
+    it('hydrates declined offers from the complete member-scoped engagement feed', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                data: {
+                    data: [{ id: 'declined-engagement', status: 'OPEN', title: 'Declined' }],
+                    meta: { page: 1, perPage: 10, totalCount: 1, totalPages: 1 },
+                },
+                headers: { get: () => undefined },
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    data: [{
+                        applicationStatus: 'SELECTED',
+                        assignments: [{ id: 'declined-assignment', status: 'OFFER_REJECTED' }],
+                        id: 'declined-engagement',
+                    }],
+                    meta: { page: 1, perPage: 200, totalCount: 1, totalPages: 1 },
+                },
+                headers: { get: () => undefined },
+            })
+
+        await expect(getOpportunityPage('engagements', {
+            memberId: '123',
+            page: 1,
+            perPage: 10,
+            statuses: ['OPEN'],
+        }))
+            .resolves.toMatchObject({
+                items: [{
+                    applicationStatus: 'SELECTED',
+                    assignments: [{ status: 'OFFER_REJECTED' }],
+                    id: 'declined-engagement',
+                }],
+            })
     })
 
     it('maps copilot track facets and skills to types and disables status grouping for honest sorting', () => {
@@ -240,7 +559,79 @@ describe('opportunities service normalization', () => {
             .toEqual(['React'])
     })
 
-    it('falls back to locally filtered legacy Copilot results during API rollout', async () => {
+    it('sorts only active Copilot custom payments before applying UI pagination', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                data: [
+                    {
+                        data: {
+                            opportunityTitle: 'Lower',
+                            otherPaymentType: '$100',
+                            paymentType: 'other',
+                        },
+                        id: 'lower',
+                    },
+                    {
+                        data: {
+                            opportunityTitle: 'Standard',
+                            otherPaymentType: '$50',
+                            paymentType: 'standard',
+                        },
+                        id: 'standard',
+                    },
+                ],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '3',
+                        'x-total-pages': '2',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockResolvedValueOnce({
+                data: [{
+                    data: {
+                        opportunityTitle: 'Higher',
+                        otherPaymentType: '$2,000',
+                        paymentType: 'other',
+                    },
+                    id: 'higher',
+                }],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '2',
+                        'x-per-page': '200',
+                        'x-total': '3',
+                        'x-total-pages': '2',
+                    } as Record<string, string>)[name],
+                },
+            })
+
+        await expect(getOpportunityPage('copilots', {
+            page: 1,
+            perPage: 1,
+            sort: 'prizeLowToHigh',
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({
+                    id: 'lower',
+                    opportunityTitle: 'Lower',
+                })],
+                total: 3,
+                totalPages: 3,
+            })
+
+        expect(get.mock.calls.map(call => {
+            const url = new URL(String(call[0]))
+            return [url.searchParams.get('page'), url.searchParams.get('pageSize')]
+        }))
+            .toEqual([['1', '200'], ['2', '200']])
+    })
+
+    it('falls back to locally filtered legacy Copilot facets during API rollout', async () => {
         const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
         globalGet
             .mockRejectedValueOnce({
@@ -271,13 +662,13 @@ describe('opportunities service normalization', () => {
                         opportunityTitle: 'Backend migration',
                         skills: [{ id: 'java', name: 'Java' }],
                         status: 'active',
-                        type: 'dev',
+                        type: 'design',
                     },
                 ],
                 headers: {
                     get: (name: string) => ({
                         'x-page': '1',
-                        'x-per-page': '1000',
+                        'x-per-page': '200',
                         'x-total': '3',
                         'x-total-pages': '1',
                     } as Record<string, string>)[name],
@@ -287,7 +678,6 @@ describe('opportunities service normalization', () => {
         await expect(getOpportunityPage('copilots', {
             page: 1,
             perPage: 10,
-            search: 'typescript',
             sort: 'newest',
             statuses: ['active'],
             tracks: ['dev'],
@@ -302,7 +692,7 @@ describe('opportunities service normalization', () => {
 
         const legacyUrl = new URL(String(globalGet.mock.calls.at(-1)?.[0]))
         expect(legacyUrl.searchParams.get('pageSize'))
-            .toBe('1000')
+            .toBe('200')
         expect(legacyUrl.searchParams.get('noGrouping'))
             .toBe('true')
         expect(legacyUrl.searchParams.has('search'))
@@ -311,6 +701,217 @@ describe('opportunities service normalization', () => {
             .toBe(false)
         expect(legacyUrl.searchParams.has('type'))
             .toBe(false)
+    })
+
+    it('uses bounded local Copilot discovery before a broken server-side skill search', async () => {
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet
+            .mockResolvedValueOnce({
+                data: [
+                    {
+                        id: 'matching',
+                        opportunityTitle: 'Matching copilot role',
+                        skills: [{ id: 'cadence-skill', name: 'Cadence SKILL' }],
+                        status: 'active',
+                    },
+                    {
+                        id: 'different',
+                        opportunityTitle: 'Different copilot role',
+                        skills: [{ id: 'react', name: 'React' }],
+                        status: 'active',
+                    },
+                ],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '2',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockRejectedValueOnce({
+                data: { message: ['property projectName should not exist'] },
+                status: 400,
+            })
+
+        await expect(getOpportunityPage('copilots', {
+            page: 1,
+            perPage: 10,
+            search: 'Cadence SKILL',
+            sort: 'newest',
+            statuses: ['active'],
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({ id: 'matching' })],
+                total: 1,
+            })
+
+        expect(globalGet)
+            .toHaveBeenCalledTimes(2)
+        const requestUrl = new URL(String(globalGet.mock.calls[0][0]))
+        expect(requestUrl.searchParams.get('pageSize'))
+            .toBe('200')
+        expect(requestUrl.searchParams.has('search'))
+            .toBe(false)
+        expect(requestUrl.searchParams.has('skills'))
+            .toBe(false)
+        const projectNameUrl = new URL(String(globalGet.mock.calls[1][0]))
+        expect(projectNameUrl.searchParams.get('projectName'))
+            .toBe('Cadence SKILL')
+        expect(projectNameUrl.searchParams.has('search'))
+            .toBe(false)
+        expect(projectNameUrl.searchParams.has('skills'))
+            .toBe(false)
+    })
+
+    it('unions safe owner project-name matches that public list rows cannot expose', async () => {
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockReset()
+        globalGet
+            .mockResolvedValueOnce({
+                data: [{
+                    id: 'different',
+                    opportunityTitle: 'Unrelated role',
+                    status: 'active',
+                    type: 'dev',
+                }],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '1',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockResolvedValueOnce({
+                data: [{
+                    id: 'project-name-match',
+                    opportunityTitle: 'Generic Copilot role',
+                    status: 'active',
+                    type: 'dev',
+                }],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '1',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+
+        await expect(getOpportunityPage('copilots', {
+            page: 1,
+            perPage: 10,
+            search: 'Apollo migration',
+            sort: 'newest',
+            statuses: ['active'],
+            tracks: ['dev'],
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({ id: 'project-name-match' })],
+                total: 1,
+            })
+
+        const projectNameUrl = new URL(String(globalGet.mock.calls[1][0]))
+        expect(projectNameUrl.searchParams.get('projectName'))
+            .toBe('Apollo migration')
+        expect(projectNameUrl.searchParams.getAll('status'))
+            .toEqual(['active'])
+        expect(projectNameUrl.searchParams.getAll('type'))
+            .toEqual(['dev'])
+        expect(projectNameUrl.searchParams.has('search'))
+            .toBe(false)
+        expect(projectNameUrl.searchParams.has('skills'))
+            .toBe(false)
+    })
+
+    it('uses canonical opportunity type rather than conflicting project type during local search', async () => {
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockReset()
+        globalGet
+            .mockResolvedValueOnce({
+                data: [
+                    {
+                        id: 'canonical-match',
+                        projectType: 'design',
+                        skills: [{ id: 'cadence', name: 'Cadence SKILL' }],
+                        status: 'active',
+                        type: 'dev',
+                    },
+                    {
+                        id: 'project-type-only',
+                        projectType: 'dev',
+                        skills: [{ id: 'cadence', name: 'Cadence SKILL' }],
+                        status: 'active',
+                        type: 'design',
+                    },
+                ],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '2',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockResolvedValueOnce({
+                data: [],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '0',
+                        'x-total-pages': '0',
+                    } as Record<string, string>)[name],
+                },
+            })
+
+        await expect(getOpportunityPage('copilots', {
+            page: 1,
+            perPage: 10,
+            search: 'Cadence SKILL',
+            sort: 'newest',
+            statuses: ['active'],
+            tracks: ['dev'],
+        }))
+            .resolves.toMatchObject({
+                items: [expect.objectContaining({ id: 'canonical-match' })],
+                total: 1,
+            })
+    })
+
+    it('propagates project-name failures other than the exact legacy unsupported-property response', async () => {
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        const projectNameError = {
+            data: { message: ['property search should not exist'] },
+            status: 400,
+        }
+        globalGet.mockReset()
+        globalGet
+            .mockResolvedValueOnce({
+                data: [],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '0',
+                        'x-total-pages': '0',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockRejectedValueOnce(projectNameError)
+
+        await expect(getOpportunityPage('copilots', {
+            page: 1,
+            perPage: 10,
+            search: 'Cadence SKILL',
+            sort: 'newest',
+        }))
+            .rejects.toEqual(projectNameError)
     })
 
     it('sorts legacy Copilot results by start date without sending an unsupported sort', async () => {
@@ -322,14 +923,15 @@ describe('opportunities service normalization', () => {
             })
             .mockResolvedValueOnce({
                 data: [
-                    { id: 'later', startDate: '2026-05-02T00:00:00.000Z', status: 'active' },
+                    { id: 'later', startDate: '2099-05-02T00:00:00.000Z', status: 'active' },
                     { id: 'missing', status: 'active' },
-                    { id: 'earlier', startDate: '2026-05-01T00:00:00.000Z', status: 'active' },
+                    { id: 'past', startDate: '2026-05-01T00:00:00.000Z', status: 'active' },
+                    { id: 'earlier', startDate: '2099-05-01T00:00:00.000Z', status: 'active' },
                 ],
                 headers: {
                     get: (name: string) => ({
                         'x-page': '1',
-                        'x-per-page': '1000',
+                        'x-per-page': '200',
                         'x-total': '3',
                         'x-total-pages': '1',
                     } as Record<string, string>)[name],
@@ -346,13 +948,82 @@ describe('opportunities service normalization', () => {
                 items: [
                     expect.objectContaining({ id: 'earlier' }),
                     expect.objectContaining({ id: 'later' }),
-                    expect.objectContaining({ id: 'missing' }),
                 ],
             })
+
+        const initialUrl = new URL(String(globalGet.mock.calls[0][0]))
+        expect(Date.parse(initialUrl.searchParams.get('startDateFrom') ?? ''))
+            .toBeGreaterThan(0)
 
         const legacyUrl = new URL(String(globalGet.mock.calls.at(-1)?.[0]))
         expect(legacyUrl.searchParams.get('sort'))
             .toBe('createdAt desc')
+    })
+
+    it('hydrates My Copilot applications when the legacy list rejects the applied filter', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get
+            .mockRejectedValueOnce({
+                data: { message: ['property applied should not exist'] },
+                status: 400,
+            })
+            .mockResolvedValueOnce({
+                data: [
+                    { id: 'mine', status: 'completed' },
+                    { id: 'another-member', status: 'completed' },
+                    { id: 'active', status: 'active' },
+                ],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '200',
+                        'x-total': '3',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockResolvedValueOnce({
+                data: [{
+                    createdAt: '2026-01-01T00:00:00.000Z',
+                    id: 'application-id',
+                    status: 'accepted',
+                    updatedAt: '2026-01-02T00:00:00.000Z',
+                    userId: '123',
+                }],
+            })
+            .mockResolvedValueOnce({
+                data: [{ userId: '456' }],
+            })
+
+        await expect(getOpportunityPage('copilots', {
+            applied: true,
+            memberId: '123',
+            page: 1,
+            perPage: 10,
+            statuses: ['completed'],
+        }))
+            .resolves.toMatchObject({
+                items: [{
+                    currentUserApplication: expect.objectContaining({
+                        id: 'application-id',
+                        status: 'accepted',
+                    }),
+                    hasApplied: true,
+                    id: 'mine',
+                }],
+                total: 1,
+            })
+
+        const applicationUrls = get.mock.calls.slice(2)
+            .map(call => new URL(String(call[0])))
+        expect(applicationUrls.map(url => url.pathname))
+            .toEqual([
+                '/v6/projects/copilots/opportunity/mine/applications',
+                '/v6/projects/copilots/opportunity/another-member/applications',
+            ])
+        expect(applicationUrls.every(url => url.searchParams.get('pageSize') === '200'))
+            .toBe(true)
     })
 
     it('uses canonical Review API facets and descending payment sorting', () => {
@@ -379,6 +1050,78 @@ describe('opportunities service normalization', () => {
             .toBe('desc')
     })
 
+    it('resolves the synthetic Review AI facet without sending an invalid track name', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                data: [{ id: 'ai-challenge' }],
+                headers: {
+                    get: (name: string) => ({
+                        'x-page': '1',
+                        'x-per-page': '100',
+                        'x-total': '1',
+                        'x-total-pages': '1',
+                    } as Record<string, string>)[name],
+                },
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    result: {
+                        content: [
+                            {
+                                challengeData: { track: 'Data Science' },
+                                challengeId: 'ai-challenge',
+                                id: 'ai-review',
+                            },
+                            {
+                                challengeData: { track: 'Development' },
+                                challengeId: 'development-challenge',
+                                id: 'development-review',
+                            },
+                            {
+                                challengeData: { track: 'Design' },
+                                challengeId: 'design-challenge',
+                                id: 'design-review',
+                            },
+                        ],
+                        metadata: {
+                            limit: 1000,
+                            page: 1,
+                            total: 3,
+                            totalPages: 1,
+                        },
+                    },
+                },
+                headers: { get: () => undefined },
+            })
+
+        await expect(getOpportunityPage('reviews', {
+            page: 1,
+            perPage: 10,
+            statuses: ['OPEN'],
+            tracks: ['AI', 'Development'],
+        }))
+            .resolves.toMatchObject({
+                items: [
+                    expect.objectContaining({ id: 'ai-review' }),
+                    expect.objectContaining({ id: 'development-review' }),
+                ],
+                total: 2,
+            })
+
+        const challengeUrl = new URL(String(get.mock.calls[0][0]))
+        expect(challengeUrl.pathname)
+            .toBe('/v6/challenges')
+        expect(challengeUrl.searchParams.getAll('tracks[]'))
+            .toEqual(['AI'])
+        const reviewUrl = new URL(String(get.mock.calls[1][0]))
+        expect(reviewUrl.pathname)
+            .toBe('/v6/review-opportunities/search')
+        expect(reviewUrl.searchParams.has('tracks'))
+            .toBe(false)
+    })
+
     it('maps Review newest-first and starting-soon labels to their supported date ordering', () => {
         const newest = new URL(buildOpportunityPageUrl('reviews', {
             page: 1,
@@ -399,6 +1142,98 @@ describe('opportunities service normalization', () => {
             .toBe('startDate')
         expect(startingSoon.searchParams.get('sortOrder'))
             .toBe('asc')
+    })
+
+    it('hydrates Review cards with standardized challenge skills', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                data: {
+                    result: {
+                        content: [{
+                            challengeData: { technologies: [] },
+                            challengeId: 'challenge-id',
+                            id: 'review-id',
+                        }],
+                        metadata: { limit: 10, page: 1, total: 1, totalPages: 1 },
+                    },
+                },
+                headers: { get: () => undefined },
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    data: [{ id: 'challenge-id', skills: [{ id: 'skill-id', name: 'TypeScript' }] }],
+                    meta: { page: 1, perPage: 1, totalCount: 1, totalPages: 1 },
+                },
+                headers: { get: () => undefined },
+            })
+
+        await expect(getOpportunityPage('reviews', {
+            page: 1,
+            perPage: 10,
+            statuses: ['OPEN'],
+        }))
+            .resolves.toMatchObject({
+                items: [{
+                    challengeData: { skills: [{ id: 'skill-id', name: 'TypeScript' }] },
+                    id: 'review-id',
+                }],
+            })
+        const challengeUrl = new URL(String(get.mock.calls[1][0]))
+        expect(challengeUrl.pathname)
+            .toBe('/v6/challenges')
+        expect(challengeUrl.searchParams.getAll('ids[]'))
+            .toEqual(['challenge-id'])
+    })
+
+    it('hydrates missing Review detail skills from its authoritative challenge', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                result: {
+                    content: {
+                        challengeData: { technologies: [] },
+                        challengeId: 'challenge/id',
+                        id: 'review-id',
+                    },
+                },
+            })
+            .mockResolvedValueOnce({
+                id: 'challenge/id',
+                name: 'Challenge',
+                skills: [{ id: 'skill-id', name: 'TypeScript' }],
+            })
+
+        await expect(getReviewOpportunity('review/id'))
+            .resolves.toMatchObject({
+                challengeData: { skills: [{ id: 'skill-id', name: 'TypeScript' }] },
+                id: 'review-id',
+            })
+        expect(get.mock.calls.map(call => call[0]))
+            .toEqual([
+                'https://api.example/v6/review-opportunities/review%2Fid',
+                'https://api.example/v6/challenges/challenge%2Fid',
+            ])
+    })
+
+    it('keeps Review details usable when optional skill hydration is unavailable', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockReset()
+        get
+            .mockResolvedValueOnce({
+                challengeData: { technologies: ['React'] },
+                challengeId: 'challenge-id',
+                id: 'review-id',
+            })
+            .mockRejectedValueOnce(new Error('Challenge unavailable'))
+
+        await expect(getReviewOpportunity('review-id'))
+            .resolves.toMatchObject({
+                challengeData: { technologies: ['React'] },
+                id: 'review-id',
+            })
     })
 
     it('loads the challenge AI review configuration used by Review Style', async () => {
@@ -453,15 +1288,19 @@ describe('opportunities service normalization', () => {
             )
     })
 
-    it('uploads a multipart challenge submission and reports Axios progress', async () => {
+    it('uploads a challenge ZIP to the canonical DMZ before creating its URL-backed submission', async () => {
         const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
+        const upload = jest.fn()
+            .mockImplementation(async (_file, options) => {
+                options.onProgress({ totalPercent: 50 })
+                return { key: 'challenge-id-123-CHECKPOINT_SUBMISSION.zip' }
+            })
+        const initMock = init as jest.MockedFunction<typeof init>
+        initMock.mockReturnValue({ upload } as never)
         const progress = jest.fn()
         const file = new File(['archive'], 'MySubmission.zip', { type: 'application/zip' })
         const controller = new AbortController()
-        post.mockImplementationOnce(async (_url, _payload, config) => {
-            config?.onUploadProgress?.({ loaded: 1, total: 2 } as never)
-            return { id: 'submission-id' } as never
-        })
+        post.mockResolvedValueOnce({ id: 'submission-id' } as never)
 
         await expect(createChallengeSubmission(
             'challenge-id',
@@ -476,25 +1315,83 @@ describe('opportunities service normalization', () => {
         expect(post)
             .toHaveBeenCalledWith(
                 'https://api.example/v6/submissions',
-                expect.any(FormData),
+                {
+                    challengeId: 'challenge-id',
+                    memberId: '123',
+                    type: 'CHECKPOINT_SUBMISSION',
+                    url: 'https://s3.amazonaws.com/submission-dmz/'
+                        + 'challenge-id-123-CHECKPOINT_SUBMISSION.zip',
+                },
                 expect.objectContaining({
-                    headers: { 'Content-Type': 'multipart/form-data' },
                     signal: controller.signal,
                 }),
             )
-        const payload = post.mock.calls.at(-1)?.[1] as FormData
-        expect(payload.get('challengeId'))
-            .toBe('challenge-id')
-        expect(payload.get('memberId'))
-            .toBe('123')
-        expect(payload.get('type'))
-            .toBe('CHECKPOINT_SUBMISSION')
-        expect(payload.get('fileName'))
-            .toBe('MySubmission.zip')
-        expect((payload.get('file') as File).name)
-            .toBe('MySubmission.zip')
+        expect(upload)
+            .toHaveBeenCalledWith(
+                file,
+                expect.objectContaining({
+                    progressInterval: 100,
+                    retry: 2,
+                    timeout: 1000,
+                }),
+                expect.objectContaining({
+                    container: 'submission-dmz',
+                    region: 'us-east-1',
+                }),
+            )
         expect(progress)
-            .toHaveBeenCalledWith(50)
+            .toHaveBeenNthCalledWith(1, 50)
+        expect(progress)
+            .toHaveBeenLastCalledWith(100)
+    })
+
+    it('creates a URL submission directly without initializing Filestack', async () => {
+        const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
+        const initMock = init as jest.MockedFunction<typeof init>
+        const controller = new AbortController()
+        initMock.mockClear()
+        post.mockResolvedValueOnce({ id: 'url-submission-id' } as never)
+
+        await expect(createChallengeUrlSubmission(
+            'challenge-id',
+            '123',
+            'CONTEST_SUBMISSION',
+            '  https://deliverables.example.com/member/result  ',
+            controller.signal,
+        ))
+            .resolves.toEqual({ id: 'url-submission-id' })
+
+        expect(post)
+            .toHaveBeenCalledWith(
+                'https://api.example/v6/submissions',
+                {
+                    challengeId: 'challenge-id',
+                    memberId: '123',
+                    type: 'CONTEST_SUBMISSION',
+                    url: 'https://deliverables.example.com/member/result',
+                },
+                { signal: controller.signal },
+            )
+        expect(initMock)
+            .not.toHaveBeenCalled()
+    })
+
+    it('does not create an already-cancelled URL submission', async () => {
+        const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
+        const controller = new AbortController()
+        post.mockClear()
+        controller.abort()
+
+        await expect(createChallengeUrlSubmission(
+            'challenge-id',
+            '123',
+            'CONTEST_SUBMISSION',
+            'https://deliverables.example.com/member/result',
+            controller.signal,
+        ))
+            .rejects.toMatchObject({ name: 'AbortError' })
+        expect(post)
+            .not.toHaveBeenCalled()
     })
 
     it('requests only the latest submission per member for the main table', async () => {
@@ -545,6 +1442,45 @@ describe('opportunities service normalization', () => {
             )
     })
 
+    it('loads AI workflow runs for the encoded member submission', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const runs = [{
+            id: 'workflow-run',
+            status: 'SUCCESS',
+            submissionId: 'submission/id',
+            workflowId: 'workflow-id',
+        }]
+        get.mockResolvedValueOnce(runs)
+
+        await expect(getChallengeSubmissionAiWorkflowRuns('submission/id'))
+            .resolves.toEqual(runs)
+        expect(get)
+            .toHaveBeenLastCalledWith(
+                'https://api.example/v6/workflows/runs?submissionId=submission%2Fid',
+            )
+    })
+
+    it('loads supported Review API artifact envelopes and downloads an encoded artifact', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const getBlob = xhrGetBlobAsync as jest.MockedFunction<typeof xhrGetBlobAsync>
+        const blob = new Blob(['artifact'], { type: 'application/zip' })
+        get.mockResolvedValueOnce({ data: { artifacts: [' scorer output ', '', 123] } })
+        getBlob.mockResolvedValueOnce(blob)
+
+        await expect(getChallengeSubmissionArtifacts('submission/id'))
+            .resolves.toEqual(['scorer output'])
+        expect(get)
+            .toHaveBeenLastCalledWith(
+                'https://api.example/v6/submissions/submission%2Fid/artifacts',
+            )
+        await expect(downloadChallengeSubmissionArtifact('submission/id', 'result/file.zip'))
+            .resolves.toBe(blob)
+        expect(getBlob)
+            .toHaveBeenLastCalledWith(
+                'https://api.example/v6/submissions/submission%2Fid/artifacts/result%2Ffile.zip/download',
+            )
+    })
+
     it('deletes only the encoded submission selected by My Submissions', async () => {
         const remove = xhrDeleteAsync as jest.MockedFunction<typeof xhrDeleteAsync>
         remove.mockResolvedValueOnce(undefined)
@@ -559,18 +1495,18 @@ describe('opportunities service normalization', () => {
         const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
         get
             .mockResolvedValueOnce({
-                data: [{ id: 'older', submittedDate: '2026-06-01T00:00:00.000Z' }],
+                data: [{ id: 'older', memberId: '123', submittedDate: '2026-06-01T00:00:00.000Z' }],
                 meta: { page: 1, perPage: 200, totalCount: 2, totalPages: 2 },
             })
             .mockResolvedValueOnce({
-                data: [{ id: 'newer', submittedDate: '2026-06-02T00:00:00.000Z' }],
+                data: [{ id: 'newer', memberId: '123', submittedDate: '2026-06-02T00:00:00.000Z' }],
                 meta: { page: 2, perPage: 200, totalCount: 2, totalPages: 2 },
             })
 
         await expect(getChallengeSubmissionHistory('challenge', '123', 'CONTEST_SUBMISSION'))
             .resolves.toEqual([
-                { id: 'newer', submittedDate: '2026-06-02T00:00:00.000Z' },
-                { id: 'older', submittedDate: '2026-06-01T00:00:00.000Z' },
+                { id: 'newer', memberId: '123', submittedDate: '2026-06-02T00:00:00.000Z' },
+                { id: 'older', memberId: '123', submittedDate: '2026-06-01T00:00:00.000Z' },
             ])
         expect(get)
             .toHaveBeenCalledWith(
@@ -582,6 +1518,23 @@ describe('opportunities service normalization', () => {
                 'https://api.example/v6/submissions?challengeId=challenge&memberId=123&page=2&perPage=200'
                 + '&sortBy=submittedDate&orderBy=desc&type=CONTEST_SUBMISSION',
             )
+    })
+
+    it('preserves a latest-only member history response for an ordinary viewer', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockResolvedValueOnce({
+            data: [{ id: 'latest-visible', memberId: '456', submittedDate: '2026-06-03T00:00:00.000Z' }],
+            meta: { page: 1, perPage: 200, totalCount: 1, totalPages: 1 },
+        })
+
+        await expect(getChallengeSubmissionHistory('challenge', '456', 'CONTEST_SUBMISSION'))
+            .resolves.toEqual([{
+                id: 'latest-visible',
+                memberId: '456',
+                submittedDate: '2026-06-03T00:00:00.000Z',
+            }])
+        expect(get)
+            .toHaveBeenCalledTimes(1)
     })
 
     it('loads every Marathon Match review-summation page for table scores and dashboard', async () => {
@@ -666,10 +1619,15 @@ describe('opportunities service normalization', () => {
                 totalPages: 2,
             })
         expect(get)
-            .toHaveBeenCalledWith('https://api.example/v6/resource-roles')
+            .toHaveBeenCalledWith(
+                'https://api.example/v6/resource-roles',
+                undefined,
+                { signal: undefined, timeout: undefined },
+            )
         expect(globalGet)
             .toHaveBeenLastCalledWith(
-                'https://api.example/v6/resources?challengeId=challenge&page=2&perPage=20&roleId=submitter-role',
+                'https://api.example/v6/resources?challengeId=challenge&page=2&perPage=20&roleId=submitter-role'
+                + '&sortBy=created&sortOrder=desc',
             )
     })
 
@@ -714,6 +1672,95 @@ describe('opportunities service normalization', () => {
             .resolves.toBeUndefined()
     })
 
+    it('accepts any exact caller-owned challenge resource for member forum access', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockResolvedValueOnce([
+            { id: 'reviewer-role', name: 'Reviewer' },
+            { id: 'copilot-role', name: 'Copilot' },
+        ])
+        globalGet
+            .mockResolvedValueOnce({
+                data: [{
+                    challengeId: 'challenge',
+                    id: 'reviewer-resource',
+                    memberId: '123',
+                    roleId: 'reviewer-role',
+                }, {
+                    challengeId: 'challenge',
+                    id: 'copilot-resource',
+                    memberId: '123',
+                    roleId: 'copilot-role',
+                }],
+                headers: { get: () => undefined },
+            })
+            .mockResolvedValueOnce({
+                data: [{
+                    challengeId: 'another-challenge',
+                    id: 'stale-resource',
+                    memberId: '123',
+                    roleId: 'copilot-role',
+                }],
+                headers: { get: () => undefined },
+            })
+
+        await expect(getChallengeMemberResource('challenge', '123'))
+            .resolves.toMatchObject({
+                id: 'copilot-resource',
+                roleId: 'copilot-role',
+                roleName: 'Copilot',
+            })
+        expect(get)
+            .toHaveBeenCalledWith('https://api.example/v6/resource-roles')
+        await expect(getChallengeMemberResource('challenge', '123'))
+            .resolves.toBeUndefined()
+        expect(globalGet)
+            .toHaveBeenLastCalledWith(
+                'https://api.example/v6/resources?challengeId=challenge&page=1&perPage=100&memberId=123',
+            )
+    })
+
+    it('preserves ordinary forum membership when legacy role enrichment fails', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockResolvedValueOnce({
+            data: [{
+                challengeId: 'challenge',
+                id: 'member-resource',
+                memberId: '123',
+                roleId: 'reviewer-role',
+            }],
+            headers: { get: () => undefined },
+        })
+        get.mockRejectedValueOnce(new Error('Resource Roles unavailable'))
+
+        await expect(getChallengeMemberResource('challenge', '123'))
+            .resolves.toEqual({
+                challengeId: 'challenge',
+                id: 'member-resource',
+                memberId: '123',
+                roleId: 'reviewer-role',
+            })
+    })
+
+    it('loads all Submitter challenge IDs used by public competition cards', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get
+            .mockResolvedValueOnce([{ id: 'submitter-role', name: 'Submitter' }])
+            .mockResolvedValueOnce(['challenge-a', 'challenge-a', 'challenge-b'])
+
+        await expect(getMemberChallengeRegistrationIds('123'))
+            .resolves.toEqual(['challenge-a', 'challenge-b'])
+
+        const url = new URL(String(get.mock.calls.at(-1)?.[0]))
+        expect(url.pathname)
+            .toBe('/v6/resources/123/challenges')
+        expect(url.searchParams.get('resourceRoleId'))
+            .toBe('submitter-role')
+        expect(url.searchParams.get('useScroll'))
+            .toBe('true')
+    })
+
     it('unregisters through Resource API\'s body-based Submitter contract', async () => {
         const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
         const request = xhrRequestAsync as jest.MockedFunction<typeof xhrRequestAsync>
@@ -735,11 +1782,8 @@ describe('opportunities service normalization', () => {
             })
     })
 
-    it('globally filters and pages My competitions in one role-aware Challenge API request', async () => {
-        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+    it('globally filters and pages all member-role competitions in one Challenge API request', async () => {
         const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
-        const submitterRoleId = '2425bb20-9a2c-4316-9f85-8b24f9ce43b8'
-        get.mockResolvedValueOnce([{ id: submitterRoleId, name: 'Submitter' }])
         globalGet.mockResolvedValueOnce({
             data: [{ id: 'challenge-b', name: 'Design challenge' }],
             headers: {
@@ -775,7 +1819,7 @@ describe('opportunities service normalization', () => {
         expect(requestUrl.searchParams.get('memberId'))
             .toBe('123')
         expect(requestUrl.searchParams.get('resourceRoleId'))
-            .toBe(submitterRoleId)
+            .toBeNull()
         expect(requestUrl.searchParams.get('search'))
             .toBe('design')
         expect(requestUrl.searchParams.getAll('status'))
@@ -794,35 +1838,211 @@ describe('opportunities service normalization', () => {
             .toHaveBeenCalledTimes(1)
     })
 
+    it('hydrates completed-card winners with real Members API handles and photos', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockResolvedValueOnce({
+            data: [{
+                id: 'completed-challenge',
+                name: 'Completed challenge',
+                status: 'COMPLETED',
+                winners: [
+                    { handle: 'legacy-first', placement: 1, userId: '101' },
+                    { handle: 'second', placement: 2, userId: '202' },
+                ],
+            }],
+            headers: { get: () => undefined },
+        })
+        get.mockResolvedValueOnce([{
+            handle: 'current-first',
+            photoURL: 'https://images.example/101.png',
+            userId: '101',
+        }])
+
+        const page = await getOpportunityPage('competitions', {
+            page: 1,
+            perPage: 10,
+            statuses: ['COMPLETED'],
+        })
+
+        expect(page.items[0].winners)
+            .toEqual([
+                {
+                    handle: 'current-first',
+                    photoURL: 'https://images.example/101.png',
+                    placement: 1,
+                    userId: '101',
+                },
+                { handle: 'second', placement: 2, userId: '202' },
+            ])
+        const memberUrl = new URL(String(get.mock.calls.at(-1)?.[0]))
+        expect(memberUrl.pathname)
+            .toBe('/v6/members')
+        expect(memberUrl.searchParams.getAll('userIds[]'))
+            .toEqual(['101', '202'])
+    })
+
+    it('does not request winner profiles for a non-completed competition page', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const globalGet = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        globalGet.mockResolvedValueOnce({
+            data: [{
+                id: 'active-challenge',
+                name: 'Active challenge',
+                status: 'ACTIVE',
+                winners: [{ handle: 'provisional-entry', placement: 1, userId: '101' }],
+            }],
+            headers: { get: () => undefined },
+        })
+
+        await expect(getOpportunityPage('competitions', { page: 1, perPage: 10 }))
+            .resolves.toMatchObject({
+                items: [{ id: 'active-challenge' }],
+            })
+        expect(get)
+            .not.toHaveBeenCalled()
+    })
+
     it('resolves legacy challenge term references from v5 details', async () => {
         const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
-        get.mockResolvedValueOnce({
-            result: [{ agreeabilityType: 'Electronically-agreeable', id: 'term-uuid', text: '<p>Rules</p>' }],
-        })
+        get
+            .mockResolvedValueOnce({
+                result: [{ agreeabilityType: 'Electronically-agreeable', id: 'term-uuid', title: 'Rules' }],
+            })
+            .mockResolvedValueOnce({
+                agreed: true,
+                id: 'term-uuid',
+                text: '<p>Rules</p>',
+            })
 
         await expect(getChallengeTermDetails({ agreed: false, id: '123456', title: 'Rules' }))
             .resolves.toEqual({
                 agreeabilityType: 'Electronically-agreeable',
-                agreed: false,
+                agreed: true,
                 id: 'term-uuid',
                 text: '<p>Rules</p>',
                 title: 'Rules',
             })
+        expect(get)
+            .toHaveBeenNthCalledWith(
+                1,
+                'https://api.example/v5/terms?legacyId=123456',
+                undefined,
+                { signal: undefined, timeout: undefined },
+            )
+        expect(get)
+            .toHaveBeenNthCalledWith(
+                2,
+                'https://api.example/v5/terms/term-uuid',
+                undefined,
+                { signal: undefined, timeout: undefined },
+            )
     })
 
-    it('loads only terms assigned to the canonical Submitter resource role', async () => {
+    it('uses a unique cache-buster for authoritative challenge term status reads', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockClear()
+        get
+            .mockResolvedValueOnce({ agreed: false, id: 'nda' })
+            .mockResolvedValueOnce({ agreed: true, id: 'nda' })
+
+        await getChallengeTermDetails({ id: 'nda' }, { fresh: true })
+        await getChallengeTermDetails({ id: 'nda' }, { fresh: true })
+
+        const requestUrls = get.mock.calls.map(call => new URL(String(call[0])))
+        expect(requestUrls.map(url => url.origin + url.pathname))
+            .toEqual([
+                'https://api.example/v5/terms/nda',
+                'https://api.example/v5/terms/nda',
+            ])
+        const cacheBusters = requestUrls.map(url => url.searchParams.get('nocache'))
+        expect(cacheBusters[0])
+            .toMatch(/^\d+-\d+$/)
+        expect(cacheBusters[1])
+            .toMatch(/^\d+-\d+$/)
+        expect(cacheBusters[1])
+            .not.toBe(cacheBusters[0])
+    })
+
+    it('persists separate electronic agreement requests in caller order', async () => {
+        const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
+        post.mockClear()
+        post.mockResolvedValue(undefined)
+
+        await agreeToChallengeTerms([{ id: 'standard-terms' }])
+        await agreeToChallengeTerms([{ id: 'nda' }])
+
+        expect(post)
+            .toHaveBeenNthCalledWith(1, 'https://api.example/v5/terms/standard-terms/agree', {})
+        expect(post)
+            .toHaveBeenNthCalledWith(2, 'https://api.example/v5/terms/nda/agree', {})
+    })
+
+    it('loads only outstanding terms assigned to the canonical Submitter resource role', async () => {
         const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
         get
             .mockResolvedValueOnce([{ id: 'submitter-role', name: 'Submitter' }])
-            .mockResolvedValueOnce({ id: 'submitter-term', text: '<p>Rules</p>' })
+            .mockResolvedValueOnce({ agreed: false, id: 'submitter-term', text: '<p>Rules</p>' })
+            .mockResolvedValueOnce({ agreed: true, id: 'accepted-term', text: '<p>Signed</p>' })
 
         await expect(getChallengeSubmitterTermsDetails([
             { id: 'submitter-term', roleId: 'submitter-role' },
+            { id: 'accepted-term', roleId: 'submitter-role' },
             { id: 'reviewer-term', roleId: 'reviewer-role' },
         ]))
-            .resolves.toEqual([{ id: 'submitter-term', roleId: 'submitter-role', text: '<p>Rules</p>' }])
+            .resolves.toEqual([{
+                agreed: false,
+                id: 'submitter-term',
+                roleId: 'submitter-role',
+                text: '<p>Rules</p>',
+            }])
+        expect(get.mock.calls.map(call => call[0]))
+            .not.toContain('https://api.example/v5/terms/reviewer-term')
+    })
+
+    it('forwards cancellation and timeout controls through submitter term detail reads', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        const controller = new AbortController()
+        const requestConfig = { signal: controller.signal, timeout: 10_000 }
+        get
+            .mockResolvedValueOnce([{ id: 'submitter-role', name: 'Submitter' }])
+            .mockResolvedValueOnce({
+                result: [{ agreed: false, id: 'canonical-term', title: 'NDA' }],
+            })
+            .mockResolvedValueOnce({ agreed: false, id: 'canonical-term', text: '<p>NDA</p>' })
+
+        await expect(getChallengeSubmitterTermsDetails(
+            [{ id: '123456', roleId: 'submitter-role' }],
+            { signal: controller.signal, timeoutMs: 10_000 },
+        ))
+            .resolves.toEqual([{
+                agreed: false,
+                id: 'canonical-term',
+                roleId: 'submitter-role',
+                text: '<p>NDA</p>',
+                title: 'NDA',
+            }])
         expect(get)
-            .not.toHaveBeenCalledWith('https://api.example/v5/terms/reviewer-term')
+            .toHaveBeenNthCalledWith(
+                1,
+                'https://api.example/v6/resource-roles',
+                undefined,
+                requestConfig,
+            )
+        expect(get)
+            .toHaveBeenNthCalledWith(
+                2,
+                'https://api.example/v5/terms?legacyId=123456',
+                undefined,
+                requestConfig,
+            )
+        expect(get)
+            .toHaveBeenNthCalledWith(
+                3,
+                'https://api.example/v5/terms/canonical-term',
+                undefined,
+                requestConfig,
+            )
     })
 
     it('returns the Terms API DocuSign recipient view', async () => {
@@ -836,5 +2056,18 @@ describe('opportunities service normalization', () => {
                 returnUrl: 'https://topcoder-dev.com/opportunities',
                 templateId: 'template',
             })
+    })
+
+    it.each([
+        // eslint-disable-next-line no-script-url
+        'javascript:alert(document.domain)',
+        'data:text/html,<script>parent.postMessage({type:"DocuSign"},"*")</script>',
+        '/relative-recipient-view',
+    ])('rejects an unsafe Terms API DocuSign URL: %s', async recipientViewUrl => {
+        const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
+        post.mockResolvedValueOnce({ recipientViewUrl })
+
+        await expect(getChallengeTermDocuSignUrl('template', 'https://topcoder-dev.com/opportunities'))
+            .rejects.toThrow('Terms API returned an invalid DocuSign URL.')
     })
 })

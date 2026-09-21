@@ -28,6 +28,7 @@ import {
 } from '../../../../../lib/models'
 
 import {
+    getReviewContextLockReason,
     isAiReviewer,
     syncAiConfigReviewers,
 } from './reviewers-field.utils'
@@ -63,6 +64,13 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     const [activeTab, setActiveTab] = useState<ReviewTab>('human')
     const [isFullReviewExpanded, setIsFullReviewExpanded] = useState<boolean>(false)
     const [aiReviewMode, setAiReviewMode] = useState<AiReviewMode | undefined>()
+    /**
+     * Review mode currently selected in the AI review tab. It can differ from the persisted
+     * mode while the AI configuration autosave is still pending, so the manual-review
+     * requirement follows the selection instead of the last saved value.
+     */
+    const [selectedAiReviewMode, setSelectedAiReviewMode] = useState<AiReviewMode | undefined>()
+    const [aiInstantReview, setAiInstantReview] = useState<boolean>(false)
     const [hasLoadedAiConfig, setHasLoadedAiConfig] = useState<boolean>(false)
     const [reviewContextRequirementCount, setReviewContextRequirementCount] = useState<number | undefined>(undefined)
     const humanTabRef = useRef<HTMLDivElement>(null)
@@ -128,6 +136,8 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                     return
                 }
 
+                setAiInstantReview(config?.instantReview === true)
+
                 if (config?.mode) {
                     setAiReviewMode(config.mode)
                 }
@@ -169,11 +179,12 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
      */
     const showScreenerOnlyView = !!props.screenerOnly && !isFullReviewExpanded
     const showFullReviewToggle = !!props.screenerOnly && !!props.canConfigureFullReview
+    const effectiveAiReviewMode = selectedAiReviewMode ?? aiReviewMode
     const aiGatingManualReviewError = useMemo(
-        () => (!showScreenerOnlyView && aiReviewMode !== 'AI_ONLY' && humanReviewersCount === 0
+        () => (!showScreenerOnlyView && effectiveAiReviewMode !== 'AI_ONLY' && humanReviewersCount === 0
             ? 'Manual review configuration is required.'
             : undefined),
-        [aiReviewMode, humanReviewersCount, showScreenerOnlyView],
+        [effectiveAiReviewMode, humanReviewersCount, showScreenerOnlyView],
     )
 
     useEffect(() => {
@@ -194,6 +205,14 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     const hasSubmissions = useMemo(
         () => Number(numOfSubmissions || 0) > 0,
         [numOfSubmissions],
+    )
+    const reviewContextLockReason = useMemo(
+        () => getReviewContextLockReason({
+            hasSubmissions,
+            instantReview: aiInstantReview,
+            phases,
+        }),
+        [aiInstantReview, hasSubmissions, phases],
     )
     const handleTabChange = useCallback((tab: ReviewTab): void => {
         setActiveTab(tab)
@@ -259,6 +278,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     const handleAiConfigPersisted = useCallback(
         (config: AiReviewConfig): void => {
             setAiReviewMode(config.mode)
+            setAiInstantReview(config.instantReview === true)
             const currentReviewers = formContext.getValues('reviewers') as Reviewer[] | undefined
             let nextReviewers = syncAiConfigReviewers({
                 phases,
@@ -284,6 +304,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     )
     const handleAiConfigRemoved = useCallback(async (): Promise<void> => {
         setAiReviewMode(undefined)
+        setAiInstantReview(false)
         const currentReviewers = formContext.getValues('reviewers') as Reviewer[] | undefined
         const nextReviewers = (currentReviewers || []).filter(reviewer => !isAiReviewer(reviewer))
 
@@ -441,7 +462,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                                 id='reviewers-human-panel'
                                 role='tabpanel'
                             >
-                                {aiReviewMode === 'AI_ONLY' && (
+                                {effectiveAiReviewMode === 'AI_ONLY' && (
                                     <p className={styles.aiOnlyNotice}>
                                         No manual reviewers are needed in AI Only mode.
                                     </p>
@@ -466,6 +487,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                                     onConfigPersisted={handleAiConfigPersisted}
                                     onConfigRemoved={handleAiConfigRemoved}
                                     onConfigSaveControllerReady={props.onConfigSaveControllerReady}
+                                    onSelectedModeChange={setSelectedAiReviewMode}
                                     reviewers={reviewerRows}
                                     trackId={trackId}
                                     typeId={typeId}
@@ -487,7 +509,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                                     challengeId={challengeId}
                                     challengeDescription={formContext.getValues('description')}
                                     challengeStatus={challengeStatus}
-                                    hasSubmissions={hasSubmissions}
+                                    lockReason={reviewContextLockReason}
                                     onRequirementCountChange={setReviewContextRequirementCount}
                                 />
                             </div>

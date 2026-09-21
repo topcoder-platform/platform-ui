@@ -14,7 +14,7 @@ import AsyncSelect from 'react-select/async'
 import classNames from 'classnames'
 
 import { InputWrapper } from '../input-wrapper'
-import { IconSolid } from '../../../../svgs'
+import { IconOutline, IconSolid } from '../../../../svgs'
 
 import styles from './InputMultiselect.module.scss'
 
@@ -53,19 +53,26 @@ export interface InputMultiselectProps {
     // Custom method to filter whether an option should be displayed in the menu
     readonly filterOption?: SelectInstance['filterOption']
     readonly openMenuOnClick?: boolean
+    readonly plainRemoveIcon?: boolean
 }
 
-const MultiValueRemove: FC = (props: any) => (
-    <components.MultiValueRemove {...props}>
-        {props.data.verified ? (
-            <span title='Topcoder Verified'>
-                <IconSolid.CheckCircleIcon />
-            </span>
-        ) : (
-            <IconSolid.XCircleIcon />
-        )}
-    </components.MultiValueRemove>
-)
+function createMultiValueRemove(usePlainIcon?: boolean): FC {
+    const MultiValueRemoveComponent: FC = (removeProps: any) => (
+        <components.MultiValueRemove {...removeProps}>
+            {usePlainIcon
+                ? <IconOutline.XIcon aria-hidden />
+                : removeProps.data.verified
+                    ? (
+                        <span title='Topcoder Verified'>
+                            <IconSolid.CheckCircleIcon />
+                        </span>
+                    )
+                    : <IconSolid.XCircleIcon />}
+        </components.MultiValueRemove>
+    )
+
+    return MultiValueRemoveComponent
+}
 
 const Input: FC = (props: any) => {
     const placeholder = props.hasValue && props.selectProps.isSearchable
@@ -122,6 +129,11 @@ const InputMultiselect: FC<InputMultiselectProps> = props => {
     const isSearchable = useMemo((): boolean => (
         !props.limit || (props.value?.length as number) < props.limit
     ), [props.limit, props.value?.length])
+
+    const MultiValueRemove = useMemo(
+        () => createMultiValueRemove(props.plainRemoveIcon),
+        [props.plainRemoveIcon],
+    )
 
     // scroll to bottom when the value is loaded / updated
     useEffect(() => {

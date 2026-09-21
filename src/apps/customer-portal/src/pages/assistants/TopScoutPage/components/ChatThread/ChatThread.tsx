@@ -1,5 +1,5 @@
 import { DefaultChatTransport, UIMessage } from 'ai'
-import { FC, useCallback, useMemo } from 'react'
+import { FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import classNames from 'classnames'
 
 import { useChat } from '@ai-sdk/react'
@@ -13,7 +13,13 @@ import {
 import { useAISDKRuntime } from '@assistant-ui/react-ai-sdk'
 import { IconOutline } from '~/libs/ui'
 
-import { authFetch, CHAT_ENDPOINT_URL } from '../../lib'
+import {
+    authFetch,
+    CHAT_ENDPOINT_URL,
+    useStreamRecovery,
+    UseStreamRecoveryResult,
+    withStallWatchdog,
+} from '../../lib'
 
 import MarkdownText from './MarkdownText'
 import styles from './ChatThread.module.scss'
@@ -151,7 +157,7 @@ const ChatThread: FC<ChatThreadProps> = props => {
                     thread: props.threadId,
                 },
             },
-            fetch: authFetch,
+            fetch: withStallWatchdog(authFetch),
         }),
         [props.resourceId, props.threadId],
     )
@@ -166,6 +172,32 @@ const ChatThread: FC<ChatThreadProps> = props => {
         onFinish: handleFinish,
         transport,
     })
+
+    const handleRecovered = useCallback((messages: UIMessage[]) => {
+        chat.setMessages(messages)
+        props.onThreadActivity?.()
+    }, [chat, props.onThreadActivity])
+
+    const { startRecovery, status: recoveryStatus }: UseStreamRecoveryResult
+        = useStreamRecovery(props.threadId, handleRecovered)
+
+    // `useChat`'s `onError` fires once per request, so re-wiring it here as
+    // a plain option risks missing an error that lands before this render
+    // commits. Watching `chat.error` instead catches it regardless of when
+    // it's set, and `handledErrorRef` stops a still-set error from
+    // re-triggering recovery on unrelated re-renders.
+    const handledErrorRef = useRef<Error | undefined>(undefined)
+
+    useEffect(() => {
+        if (chat.error && chat.error !== handledErrorRef.current) {
+            handledErrorRef.current = chat.error
+            // Mirrors `toChatUIMessages`' empty-parts filter, so this lines
+            // up with what the recovered thread history will look like.
+            const baselineMessageCount = chat.messages.filter(message => message.parts.length > 0).length
+
+            startRecovery(baselineMessageCount)
+        }
+    }, [chat.error, chat.messages, startRecovery])
 
     const runtime = useAISDKRuntime(chat)
 
@@ -203,6 +235,19 @@ const ChatThread: FC<ChatThreadProps> = props => {
                         }}
                     />
                 </ThreadPrimitive.Viewport>
+
+                {recoveryStatus === 'recovering' && (
+                    <div className={styles.recoveryBanner}>
+                        <ThinkingDots className={styles.recoveryDots} />
+                        Still working on that — reconnecting to fetch the response…
+                    </div>
+                )}
+
+                {recoveryStatus === 'timed-out' && (
+                    <div className={classNames(styles.recoveryBanner, styles.recoveryBannerError)}>
+                        This is taking longer than expected. Refresh the page to check whether a response arrived.
+                    </div>
+                )}
 
                 <ComposerPrimitive.Root className={styles.composer}>
                     <ComposerPrimitive.Input

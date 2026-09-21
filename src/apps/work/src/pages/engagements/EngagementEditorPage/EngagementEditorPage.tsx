@@ -3,8 +3,11 @@
 import {
     FC,
     useContext,
+    useEffect,
+    useMemo,
+    useState,
 } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 
 import { PageWrapper } from '~/apps/review/src/lib'
 
@@ -19,11 +22,18 @@ import {
     useFetchEngagement,
     useFetchProject,
 } from '../../../lib/hooks'
+import type {
+    EngagementLeadPrefill,
+} from '../../../lib/models/EngagementLead.model'
 import {
     WorkAppContextModel,
 } from '../../../lib/models'
 import {
+    fetchEngagementLeadPrefill,
+} from '../../../lib/services/engagement-leads.service'
+import {
     canCreateEngagement,
+    extractErrorMessage,
 } from '../../../lib/utils'
 
 import {
@@ -42,9 +52,16 @@ function getErrorMessage(error: Error | undefined): string {
 function getPageTitle(
     isEditMode: boolean,
     projectName: string | undefined,
+    fromLead: boolean,
 ): string {
     if (isEditMode) {
         return 'Edit Engagement'
+    }
+
+    if (fromLead) {
+        return projectName
+            ? `Create Engagement from Lead (${projectName})`
+            : 'Create Engagement from Lead'
     }
 
     if (projectName) {
@@ -56,9 +73,11 @@ function getPageTitle(
 
 export const EngagementEditorPage: FC = () => {
     const params: Readonly<{ engagementId?: string; projectId?: string }> = useParams<'engagementId' | 'projectId'>()
+    const [searchParams] = useSearchParams()
 
     const projectId = params.projectId || ''
     const engagementId = params.engagementId
+    const leadId = searchParams.get('leadId') || undefined
 
     const isEditMode = !!engagementId
 
@@ -70,7 +89,41 @@ export const EngagementEditorPage: FC = () => {
     const engagementResult = useFetchEngagement(canManage ? engagementId : undefined)
     const projectResult = useFetchProject(canManage ? projectId || undefined : undefined)
 
-    const pageTitle = getPageTitle(isEditMode, projectResult.project?.name)
+    const [leadPrefill, setLeadPrefill] = useState<EngagementLeadPrefill | undefined>(undefined)
+    const [leadPrefillLoading, setLeadPrefillLoading] = useState<boolean>(Boolean(leadId && !isEditMode))
+    const [leadPrefillError, setLeadPrefillError] = useState<string | undefined>(undefined)
+
+    useEffect(() => {
+        if (!leadId || isEditMode || !canManage) {
+            setLeadPrefill(undefined)
+            setLeadPrefillLoading(false)
+            setLeadPrefillError(undefined)
+            return
+        }
+
+        setLeadPrefillLoading(true)
+        setLeadPrefillError(undefined)
+
+        fetchEngagementLeadPrefill(leadId)
+            .then(response => {
+                setLeadPrefill(response)
+            })
+            .catch((err: unknown) => {
+                setLeadPrefillError(
+                    extractErrorMessage(err, 'Unable to load engagement lead prefill data.'),
+                )
+            })
+            .finally(() => {
+                setLeadPrefillLoading(false)
+            })
+    }, [canManage, isEditMode, leadId])
+
+    const pageTitle = useMemo(
+        () => getPageTitle(isEditMode, projectResult.project?.name, Boolean(leadId)),
+        [isEditMode, leadId, projectResult.project?.name],
+    )
+
+    const isLoading = engagementResult.isLoading || leadPrefillLoading
 
     return (
         <PageWrapper
@@ -83,11 +136,15 @@ export const EngagementEditorPage: FC = () => {
                     ? <ErrorMessage message='You need Admin or Talent Manager role to view engagements.' />
                     : undefined}
 
-                {canManage && engagementResult.isLoading
+                {canManage && isLoading
                     ? <LoadingSpinner />
                     : undefined}
 
-                {canManage && !engagementResult.isLoading && engagementResult.isError
+                {canManage && leadPrefillError
+                    ? <ErrorMessage message={leadPrefillError} />
+                    : undefined}
+
+                {canManage && !isLoading && engagementResult.isError
                     ? (
                         <ErrorMessage
                             message={getErrorMessage(engagementResult.error)}
@@ -99,12 +156,14 @@ export const EngagementEditorPage: FC = () => {
                     )
                     : undefined}
 
-                {canManage && !engagementResult.isLoading && !engagementResult.isError
+                {canManage && !isLoading && !engagementResult.isError && !leadPrefillError
                     ? (
                         <EngagementEditorForm
                             canEditParentProject={canEditParentProject}
                             engagement={engagementResult.engagement}
                             isEditMode={isEditMode}
+                            leadId={leadId}
+                            leadPrefill={leadPrefill}
                             projectId={projectId}
                             projectName={projectResult.project?.name}
                         />

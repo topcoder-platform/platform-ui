@@ -47,6 +47,7 @@ interface InputSkillSelectorProps {
     readonly inputRef?: Ref<any>
     // Custom method to filter whether an option should be displayed in the menu
     readonly filterOption?: SelectInstance['filterOption']
+    readonly plainRemoveIcon?: boolean
 }
 
 const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
@@ -68,6 +69,7 @@ const InputSkillSelector: FC<InputSkillSelectorProps> = props => (
         additionalPlaceholder={props.additionalPlaceholder}
         inputRef={props.inputRef}
         filterOption={props.filterOption}
+        plainRemoveIcon={props.plainRemoveIcon}
     />
 )
 

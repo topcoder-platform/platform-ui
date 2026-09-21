@@ -1,0 +1,60 @@
+@import '@libs/ui/styles/2026/tokens';
+
+.body {
+    display: block;
+}
+
+.state {
+    padding: 40px 0;
+    min-height: 140px;
+    position: relative;
+}
+
+.error {
+    border: 1px solid $tc-2026-danger;
+    border-radius: $tc-2026-radius-md;
+    color: $tc-2026-danger;
+    padding: 16px;
+}
+
+.sectionTitle {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: $tc-2026-muted;
+}
+
+.description {
+    margin-top: 8px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.details {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.detail dt {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: $tc-2026-muted;
+}
+
+.detail dd {
+    margin-top: 4px;
+    overflow-wrap: anywhere;
+}
+
+.link {
+    display: inline-block;
+    margin-top: 24px;
+    font-weight: 700;
+    color: $tc-2026-teal;
+    text-decoration: underline;
+}

@@ -14,40 +14,52 @@ interface ProjectShowcaseCardProps {
     post: ProjectShowcasePost
 }
 
-const ProjectShowcaseCard: FC<ProjectShowcaseCardProps> = props => (
-    <article className={styles.wrap}>
-        <div className={styles.tags}>
-            {props.post.categories.map(category => (
-                <span className={classNames(styles.tag, toClassName(category.name))} id={category.id}>
-                    {category.name}
-                </span>
-            ))}
-        </div>
+const ProjectShowcaseCard: FC<ProjectShowcaseCardProps> = props => {
+    const industries = props.post.industries.map(item => item.name)
+        .join(', ')
+    const highlights = [props.post.type, props.post.customer, props.post.currentStatus]
+        .map(value => value?.trim())
+        .filter(Boolean)
+        .join(' · ')
+    const summary = props.post.content || props.post.challenge || props.post.businessImpact || ''
 
-        <h3 className={styles.title} title={props.post.title || 'Untitled'}>
-            {props.post.title || 'Untitled'}
-        </h3>
-        <div className={styles.taxonomy}>
-            <IconOutline.OfficeBuildingIcon className={classNames('icon-lg', styles.industryIcon)} />
-            <span>
-                {props.post.industries.map(item => item.name)
-                    .join(', ') || '—'}
-            </span>
-        </div>
+    return (
+        <article className={styles.wrap}>
+            <div className={styles.tags}>
+                {props.post.categories.map(category => (
+                    <span className={classNames(styles.tag, toClassName(category.name))} id={category.id}>
+                        {category.name}
+                    </span>
+                ))}
+            </div>
 
-        <div className={styles.content}>
-            {renderRichTextToPlainText(props.post.content || '')}
-        </div>
+            <h3 className={styles.title} title={props.post.title || 'Untitled'}>
+                {props.post.title || 'Untitled'}
+            </h3>
+            {highlights && <div className={styles.highlights}>{highlights}</div>}
+            {industries && (
+                <div className={styles.taxonomy}>
+                    <IconOutline.OfficeBuildingIcon className={classNames('icon-lg', styles.industryIcon)} />
+                    <span>{industries}</span>
+                </div>
+            )}
 
-        <div className={styles.button}>
-            <LinkButton
-                size='sm'
-                label='View details'
-                secondary
-                to={getPostRoute(props.post.projectId as string, props.post.id)}
-            />
-        </div>
-    </article>
-)
+            {summary && (
+                <div className={styles.content}>
+                    {renderRichTextToPlainText(summary)}
+                </div>
+            )}
+
+            <div className={styles.button}>
+                <LinkButton
+                    size='sm'
+                    label='View details'
+                    secondary
+                    to={getPostRoute(props.post.projectId as string, props.post.id)}
+                />
+            </div>
+        </article>
+    )
+}
 
 export default ProjectShowcaseCard

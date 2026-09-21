@@ -19,6 +19,7 @@ import {
 import {
     AiReviewConfig,
     AiReviewConfigWorkflow,
+    AiReviewMode,
     AiReviewTemplate,
     Reviewer,
     Workflow,
@@ -60,6 +61,7 @@ interface AiReviewTabProps {
     typeId?: string
     onConfigPersisted?: (config: AiReviewConfig) => void
     onConfigSaveControllerReady?: (controller: AiReviewConfigSaveController | undefined) => void
+    onSelectedModeChange?: (mode: AiReviewMode | undefined) => void
 }
 
 type ConfigurationMode = 'manual' | 'template'
@@ -494,6 +496,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
     const readOnly = props.hasSubmissions === true
     const onConfigPersisted = props.onConfigPersisted
     const onConfigSaveControllerReady = props.onConfigSaveControllerReady
+    const onSelectedModeChange = props.onSelectedModeChange
     const reviewers = props.reviewers
     const trackId = props.trackId
     const typeId = props.typeId
@@ -1092,6 +1095,21 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         await persistConfiguration()
             .catch(() => undefined)
     }, [hasPendingConfigurationChanges, persistConfiguration])
+
+    /*
+     * The manual-review requirement in the review section depends on the review mode the
+     * copilot has currently selected, so the selection is reported immediately instead of
+     * waiting for the debounced autosave to persist it.
+     */
+    useEffect(() => {
+        onSelectedModeChange?.(configurationMode
+            ? configuration.mode || 'AI_GATING'
+            : undefined)
+    }, [
+        configuration.mode,
+        configurationMode,
+        onSelectedModeChange,
+    ])
 
     useEffect(() => {
         onConfigSaveControllerReady?.({

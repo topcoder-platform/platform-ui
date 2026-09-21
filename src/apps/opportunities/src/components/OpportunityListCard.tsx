@@ -1,7 +1,14 @@
-/* eslint-disable ordered-imports/ordered-imports */
-import { FC, ReactNode, SVGProps } from 'react'
+/* eslint-disable ordered-imports/ordered-imports, react/jsx-no-bind */
+import {
+    FC,
+    ReactNode,
+    SVGProps,
+    useState,
+} from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
+import { EnvironmentConfig } from '~/config'
+import { absoluteRootRoute as copilotAbsoluteRootRoute } from '~/apps/copilots'
 import { IconOutline, Tooltip } from '~/libs/ui'
 
 import {
@@ -14,13 +21,16 @@ import {
     OpportunityView,
     ReviewOpportunity,
 } from '../models'
+import { engagementOpportunityState } from '../utils/engagement-status.utils'
 
+import { ReactComponent as ApplicationWaitlistedIcon } from '../assets/application-waitlisted.svg'
 import { ReactComponent as ChallengeTypeIcon } from '../assets/challenge-type.svg'
+import { ReactComponent as CompletedIcon } from '../assets/check-double.svg'
 import { ReactComponent as First2FinishTypeIcon } from '../assets/first2finish-type.svg'
 import { ReactComponent as MarathonTypeIcon } from '../assets/marathon-type.svg'
 import { ReactComponent as MedalFirstIcon } from '../assets/medal-1.svg'
-import { ReactComponent as MedalSecondIcon } from '../assets/medal-2.svg'
-import { ReactComponent as MedalThirdIcon } from '../assets/medal-3.svg'
+import { ReactComponent as MedalSecondIcon } from '../assets/prize-medal-2.svg'
+import { ReactComponent as MedalThirdIcon } from '../assets/prize-medal-3.svg'
 import { ReactComponent as CalendarMetricIcon } from '../assets/metric-calendar.svg'
 import { ReactComponent as HoursMetricIcon } from '../assets/metric-hours.svg'
 import { ReactComponent as PaymentMetricIcon } from '../assets/metric-payment.svg'
@@ -43,21 +53,40 @@ import {
     challengePlacementPrizes,
     challengeRegistrationIsOpen,
     formatChallengeTimeLeft,
+    FUN_CHALLENGE_PRIZE_LABEL,
 } from './challenge-card.utils'
+import {
+    reviewFirstSubmissionPayment,
+    reviewOpportunityIsWaitlisted,
+    reviewOpportunityLabels,
+} from '../utils/review-opportunity.utils'
+import {
+    ChallengeDetailTab,
+    challengeDetailPath,
+} from '../utils/challenge-detail-route.utils'
 import styles from './OpportunityListCard.module.scss'
 
 interface OpportunityListCardProps {
     applicationState?: string
     item: OpportunityItem
     kind: OpportunityKind
+    memberApplied?: boolean
+    onSkillClick?: (skill: string) => void
     registered?: boolean
     view?: OpportunityView
 }
 
 interface CompetitionListCardProps {
     item: ChallengeOpportunity
+    onSkillClick?: (skill: string) => void
     registered?: boolean
     view?: OpportunityView
+}
+
+interface SkillFilterTagProps {
+    className?: string
+    onSelect?: (skill: string) => void
+    skill: string
 }
 
 interface CardViewModel {
@@ -76,6 +105,20 @@ interface ChallengeTypePresentation {
     label: string
 }
 
+interface CompetitionMetric {
+    icon: ReactNode
+    label: string
+    tab: ChallengeDetailTab
+    value: string
+}
+
+type ChallengeWinner = NonNullable<ChallengeOpportunity['winners']>[number]
+
+interface CompetitionWinnerAvatarProps {
+    placement: number
+    winner: ChallengeWinner
+}
+
 const challengeTypePresentations: Record<string, ChallengeTypePresentation> = {
     challenge: { icon: ChallengeTypeIcon, label: 'Challenge' },
     first2finish: { icon: First2FinishTypeIcon, label: 'First 2 Finish' },
@@ -84,6 +127,66 @@ const challengeTypePresentations: Record<string, ChallengeTypePresentation> = {
 }
 
 const medalIcons: Array<FC<SVGProps<SVGSVGElement>>> = [MedalFirstIcon, MedalSecondIcon, MedalThirdIcon]
+
+/**
+ * Renders one API-backed winner photo with its existing placement medal. A
+ * failed or unavailable member photo falls back to the winner's real handle
+ * initial without inventing identity artwork.
+ *
+ * @param props Challenge API winner, enriched Members API photo, and placement.
+ * @returns compact winner avatar used by completed competition cards.
+ * @throws Does not throw; image failures switch to an initial fallback.
+ */
+const CompetitionWinnerAvatar: FC<CompetitionWinnerAvatarProps> = props => {
+    const [failedPhotoURL, setFailedPhotoURL] = useState<string>()
+    const handle = props.winner.handle?.trim() || String(props.winner.userId ?? 'Winner')
+    const photoURL = props.winner.photoURL
+    const showPhoto = !!photoURL && photoURL !== failedPhotoURL
+    const MedalIcon = medalIcons[props.placement - 1] ?? MedalThirdIcon
+
+    return (
+        <span className={styles.winnerAvatar} title={handle}>
+            <span aria-hidden='true' className={styles.winnerPhoto}>
+                {showPhoto
+                    ? <img alt='' onError={() => setFailedPhotoURL(photoURL)} src={photoURL} />
+                    : handle.charAt(0)
+                        .toUpperCase()}
+            </span>
+            <span aria-hidden='true' className={styles.winnerMedal}>
+                <MedalIcon />
+            </span>
+        </span>
+    )
+}
+
+/**
+ * Renders a card skill as a native filter control when the list supplies a
+ * selection callback.
+ *
+ * @param props skill label, optional styling, and list-filter callback.
+ * @returns interactive or presentational skill tag.
+ * @throws Does not throw.
+ */
+const SkillFilterTag: FC<SkillFilterTagProps> = props => {
+    if (props.onSelect) {
+        return (
+            <button
+                aria-label={`Filter by ${props.skill}`}
+                className={classNames(props.className, styles.filterableSkill)}
+                onClick={() => props.onSelect?.(props.skill)}
+                type='button'
+            >
+                {props.skill}
+            </button>
+        )
+    }
+
+    return (
+        <span className={props.className}>
+            {props.skill}
+        </span>
+    )
+}
 
 /**
  * Formats a date for compact card metadata.
@@ -192,6 +295,26 @@ function enumLabel(value?: string): string | undefined {
 function applicationState(applied: boolean, open: boolean): string {
     if (applied) return 'Applied'
     return open ? 'Open for application' : 'Application closed'
+}
+
+/**
+ * Converts the caller's Review API application status to its authored card
+ * label instead of reducing terminal decisions to the generic Applied state.
+ *
+ * @param item Review API opportunity containing caller-scoped applications.
+ * @param open whether the review opportunity still accepts applications.
+ * @returns Approved, Rejected, Cancelled, Waitlisted, Applied, or the public availability state.
+ * @throws Does not throw.
+ */
+function reviewApplicationState(item: ReviewOpportunity, open: boolean): string {
+    if (reviewOpportunityIsWaitlisted(item)) return 'Waitlisted'
+    const statusKey = challengeCatalogKey(item.myApplications?.[0]?.status)
+    const terminalLabels: Record<string, string> = {
+        approved: 'Approved',
+        cancelled: 'Cancelled',
+        rejected: 'Rejected',
+    }
+    return terminalLabels[statusKey] ?? applicationState(!!item.myApplications?.length, open)
 }
 
 /**
@@ -318,9 +441,9 @@ function challengeSkillLabels(item: ChallengeOpportunity): string[] {
 }
 
 /**
- * Returns the scoped CSS class for a Challenge API track pill.
+ * Returns the shared Figma foreground and background palette for an opportunity track pill.
  *
- * @param trackKey normalized catalog track key.
+ * @param trackKey normalized owning-API track key, including DEV and QA aliases.
  * @returns matching Figma track color class or the neutral fallback class.
  * @throws Does not throw.
  */
@@ -330,7 +453,9 @@ function challengeTrackClass(trackKey: string): string {
         artificialintelligence: styles.artificialIntelligenceBadge,
         datascience: styles.dataScienceBadge,
         design: styles.designBadge,
+        dev: styles.developmentBadge,
         development: styles.developmentBadge,
+        qa: styles.qualityAssuranceBadge,
         qualityassurance: styles.qualityAssuranceBadge,
     }
     return trackClasses[trackKey] ?? styles.competitionBadge
@@ -340,10 +465,12 @@ function challengeTrackClass(trackKey: string): string {
  * Renders the visible placement prizes from the Challenge API PLACEMENT set.
  *
  * @param prizes placement prizes with stable source-order positions.
+ * @param funChallenge whether leaderboard scoring replaces individual prizes.
  * @returns Figma medal/value row with an overflow count when required.
  * @throws Does not throw.
  */
-function renderChallengePrizes(prizes: ChallengePlacementPrize[]): ReactNode {
+function renderChallengePrizes(prizes: ChallengePlacementPrize[], funChallenge: boolean): ReactNode {
+    if (funChallenge) return <span className={styles.prizeUnavailable}>{FUN_CHALLENGE_PRIZE_LABEL}</span>
     if (!prizes.length) return <span className={styles.prizeUnavailable}>Prize details coming soon</span>
 
     const visiblePrizes = prizes.slice(0, medalIcons.length)
@@ -367,12 +494,12 @@ function renderChallengePrizes(prizes: ChallengePlacementPrize[]): ReactNode {
 }
 
 /** Converts engagement data to the shared card presentation model. */
-function engagementView(item: EngagementOpportunity): CardViewModel {
+function engagementView(item: EngagementOpportunity, memberApplied: boolean): CardViewModel {
     const role = enumLabel(item.role) || 'Contributor'
     return {
         badge: opportunityTrackLabel(item.role),
         description: descriptionExcerpt(item.description),
-        href: `/engagements/${item.nanoId ?? item.id}`,
+        href: `${EnvironmentConfig.ENGAGEMENTS_URL}/${item.nanoId ?? item.id}`,
         meta: [
             { icon: <RoleMetricIcon />, label: 'Role', value: role },
             { icon: <CalendarMetricIcon />, label: 'Duration', value: formatEngagementDuration(item) },
@@ -388,7 +515,11 @@ function engagementView(item: EngagementOpportunity): CardViewModel {
             },
         ],
         skills: engagementSkillNames(item),
-        state: applicationState(false, challengeCatalogKey(item.status) === 'open'),
+        state: engagementOpportunityState(
+            item,
+            memberApplied,
+            challengeCatalogKey(item.status) === 'open',
+        ),
         title: item.title,
     }
 }
@@ -398,7 +529,7 @@ function copilotView(item: CopilotOpportunity): CardViewModel {
     return {
         badge: opportunityTrackLabel(item.projectType || item.type || 'Copilot'),
         description: descriptionExcerpt(item.overview),
-        href: `/copilots/opportunity/${item.id}`,
+        href: `${copilotAbsoluteRootRoute}/opportunity/${encodeURIComponent(String(item.id))}`,
         meta: [
             {
                 icon: <HoursMetricIcon />,
@@ -415,7 +546,7 @@ function copilotView(item: CopilotOpportunity): CardViewModel {
         skills: (item.skills ?? []).map((skill: OpportunitySkill) => skill.name),
         state: applicationState(!!item.hasApplied, challengeCatalogKey(item.status) === 'active'),
         title: item.opportunityTitle || item.projectName || item.project?.name || 'Copilot Opportunity',
-        type: enumLabel(item.type) || 'Copilot',
+        type: opportunityTrackLabel(item.type || item.projectType || 'Copilot'),
     }
 }
 
@@ -430,15 +561,37 @@ export function reviewApplicationTotal(item: ReviewOpportunity): number {
     return item.applicationCount ?? item.applications?.length ?? 0
 }
 
+/**
+ * Formats the reviewer compensation shown on an opportunity card.
+ *
+ * @param value Review API payment value.
+ * @returns concise USD amount, or `TBD` when no finite amount is available.
+ * @throws Does not throw.
+ */
+export function formatReviewPayment(value?: number): string {
+    if (value === undefined || !Number.isFinite(value)) return 'TBD'
+    return new Intl.NumberFormat('en-US', {
+        currency: 'USD',
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 0,
+        style: 'currency',
+    })
+        .format(value)
+}
+
 /** Converts review data to the shared card presentation model. */
 function reviewView(item: ReviewOpportunity): CardViewModel {
     const track = String(item.challengeData?.track ?? item.challengeData?.trackName ?? 'Review')
-    const technologies = item.challengeData?.technologies
     return {
         badge: track,
         href: `/opportunities/review/${item.id}`,
         meta: [
             { icon: <RoleMetricIcon />, label: 'Role', value: item.payments?.[0]?.role || 'Reviewer' },
+            {
+                icon: <PaymentMetricIcon />,
+                label: 'Payment',
+                value: formatReviewPayment(reviewFirstSubmissionPayment(item)),
+            },
             { icon: <StartMetricIcon />, label: 'Start', value: formatDate(item.startDate) },
             {
                 icon: <SubmissionsMetricIcon />,
@@ -446,9 +599,9 @@ function reviewView(item: ReviewOpportunity): CardViewModel {
                 value: String(reviewApplicationTotal(item)),
             },
         ],
-        skills: Array.isArray(technologies) ? technologies.map(String) : [],
-        state: applicationState(
-            !!item.myApplications?.length,
+        skills: reviewOpportunityLabels(item),
+        state: reviewApplicationState(
+            item,
             item.canApply === true || challengeCatalogKey(item.status) === 'open',
         ),
         title: item.challengeName || String(item.challengeData?.name ?? 'Review Opportunity'),
@@ -461,11 +614,12 @@ function reviewView(item: ReviewOpportunity): CardViewModel {
  *
  * @param kind opportunity domain selected in the hero.
  * @param item raw owning API response.
+ * @param memberApplied whether the active list is scoped to the member's applications.
  * @returns shared Figma card presentation data.
  * @throws Does not throw when called with matching kind/item data.
  */
-function toViewModel(kind: OpportunityKind, item: OpportunityItem): CardViewModel {
-    if (kind === 'engagements') return engagementView(item as EngagementOpportunity)
+function toViewModel(kind: OpportunityKind, item: OpportunityItem, memberApplied: boolean): CardViewModel {
+    if (kind === 'engagements') return engagementView(item as EngagementOpportunity, memberApplied)
     if (kind === 'copilots') return copilotView(item as CopilotOpportunity)
     return reviewView(item as ReviewOpportunity)
 }
@@ -474,7 +628,8 @@ function toViewModel(kind: OpportunityKind, item: OpportunityItem): CardViewMode
  * Renders the Figma competition card using Challenge API placement and phase data.
  *
  * @param item Challenge API list item.
- * @returns linked competition card with catalog tags, placement prizes, phase progress, and metrics.
+ * @returns linked competition card with catalog tags, a distinct completed-state icon,
+ * placement prizes, phase progress, and metrics.
  * @throws Does not throw; absent API fields use explicit pending placeholders.
  */
 const CompetitionListCard: FC<CompetitionListCardProps> = props => {
@@ -496,30 +651,43 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const timeLeft = formatChallengeTimeLeft(phaseTiming) || 'TBD'
     const progress = Math.round(phaseTiming.progressPercent)
     const registrationOpen = challengeRegistrationIsOpen(item)
-    const metrics = [
+    const completed = challengeCatalogKey(item.status) === 'completed'
+    const visibleWinners = completed
+        ? (item.winners ?? [])
+            .map((winner, index) => ({
+                placement: winner.placement ?? index + 1,
+                winner,
+            }))
+            .filter(entry => entry.placement >= 1 && entry.placement <= 3)
+            .sort((first, second) => first.placement - second.placement)
+            .slice(0, 3)
+        : []
+    const metrics: CompetitionMetric[] = [
         {
             icon: <SubmissionsMetricIcon aria-hidden='true' />,
             label: 'Submissions',
+            tab: 'submissions',
             value: item.numOfSubmissions === undefined ? '—' : String(item.numOfSubmissions),
         },
         {
             icon: <RegistrantsMetricIcon aria-hidden='true' />,
             label: 'Registrants',
+            tab: 'registrants',
             value: item.numOfRegistrants === undefined ? '—' : String(item.numOfRegistrants),
         },
         {
             icon: <PostsMetricIcon aria-hidden='true' />,
             label: 'Posts',
+            tab: 'forum',
             value: item.numOfPosts === undefined ? '—' : String(item.numOfPosts),
         },
     ]
 
     return (
-        <Link
+        <article
             className={classNames(styles.card, styles.competitionCard, {
                 [styles.gridCard]: props.view === 'grid',
             })}
-            to={`/opportunities/challenge/${item.id}`}
         >
             <div className={styles.competitionMain}>
                 <div className={styles.competitionCopy}>
@@ -537,38 +705,50 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                             {type.label}
                         </span>
                         <span className={classNames(styles.registrationState, {
-                            [styles.registrationClosed]: !props.registered && !registrationOpen,
-                            [styles.registrationRegistered]: props.registered,
+                            [styles.registrationClosed]: !completed && !props.registered && !registrationOpen,
+                            [styles.registrationRegistered]: !completed && props.registered,
                         })}
                         >
-                            {props.registered
-                                ? <IconOutline.CheckIcon aria-hidden='true' />
-                                : registrationOpen
-                                    ? <RegistrationOpenIcon aria-hidden='true' />
-                                    : <RegistrationClosedIcon aria-hidden='true' />}
-                            {props.registered
-                                ? 'Registered'
-                                : registrationOpen ? 'Open for registration' : 'Registration closed'}
+                            {completed
+                                ? <CompletedIcon aria-hidden='true' />
+                                : props.registered
+                                    ? <IconOutline.CheckIcon aria-hidden='true' />
+                                    : registrationOpen
+                                        ? <RegistrationOpenIcon aria-hidden='true' />
+                                        : <RegistrationClosedIcon aria-hidden='true' />}
+                            {completed
+                                ? 'Completed'
+                                : props.registered
+                                    ? 'Registered'
+                                    : registrationOpen ? 'Open for registration' : 'Registration closed'}
                         </span>
                     </div>
                     <Tooltip
                         className={styles.cardTooltip}
                         content={item.name}
                         place='bottom'
+                        strategy='fixed'
                     >
-                        <h3>{item.name}</h3>
+                        <h3>
+                            <Link
+                                className={styles.titleLink}
+                                to={challengeDetailPath(item.id)}
+                            >
+                                {item.name}
+                            </Link>
+                        </h3>
                     </Tooltip>
                     {visibleSkills.length > 0 && (
                         <div className={styles.skills}>
                             {visibleSkills.map((skill, index) => (
-                                <span
+                                <SkillFilterTag
                                     className={classNames({
                                         [styles.primarySkill]: trackKey === 'design' && index === 0,
                                     })}
                                     key={skill}
-                                >
-                                    {skill}
-                                </span>
+                                    onSelect={props.onSkillClick}
+                                    skill={skill}
+                                />
                             ))}
                             {remainingSkills > 0 && (
                                 <Tooltip
@@ -580,6 +760,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                                         </ul>
                                     )}
                                     place='bottom'
+                                    strategy='fixed'
                                 >
                                     <span>{`+${remainingSkills}`}</span>
                                 </Tooltip>
@@ -589,9 +770,24 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                 </div>
                 <div className={styles.competitionFooter}>
                     <div aria-label='Placement prizes' className={styles.prizes}>
-                        {renderChallengePrizes(placementPrizes)}
+                        {renderChallengePrizes(placementPrizes, item.funChallenge === true)}
                     </div>
-                    {phase && (
+                    {visibleWinners.length > 0 && (
+                        <Link
+                            aria-label='View winners'
+                            className={styles.winnersLink}
+                            to={challengeDetailPath(item.id, 'winners')}
+                        >
+                            {visibleWinners.map(entry => (
+                                <CompetitionWinnerAvatar
+                                    key={`${entry.placement}-${entry.winner.userId ?? entry.winner.handle ?? 'winner'}`}
+                                    placement={entry.placement}
+                                    winner={entry.winner}
+                                />
+                            ))}
+                        </Link>
+                    )}
+                    {!completed && phase && (
                         <div className={styles.phase}>
                             <div className={styles.phaseHeading}>
                                 <span className={styles.phaseLabel}>
@@ -616,14 +812,21 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
             </div>
             <dl className={classNames(styles.meta, styles.competitionMeta)}>
                 {metrics.map(row => (
-                    <div key={row.label}>
+                    <div className={styles.metricRow} key={row.label}>
                         {row.icon}
                         <dt>{`${row.label}:`}</dt>
-                        <dd>{row.value}</dd>
+                        <dd>
+                            {row.value}
+                            <Link
+                                aria-label={`View ${row.label}`}
+                                className={styles.metricLink}
+                                to={challengeDetailPath(item.id, row.tab)}
+                            />
+                        </dd>
                     </div>
                 ))}
             </dl>
-        </Link>
+        </article>
     )
 }
 
@@ -639,6 +842,7 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
         return (
             <CompetitionListCard
                 item={props.item as ChallengeOpportunity}
+                onSkillClick={props.onSkillClick}
                 registered={props.registered}
                 view={props.view}
             />
@@ -646,13 +850,22 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
     }
 
     const card = {
-        ...toViewModel(props.kind, props.item),
+        ...toViewModel(props.kind, props.item, !!props.memberApplied),
         ...(props.applicationState ? { state: props.applicationState } : {}),
     }
     const visibleSkills = card.skills.filter(Boolean)
         .slice(0, props.view === 'grid' ? 3 : 5)
     const remaining = Math.max(0, card.skills.filter(Boolean).length - visibleSkills.length)
     const stateKey = challengeCatalogKey(card.state)
+    const stateIsAccepted = ['accepted', 'approved', 'assigned', 'completed', 'selected'].includes(stateKey)
+    const stateIsApplied = ['applied', 'onhold', 'shortlisted', 'underreview', 'waitlisted'].includes(stateKey)
+    const stateIsClosed = [
+        'applicationclosed',
+        'cancelled',
+        'offerdeclined',
+        'rejected',
+        'terminated',
+    ].includes(stateKey)
     const cardClassName = classNames(styles.card, {
         [styles.copilotCard]: props.kind === 'copilots',
         [styles.engagementCard]: props.kind === 'engagements',
@@ -661,7 +874,9 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
     })
 
     return (
-        <Link className={cardClassName} to={card.href}>
+        <article
+            className={cardClassName}
+        >
             <div className={styles.main}>
                 <div className={styles.eyebrow}>
                     <span className={classNames(
@@ -679,15 +894,16 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                     )}
                     {card.state && (
                         <span className={classNames(styles.state, {
-                            [styles.stateApplied]: stateKey === 'applied',
-                            [styles.stateAccepted]: stateKey === 'accepted',
-                            [styles.stateClosed]: stateKey === 'applicationclosed',
+                            [styles.stateApplied]: stateIsApplied,
+                            [styles.stateAccepted]: stateIsAccepted,
+                            [styles.stateClosed]: stateIsClosed,
                         })}
                         >
                             {stateKey === 'openforapplication' && <RegistrationOpenIcon aria-hidden='true' />}
                             {stateKey === 'applied' && <IconOutline.CheckIcon aria-hidden='true' />}
-                            {stateKey === 'accepted' && <IconOutline.CheckIcon aria-hidden='true' />}
-                            {stateKey === 'applicationclosed' && <IconOutline.XIcon aria-hidden='true' />}
+                            {stateKey === 'waitlisted' && <ApplicationWaitlistedIcon aria-hidden='true' />}
+                            {stateIsAccepted && <IconOutline.CheckIcon aria-hidden='true' />}
+                            {stateIsClosed && <IconOutline.XIcon aria-hidden='true' />}
                             {card.state}
                         </span>
                     )}
@@ -696,12 +912,31 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                     className={styles.cardTooltip}
                     content={card.title}
                     place='bottom'
+                    strategy='fixed'
                 >
-                    <h3>{card.title}</h3>
+                    <h3 className={classNames({
+                        [styles.reviewTitle]: props.kind === 'reviews' && props.view !== 'grid',
+                    })}
+                    >
+                        <Link
+                            className={styles.titleLink}
+                            rel={props.kind === 'engagements' ? 'noreferrer' : undefined}
+                            target={props.kind === 'engagements' ? '_blank' : undefined}
+                            to={card.href}
+                        >
+                            {card.title}
+                        </Link>
+                    </h3>
                 </Tooltip>
                 {visibleSkills.length > 0 && (
                     <div className={styles.skills}>
-                        {visibleSkills.map((skill: string) => <span key={skill}>{skill}</span>)}
+                        {visibleSkills.map((skill: string) => (
+                            <SkillFilterTag
+                                key={skill}
+                                onSelect={props.onSkillClick}
+                                skill={skill}
+                            />
+                        ))}
                         {remaining > 0 && (
                             <Tooltip
                                 className={styles.cardTooltip}
@@ -712,6 +947,7 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                                     </ul>
                                 )}
                                 place='bottom'
+                                strategy='fixed'
                             >
                                 <span>{`+${remaining}`}</span>
                             </Tooltip>
@@ -729,6 +965,6 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                     </div>
                 ))}
             </dl>
-        </Link>
+        </article>
     )
 }

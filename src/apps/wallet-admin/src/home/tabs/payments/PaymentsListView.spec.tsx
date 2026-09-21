@@ -34,7 +34,9 @@ jest.mock('../../../lib/services/wallet', () => ({
 jest.mock('../../../lib', () => ({
     FilterBar: (props: any) => mockFilterBar(props),
     formatIOSDateString: (value: string) => value,
-    PaymentView: () => <div>Payment View</div>,
+    PaymentView: (props: any) => (
+        <div data-testid='view-payment-amount'>{props.payment.grossAmountNumber}</div>
+    ),
 }))
 
 jest.mock('../../../lib/components/payment-edit/PaymentEdit', () => ({
@@ -51,15 +53,22 @@ jest.mock('../../../lib/components/payments-table/PaymentTable', () => ({
             <div>
                 <div>Payment Table</div>
                 {props.payments.map((payment: any) => (
-                    <button
-                        key={payment.id}
-                        type='button'
-                        onClick={() => props.onSelectionChange?.({ [payment.id]: payment })}
-                    >
-                        Select
-                        {' '}
-                        {payment.handle}
-                    </button>
+                    <div key={payment.id}>
+                        <span>{payment.grossAmount}</span>
+                        <button
+                            type='button'
+                            onClick={() => props.onSelectionChange?.({ [payment.id]: payment })}
+                        >
+                            Select
+                            {' '}
+                            {payment.handle}
+                        </button>
+                        <button type='button' onClick={() => props.onPaymentViewClick(payment)}>
+                            View payment
+                            {' '}
+                            {payment.id}
+                        </button>
+                    </div>
                 ))}
                 {props.payments.length > 1 && (
                     <button
@@ -264,6 +273,60 @@ describe('PaymentsListView', () => {
 
     afterEach(() => {
         jest.clearAllMocks()
+    })
+
+    it.each([3680, undefined])(
+        'shows the full split payment in the list and details with API gross summary %s',
+        async grossAmount => {
+            mockedGetPayments.mockResolvedValue({
+                ...paymentsResponse,
+                winnings: [{
+                    ...paymentsResponse.winnings[0],
+                    category: 'TASK_PAYMENT',
+                    details: [2760, 920].map((amount, index) => ({
+                        currency: 'USD',
+                        datePaid: '2024-03-20T14:19:07.000Z',
+                        grossAmount: String(amount),
+                        id: `installment-${index + 1}`,
+                        installmentNumber: index + 1,
+                        status: 'PAID',
+                        totalAmount: '3680',
+                    })),
+                    grossAmount,
+                }],
+            })
+
+            render(<PaymentsListView profile={{ roles: ['Payment Admin'] } as any} />)
+
+            expect(await screen.findByText('$3,680.00'))
+                .toBeTruthy()
+            expect(screen.queryByText('$7,360.00'))
+                .toBeNull()
+            fireEvent.click(screen.getByRole('button', { name: 'View payment winning-1' }))
+            expect((await screen.findByTestId('view-payment-amount')).textContent)
+                .toBe('3680')
+        },
+    )
+
+    it('keeps the single-installment member amount separate from billing markup', async () => {
+        mockedGetPayments.mockResolvedValue({
+            ...paymentsResponse,
+            winnings: [{
+                ...paymentsResponse.winnings[0],
+                details: [{
+                    ...paymentsResponse.winnings[0].details[0],
+                    grossAmount: '2400',
+                    totalAmount: '3000',
+                }],
+            }],
+        })
+
+        render(<PaymentsListView profile={{ roles: ['Payment Admin'] } as any} />)
+
+        expect(await screen.findByText('$2,400.00'))
+            .toBeTruthy()
+        expect(screen.queryByText('$3,000.00'))
+            .toBeNull()
     })
 
     it('defaults the approver view to the On Hold (Admin) status filter and both allowed categories', async () => {

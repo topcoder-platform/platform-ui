@@ -1,0 +1,40 @@
+.container {
+    display: grid;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid var(--black-10, #eee);
+    border-radius: 8px;
+    background: #fff;
+}
+
+.grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.field {
+    display: grid;
+    gap: 6px;
+}
+
+.label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--black-60, #666);
+}
+
+.input,
+.select {
+    width: 100%;
+    border: 1px solid var(--black-20, #ddd);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}

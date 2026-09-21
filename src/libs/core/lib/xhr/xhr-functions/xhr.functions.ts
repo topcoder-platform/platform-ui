@@ -60,11 +60,21 @@ export async function deleteAsync<T>(
     return output.data
 }
 
+/**
+ * Performs a GET request and returns its response payload.
+ *
+ * @param url request URL.
+ * @param xhrInstance Axios instance used to execute the request.
+ * @param config optional Axios request configuration, including cancellation and timeout controls.
+ * @returns response data returned by the server.
+ * @throws Propagates Axios request, cancellation, and timeout errors.
+ */
 export async function getAsync<T>(
     url: string,
-    xhrInstance: AxiosInstance = globalInstance,
+    xhrInstance?: AxiosInstance,
+    config?: AxiosRequestConfig,
 ): Promise<T> {
-    const output: AxiosResponse<T> = await xhrInstance.get(url)
+    const output: AxiosResponse<T> = await (xhrInstance ?? globalInstance).get(url, config)
     return output.data
 }
 
