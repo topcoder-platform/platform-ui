@@ -264,7 +264,7 @@
 }
 
 .competitionCard {
-    grid-template-columns: minmax(0, 1fr) 195px;
+    grid-template-columns: minmax(0, 1fr) 220px;
     min-height: 212px;
 }
 
@@ -589,13 +589,26 @@
         font-family: 'Nunito Sans', sans-serif;
         font-size: 14px;
         gap: 4px;
-        grid-template-columns: 20px auto 1fr;
+
+        /* The count column is sized to its content so multi-digit values are
+           never clipped; the label absorbs any remaining shortfall instead. */
+        grid-template-columns: 20px minmax(0, auto) max-content;
         line-height: 20px;
     }
 
     svg {
         height: 20px;
         width: 20px;
+    }
+
+    dt {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    dd {
+        overflow: visible;
     }
 }
 
