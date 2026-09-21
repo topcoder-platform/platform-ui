@@ -488,7 +488,9 @@
 
 .createdBy {
     align-items: center;
-    color: #6f6f6f;
+
+    /* Authored copy: the byline reads at full text contrast, not as muted meta. */
+    color: #161616;
     display: flex;
     flex-wrap: wrap;
     font-size: 12px;
@@ -888,7 +890,7 @@
     font-size: 16px;
     -webkit-line-clamp: 3;
     line-height: 22px;
-    margin: 20px 0 0;
+    margin: 16px 0 0;
     overflow: hidden;
     -webkit-box-orient: vertical;
 
