@@ -78,6 +78,33 @@ function submissionHandle(submission?: ChallengeSubmission): string | undefined 
 }
 
 /**
+ * Resolves the proportional column widths for the submission history table.
+ *
+ * The table is laid out with `table-layout: fixed`, which otherwise splits the
+ * modal evenly between the columns. Marathon Match scores are rendered at full
+ * precision, so an even split leaves the score columns too narrow and their
+ * values run into the next column. Weighting the columns gives the scores the
+ * room they need while the Submission ID keeps its ellipsis and Artifacts stays
+ * compact.
+ *
+ * @param isMarathonMatch whether the Provisional Score column is rendered.
+ * @param showArtifacts whether the Artifacts column is rendered.
+ * @returns one CSS percentage per rendered column, in column order, summing to 100%.
+ * @throws Does not throw.
+ */
+function columnWidths(isMarathonMatch: boolean, showArtifacts: boolean): string[] {
+    const weights = [
+        24, // Submission ID
+        18, // Submission Date
+        ...(isMarathonMatch ? [22] : []), // Provisional Score
+        22, // Final Score
+        ...(showArtifacts ? [14] : []), // Artifacts
+    ]
+    const total = weights.reduce((sum, weight) => sum + weight, 0)
+    return weights.map(weight => `${((weight / total) * 100).toFixed(2)}%`)
+}
+
+/**
  * Shows the selected member's server-authorized submission history without
  * navigating away from Opportunities to Review App. Review API may limit an
  * ordinary viewer to the latest attempt.
@@ -139,6 +166,13 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                 </p>
                 <div className={styles.tableWrap}>
                     <table>
+                        <colgroup>
+                            {columnWidths(!!props.isMarathonMatch, !!props.onOpenArtifacts)
+                                .map((width, index) => (
+                                    // eslint-disable-next-line react/no-array-index-key
+                                    <col key={`column-${index}`} style={{ width }} />
+                                ))}
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th>Submission ID</th>
