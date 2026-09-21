@@ -1,4 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+import { readFileSync } from 'fs'
+
 import '@testing-library/jest-dom'
 import { fireEvent, render, RenderResult, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
@@ -15,6 +17,11 @@ jest.mock('~/libs/ui', () => {
         }),
     }
 }, { virtual: true })
+
+const challengeDetailHeaderStyles = readFileSync(
+    `${__dirname}/ChallengeDetailHeader.module.scss`,
+    'utf8',
+)
 
 /** Creates an active, overlapping registration/submission challenge fixture. */
 function challengeFixture(overrides: Partial<ChallengeOpportunity> = {}): ChallengeOpportunity {
@@ -368,6 +375,26 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toBeDisabled()
         expect(screen.getByRole('button', { name: 'Submit a solution' }))
             .toBeDisabled()
+    })
+
+    it('uses the authored disabled treatment instead of a blanket opacity', () => {
+        const secondaryBlock = (challengeDetailHeaderStyles
+            .match(/\n\.secondary \{[\s\S]*?\n\}/) ?? [''])[0]
+        const primaryBlock = (challengeDetailHeaderStyles
+            .match(/\n\.primary \{[\s\S]*?\n\}/) ?? [''])[0]
+        const actionCardBlock = (challengeDetailHeaderStyles
+            .match(/\n\.actionCard \{[\s\S]*?\n\}/) ?? [''])[0]
+
+        expect(secondaryBlock)
+            .toContain('border-color: rgba(255, 255, 255, .1)')
+        expect(secondaryBlock)
+            .toContain('color: rgba(255, 255, 255, .15)')
+        expect(primaryBlock)
+            .toContain('background: rgba(255, 255, 255, .1)')
+        expect(primaryBlock)
+            .toContain('color: rgba(255, 255, 255, .15)')
+        expect(actionCardBlock)
+            .not.toContain('opacity: .55')
     })
 
     it('avoids flashing Register while member registration is unresolved', () => {

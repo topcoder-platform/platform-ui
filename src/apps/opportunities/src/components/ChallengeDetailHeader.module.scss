@@ -281,9 +281,12 @@
         width: 100%;
     }
 
+    /*
+     * The disabled treatment is authored per button variant below rather than as
+     * a blanket opacity, so the stroke, fill, and label each get their own value.
+     */
     button:disabled {
         cursor: not-allowed;
-        opacity: .55;
     }
 }
 
@@ -389,6 +392,12 @@
     border: 1px solid #fff;
     color: #fff;
     cursor: pointer;
+
+    /* Authored disabled treatment: a 10% white stroke with a 15% white label. */
+    &:disabled {
+        border-color: rgba(255, 255, 255, .1);
+        color: rgba(255, 255, 255, .15);
+    }
 }
 
 .primary {
@@ -403,10 +412,15 @@
         pointer-events: none;
     }
 
+    /* Authored disabled treatment: a 10% white fill with a 15% white label. */
     &:disabled {
-        background: rgba(0, 125, 121, .45);
+        background: rgba(255, 255, 255, .1);
         border-color: transparent;
-        color: rgba(255, 255, 255, .6);
+        color: rgba(255, 255, 255, .15);
+
+        img {
+            opacity: .15;
+        }
     }
 
     img {
