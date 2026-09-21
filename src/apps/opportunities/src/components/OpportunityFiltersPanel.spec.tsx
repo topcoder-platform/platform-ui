@@ -120,6 +120,40 @@ describe('OpportunityFiltersPanel', () => {
             .toHaveAttribute('id', 'engagements-role-description')
     })
 
+    it('leaves both engagements status choices unselected until one is picked', () => {
+        const onStatusChange = jest.fn()
+
+        render(
+            <OpportunityFiltersPanel
+                applied={false}
+                isAuthenticated
+                kind='engagements'
+                onAppliedChange={jest.fn()}
+                onReset={jest.fn()}
+                onRoleChange={jest.fn()}
+                onSearchChange={jest.fn()}
+                onStatusChange={onStatusChange}
+                onTrackChange={jest.fn()}
+                onTypeChange={jest.fn()}
+                search=''
+                selectedRole=''
+                status=''
+                tracks={[]}
+                types={[]}
+            />,
+        )
+
+        const statuses = screen.getAllByRole('radio') as HTMLInputElement[]
+        expect(statuses.map(radio => radio.closest('label')?.textContent))
+            .toEqual(['Open for application', 'My engagements'])
+        expect(statuses.some(radio => radio.checked))
+            .toBe(false)
+
+        fireEvent.click(screen.getByRole('radio', { name: 'Open for application' }))
+        expect(onStatusChange)
+            .toHaveBeenCalledWith('OPEN')
+    })
+
     it('hides the owner-scoped engagements status from anonymous visitors', () => {
         render(
             <OpportunityFiltersPanel

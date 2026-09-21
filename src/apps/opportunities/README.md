@@ -65,8 +65,11 @@ Track, Type, or Role facets sit behind the accessible More filters control.
 Desktop keeps every available facet expanded.
 
 Engagements state their two authored Status choices directly: `Open for
-application` and `My engagements`. The separate ownership checkbox is therefore
-omitted for that domain only; the other domains keep it. `My engagements` is an
+application` and `My engagements`. Neither is preselected: both are narrowing
+choices the member opts into, so Browse Engagements opens on the whole catalog
+and Reset all returns to that unfiltered state. Every other domain keeps its
+existing default status. The separate ownership checkbox is therefore
+omitted for engagements only; the other domains keep it. `My engagements` is an
 ownership filter wearing a status label, so it deliberately applies no lifecycle
 status and returns the member's open, in-progress, and completed engagements in
 one list, each card carrying its own Applied, Accepted, or Completed state pill.

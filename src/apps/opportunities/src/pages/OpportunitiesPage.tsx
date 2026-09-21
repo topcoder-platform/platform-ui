@@ -103,13 +103,19 @@ function hasRole(roles: string[] | undefined, expected: string): boolean {
 /**
  * Builds the first-page status appropriate for each owning API.
  *
+ * Engagements open with neither Status choice selected, matching the authored
+ * design: "Open for application" and "My engagements" are both narrowing
+ * choices the member opts into, so Browse Engagements starts by showing the
+ * whole catalog rather than silently pre-filtering it.
+ *
  * @param kind active opportunity domain.
- * @returns default status filter.
+ * @returns default status filter, or an empty string when none is preselected.
  * @throws Does not throw.
  */
 function defaultStatus(kind: OpportunityKind): string {
     if (kind === 'competitions') return 'ACTIVE'
     if (kind === 'copilots') return 'active'
+    if (kind === 'engagements') return ''
     return 'OPEN'
 }
 

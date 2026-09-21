@@ -59,10 +59,12 @@ jest.mock('../components', () => ({
     }) => {
         const selectMyCompetitions = (): void => props.onAppliedChange(true)
         const selectMyEngagements = (): void => props.onStatusChange('MINE')
+        const selectOpenEngagements = (): void => props.onStatusChange('OPEN')
         return (
             <aside aria-label='Opportunity filters'>
                 <button onClick={selectMyCompetitions} type='button'>My competitions</button>
                 <button onClick={selectMyEngagements} type='button'>My engagements</button>
+                <button onClick={selectOpenEngagements} type='button'>Open for application</button>
             </aside>
         )
     },
@@ -452,6 +454,15 @@ describe('OpportunitiesPage', () => {
                 </MemoryRouter>
             </SWRConfig>,
         )
+
+        // Neither Status choice is preselected, so Browse opens on the whole catalog.
+        await waitFor(() => expect(mockedGetOpportunityPage)
+            .toHaveBeenLastCalledWith('engagements', expect.objectContaining({
+                applied: false,
+                statuses: undefined,
+            })))
+
+        fireEvent.click(screen.getByRole('button', { name: 'Open for application' }))
 
         await waitFor(() => expect(mockedGetOpportunityPage)
             .toHaveBeenLastCalledWith('engagements', expect.objectContaining({
