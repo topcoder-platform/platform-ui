@@ -104,12 +104,18 @@ const ProjectShowcasePostPage: FC = () => {
                         {storySections.map(section => (
                             <div key={section.label} className={styles.contentSection}>
                                 <h5 className={styles.sectionTitle}>{section.label}</h5>
-                                <div
-                                    className={styles.htmlContent}
-                                    dangerouslySetInnerHTML={{
-                                        __html: renderRichTextToHtml(section.value),
-                                    }}
-                                />
+                                {section.isRichText ? (
+                                    <div
+                                        className={styles.htmlContent}
+                                        dangerouslySetInnerHTML={{
+                                            __html: renderRichTextToHtml(section.value),
+                                        }}
+                                    />
+                                ) : (
+                                    <div className={styles.htmlContent}>
+                                        <p>{section.value}</p>
+                                    </div>
+                                )}
                             </div>
                         ))}
                         {!!post?.media?.length && (
