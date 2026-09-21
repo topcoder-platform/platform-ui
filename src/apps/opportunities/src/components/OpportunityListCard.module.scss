@@ -301,10 +301,18 @@
 .competitionCard .skills {
     gap: 8px;
 
-    .primarySkill {
+    /*
+     * Authored challenge tags read as outlined pills so they are visibly
+     * distinct from the filled standardized-skill chips beside them.
+     */
+    .tagLabel {
         background: #fff;
         border: 1px solid #a8a8a8;
         padding: 3px;
+
+        &:hover {
+            background: #f4f4f4;
+        }
     }
 }
 
