@@ -107,7 +107,8 @@ function columnWidths(isMarathonMatch: boolean, showArtifacts: boolean): string[
 /**
  * Shows the selected member's server-authorized submission history without
  * navigating away from Opportunities to Review App. Review API may limit an
- * ordinary viewer to the latest attempt.
+ * ordinary viewer to the latest attempt. Each row's Artifacts control is styled
+ * as a link, matching the All Submissions table on the challenge detail page.
  *
  * @param props selected submission, challenge context, visibility, and authorized artifact/close callbacks.
  * @returns modal with history rows or a loading, error, or empty state.
@@ -210,9 +211,14 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                                             <td data-mobile-label='Artifacts' data-mobile-order='5'>
                                                 <button
                                                     aria-label={`Download submission artifacts ${submission.id}`}
+                                                    className={styles.artifactsLink}
                                                     onClick={() => props.onOpenArtifacts?.(submission.id)}
                                                     type='button'
                                                 >
+                                                    <IconOutline.FolderDownloadIcon
+                                                        aria-hidden='true'
+                                                        width={16}
+                                                    />
                                                     Artifacts
                                                 </button>
                                             </td>

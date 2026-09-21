@@ -133,6 +133,41 @@
     }
 }
 
+/*
+ * Reads as a link rather than a bare button, matching the Artifacts control in
+ * the All Submissions table on the challenge detail page.
+ */
+.artifactsLink {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-radius: 4px;
+    color: #007d79;
+    cursor: pointer;
+    display: inline-flex;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    gap: 4px;
+    line-height: 20px;
+    padding: 0;
+    text-decoration: underline;
+
+    svg {
+        height: 16px;
+        width: 16px;
+    }
+
+    &:hover {
+        text-decoration: none;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #0f62fe;
+        outline-offset: 2px;
+    }
+}
+
 .mobileFooter {
     display: none;
 }
