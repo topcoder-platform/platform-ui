@@ -564,6 +564,11 @@
     white-space: nowrap;
 }
 
+/* An overdue phase deadline reads in the alert red. */
+.timeLeftPastDue {
+    color: #c1294f;
+}
+
 .progress {
     background: #e0e0e0;
     border-radius: 999px;
