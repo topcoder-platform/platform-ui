@@ -92,6 +92,7 @@ import {
     isMarathonMatchChallenge,
     isTaskChallenge,
     marathonDashboardIsEnabled,
+    marathonLeaderboardIsPublic,
     marathonSubmissionScores,
     marathonSubmissionTestProgress,
     memberProfileUrl,
@@ -439,10 +440,13 @@ export const ChallengeDetailsPage: FC = () => {
     const tabs = useMemo<TabConfig[]>(() => {
         const designChallenge = catalogName(challenge?.track)
             .toLowerCase() === 'design'
+        // Marathon Match scores are public while the challenge runs, so the
+        // leaderboard and Dashboard stay listed for signed out visitors.
+        const publicMarathonLeaderboard = !!challenge && marathonLeaderboardIsPublic(challenge)
         return [
             { id: 'requirements', label: 'Requirements' },
             { count: challenge?.numOfRegistrants, id: 'registrants', label: 'Registrants' },
-            ...(!taskChallenge && (memberId || designChallenge)
+            ...(!taskChallenge && (memberId || designChallenge || publicMarathonLeaderboard)
                 ? [{
                     count: challenge?.numOfSubmissions,
                     id: 'submissions' as ChallengeTab,
@@ -454,7 +458,7 @@ export const ChallengeDetailsPage: FC = () => {
                 id: 'mine' as ChallengeTab,
                 label: 'My Submissions',
             }] : []),
-            ...(hasMemberTabAccess && challenge && marathonDashboardIsEnabled(challenge)
+            ...(challenge && marathonDashboardIsEnabled(challenge)
                 ? [{ id: 'dashboard' as ChallengeTab, label: 'Dashboard' }]
                 : []),
             ...(hasForumAccess
@@ -466,7 +470,6 @@ export const ChallengeDetailsPage: FC = () => {
         challenge,
         forumTopicCount,
         hasForumAccess,
-        hasMemberTabAccess,
         isRegistered,
         memberId,
         mySubmissionCountResponse.data,
@@ -937,7 +940,7 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
     if (props.activeTab === 'submissions') {
         const isDesign = catalogName(props.challenge.track)
             .toLowerCase() === 'design'
-        return props.memberId || isDesign
+        return props.memberId || isDesign || marathonLeaderboardIsPublic(props.challenge)
             ? (
                 <SubmissionsTab
                     canManageArtifacts={props.canManageArtifacts}
@@ -981,9 +984,7 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
     }
 
     if (props.activeTab === 'dashboard') {
-        return props.memberId
-            ? <MarathonDashboard challenge={props.challenge} />
-            : <SignInTab subject='the Marathon Match dashboard' />
+        return <MarathonDashboard challenge={props.challenge} />
     }
 
     if (props.activeTab === 'forum') {

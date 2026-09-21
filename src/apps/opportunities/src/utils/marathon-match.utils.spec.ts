@@ -5,6 +5,7 @@ import {
     formatMarathonScore,
     isMarathonMatchChallenge,
     marathonDashboardIsEnabled,
+    marathonLeaderboardIsPublic,
     marathonSubmissionScores,
     marathonSubmissionTestProgress,
     shouldShowFinalSubmissionScores,
@@ -101,6 +102,15 @@ describe('Marathon Match challenge detail utilities', () => {
             name: 'Not MM',
             type: 'Challenge',
         }))
+            .toBe(false)
+    })
+
+    it('publishes the leaderboard only for Marathon Match challenges', () => {
+        expect(marathonLeaderboardIsPublic({ id: 'mm', name: 'MM', type: 'Marathon Match' }))
+            .toBe(true)
+        expect(marathonLeaderboardIsPublic({ id: 'tagged', name: 'Tagged', tags: ['MM'] }))
+            .toBe(true)
+        expect(marathonLeaderboardIsPublic({ id: 'dev', name: 'Dev', type: 'Challenge' }))
             .toBe(false)
     })
 

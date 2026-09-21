@@ -280,6 +280,25 @@ export function isMarathonMatchChallenge(challenge: ChallengeOpportunity): boole
 }
 
 /**
+ * Reports whether a challenge exposes its leaderboard and Dashboard to signed
+ * out visitors.
+ *
+ * Marathon Match challenge details have always been public, but the scoreboard
+ * that makes them interesting was not (PM-6293). Marathon Matches now publish
+ * their submission leaderboard and, when `show_data_dashboard` is set, their
+ * score-over-time dashboard while the challenge runs. Review API remains the
+ * authority: it re-checks challenge whitelist and group visibility, and it
+ * withholds member-private submission fields from anonymous callers.
+ *
+ * @param challenge Challenge API detail record.
+ * @returns true when anonymous visitors may read the challenge's scores.
+ * @throws Does not throw.
+ */
+export function marathonLeaderboardIsPublic(challenge: ChallengeOpportunity): boolean {
+    return isMarathonMatchChallenge(challenge)
+}
+
+/**
  * Preserves community-app's authored Marathon Match dashboard gate. Challenge
  * managers enable the standalone Dashboard tab with `show_data_dashboard`.
  *
