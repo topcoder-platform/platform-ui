@@ -93,7 +93,18 @@ export const OpportunitySortSelect: FC<OpportunitySortSelectProps> = props => {
                 role='combobox'
                 type='button'
             >
-                <span>{selected?.label ?? 'Select sort'}</span>
+                <span className={styles.label}>
+                    {/*
+                      * Reserves the width of the longest option so the chevron keeps
+                      * its place as the selection changes, with no slack after the text.
+                      */}
+                    <span aria-hidden='true' className={styles.labelSizer}>
+                        {props.options.map(option => (
+                            <span key={option.value}>{option.label}</span>
+                        ))}
+                    </span>
+                    {selected?.label ?? 'Select sort'}
+                </span>
                 <ChevronDownIcon aria-hidden='true' />
             </button>
             {open && (

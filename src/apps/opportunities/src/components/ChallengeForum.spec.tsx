@@ -576,6 +576,34 @@ describe('ChallengeForum', () => {
             .toBeUndefined()
     })
 
+    it('opens the topic when the upper card is clicked, keeping the footer for actions', async () => {
+        const { container }: RenderResult = render(
+            <ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />,
+        )
+
+        const overlay = container.querySelector('.topicOverlay') as HTMLButtonElement
+        expect(overlay)
+            .toBeInTheDocument()
+        expect(overlay)
+            .toHaveAttribute('aria-hidden', 'true')
+        expect(overlay)
+            .toHaveAttribute('tabindex', '-1')
+
+        await act(async () => fireEvent.click(overlay))
+
+        expect(screen.getByText('Welcome **competitors**.'))
+            .toBeInTheDocument()
+    })
+
+    it('keeps the footer actions and member links above the topic card overlay', () => {
+        const overlayBlock = (forumStyles.match(/\.topicOverlay\s*\{[\s\S]*?\n\}/) ?? [''])[0]
+        const footerBlock = (forumStyles.match(/\.topicFooter\s*\{[\s\S]*?\n\}/) ?? [''])[0]
+        expect(overlayBlock)
+            .toContain('z-index: 1')
+        expect(footerBlock)
+            .toContain('z-index: 2')
+    })
+
     it('matches the Figma desktop forum geometry and core tokens', () => {
         expect(forumStyles)
             .toContain('grid-template-columns: 281px minmax(0, 895px);')

@@ -318,3 +318,22 @@ export const queueAiWorkflowRuns = async (
         { ignoreAiPhaseState, submissionId },
     )
 )
+
+interface RebuildSubmissionDecisionRequest {
+    submissionId: string
+}
+
+export interface RebuildSubmissionDecisionResponse {
+    submissionId: string
+    rebuilt: boolean
+    message: string
+}
+
+export const rebuildSubmissionDecision = async (
+    submissionId: string,
+): Promise<RebuildSubmissionDecisionResponse> => (
+    xhrPostAsync<RebuildSubmissionDecisionRequest, RebuildSubmissionDecisionResponse>(
+        `${TC_API_BASE_URL}/workflows/runs/rebuild-decision`,
+        { submissionId },
+    )
+)
