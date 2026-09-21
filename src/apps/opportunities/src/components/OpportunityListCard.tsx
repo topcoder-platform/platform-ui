@@ -2,7 +2,10 @@
 import {
     FC,
     ReactNode,
+    RefObject,
     SVGProps,
+    useEffect,
+    useRef,
     useState,
 } from 'react'
 import { Link } from 'react-router-dom'
@@ -157,6 +160,44 @@ const CompetitionWinnerAvatar: FC<CompetitionWinnerAvatarProps> = props => {
             </span>
         </span>
     )
+}
+
+/**
+ * Reports whether an element's text is visually clipped by its line clamp.
+ *
+ * Card titles are clamped to two or three lines and end in an ellipsis once
+ * they overflow. The title tooltip exists only to reveal what the clamp hides,
+ * so it is suppressed while the whole title is visible.
+ *
+ * Re-measures whenever the element resizes or the text changes. Environments
+ * without `ResizeObserver` fall back to the initial measurement.
+ *
+ * @param text the rendered text, used to re-measure when the title changes.
+ * @returns a ref to attach to the clamped element, and whether its text is clipped.
+ * @throws Does not throw.
+ */
+function useIsTextClipped(text: string): [RefObject<HTMLHeadingElement>, boolean] {
+    const ref = useRef<HTMLHeadingElement>(null)
+    const [clipped, setClipped] = useState(false)
+
+    useEffect(() => {
+        const element = ref.current
+        if (!element) return undefined
+
+        const measure = (): void => setClipped(
+            element.scrollHeight - element.clientHeight > 1
+            || element.scrollWidth - element.clientWidth > 1,
+        )
+
+        measure()
+        if (typeof ResizeObserver === 'undefined') return undefined
+
+        const observer = new ResizeObserver(measure)
+        observer.observe(element)
+        return () => observer.disconnect()
+    }, [text])
+
+    return [ref, clipped]
 }
 
 /**
@@ -634,6 +675,7 @@ function toViewModel(kind: OpportunityKind, item: OpportunityItem, memberApplied
  */
 const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const item = props.item
+    const [titleRef, titleClipped] = useIsTextClipped(item.name)
     const type = challengeTypePresentation(item)
     const TypeIcon = type.icon
     const trackKey = challengeCatalogKey(item.track)
@@ -726,10 +768,11 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                     <Tooltip
                         className={styles.cardTooltip}
                         content={item.name}
+                        disableTooltip={!titleClipped}
                         place='bottom'
                         strategy='fixed'
                     >
-                        <h3>
+                        <h3 ref={titleRef}>
                             <Link
                                 className={styles.titleLink}
                                 to={challengeDetailPath(item.id)}
@@ -838,7 +881,14 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
  * @throws Does not throw.
  */
 export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
-    if (props.kind === 'competitions') {
+    // Resolved before the competition branch returns so the title measurement
+    // hook below is called unconditionally.
+    const viewModel = props.kind === 'competitions'
+        ? undefined
+        : toViewModel(props.kind, props.item, !!props.memberApplied)
+    const [titleRef, titleClipped] = useIsTextClipped(viewModel?.title ?? '')
+
+    if (props.kind === 'competitions' || !viewModel) {
         return (
             <CompetitionListCard
                 item={props.item as ChallengeOpportunity}
@@ -850,7 +900,7 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
     }
 
     const card = {
-        ...toViewModel(props.kind, props.item, !!props.memberApplied),
+        ...viewModel,
         ...(props.applicationState ? { state: props.applicationState } : {}),
     }
     const visibleSkills = card.skills.filter(Boolean)
@@ -911,12 +961,15 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                 <Tooltip
                     className={styles.cardTooltip}
                     content={card.title}
+                    disableTooltip={!titleClipped}
                     place='bottom'
                     strategy='fixed'
                 >
-                    <h3 className={classNames({
-                        [styles.reviewTitle]: props.kind === 'reviews' && props.view !== 'grid',
-                    })}
+                    <h3
+                        className={classNames({
+                            [styles.reviewTitle]: props.kind === 'reviews' && props.view !== 'grid',
+                        })}
+                        ref={titleRef}
                     >
                         <Link
                             className={styles.titleLink}
