@@ -143,6 +143,36 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toEqual(labels)
     })
 
+    it('renders authored tags as outlined pills ahead of the filled skill chips', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        skills: [{ name: 'Figma' }, { name: 'Algorithms' }],
+                        tags: ['Application Front-End Design', 'Algorithms'],
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        const labels = screen.getAllByRole('link')
+            .filter(link => (link.getAttribute('href') ?? '')
+                .includes('/opportunities/competitions?search='))
+        expect(labels.map(link => link.textContent))
+            .toEqual(['Application Front-End Design', 'Algorithms', 'Figma'])
+        expect(labels[0].className)
+            .toContain('tagLabel')
+        expect(labels[1].className)
+            .toContain('tagLabel')
+        expect(labels[2].className)
+            .not.toContain('tagLabel')
+    })
+
     it('uses the compact QA label for Quality Assurance challenges', () => {
         render(
             <MemoryRouter>

@@ -93,6 +93,13 @@ interface SkillFilterTagProps {
     skill: string
 }
 
+/** One authored tag or standardized skill shown on a competition card. */
+interface ChallengeLabel {
+    /** Authored challenge tags read as outlined pills; skills read as filled chips. */
+    isTag: boolean
+    label: string
+}
+
 interface CardViewModel {
     badge: string
     description?: string
@@ -465,18 +472,28 @@ function challengeTypePresentation(item: ChallengeOpportunity): ChallengeTypePre
 }
 
 /**
- * Deduplicates Challenge API skill and tag labels while retaining source order.
+ * Deduplicates a challenge's authored tags and standardized skills, flagging
+ * which is which so the card can render them differently.
+ *
+ * Tags come first, matching the Aug 2026 Opportunities design, and a skill that
+ * repeats a tag is dropped rather than shown twice.
  *
  * @param item Challenge API list item.
- * @returns non-empty card labels in stable source order.
+ * @returns non-empty labels in stable source order, tags before skills.
  * @throws Does not throw.
  */
-function challengeSkillLabels(item: ChallengeOpportunity): string[] {
-    return Array.from(new Set([
-        ...(item.skills ?? []).map(skill => skill.name),
-        ...(item.tags ?? []),
-    ].map(label => label.trim())
-        .filter(Boolean)))
+function challengeLabels(item: ChallengeOpportunity): ChallengeLabel[] {
+    const seen = new Set<string>()
+    return [
+        ...(item.tags ?? []).map(label => ({ isTag: true, label })),
+        ...(item.skills ?? []).map(skill => ({ isTag: false, label: skill.name })),
+    ]
+        .map(entry => ({ ...entry, label: entry.label?.trim() ?? '' }))
+        .filter(entry => {
+            if (!entry.label || seen.has(entry.label)) return false
+            seen.add(entry.label)
+            return true
+        })
 }
 
 /**
@@ -677,7 +694,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const type = challengeTypePresentation(item)
     const TypeIcon = type.icon
     const trackKey = challengeCatalogKey(item.track)
-    const skillLabels = challengeSkillLabels(item)
+    const skillLabels = challengeLabels(item)
     const visibleSkills = skillLabels.slice(0, props.view === 'grid' ? 3 : 5)
     const remainingSkills = skillLabels.length - visibleSkills.length
     const placementPrizes = challengePlacementPrizes(item)
@@ -784,14 +801,12 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                     </Tooltip>
                     {visibleSkills.length > 0 && (
                         <div className={styles.skills}>
-                            {visibleSkills.map((skill, index) => (
+                            {visibleSkills.map(entry => (
                                 <SkillFilterTag
-                                    className={classNames({
-                                        [styles.primarySkill]: trackKey === 'design' && index === 0,
-                                    })}
-                                    key={skill}
+                                    className={classNames({ [styles.tagLabel]: entry.isTag })}
+                                    key={entry.label}
                                     onSelect={props.onSkillClick}
-                                    skill={skill}
+                                    skill={entry.label}
                                 />
                             ))}
                             {remainingSkills > 0 && (
@@ -800,7 +815,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                                     content={(
                                         <ul>
                                             {skillLabels.slice(visibleSkills.length)
-                                                .map(skill => <li key={skill}>{skill}</li>)}
+                                                .map(entry => <li key={entry.label}>{entry.label}</li>)}
                                         </ul>
                                     )}
                                     place='bottom'

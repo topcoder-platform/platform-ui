@@ -97,6 +97,7 @@ function competitionFixture(overrides: Partial<ChallengeOpportunity> = {}): Chal
         }],
         skills: [{ name: 'Figma' }, { name: 'User Experience Design' }],
         status: 'ACTIVE',
+        tags: ['Application Front-End Design'],
         track: { name: 'Design', track: 'DESIGN' },
         type: { name: 'First2Finish' },
         ...overrides,
@@ -176,8 +177,10 @@ describe('OpportunityListCard competition presentation', () => {
             .toBeInTheDocument()
         expect(screen.getByText('—'))
             .toBeInTheDocument()
+        expect(screen.getByText('Application Front-End Design').className)
+            .toContain('tagLabel')
         expect(screen.getByText('Figma').className)
-            .toContain('primarySkill')
+            .not.toContain('tagLabel')
         expect(screen.queryByText(/intentionally absent/))
             .not.toBeInTheDocument()
     })
@@ -212,6 +215,7 @@ describe('OpportunityListCard competition presentation', () => {
                             { name: 'UI' },
                             { name: 'Architecture' },
                         ],
+                        tags: [],
                     })}
                     kind='competitions'
                     view='grid'

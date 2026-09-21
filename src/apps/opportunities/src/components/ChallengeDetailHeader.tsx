@@ -172,6 +172,38 @@ function phaseSummary(
     }
 }
 
+/** One authored tag or standardized skill shown in the challenge masthead. */
+interface ChallengeLabel {
+    /** Authored challenge tags read as outlined pills; skills read as filled chips. */
+    isTag: boolean
+    label: string
+}
+
+/**
+ * Deduplicates a challenge's authored tags and standardized skills, flagging
+ * which is which so the masthead can render them differently.
+ *
+ * Tags come first, matching the Aug 2026 Opportunities design, and a skill that
+ * repeats a tag is dropped rather than shown twice.
+ *
+ * @param challenge Challenge API detail response.
+ * @returns non-empty labels in stable source order, tags before skills.
+ * @throws Does not throw.
+ */
+function challengeLabels(challenge: ChallengeOpportunity): ChallengeLabel[] {
+    const seen = new Set<string>()
+    return [
+        ...(challenge.tags ?? []).map(label => ({ isTag: true, label })),
+        ...(challenge.skills ?? []).map(skill => ({ isTag: false, label: skill.name })),
+    ]
+        .map(entry => ({ ...entry, label: entry.label?.trim() ?? '' }))
+        .filter(entry => {
+            if (!entry.label || seen.has(entry.label)) return false
+            seen.add(entry.label)
+            return true
+        })
+}
+
 /**
  * Formats one typed placement prize without assuming every reward is USD.
  *
@@ -430,7 +462,8 @@ function timelineTimezone(): string {
 
 /**
  * Renders the Figma challenge title, authored tags, standardized skills, phase
- * context, prizes, and competition member actions. Tags precede skills, with
+ * context, prizes, and competition member actions. Tags precede skills and read
+ * as outlined pills so they are distinct from the filled skill chips, with
  * blank and duplicate labels omitted. Assignment-only Task challenges omit actions.
  * Featured placement prizes shrink to a compact size for long or point-based
  * labels and to a dense size once lower placement prizes are also shown, and the
@@ -490,11 +523,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     // Per design, the top tier drops to 22px once the card also has to carry
     // lower placement prizes, so the three featured amounts stay inside the frame.
     const denseFeaturedPrizes = challengePrizes.length > 3
-    const labels = Array.from(new Set([
-        ...(props.challenge.tags ?? []),
-        ...(props.challenge.skills ?? []).map(skill => skill.name),
-    ].map(label => label.trim())
-        .filter(Boolean)))
+    const labels = challengeLabels(props.challenge)
     const expandedTimeline = challengeTimelineItems(props.challenge, phase)
     const displayedTimelinePhases = expandedTimeline.slice(1, -1)
     const timelineGridStyle: CSSProperties = {
@@ -533,16 +562,15 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                         </div>
                         <h1>{props.challenge.name}</h1>
                         {labels.length > 0 && (
-                            <div className={classNames(styles.skills, {
-                                [styles.designSkills]: trackKey === 'design',
-                            })}
-                            >
-                                {labels.map(label => (
+                            <div className={styles.skills}>
+                                {labels.map(entry => (
                                     <Link
-                                        key={label}
-                                        to={`/opportunities/competitions?search=${encodeURIComponent(label)}`}
+                                        className={classNames({ [styles.tagLabel]: entry.isTag })}
+                                        key={entry.label}
+                                        to={`/opportunities/competitions?search=${
+                                            encodeURIComponent(entry.label)}`}
                                     >
-                                        {label}
+                                        {entry.label}
                                     </Link>
                                 ))}
                             </div>

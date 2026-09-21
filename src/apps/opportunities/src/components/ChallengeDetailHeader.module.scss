@@ -192,10 +192,18 @@
     }
 }
 
-.designSkills a:first-child {
+/*
+ * Authored challenge tags read as outlined pills so they are visibly distinct
+ * from the filled standardized-skill chips beside them.
+ */
+.skills a.tagLabel {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, .6);
     padding: 3px;
+
+    &:hover {
+        background: rgba(255, 255, 255, .15);
+    }
 }
 
 .timeline {
