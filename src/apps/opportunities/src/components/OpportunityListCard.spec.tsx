@@ -29,9 +29,15 @@ jest.mock('~/libs/ui', () => {
         }),
         Tooltip: (props: {
             children: JSX.Element
+            disableTooltip?: boolean
             strategy?: string
         }): JSX.Element => (
-            <span data-tooltip-strategy={props.strategy}>{props.children}</span>
+            <span
+                data-tooltip-disabled={props.disableTooltip ? 'true' : 'false'}
+                data-tooltip-strategy={props.strategy}
+            >
+                {props.children}
+            </span>
         ),
     }
 }, { virtual: true })
@@ -895,6 +901,36 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toEqual([['Tag'], ['UICollectionView']])
         expect(screen.getByRole('link', { name: /Review post check/ }))
             .toHaveAttribute('href', '/opportunities/review/review-search-skills')
+    })
+
+    it('suppresses the title tooltip while the whole title is visible', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={competitionFixture()} kind='competitions' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Topcoder Opportunities Challenge' }).parentElement)
+            .toHaveAttribute('data-tooltip-disabled', 'true')
+    })
+
+    it('shows the title tooltip once the title is clipped by its line clamp', () => {
+        const scrollHeight = jest.spyOn(HTMLElement.prototype, 'scrollHeight', 'get')
+            .mockReturnValue(120)
+        const clientHeight = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get')
+            .mockReturnValue(60)
+
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={competitionFixture()} kind='competitions' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Topcoder Opportunities Challenge' }).parentElement)
+            .toHaveAttribute('data-tooltip-disabled', 'false')
+
+        scrollHeight.mockRestore()
+        clientHeight.mockRestore()
     })
 
     it('positions review title tooltips outside the card clipping context', () => {
