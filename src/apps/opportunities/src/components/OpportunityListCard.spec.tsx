@@ -942,6 +942,40 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toHaveAttribute('href', '/opportunities/review/review-search-skills')
     })
 
+    it.each([
+        ['Registration', 'phase-registration.svg'],
+        ['Checkpoint Submission', 'phase-submission.svg'],
+        ['Screening', 'phase-screening.svg'],
+        ['AI Screening', 'phase-ai-screening.svg'],
+        ['AI Review', 'phase-ai-screening.svg'],
+        ['Review', 'phase-review.svg'],
+        ['Appeals', 'phase-appeals.svg'],
+        ['Appeals Response', 'phase-appeals-response.svg'],
+        ['Approval', 'phase-winners.svg'],
+        ['Post-Mortem', 'phase-review.svg'],
+    ])('uses the %s phase glyph on the competition card', (phaseName, asset) => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({
+                        currentPhase: {
+                            isOpen: true,
+                            name: phaseName,
+                            scheduledEndDate: '2026-08-14T01:00:00.000Z',
+                            scheduledStartDate: '2026-08-13T00:00:00.000Z',
+                        },
+                        phases: undefined,
+                    })}
+                    kind='competitions'
+                />
+            </MemoryRouter>,
+        )
+
+        const label = screen.getByText(phaseName === 'Registration' ? 'Registration' : phaseName)
+        expect(label.querySelector('svg')?.textContent)
+            .toBe(asset)
+    })
+
     it('suppresses the title tooltip while the whole title is visible', () => {
         render(
             <MemoryRouter>

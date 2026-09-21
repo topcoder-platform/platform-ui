@@ -42,8 +42,14 @@ import { ReactComponent as RegistrantsMetricIcon } from '../assets/metric-regist
 import { ReactComponent as RoleMetricIcon } from '../assets/metric-role.svg'
 import { ReactComponent as StartMetricIcon } from '../assets/metric-start.svg'
 import { ReactComponent as SubmissionsMetricIcon } from '../assets/metric-submissions.svg'
+import { ReactComponent as PhaseAiScreeningIcon } from '../assets/phase-ai-screening.svg'
+import { ReactComponent as PhaseAppealsIcon } from '../assets/phase-appeals.svg'
+import { ReactComponent as PhaseAppealsResponseIcon } from '../assets/phase-appeals-response.svg'
 import { ReactComponent as PhaseRegistrationIcon } from '../assets/phase-registration.svg'
+import { ReactComponent as PhaseReviewIcon } from '../assets/phase-review.svg'
+import { ReactComponent as PhaseScreeningIcon } from '../assets/phase-screening.svg'
 import { ReactComponent as PhaseSubmissionIcon } from '../assets/phase-submission.svg'
+import { ReactComponent as PhaseWinnersIcon } from '../assets/phase-winners.svg'
 import { ReactComponent as RegistrationClosedIcon } from '../assets/registration-closed.svg'
 import { ReactComponent as RegistrationOpenIcon } from '../assets/registration-open.svg'
 import { ReactComponent as TaskTypeIcon } from '../assets/task-type.svg'
@@ -168,6 +174,29 @@ const CompetitionWinnerAvatar: FC<CompetitionWinnerAvatarProps> = props => {
             </span>
         </span>
     )
+}
+
+/**
+ * Resolves the glyph for a challenge phase pill.
+ *
+ * Each phase family reads with its own icon, matching the authored phase tag
+ * set: registration, submission, screening, AI screening or AI review, review,
+ * appeals, appeals response, and winners. Checkpoint phases share their parent
+ * phase's glyph, and an unrecognized phase falls back to the review glyph.
+ *
+ * @param phaseKey normalized phase name from `challengeCatalogKey`.
+ * @returns the SVG component for that phase family.
+ * @throws Does not throw.
+ */
+function challengePhaseIcon(phaseKey: string): FC<SVGProps<SVGSVGElement>> {
+    if (phaseKey.includes('registration') || phaseKey === 'open') return PhaseRegistrationIcon
+    if (phaseKey.includes('submission') || phaseKey.includes('finalfix')) return PhaseSubmissionIcon
+    if (phaseKey.includes('aiscreening') || phaseKey.includes('aireview')) return PhaseAiScreeningIcon
+    if (phaseKey.includes('screening')) return PhaseScreeningIcon
+    if (phaseKey.includes('appealsresponse')) return PhaseAppealsResponseIcon
+    if (phaseKey.includes('appeals')) return PhaseAppealsIcon
+    if (phaseKey.includes('winner') || phaseKey.includes('approval')) return PhaseWinnersIcon
+    return PhaseReviewIcon
 }
 
 /**
@@ -700,9 +729,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const placementPrizes = challengePlacementPrizes(item)
     const phase = challengeCurrentPhase(item)
     const phaseKey = challengeCatalogKey(phase?.name)
-    const PhaseIcon = phaseKey === 'registration' || phaseKey === 'open'
-        ? PhaseRegistrationIcon
-        : PhaseSubmissionIcon
+    const PhaseIcon = challengePhaseIcon(phaseKey)
     const phaseLabel = phaseKey === 'open' ? 'Registration & Submission' : phase?.name || 'Schedule'
     const phaseTiming = challengePhaseTiming(phase)
     const timeLeft = formatChallengeTimeLeft(phaseTiming) || 'TBD'
