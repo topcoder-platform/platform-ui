@@ -689,6 +689,9 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const phaseLabel = phaseKey === 'open' ? 'Registration & Submission' : phase?.name || 'Schedule'
     const phaseTiming = challengePhaseTiming(phase)
     const timeLeft = formatChallengeTimeLeft(phaseTiming) || 'TBD'
+    // A phase whose deadline has passed reads in the alert red, so an overdue
+    // challenge is obvious at a glance in the listing.
+    const phasePastDue = (phaseTiming.remainingMilliseconds ?? 0) < 0
     const progress = Math.round(phaseTiming.progressPercent)
     const registrationOpen = challengeRegistrationIsOpen(item)
     const completed = challengeCatalogKey(item.status) === 'completed'
@@ -835,7 +838,12 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                                     <PhaseIcon aria-hidden='true' />
                                     {phaseLabel}
                                 </span>
-                                <span className={styles.timeLeft}>{timeLeft}</span>
+                                <span className={classNames(styles.timeLeft, {
+                                    [styles.timeLeftPastDue]: phasePastDue,
+                                })}
+                                >
+                                    {timeLeft}
+                                </span>
                             </div>
                             <div
                                 aria-label={`${phaseLabel} phase progress`}

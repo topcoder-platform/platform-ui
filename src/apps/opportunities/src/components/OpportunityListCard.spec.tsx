@@ -228,6 +228,41 @@ describe('OpportunityListCard competition presentation', () => {
             .toBeInTheDocument()
     })
 
+    it('marks an overdue phase deadline in the alert red', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({
+                        currentPhase: {
+                            isOpen: true,
+                            name: 'Screening',
+                            scheduledEndDate: '2026-08-13T12:00:00.000Z',
+                            scheduledStartDate: '2026-08-13T00:00:00.000Z',
+                        },
+                        phases: undefined,
+                    })}
+                    kind='competitions'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Past due').className)
+            .toContain('timeLeftPastDue')
+        expect(opportunityListCardStyles)
+            .toContain('#c1294f')
+    })
+
+    it('does not mark a phase that is still running', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={competitionFixture()} kind='competitions' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('30m left').className)
+            .not.toContain('timeLeftPastDue')
+    })
+
     it('preserves the Figma spacing between grid skills and the divider', () => {
         const competitionMainRules = Array.from(
             opportunityListCardStyles.matchAll(/(?:^|\n)\s*\.competitionMain\s*\{([^}]*)\}/g),
