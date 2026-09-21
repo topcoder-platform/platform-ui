@@ -2,7 +2,11 @@
 import '@testing-library/jest-dom'
 import { fireEvent, render, screen } from '@testing-library/react'
 
-import { MY_ENGAGEMENTS_STATUS, OpportunityFiltersPanel } from './OpportunityFiltersPanel'
+import {
+    COMPLETED_ENGAGEMENTS_STATUS,
+    MY_ENGAGEMENTS_STATUS,
+    OpportunityFiltersPanel,
+} from './OpportunityFiltersPanel'
 
 jest.mock('~/libs/ui', () => {
     const Icon = (): JSX.Element => <svg />
@@ -70,7 +74,7 @@ describe('OpportunityFiltersPanel', () => {
             .toHaveBeenCalledWith('TSK', true)
     })
 
-    it('uses the authored unified search and supported My engagements filter', () => {
+    it('uses the authored unified search and the member scoped engagements filters', () => {
         const onRoleChange = jest.fn()
         const onStatusChange = jest.fn()
 
@@ -98,16 +102,17 @@ describe('OpportunityFiltersPanel', () => {
             .not.toBeInTheDocument()
         expect(screen.getByText('Search skills, technologies, projects'))
             .toBeInTheDocument()
-        expect(screen.queryByText('Completed'))
-            .not.toBeInTheDocument()
         expect(screen.queryByRole('checkbox', { name: 'My engagements' }))
             .not.toBeInTheDocument()
         expect(screen.getAllByRole('radio')
             .map(radio => radio.closest('label')?.textContent))
-            .toEqual(['Open for application', 'My engagements'])
+            .toEqual(['Open for application', 'My engagements', 'Completed'])
         fireEvent.click(screen.getByRole('radio', { name: 'My engagements' }))
         expect(onStatusChange)
             .toHaveBeenCalledWith(MY_ENGAGEMENTS_STATUS)
+        fireEvent.click(screen.getByRole('radio', { name: 'Completed' }))
+        expect(onStatusChange)
+            .toHaveBeenCalledWith(COMPLETED_ENGAGEMENTS_STATUS)
         fireEvent.click(screen.getByRole('combobox', { name: 'Role' }))
         expect(screen.getByRole('listbox'))
             .toBeInTheDocument()
@@ -145,6 +150,8 @@ describe('OpportunityFiltersPanel', () => {
             .map(radio => radio.closest('label')?.textContent))
             .toEqual(['Open for application'])
         expect(screen.queryByText('My engagements'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Completed'))
             .not.toBeInTheDocument()
     })
 
