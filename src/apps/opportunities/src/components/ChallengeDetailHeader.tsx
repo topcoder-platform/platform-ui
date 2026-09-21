@@ -37,11 +37,13 @@ import timelineWinnersIcon from '../assets/timeline-winners.svg'
 import {
     challengeCatalogKey,
     challengeCurrentPhase,
+    challengeIsCancelled,
     ChallengePlacementPrize,
     challengePlacementPrizes,
     challengeRegistrationIsOpen,
     challengeSubmissionIsOpen,
     FUN_CHALLENGE_PRIZE_LABEL,
+    isPostMortemPhase,
 } from './challenge-card.utils'
 import styles from './ChallengeDetailHeader.module.scss'
 
@@ -300,6 +302,8 @@ function challengeTimelineEnd(challenge: ChallengeOpportunity): string | undefin
  * Builds the Figma timeline sequence from Challenge API boundaries and phases.
  * Authored phases stay chronological, with Registration first when valid starts match.
  * Task timelines omit Iterative Review because that phase is not member-facing for Tasks.
+ * Every timeline omits Post-Mortem, which Autopilot opens for the copilot after a
+ * cancellation and which community-app never showed to members.
  *
  * @param challenge Challenge API detail response.
  * @param selected API-authoritative current phase.
@@ -316,8 +320,9 @@ function challengeTimelineItems(
     const endTimestamp = timelineTimestamp(endDate)
     const taskChallenge = isTaskChallenge(challenge)
     const authoredPhases = (challenge.phases ?? []).filter(item => (
-        !taskChallenge || !challengeCatalogKey(item.name)
-            .includes('iterativereview')
+        !isPostMortemPhase(item)
+        && (!taskChallenge || !challengeCatalogKey(item.name)
+            .includes('iterativereview'))
     ))
     const phases = authoredPhases
         .map((item, index) => ({ index, item }))
@@ -453,7 +458,11 @@ function timelineTimezone(): string {
  */
 export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const [timelineOpen, setTimelineOpen] = useState(false)
-    const phase = challengeCurrentPhase(props.challenge)
+    const cancelled = challengeIsCancelled(props.challenge)
+    const currentPhase = challengeCurrentPhase(props.challenge)
+    // A cancelled challenge keeps its Post-Mortem phase open for the copilot. The
+    // masthead must read the cancellation, not a countdown to that phase's close.
+    const phase = cancelled || isPostMortemPhase(currentPhase) ? undefined : currentPhase
     const phaseCopy = phaseSummary(phase, props.challenge.status)
     const challengePrizes = challengePlacementPrizes(props.challenge)
     const type = catalogName(props.challenge.type, 'Challenge')
@@ -463,14 +472,10 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const registrationOpen = challengeRegistrationIsOpen(props.challenge)
     const submissionOpen = challengeSubmissionIsOpen(props.challenge)
     const challengeStatusKey = challengeCatalogKey(props.challenge.status)
-    const showInactiveActions = [
-        'canceled',
-        'canceledclientrequest',
-        'cancelled',
-        'cancelledclientrequest',
-        'completed',
-        'draft',
-    ].includes(challengeStatusKey)
+    // Every cancellation reason reads as a cancelled challenge, including the
+    // `CANCELLED_ZERO_SUBMISSIONS` status Autopilot sets when a challenge closes
+    // with nothing submitted.
+    const showInactiveActions = cancelled || ['completed', 'draft'].includes(challengeStatusKey)
     const registrationUnavailable = props.registrationLoading || props.registrationError
     const canUnregister = props.isRegistered
         && !props.hasSubmitted
