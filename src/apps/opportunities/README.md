@@ -41,8 +41,10 @@ My Work requests at most the first 100 member records from each owning API in
 parallel, then applies its shared opportunity-type and track facets, global
 sorting, and pagination in the client. Owner-specific lifecycle values are
 normalized to All, Active, and Past. Competition cards read Registered;
-approved, accepted, or selected non-competition applications read Accepted;
-the remaining member applications read Applied. Summary counts retain the
+approved or accepted non-competition applications read Accepted; the remaining
+member applications read Applied. Engagements carry the fuller PM-6084
+vocabulary described below, so an offer still awaiting the member reads
+Selected rather than Accepted. Summary counts retain the
 owner-reported totals even when an owner has more than 100 records. Once the
 authenticated profile is available, four count-only owner requests load those
 totals independently of the selected Browse/My Work destination. The masthead
@@ -64,15 +66,21 @@ On mobile, Search, ownership, and Status remain immediately visible while the
 Track, Type, or Role facets sit behind the accessible More filters control.
 Desktop keeps every available facet expanded.
 
-Engagements state their two authored Status choices directly: `Open for
-application` and `My engagements`. The separate ownership checkbox is therefore
-omitted for that domain only; the other domains keep it. `My engagements` is an
+Engagements state their authored Status choices directly: `Open for
+application`, `My engagements`, and `Completed`. The separate ownership checkbox
+is therefore omitted for that domain only; the other domains keep it. `My engagements` is an
 ownership filter wearing a status label, so it deliberately applies no lifecycle
 status and returns the member's open, in-progress, and completed engagements in
-one list, each card carrying its own Applied, Accepted, or Completed state pill.
-An accepted, approved, or selected application or assignment all read as
-`Accepted`, matching the design and the label My Work already used.
-Anonymous visitors never see the option because they own no engagements.
+one list, each card carrying its own state pill. Those pills use the PM-6084
+vocabulary: `Applied`, `Under Review`, `Shortlisted`, `Selected`, `Assigned`,
+`Completed`, `Rejected`, `Offer Declined`, and `Terminated`. `Selected` and
+`Assigned` are deliberately distinct, because the Engagements API uses
+`SELECTED` for an offer a talent manager has extended and `ASSIGNED` only once
+the member has pressed Accept Offer; labelling a pending offer `Accepted`
+contradicted the Accept Offer button still showing on the same engagement
+(PM-6335). `Accepted` is reserved for the `ACCEPTED` application status the
+member sets themselves. Anonymous visitors never see the option because they own
+no engagements.
 
 On narrow layouts, Browse keeps the member's decision flow in document order:
 the title is followed by filters, then the sort/view toolbar, and finally the
