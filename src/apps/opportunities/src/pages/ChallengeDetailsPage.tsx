@@ -282,6 +282,8 @@ interface TabConfig {
     count?: number
     id: ChallengeTab
     label: string
+    /** Marks the tab's count badge with the unread dot. */
+    unread?: boolean
 }
 
 /**
@@ -422,6 +424,8 @@ export const ChallengeDetailsPage: FC = () => {
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
     const forumTopicCount = forumResponse.data?.sourceTotalCount ?? challenge?.numOfPosts
+    // Surfaced on the Forum tab so unread topics are visible without opening the tab.
+    const forumHasUnread = (forumResponse.data?.data ?? []).some(topic => topic.unread)
 
     useEffect(() => {
         setIssueOpen(false)
@@ -458,12 +462,18 @@ export const ChallengeDetailsPage: FC = () => {
                 ? [{ id: 'dashboard' as ChallengeTab, label: 'Dashboard' }]
                 : []),
             ...(hasForumAccess
-                ? [{ count: forumTopicCount, id: 'forum' as ChallengeTab, label: 'Forum' }]
+                ? [{
+                    count: forumTopicCount,
+                    id: 'forum' as ChallengeTab,
+                    label: 'Forum',
+                    unread: forumHasUnread,
+                }]
                 : []),
             { id: 'winners', label: 'Winners' },
         ]
     }, [
         challenge,
+        forumHasUnread,
         forumTopicCount,
         hasForumAccess,
         hasMemberTabAccess,
@@ -825,7 +835,11 @@ export const ChallengeDetailsPage: FC = () => {
                             type='button'
                         >
                             {tab.label}
-                            {(tab.count ?? 0) > 0 && <span>{tab.count}</span>}
+                            {(tab.count ?? 0) > 0 && (
+                                <span className={tab.unread ? styles.unreadBadge : undefined}>
+                                    {tab.count}
+                                </span>
+                            )}
                         </button>
                     ))}
                 </div>
