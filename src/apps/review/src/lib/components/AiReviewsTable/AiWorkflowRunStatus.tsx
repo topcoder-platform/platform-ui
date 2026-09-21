@@ -8,7 +8,7 @@ import StatusLabel from './StatusLabel'
 
 interface AiWorkflowRunStatusProps {
     run?: Pick<AiWorkflowRun, 'status'|'score'|'workflow'|'id'>
-    status?: 'passed' | 'pending' | 'failed-score' | 'failed' | 'cancelled' | 'human-override'
+    status?: 'passed' | 'pending' | 'failed-score' | 'failed' | 'cancelled' | 'timeout' | 'human-override'
     score?: number
     hideLabel?: boolean
     showScore?: boolean
@@ -17,15 +17,16 @@ interface AiWorkflowRunStatusProps {
 
 const aiRunStatus = (
     run: Pick<AiWorkflowRun, 'status'|'score'|'workflow'>,
-): 'pending' | 'failed' | 'cancelled' | 'passed' | 'failed-score' => {
+): 'pending' | 'failed' | 'cancelled' | 'timeout' | 'passed' | 'failed-score' => {
     const isInProgress = aiRunInProgress(run)
     const isFailed = aiRunFailed(run)
     const isCancelled = run.status === 'CANCELLED'
+    const isTimedOut = run.status === 'TIMEOUT'
     const isPassing = (
         run.status === 'SUCCESS'
         && run.score >= (run.workflow.scorecard?.minimumPassingScore ?? 0)
     )
-    return isInProgress ? 'pending' : isCancelled ? 'cancelled' : isFailed ? 'failed' : (
+    return isInProgress ? 'pending' : isCancelled ? 'cancelled' : isTimedOut ? 'timeout' : isFailed ? 'failed' : (
         isPassing ? 'passed' : 'failed-score'
     )
 }
@@ -94,6 +95,16 @@ export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
                     hideLabel={props.hideLabel}
                     status='failed'
                     label='Cancelled'
+                    score={score}
+                    action={props.action}
+                />
+            )}
+            {displayStatus === 'timeout' && (
+                <StatusLabel
+                    icon={<IconOutline.ClockIcon className='icon-xl' />}
+                    hideLabel={props.hideLabel}
+                    status={displayStatus}
+                    label='Timeout'
                     score={score}
                     action={props.action}
                 />

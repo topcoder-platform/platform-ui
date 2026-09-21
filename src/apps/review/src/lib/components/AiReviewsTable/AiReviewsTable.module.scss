@@ -149,7 +149,8 @@
 }
 
 .row-failed,
-.row-failed-score {
+.row-failed-score,
+.row-timeout {
     .resultCol {
         color: $red-140;
     }
