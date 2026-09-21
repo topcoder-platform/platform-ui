@@ -100,7 +100,12 @@
         font-size: 14px;
         height: 52px;
         line-height: 20px;
-        padding: 8px 16px;
+
+        /* The fixed layout clips nothing on its own, so a value wider than its
+           column renders over the next one. Wrapping keeps full-precision
+           Marathon Match scores inside the column they belong to. */
+        overflow-wrap: anywhere;
+        padding: 8px 12px;
         text-align: left;
     }
 
