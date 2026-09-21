@@ -40,7 +40,7 @@ import { ChallengeEditorPage } from './ChallengeEditorPage'
 
 var mockWorkAppContext: Context<WorkAppContextModel>
 
-jest.mock('tc-auth-lib', () => ({
+jest.mock('@topcoder-platform/tc-auth-lib', () => ({
     decodeToken: jest.fn(),
 }))
 
