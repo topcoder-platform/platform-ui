@@ -2,7 +2,10 @@
 import {
     FC,
     ReactNode,
+    RefObject,
     SVGProps,
+    useEffect,
+    useRef,
     useState,
 } from 'react'
 import { Link } from 'react-router-dom'
@@ -90,6 +93,13 @@ interface SkillFilterTagProps {
     skill: string
 }
 
+/** One authored tag or standardized skill shown on a competition card. */
+interface ChallengeLabel {
+    /** Authored challenge tags read as outlined pills; skills read as filled chips. */
+    isTag: boolean
+    label: string
+}
+
 interface CardViewModel {
     badge: string
     description?: string
@@ -158,6 +168,44 @@ const CompetitionWinnerAvatar: FC<CompetitionWinnerAvatarProps> = props => {
             </span>
         </span>
     )
+}
+
+/**
+ * Reports whether an element's text is visually clipped by its line clamp.
+ *
+ * Card titles are clamped to two or three lines and end in an ellipsis once
+ * they overflow. The title tooltip exists only to reveal what the clamp hides,
+ * so it is suppressed while the whole title is visible.
+ *
+ * Re-measures whenever the element resizes or the text changes. Environments
+ * without `ResizeObserver` fall back to the initial measurement.
+ *
+ * @param text the rendered text, used to re-measure when the title changes.
+ * @returns a ref to attach to the clamped element, and whether its text is clipped.
+ * @throws Does not throw.
+ */
+function useIsTextClipped(text: string): [RefObject<HTMLHeadingElement>, boolean] {
+    const ref = useRef<HTMLHeadingElement>(null)
+    const [clipped, setClipped] = useState(false)
+
+    useEffect(() => {
+        const element = ref.current
+        if (!element) return undefined
+
+        const measure = (): void => setClipped(
+            element.scrollHeight - element.clientHeight > 1
+            || element.scrollWidth - element.clientWidth > 1,
+        )
+
+        measure()
+        if (typeof ResizeObserver === 'undefined') return undefined
+
+        const observer = new ResizeObserver(measure)
+        observer.observe(element)
+        return () => observer.disconnect()
+    }, [text])
+
+    return [ref, clipped]
 }
 
 /**
@@ -424,18 +472,28 @@ function challengeTypePresentation(item: ChallengeOpportunity): ChallengeTypePre
 }
 
 /**
- * Deduplicates Challenge API skill and tag labels while retaining source order.
+ * Deduplicates a challenge's authored tags and standardized skills, flagging
+ * which is which so the card can render them differently.
+ *
+ * Tags come first, matching the Aug 2026 Opportunities design, and a skill that
+ * repeats a tag is dropped rather than shown twice.
  *
  * @param item Challenge API list item.
- * @returns non-empty card labels in stable source order.
+ * @returns non-empty labels in stable source order, tags before skills.
  * @throws Does not throw.
  */
-function challengeSkillLabels(item: ChallengeOpportunity): string[] {
-    return Array.from(new Set([
-        ...(item.skills ?? []).map(skill => skill.name),
-        ...(item.tags ?? []),
-    ].map(label => label.trim())
-        .filter(Boolean)))
+function challengeLabels(item: ChallengeOpportunity): ChallengeLabel[] {
+    const seen = new Set<string>()
+    return [
+        ...(item.tags ?? []).map(label => ({ isTag: true, label })),
+        ...(item.skills ?? []).map(skill => ({ isTag: false, label: skill.name })),
+    ]
+        .map(entry => ({ ...entry, label: entry.label?.trim() ?? '' }))
+        .filter(entry => {
+            if (!entry.label || seen.has(entry.label)) return false
+            seen.add(entry.label)
+            return true
+        })
 }
 
 /**
@@ -637,10 +695,11 @@ function toViewModel(kind: OpportunityKind, item: OpportunityItem, memberApplied
 const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const item = props.item
     const title = decodeHtmlEntities(item.name)
+    const [titleRef, titleClipped] = useIsTextClipped(title)
     const type = challengeTypePresentation(item)
     const TypeIcon = type.icon
     const trackKey = challengeCatalogKey(item.track)
-    const skillLabels = challengeSkillLabels(item)
+    const skillLabels = challengeLabels(item)
     const visibleSkills = skillLabels.slice(0, props.view === 'grid' ? 3 : 5)
     const remainingSkills = skillLabels.length - visibleSkills.length
     const placementPrizes = challengePlacementPrizes(item)
@@ -652,6 +711,9 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const phaseLabel = phaseKey === 'open' ? 'Registration & Submission' : phase?.name || 'Schedule'
     const phaseTiming = challengePhaseTiming(phase)
     const timeLeft = formatChallengeTimeLeft(phaseTiming) || 'TBD'
+    // A phase whose deadline has passed reads in the alert red, so an overdue
+    // challenge is obvious at a glance in the listing.
+    const phasePastDue = (phaseTiming.remainingMilliseconds ?? 0) < 0
     const progress = Math.round(phaseTiming.progressPercent)
     const registrationOpen = challengeRegistrationIsOpen(item)
     const completed = challengeCatalogKey(item.status) === 'completed'
@@ -729,10 +791,11 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                     <Tooltip
                         className={styles.cardTooltip}
                         content={title}
+                        disableTooltip={!titleClipped}
                         place='bottom'
                         strategy='fixed'
                     >
-                        <h3>
+                        <h3 ref={titleRef}>
                             <Link
                                 className={styles.titleLink}
                                 to={challengeDetailPath(item.id)}
@@ -743,14 +806,12 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                     </Tooltip>
                     {visibleSkills.length > 0 && (
                         <div className={styles.skills}>
-                            {visibleSkills.map((skill, index) => (
+                            {visibleSkills.map(entry => (
                                 <SkillFilterTag
-                                    className={classNames({
-                                        [styles.primarySkill]: trackKey === 'design' && index === 0,
-                                    })}
-                                    key={skill}
+                                    className={classNames({ [styles.tagLabel]: entry.isTag })}
+                                    key={entry.label}
                                     onSelect={props.onSkillClick}
-                                    skill={skill}
+                                    skill={entry.label}
                                 />
                             ))}
                             {remainingSkills > 0 && (
@@ -759,7 +820,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                                     content={(
                                         <ul>
                                             {skillLabels.slice(visibleSkills.length)
-                                                .map(skill => <li key={skill}>{skill}</li>)}
+                                                .map(entry => <li key={entry.label}>{entry.label}</li>)}
                                         </ul>
                                     )}
                                     place='bottom'
@@ -797,7 +858,12 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                                     <PhaseIcon aria-hidden='true' />
                                     {phaseLabel}
                                 </span>
-                                <span className={styles.timeLeft}>{timeLeft}</span>
+                                <span className={classNames(styles.timeLeft, {
+                                    [styles.timeLeftPastDue]: phasePastDue,
+                                })}
+                                >
+                                    {timeLeft}
+                                </span>
                             </div>
                             <div
                                 aria-label={`${phaseLabel} phase progress`}
@@ -841,7 +907,14 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
  * @throws Does not throw.
  */
 export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
-    if (props.kind === 'competitions') {
+    // Resolved before the competition branch returns so the title measurement
+    // hook below is called unconditionally.
+    const viewModel = props.kind === 'competitions'
+        ? undefined
+        : toViewModel(props.kind, props.item, !!props.memberApplied)
+    const [titleRef, titleClipped] = useIsTextClipped(viewModel?.title ?? '')
+
+    if (props.kind === 'competitions' || !viewModel) {
         return (
             <CompetitionListCard
                 item={props.item as ChallengeOpportunity}
@@ -853,7 +926,7 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
     }
 
     const card = {
-        ...toViewModel(props.kind, props.item, !!props.memberApplied),
+        ...viewModel,
         ...(props.applicationState ? { state: props.applicationState } : {}),
     }
     const visibleSkills = card.skills.filter(Boolean)
@@ -914,12 +987,15 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                 <Tooltip
                     className={styles.cardTooltip}
                     content={card.title}
+                    disableTooltip={!titleClipped}
                     place='bottom'
                     strategy='fixed'
                 >
-                    <h3 className={classNames({
-                        [styles.reviewTitle]: props.kind === 'reviews' && props.view !== 'grid',
-                    })}
+                    <h3
+                        className={classNames({
+                            [styles.reviewTitle]: props.kind === 'reviews' && props.view !== 'grid',
+                        })}
+                        ref={titleRef}
                     >
                         <Link
                             className={styles.titleLink}

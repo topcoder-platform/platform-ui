@@ -15,6 +15,7 @@ import {
     formatMarathonScore,
     marathonSubmissionScores,
 } from '../utils/marathon-match.utils'
+import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 
 import styles from './SubmissionHistoryModal.module.scss'
 
@@ -33,22 +34,11 @@ interface SubmissionHistoryModalProps {
  * Formats a Review API timestamp for the submission history table.
  *
  * @param value optional ISO timestamp.
- * @returns localized timestamp, or an em dash for invalid input.
+ * @returns localized timestamp such as `17 Sep 2026, 14:39`, or an em dash for invalid input.
  * @throws Does not throw.
  */
 function formatTimestamp(value?: string): string {
-    if (!value) return '—'
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return '—'
-    return new Intl.DateTimeFormat('en-US', {
-        day: 'numeric',
-        hour: '2-digit',
-        hour12: false,
-        minute: '2-digit',
-        month: 'long',
-        year: 'numeric',
-    })
-        .format(date)
+    return formatOpportunityDateTime(value, '—')
 }
 
 /**
@@ -78,9 +68,37 @@ function submissionHandle(submission?: ChallengeSubmission): string | undefined 
 }
 
 /**
+ * Resolves the proportional column widths for the submission history table.
+ *
+ * The table is laid out with `table-layout: fixed`, which otherwise splits the
+ * modal evenly between the columns. Marathon Match scores are rendered at full
+ * precision, so an even split leaves the score columns too narrow and their
+ * values run into the next column. Weighting the columns gives the scores the
+ * room they need while the Submission ID keeps its ellipsis and Artifacts stays
+ * compact.
+ *
+ * @param isMarathonMatch whether the Provisional Score column is rendered.
+ * @param showArtifacts whether the Artifacts column is rendered.
+ * @returns one CSS percentage per rendered column, in column order, summing to 100%.
+ * @throws Does not throw.
+ */
+function columnWidths(isMarathonMatch: boolean, showArtifacts: boolean): string[] {
+    const weights = [
+        24, // Submission ID
+        18, // Submission Date
+        ...(isMarathonMatch ? [22] : []), // Provisional Score
+        22, // Final Score
+        ...(showArtifacts ? [14] : []), // Artifacts
+    ]
+    const total = weights.reduce((sum, weight) => sum + weight, 0)
+    return weights.map(weight => `${((weight / total) * 100).toFixed(2)}%`)
+}
+
+/**
  * Shows the selected member's server-authorized submission history without
  * navigating away from Opportunities to Review App. Review API may limit an
- * ordinary viewer to the latest attempt.
+ * ordinary viewer to the latest attempt. Each row's Artifacts control is styled
+ * as a link, matching the All Submissions table on the challenge detail page.
  *
  * @param props selected submission, challenge context, visibility, and authorized artifact/close callbacks.
  * @returns modal with history rows or a loading, error, or empty state.
@@ -139,6 +157,13 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                 </p>
                 <div className={styles.tableWrap}>
                     <table>
+                        <colgroup>
+                            {columnWidths(!!props.isMarathonMatch, !!props.onOpenArtifacts)
+                                .map((width, index) => (
+                                    // eslint-disable-next-line react/no-array-index-key
+                                    <col key={`column-${index}`} style={{ width }} />
+                                ))}
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th>Submission ID</th>
@@ -176,9 +201,14 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                                             <td data-mobile-label='Artifacts' data-mobile-order='5'>
                                                 <button
                                                     aria-label={`Download submission artifacts ${submission.id}`}
+                                                    className={styles.artifactsLink}
                                                     onClick={() => props.onOpenArtifacts?.(submission.id)}
                                                     type='button'
                                                 >
+                                                    <IconOutline.FolderDownloadIcon
+                                                        aria-hidden='true'
+                                                        width={16}
+                                                    />
                                                     Artifacts
                                                 </button>
                                             </td>

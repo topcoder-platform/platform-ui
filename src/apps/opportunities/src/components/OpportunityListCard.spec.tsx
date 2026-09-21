@@ -29,9 +29,15 @@ jest.mock('~/libs/ui', () => {
         }),
         Tooltip: (props: {
             children: JSX.Element
+            disableTooltip?: boolean
             strategy?: string
         }): JSX.Element => (
-            <span data-tooltip-strategy={props.strategy}>{props.children}</span>
+            <span
+                data-tooltip-disabled={props.disableTooltip ? 'true' : 'false'}
+                data-tooltip-strategy={props.strategy}
+            >
+                {props.children}
+            </span>
         ),
     }
 }, { virtual: true })
@@ -91,6 +97,7 @@ function competitionFixture(overrides: Partial<ChallengeOpportunity> = {}): Chal
         }],
         skills: [{ name: 'Figma' }, { name: 'User Experience Design' }],
         status: 'ACTIVE',
+        tags: ['Application Front-End Design'],
         track: { name: 'Design', track: 'DESIGN' },
         type: { name: 'First2Finish' },
         ...overrides,
@@ -170,8 +177,10 @@ describe('OpportunityListCard competition presentation', () => {
             .toBeInTheDocument()
         expect(screen.getByText('—'))
             .toBeInTheDocument()
+        expect(screen.getByText('Application Front-End Design').className)
+            .toContain('tagLabel')
         expect(screen.getByText('Figma').className)
-            .toContain('primarySkill')
+            .not.toContain('tagLabel')
         expect(screen.queryByText(/intentionally absent/))
             .not.toBeInTheDocument()
     })
@@ -206,6 +215,7 @@ describe('OpportunityListCard competition presentation', () => {
                             { name: 'UI' },
                             { name: 'Architecture' },
                         ],
+                        tags: [],
                     })}
                     kind='competitions'
                     view='grid'
@@ -220,6 +230,41 @@ describe('OpportunityListCard competition presentation', () => {
             .toHaveLength(2)
         expect(screen.getByText('Submissions:'))
             .toBeInTheDocument()
+    })
+
+    it('marks an overdue phase deadline in the alert red', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({
+                        currentPhase: {
+                            isOpen: true,
+                            name: 'Screening',
+                            scheduledEndDate: '2026-08-13T12:00:00.000Z',
+                            scheduledStartDate: '2026-08-13T00:00:00.000Z',
+                        },
+                        phases: undefined,
+                    })}
+                    kind='competitions'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Past due').className)
+            .toContain('timeLeftPastDue')
+        expect(opportunityListCardStyles)
+            .toContain('#c1294f')
+    })
+
+    it('does not mark a phase that is still running', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={competitionFixture()} kind='competitions' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('30m left').className)
+            .not.toContain('timeLeftPastDue')
     })
 
     it('preserves the Figma spacing between grid skills and the divider', () => {
@@ -256,6 +301,25 @@ describe('OpportunityListCard competition presentation', () => {
             .toBeInTheDocument()
         expect(screen.queryByText(/&amp;/))
             .not.toBeInTheDocument()
+    })
+
+    it('draws the winner medal at its 14:18 artwork ratio', () => {
+        const medalBlock = (opportunityListCardStyles
+            .match(/\.winnerMedal\s*\{[\s\S]*?\n\}/) ?? [''])[0]
+
+        expect(medalBlock)
+            .toContain('width: 16px')
+        expect(medalBlock)
+            .toContain('height: 20px')
+        expect(medalBlock)
+            .not.toContain('width: 20px')
+
+        const medalArtwork = readFileSync(
+            `${__dirname}/../assets/medal-1.svg`,
+            'utf8',
+        )
+        expect(medalArtwork)
+            .not.toContain('preserveAspectRatio="none"')
     })
 
     it('deep-links every active competition metric without nesting card links', () => {
@@ -900,6 +964,36 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toEqual([['Tag'], ['UICollectionView']])
         expect(screen.getByRole('link', { name: /Review post check/ }))
             .toHaveAttribute('href', '/opportunities/review/review-search-skills')
+    })
+
+    it('suppresses the title tooltip while the whole title is visible', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={competitionFixture()} kind='competitions' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Topcoder Opportunities Challenge' }).parentElement)
+            .toHaveAttribute('data-tooltip-disabled', 'true')
+    })
+
+    it('shows the title tooltip once the title is clipped by its line clamp', () => {
+        const scrollHeight = jest.spyOn(HTMLElement.prototype, 'scrollHeight', 'get')
+            .mockReturnValue(120)
+        const clientHeight = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get')
+            .mockReturnValue(60)
+
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={competitionFixture()} kind='competitions' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Topcoder Opportunities Challenge' }).parentElement)
+            .toHaveAttribute('data-tooltip-disabled', 'false')
+
+        scrollHeight.mockRestore()
+        clientHeight.mockRestore()
     })
 
     it('positions review title tooltips outside the card clipping context', () => {
