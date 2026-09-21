@@ -387,9 +387,38 @@ export function shouldShowFinalSubmissionScores(
 }
 
 /**
+ * Ranks the scorer phases a summation can belong to.
+ *
+ * A submission advances Example -> Provisional -> System, so the furthest phase
+ * describes the process the submission is actually in. Example runs are
+ * diagnostic warm-ups and must never speak for the row, which is what
+ * community-app's "Current Tests Process" column shows.
+ */
+const TEST_PROCESS_PRIORITY: Record<NonNullable<MarathonTestProgress['process']>, number> = {
+    Example: 1,
+    Provisional: 2,
+    System: 3,
+}
+
+/**
+ * Ranks scorer statuses within a single phase.
+ *
+ * A cancellation or an active run is more newsworthy than a settled result, so
+ * a stale passing run cannot hide either of them.
+ */
+function testStatusPriority(status: MarathonTestProgress['status']): number {
+    if (status === 'Cancelled') return 2
+    if (status === 'In progress') return 1
+    return 0
+}
+
+/**
  * Resolves the most relevant member-safe scorer progress metadata, then falls
  * back to virus-scan, review, score, and submission lifecycle fields.
- * Uses the newest result per phase so stale progress cannot hide a cancellation.
+ * Candidates are ranked by scorer phase first and by status second, so a
+ * cancelled Example run cannot displace the submission's provisional or system
+ * result, and the newest result per phase is used so stale progress cannot hide
+ * a cancellation within that phase.
  *
  * @param submission Review API submission with attached summations.
  * @param challenge optional Challenge API context used to identify the active scoring phase.
@@ -418,26 +447,19 @@ export function marathonSubmissionTestProgress(
             })
             const progress = testProgressValue(metadata.testProgress ?? detailRecord.progress)
             const status = testStatusValue(metadata.testStatus ?? detailRecord.status)
-            const priority = status === 'Cancelled'
-                ? 5
-                : status === 'In progress'
-                    ? 4
-                    : process === 'System'
-                        ? 3
-                        : process === 'Provisional'
-                            ? 2
-                            : 1
             return {
                 index,
-                priority,
                 process,
+                processPriority: process ? TEST_PROCESS_PRIORITY[process] : 0,
                 progress,
                 status,
+                statusPriority: testStatusPriority(status),
                 timestamp: summationTimestamp(summation),
             }
         })
         .filter(candidate => candidate.process || candidate.status || candidate.progress !== undefined)
-        .sort((first, second) => second.priority - first.priority
+        .sort((first, second) => second.processPriority - first.processPriority
+            || second.statusPriority - first.statusPriority
             || second.timestamp - first.timestamp
             || second.index - first.index)
     const current = candidates[0]
