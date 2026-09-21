@@ -234,6 +234,25 @@ describe('OpportunityListCard competition presentation', () => {
             .toBe(false)
     })
 
+    it('draws the winner medal at its 14:18 artwork ratio', () => {
+        const medalBlock = (opportunityListCardStyles
+            .match(/\.winnerMedal\s*\{[\s\S]*?\n\}/) ?? [''])[0]
+
+        expect(medalBlock)
+            .toContain('width: 16px')
+        expect(medalBlock)
+            .toContain('height: 20px')
+        expect(medalBlock)
+            .not.toContain('width: 20px')
+
+        const medalArtwork = readFileSync(
+            `${__dirname}/../assets/medal-1.svg`,
+            'utf8',
+        )
+        expect(medalArtwork)
+            .not.toContain('preserveAspectRatio="none"')
+    })
+
     it('deep-links every active competition metric without nesting card links', () => {
         render(
             <MemoryRouter>
