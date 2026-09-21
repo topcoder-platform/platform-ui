@@ -52,6 +52,54 @@ describe('Marathon Match challenge detail utilities', () => {
             .toEqual({ process: 'Provisional', progress: 0, status: 'Cancelled' })
     })
 
+    it('keeps a cancelled Example run from speaking for a scored submission', () => {
+        expect(marathonSubmissionTestProgress({
+            id: 'example-cancelled',
+            reviewSummation: [{
+                createdAt: '2026-09-15T17:36:30Z',
+                id: 'cancelled-example',
+                isExample: true,
+                metadata: { testProgress: 1, testStatus: 'CANCELLED' },
+            }, {
+                aggregateScore: 99.74,
+                createdAt: '2026-09-15T17:36:23Z',
+                id: 'passed-provisional',
+                isProvisional: true,
+                metadata: { testProgress: 1, testStatus: 'PASSED' },
+            }],
+        }))
+            .toEqual({ process: 'Provisional', progress: 100, status: 'Passed' })
+    })
+
+    it('still surfaces a cancellation raised by the furthest scorer phase', () => {
+        expect(marathonSubmissionTestProgress({
+            id: 'system-cancelled',
+            reviewSummation: [{
+                aggregateScore: 99.74,
+                id: 'passed-provisional',
+                isProvisional: true,
+                metadata: { testProgress: 1, testStatus: 'PASSED' },
+            }, {
+                id: 'cancelled-system',
+                isFinal: true,
+                metadata: { testStatus: 'CANCELLED' },
+            }],
+        }))
+            .toEqual({ process: 'System', progress: 0, status: 'Cancelled' })
+    })
+
+    it('falls back to an Example run when it is the only scorer result', () => {
+        expect(marathonSubmissionTestProgress({
+            id: 'example-only',
+            reviewSummation: [{
+                id: 'running-example',
+                isExample: true,
+                metadata: { testProgress: 0.4, testStatus: 'IN PROGRESS' },
+            }],
+        }))
+            .toEqual({ process: 'Example', progress: 40, status: 'In progress' })
+    })
+
     it('does not graph cancelled attempts even if a stale positive score is attached', () => {
         expect(buildMarathonDashboardData([{
             aggregateScore: 98,
