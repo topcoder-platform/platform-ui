@@ -374,10 +374,12 @@
 
     > div {
         display: grid;
-        font-size: 12px;
+
+        /* Authored size for the Last post / Created rows in both info rails. */
+        font-size: 14px;
         gap: 8px;
-        grid-template-columns: 64px 1fr;
-        line-height: 16px;
+        grid-template-columns: 72px 1fr;
+        line-height: 20px;
     }
 
     dt {
@@ -389,10 +391,6 @@
     }
 }
 
-.discussionInfo dl > div {
-    font-size: 14px;
-    line-height: 20px;
-}
 
 .member {
     align-items: center;
