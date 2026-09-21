@@ -80,6 +80,7 @@ jest.mock('../utils', () => ({
     isMarathonMatchChallenge: (): boolean => false,
     isTaskChallenge: (): boolean => false,
     marathonDashboardIsEnabled: (): boolean => false,
+    marathonLeaderboardIsPublic: (): boolean => false,
     marathonSubmissionScores: (): Record<string, never> => ({}),
     memberProfileUrl: (handle: string): string => `https://profiles.topcoder-dev.com/${handle}`,
     shouldShowFinalSubmissionScores: (): boolean => false,

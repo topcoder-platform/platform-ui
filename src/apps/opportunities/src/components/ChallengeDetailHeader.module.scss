@@ -192,10 +192,18 @@
     }
 }
 
-.designSkills a:first-child {
+/*
+ * Authored challenge tags read as outlined pills so they are visibly distinct
+ * from the filled standardized-skill chips beside them.
+ */
+.skills a.tagLabel {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, .6);
     padding: 3px;
+
+    &:hover {
+        background: rgba(255, 255, 255, .15);
+    }
 }
 
 .timeline {
@@ -257,10 +265,12 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    height: 252px;
     justify-content: space-between;
     justify-self: end;
     max-width: 100%;
+
+    /* Grows rather than clips when the prize rows wrap onto an extra line. */
+    min-height: 252px;
     padding: 24px;
     position: relative;
     width: 384px;
@@ -308,9 +318,11 @@
 }
 
 .prizes {
+    box-sizing: border-box;
     color: #3ddbd9;
     flex-direction: column;
     gap: 4px;
+    max-width: 100%;
     width: 100%;
 
     strong {
@@ -350,16 +362,27 @@
 }
 
 .featuredPrizes {
-    gap: 24px;
+    /* Wrapping keeps wide amounts inside the prize frame instead of bleeding
+       past the card border when three large placement prizes are shown. */
+    flex-wrap: wrap;
+    gap: 8px 24px;
 }
 
 .compactFeaturedPrizes {
-    flex-wrap: wrap;
     gap: 8px 20px;
 }
 
 .compactPrize {
     font-size: 24px !important;
+    min-width: 0;
+}
+
+.denseFeaturedPrizes {
+    gap: 8px 16px;
+}
+
+.densePrize {
+    font-size: 22px !important;
     min-width: 0;
 }
 

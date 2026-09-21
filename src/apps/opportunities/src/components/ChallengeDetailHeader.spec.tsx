@@ -150,6 +150,36 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toEqual(labels)
     })
 
+    it('renders authored tags as outlined pills ahead of the filled skill chips', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        skills: [{ name: 'Figma' }, { name: 'Algorithms' }],
+                        tags: ['Application Front-End Design', 'Algorithms'],
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        const labels = screen.getAllByRole('link')
+            .filter(link => (link.getAttribute('href') ?? '')
+                .includes('/opportunities/competitions?search='))
+        expect(labels.map(link => link.textContent))
+            .toEqual(['Application Front-End Design', 'Algorithms', 'Figma'])
+        expect(labels[0].className)
+            .toContain('tagLabel')
+        expect(labels[1].className)
+            .toContain('tagLabel')
+        expect(labels[2].className)
+            .not.toContain('tagLabel')
+    })
+
     it('uses the compact QA label for Quality Assurance challenges', () => {
         render(
             <MemoryRouter>
@@ -395,6 +425,66 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toContain('color: rgba(255, 255, 255, .15)')
         expect(actionCardBlock)
             .not.toContain('opacity: .55')
+    })
+
+    it('reads the cancellation instead of the open Post-Mortem phase for a zero-submission challenge', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        currentPhase: {
+                            isOpen: true,
+                            name: 'Post-Mortem',
+                            scheduledEndDate: '2026-08-18T00:00:00.000Z',
+                        },
+                        currentPhaseNames: ['Post-Mortem'],
+                        phases: [
+                            {
+                                isOpen: false,
+                                name: 'Registration',
+                                scheduledEndDate: '2026-08-13T00:00:00.000Z',
+                            },
+                            {
+                                isOpen: false,
+                                name: 'Submission',
+                                scheduledEndDate: '2026-08-13T00:00:00.000Z',
+                            },
+                            {
+                                isOpen: true,
+                                name: 'Post-Mortem',
+                                scheduledEndDate: '2026-08-18T00:00:00.000Z',
+                            },
+                        ],
+                        status: 'CANCELLED_ZERO_SUBMISSIONS',
+                    })}
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Cancelled zero submissions'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Post-Mortem'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText(/phase closes in/))
+            .not.toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+
+        expect(screen.queryByText('Post-Mortem'))
+            .not.toBeInTheDocument()
+        expect(screen.getByText('Registration'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Submission'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Unregister' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Submit a solution' }))
+            .toBeDisabled()
     })
 
     it('avoids flashing Register while member registration is unresolved', () => {

@@ -216,6 +216,39 @@ function phaseStartTimestamp(phase: ChallengePhase): number | undefined {
 }
 
 /**
+ * Tests whether a phase is the copilot-facing Post-Mortem phase.
+ *
+ * Autopilot opens a Post-Mortem phase when a challenge is cancelled, and leaves
+ * it open while the copilot writes it up. It is internal bookkeeping rather than
+ * member-facing competition work, so community-app never surfaced it and the
+ * v6 challenge detail timeline leaves it out as well.
+ *
+ * @param phase Challenge API phase, or undefined.
+ * @returns true when the phase is Post-Mortem.
+ * @throws Does not throw.
+ */
+export function isPostMortemPhase(phase: ChallengePhase | undefined): boolean {
+    return challengeCatalogKey(phase?.name)
+        .includes('postmortem')
+}
+
+/**
+ * Tests whether a challenge was cancelled.
+ *
+ * Challenge API reports the reason in the status itself, for example
+ * `CANCELLED_ZERO_SUBMISSIONS` or `CANCELLED_CLIENT_REQUEST`, so every
+ * cancellation reason is matched rather than an enumerated subset.
+ *
+ * @param challenge challenge returned by Challenge API.
+ * @returns true for any cancelled status.
+ * @throws Does not throw.
+ */
+export function challengeIsCancelled(challenge: Pick<ChallengeOpportunity, 'status'>): boolean {
+    return challengeCatalogKey(challenge.status)
+        .startsWith('cancel')
+}
+
+/**
  * Selects the current open challenge phase.
  *
  * Challenge API's computed `currentPhase` is preferred unless it is explicitly
