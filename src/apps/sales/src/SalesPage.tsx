@@ -89,7 +89,7 @@ const SummaryCard: FC<{ amount?: SalesSummaryAmount; label: string; value?: stri
  * Read-only Sales workspace, used on the dedicated host and inside Work.
  * @returns An executive dashboard: four snapshot-wide summary cards, a clickable stage
  * breakdown beside the Created/Close date range filter, and a compact report table with
- * server-side view controls and live refresh.
+ * server-side view controls and manual refresh.
  * @throws Does not throw request failures; shows inline recovery and stale-data status.
  */
 const SalesPage: FC = () => {
@@ -149,21 +149,6 @@ const SalesPage: FC = () => {
             busy.current = false
         }
     }, [query, refreshVersion])
-
-    useEffect(() => {
-        /** Refreshes a visible, idle page on the timer or on return to the tab; returns void and does not throw. */
-        function refreshVisible(): void {
-            if (document.visibilityState !== 'visible' || busy.current) return
-            refresh()
-        }
-
-        const timer = window.setInterval(refreshVisible, Math.max(60, report?.refreshAfterSeconds ?? 60) * 1000)
-        document.addEventListener('visibilitychange', refreshVisible)
-        return () => {
-            window.clearInterval(timer)
-            document.removeEventListener('visibilitychange', refreshVisible)
-        }
-    }, [refresh, report?.refreshAfterSeconds])
 
     useEffect(() => {
         const timer = window.setTimeout(() => {
