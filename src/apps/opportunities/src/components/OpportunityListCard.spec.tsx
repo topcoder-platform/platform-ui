@@ -1009,7 +1009,10 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         ['Review', 'phase-review.svg'],
         ['Appeals', 'phase-appeals.svg'],
         ['Appeals Response', 'phase-appeals-response.svg'],
-        ['Approval', 'phase-winners.svg'],
+        ['Winners', 'phase-winners.svg'],
+        ['Final Fixes', 'phase-final-fixes.svg'],
+        ['Approval', 'phase-approval.svg'],
+        ['On Hold', 'phase-on-hold.svg'],
         ['Post-Mortem', 'phase-review.svg'],
     ])('uses the %s phase glyph on the competition card', (phaseName, asset) => {
         render(
@@ -1032,6 +1035,21 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         const label = screen.getByText(phaseName === 'Registration' ? 'Registration' : phaseName)
         expect(label.querySelector('svg')?.textContent)
             .toBe(asset)
+    })
+
+    it.each([
+        ['.competitionMain'],
+        ['.main'],
+    ])('clamps %s card titles to two lines in every view', selector => {
+        const titleRule = new RegExp(`\\n\\${selector} \\{[^{]*h3 \\{([^}]*)\\}`)
+            .exec(opportunityListCardStyles)?.[1]
+
+        expect(titleRule)
+            .toContain('-webkit-line-clamp: 2;')
+        expect(titleRule)
+            .toContain('overflow: hidden;')
+        expect(titleRule)
+            .toContain('text-overflow: ellipsis;')
     })
 
     it('suppresses the title tooltip while the whole title is visible', () => {

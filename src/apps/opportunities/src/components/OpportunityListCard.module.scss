@@ -82,14 +82,22 @@
     min-width: 0;
     padding: 24px;
 
+    /* Titles are clamped to two lines in every view so a long name ends in an
+       ellipsis and the card keeps its authored height; the title tooltip then
+       reveals the rest. */
     h3 {
         color: #161616;
+        display: -webkit-box;
         font-family: 'Figtree', sans-serif;
         font-size: 24px;
         font-weight: 700;
         line-height: 28px;
         margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
         text-transform: none;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
     }
 
     p {
@@ -103,14 +111,12 @@
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
     }
-}
 
-.reviewTitle {
-    display: -webkit-box;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 4;
+    /* Review rows are laid out beside a wide meta column, so their titles are
+       allowed the authored four lines before clamping. */
+    h3.reviewTitle {
+        -webkit-line-clamp: 4;
+    }
 }
 
 .eyebrow {
@@ -275,14 +281,21 @@
     min-width: 0;
     padding: 24px;
 
+    /* Matches the two-line clamp used by the other cards so a long challenge
+       name is cut off with an ellipsis and revealed by the title tooltip. */
     h3 {
         color: #161616;
+        display: -webkit-box;
         font-family: 'Figtree', sans-serif;
         font-size: 24px;
         font-weight: 700;
         line-height: 28px;
         margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
         text-transform: none;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
     }
 }
 
@@ -656,20 +669,6 @@
         gap: 8px;
         padding: 24px;
 
-        h3 {
-            color: #161616;
-            display: -webkit-box;
-            font-family: 'Figtree', sans-serif;
-            font-size: 24px;
-            font-weight: 700;
-            line-height: 28px;
-            margin: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2;
-        }
-
         p {
             color: #000;
             display: -webkit-box;
@@ -736,14 +735,6 @@
 .competitionCard.gridCard {
     .competitionMain {
         min-height: 0;
-    }
-
-    h3 {
-        display: -webkit-box;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
     }
 
     .competitionFooter {

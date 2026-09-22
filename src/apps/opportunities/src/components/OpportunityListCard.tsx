@@ -45,6 +45,9 @@ import { ReactComponent as SubmissionsMetricIcon } from '../assets/metric-submis
 import { ReactComponent as PhaseAiScreeningIcon } from '../assets/phase-ai-screening.svg'
 import { ReactComponent as PhaseAppealsIcon } from '../assets/phase-appeals.svg'
 import { ReactComponent as PhaseAppealsResponseIcon } from '../assets/phase-appeals-response.svg'
+import { ReactComponent as PhaseApprovalIcon } from '../assets/phase-approval.svg'
+import { ReactComponent as PhaseFinalFixesIcon } from '../assets/phase-final-fixes.svg'
+import { ReactComponent as PhaseOnHoldIcon } from '../assets/phase-on-hold.svg'
 import { ReactComponent as PhaseRegistrationIcon } from '../assets/phase-registration.svg'
 import { ReactComponent as PhaseReviewIcon } from '../assets/phase-review.svg'
 import { ReactComponent as PhaseScreeningIcon } from '../assets/phase-screening.svg'
@@ -181,8 +184,9 @@ const CompetitionWinnerAvatar: FC<CompetitionWinnerAvatarProps> = props => {
  *
  * Each phase family reads with its own icon, matching the authored phase tag
  * set: registration, submission, screening, AI screening or AI review, review,
- * appeals, appeals response, and winners. Checkpoint phases share their parent
- * phase's glyph, and an unrecognized phase falls back to the review glyph.
+ * appeals, appeals response, winners, final fixes, approval and on hold.
+ * Checkpoint phases share their parent phase's glyph, and an unrecognized phase
+ * falls back to the review glyph.
  *
  * @param phaseKey normalized phase name from `challengeCatalogKey`.
  * @returns the SVG component for that phase family.
@@ -190,12 +194,15 @@ const CompetitionWinnerAvatar: FC<CompetitionWinnerAvatarProps> = props => {
  */
 function challengePhaseIcon(phaseKey: string): FC<SVGProps<SVGSVGElement>> {
     if (phaseKey.includes('registration') || phaseKey === 'open') return PhaseRegistrationIcon
-    if (phaseKey.includes('submission') || phaseKey.includes('finalfix')) return PhaseSubmissionIcon
+    if (phaseKey.includes('submission')) return PhaseSubmissionIcon
     if (phaseKey.includes('aiscreening') || phaseKey.includes('aireview')) return PhaseAiScreeningIcon
     if (phaseKey.includes('screening')) return PhaseScreeningIcon
     if (phaseKey.includes('appealsresponse')) return PhaseAppealsResponseIcon
     if (phaseKey.includes('appeals')) return PhaseAppealsIcon
-    if (phaseKey.includes('winner') || phaseKey.includes('approval')) return PhaseWinnersIcon
+    if (phaseKey.includes('winner')) return PhaseWinnersIcon
+    if (phaseKey.includes('finalfix')) return PhaseFinalFixesIcon
+    if (phaseKey.includes('approval')) return PhaseApprovalIcon
+    if (phaseKey.includes('onhold')) return PhaseOnHoldIcon
     return PhaseReviewIcon
 }
 
