@@ -235,6 +235,26 @@ describe('ReviewOpportunityDetailsPage', () => {
             .toBeInTheDocument()
     })
 
+    it('drops the repeated year from a review period that opens and closes in one year', () => {
+        renderPage()
+
+        expect(screen.getByText('22 Jun - 24 Jun 2026'))
+            .toBeInTheDocument()
+    })
+
+    it('keeps both years on a review period that crosses into the next year', () => {
+        mockUseSWR.mockReturnValue({
+            data: reviewFixture({ duration: 172800, startDate: '2026-12-31T00:00:00' }),
+            isValidating: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage()
+
+        expect(screen.getByText('31 Dec 2026 - 2 Jan 2027'))
+            .toBeInTheDocument()
+    })
+
     it('hides the zero application count while keeping the Applications tab available', () => {
         mockUseSWR.mockReturnValue({
             data: reviewFixture({ applications: [{ id: 'cancelled', status: 'CANCELLED' }] }),

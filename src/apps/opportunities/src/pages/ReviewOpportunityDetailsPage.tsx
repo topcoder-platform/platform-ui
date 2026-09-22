@@ -46,6 +46,7 @@ import {
 } from '../utils'
 import {
     formatOpportunityDate,
+    formatOpportunityDateRange,
     formatOpportunityDateTime,
 } from '../utils/opportunity-date.utils'
 
@@ -109,7 +110,8 @@ function formatApplicationDate(value?: string): string {
  *
  * @param startDate ISO assignment start.
  * @param duration assignment duration in seconds.
- * @returns a long-date range, or `TBD` when either value is unavailable.
+ * @returns a range such as `14 Sep - 15 Sep 2026`, dropping the repeated year
+ * when both ends share it, or `TBD` when either value is unavailable.
  * @throws Does not throw.
  */
 function reviewPeriod(startDate?: string, duration?: number): string {
@@ -118,13 +120,8 @@ function reviewPeriod(startDate?: string, duration?: number): string {
     if (Number.isNaN(start.getTime())) return 'TBD'
     const end = new Date(start.getTime() + (duration * 1000))
     if (Number.isNaN(end.getTime())) return 'TBD'
-    const startLabel = formatDate(start.toISOString())
-    const endLabel = formatDate(end.toISOString())
-    if (start.getFullYear() === end.getFullYear()) {
-        return `${startLabel.replace(`, ${start.getFullYear()}`, '')} - ${endLabel}`
-    }
 
-    return `${startLabel} - ${endLabel}`
+    return formatOpportunityDateRange(start.toISOString(), end.toISOString(), 'TBD')
 }
 
 /**
