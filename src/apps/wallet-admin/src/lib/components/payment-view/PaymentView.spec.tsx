@@ -92,6 +92,8 @@ describe('PaymentView', () => {
         releaseDate: '15/5/2026',
         releaseDateObj: new Date('2026-05-15T00:00:00.000Z'),
         status: 'On Hold (Admin)',
+        totalAmount: '$2,000.00',
+        totalAmountNumber: 2000,
         type: 'engagement payment',
     }
 

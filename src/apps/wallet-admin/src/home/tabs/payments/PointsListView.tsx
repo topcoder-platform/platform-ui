@@ -101,6 +101,9 @@ const PointsListView: FC<PointsListViewProps> = (props: PointsListViewProps) => 
                 releaseDate: formattedReleaseDate,
                 releaseDateObj: releaseDate,
                 status: 'Points',
+                totalAmount: parseFloat(point.details[0].totalAmount)
+                    .toString(),
+                totalAmountNumber: parseFloat(point.details[0].totalAmount),
                 type: point.category.replaceAll('_', ' ')
                     .toLowerCase(),
             }

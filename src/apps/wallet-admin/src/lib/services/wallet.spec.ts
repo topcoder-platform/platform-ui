@@ -66,6 +66,8 @@ describe('fetchWinningPaymentDetails', () => {
         releaseDate: 'Apr 17, 2026',
         releaseDateObj: new Date('2026-04-17T00:00:00.000Z'),
         status: 'On Hold (Admin)',
+        totalAmount: '$2,400.00',
+        totalAmountNumber: 2400,
         type: 'engagement payment',
         winnerId: '40123456',
     }

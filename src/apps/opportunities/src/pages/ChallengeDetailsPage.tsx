@@ -92,6 +92,7 @@ import {
     isMarathonMatchChallenge,
     isTaskChallenge,
     marathonDashboardIsEnabled,
+    marathonLeaderboardIsPublic,
     marathonSubmissionScores,
     marathonSubmissionTestProgress,
     memberProfileUrl,
@@ -102,6 +103,7 @@ import {
     ChallengeDetailTab,
     challengeDetailTabFromSearch,
 } from '../utils/challenge-detail-route.utils'
+import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
 import { ReactComponent as SortIcon } from '../assets/sort.svg'
 import medal1 from '../assets/medal-1.svg'
@@ -282,6 +284,8 @@ interface TabConfig {
     count?: number
     id: ChallengeTab
     label: string
+    /** Marks the tab's count badge with the unread dot. */
+    unread?: boolean
 }
 
 /**
@@ -317,20 +321,11 @@ function challengeMetadataFlag(challenge: ChallengeOpportunity, name: string): b
  * Formats an API timestamp used in submission and phase tables.
  *
  * @param value optional ISO timestamp.
- * @returns localized date and time, or an em dash.
+ * @returns localized date and time such as `17 Sep 2026, 14:39`, or an em dash.
  * @throws Does not throw.
  */
 function formatTimestamp(value?: string): string {
-    if (!value) return '—'
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return '—'
-    const month = new Intl.DateTimeFormat('en-US', { month: 'long' })
-        .format(date)
-    const hours = String(date.getHours())
-        .padStart(2, '0')
-    const minutes = String(date.getMinutes())
-        .padStart(2, '0')
-    return `${date.getDate()} ${month}, ${date.getFullYear()}, ${hours}:${minutes}`
+    return formatOpportunityDateTime(value, '—')
 }
 
 /**
@@ -369,8 +364,11 @@ export const ChallengeDetailsPage: FC = () => {
     )
     const challenge = challengeResponse.data
     const taskChallenge = isTaskChallenge(challenge)
+    const developmentChallenge = challenge
+        ? challengeCatalogKey(challenge.track) === 'development'
+        : false
     const aiReviewConfigResponse: SWRResponse<ChallengeAiReviewConfig | undefined, Error> = useSWR(
-        challengeId && profile && challenge && !isMarathonMatchChallenge(challenge)
+        challengeId && profile && challenge && developmentChallenge && !isMarathonMatchChallenge(challenge)
             ? ['opportunities:challenge-review-style', challengeId]
             : undefined,
         () => getChallengeAiReviewConfig(challengeId),
@@ -419,6 +417,8 @@ export const ChallengeDetailsPage: FC = () => {
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
     const forumTopicCount = forumResponse.data?.sourceTotalCount ?? challenge?.numOfPosts
+    // Surfaced on the Forum tab so unread topics are visible without opening the tab.
+    const forumHasUnread = (forumResponse.data?.data ?? []).some(topic => topic.unread)
 
     useEffect(() => {
         setIssueOpen(false)
@@ -436,10 +436,13 @@ export const ChallengeDetailsPage: FC = () => {
     const tabs = useMemo<TabConfig[]>(() => {
         const designChallenge = catalogName(challenge?.track)
             .toLowerCase() === 'design'
+        // Marathon Match scores are public while the challenge runs, so the
+        // leaderboard and Dashboard stay listed for signed out visitors.
+        const publicMarathonLeaderboard = !!challenge && marathonLeaderboardIsPublic(challenge)
         return [
             { id: 'requirements', label: 'Requirements' },
             { count: challenge?.numOfRegistrants, id: 'registrants', label: 'Registrants' },
-            ...(!taskChallenge && (memberId || designChallenge)
+            ...(!taskChallenge && (memberId || designChallenge || publicMarathonLeaderboard)
                 ? [{
                     count: challenge?.numOfSubmissions,
                     id: 'submissions' as ChallengeTab,
@@ -451,19 +454,24 @@ export const ChallengeDetailsPage: FC = () => {
                 id: 'mine' as ChallengeTab,
                 label: 'My Submissions',
             }] : []),
-            ...(hasMemberTabAccess && challenge && marathonDashboardIsEnabled(challenge)
+            ...(challenge && marathonDashboardIsEnabled(challenge)
                 ? [{ id: 'dashboard' as ChallengeTab, label: 'Dashboard' }]
                 : []),
             ...(hasForumAccess
-                ? [{ count: forumTopicCount, id: 'forum' as ChallengeTab, label: 'Forum' }]
+                ? [{
+                    count: forumTopicCount,
+                    id: 'forum' as ChallengeTab,
+                    label: 'Forum',
+                    unread: forumHasUnread,
+                }]
                 : []),
             { id: 'winners', label: 'Winners' },
         ]
     }, [
         challenge,
+        forumHasUnread,
         forumTopicCount,
         hasForumAccess,
-        hasMemberTabAccess,
         isRegistered,
         memberId,
         mySubmissionCountResponse.data,
@@ -822,7 +830,11 @@ export const ChallengeDetailsPage: FC = () => {
                             type='button'
                         >
                             {tab.label}
-                            {(tab.count ?? 0) > 0 && <span>{tab.count}</span>}
+                            {(tab.count ?? 0) > 0 && (
+                                <span className={tab.unread ? styles.unreadBadge : undefined}>
+                                    {tab.count}
+                                </span>
+                            )}
                         </button>
                     ))}
                 </div>
@@ -865,6 +877,7 @@ export const ChallengeDetailsPage: FC = () => {
                             && aiReviewConfigResponse.data === undefined
                             && !aiReviewConfigResponse.error}
                         reviewStyleUnavailable={!!aiReviewConfigResponse.error}
+                        showReviewStyle={profileInitialized && !!profile}
                     />
                 )}
             </div>
@@ -933,7 +946,7 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
     if (props.activeTab === 'submissions') {
         const isDesign = catalogName(props.challenge.track)
             .toLowerCase() === 'design'
-        return props.memberId || isDesign
+        return props.memberId || isDesign || marathonLeaderboardIsPublic(props.challenge)
             ? (
                 <SubmissionsTab
                     canManageArtifacts={props.canManageArtifacts}
@@ -977,9 +990,7 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
     }
 
     if (props.activeTab === 'dashboard') {
-        return props.memberId
-            ? <MarathonDashboard challenge={props.challenge} />
-            : <SignInTab subject='the Marathon Match dashboard' />
+        return <MarathonDashboard challenge={props.challenge} />
     }
 
     if (props.activeTab === 'forum') {

@@ -1,5 +1,9 @@
+import { Navigate } from 'react-router-dom'
+
 import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
+
+import { isTopgearCommunity, OPPORTUNITIES_ROOT_ROUTE } from './utils/topgear.utils'
 
 const OpportunitiesApp: LazyLoadedComponent = lazyLoad(() => import('./OpportunitiesApp'))
 const OpportunitiesPage: LazyLoadedComponent = lazyLoad(() => import('./pages/OpportunitiesPage'))
@@ -16,6 +20,22 @@ export const rootRoute: string = (
 )
 
 export const toolTitle: string = ToolTitle.opportunities
+
+/**
+ * Community-app served TopGear (Wipro) members their challenge list from the
+ * `topgear` host root, so that host lands on the Opportunities listing instead
+ * of the Platform UI home page.
+ */
+export const topgearRoutes: ReadonlyArray<PlatformRoute> = (
+    isTopgearCommunity() ? [
+        {
+            element: <Navigate replace to={OPPORTUNITIES_ROOT_ROUTE} />,
+            id: 'TopGear root redirect',
+            route: '',
+            title: toolTitle,
+        },
+    ] : []
+)
 
 /** Replacement aliases for community-app challenge and review routes. */
 export const legacyOpportunityRoutes: ReadonlyArray<PlatformRoute> = (

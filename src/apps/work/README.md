@@ -40,6 +40,30 @@ default and white on a teal hover background.
 2. Implement pages/components inside `src/lib` or feature folders.
 3. Reuse `WorkAppContext` and `SWRConfigProvider` for shared state/data access.
 
+## Private engagement assignments
+
+The engagement editor autosaves while the form is dirty and valid, and it also
+reseeds itself whenever the page hands it a freshly fetched engagement. Both
+paths call `reset()`, which replaces every form value with the API's view of the
+engagement.
+
+A private engagement's member slots are filled in two steps: pick a member in a
+slot, then complete that member's assignment details in the Assign Member
+dialog. Until the details exist, the API has nothing to return for the slot, so
+an unguarded `reset()` in the middle of that flow erases the handle the user just
+picked and the member can never be added.
+
+`EngagementEditorForm` therefore:
+
+- suspends autosave and defers engagement-driven resets while
+  `EngagementPrivateSection` reports its Assign Member dialog as open, and
+- runs `mergePendingAssignmentSlots()` on every reset so a slot whose member is
+  not yet represented in the saved engagement survives the round trip.
+
+The deferred reset is applied once the dialog closes, but only when the incoming
+engagement, lead prefill, or project actually changed, so closing the dialog
+never discards unrelated edits.
+
 ## Legacy Reference
 
 Original implementation reference:

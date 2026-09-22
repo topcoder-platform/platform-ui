@@ -31,6 +31,7 @@ interface BulkFormState {
     type: string
     status: string
     updatedSince: string
+    updatedUntil: string
 }
 
 const EMPTY_BULK: BulkFormState = {
@@ -39,6 +40,7 @@ const EMPTY_BULK: BulkFormState = {
     track: '',
     type: '',
     updatedSince: '',
+    updatedUntil: '',
 }
 
 interface IngestChallengesPanelProps {
@@ -87,6 +89,17 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
     }, [])
 
     const runIngestion = useCallback(async () => {
+        const since = bulk.updatedSince.trim()
+        const until = bulk.updatedUntil.trim()
+
+        // An inverted window matches nothing server-side, which comes back as a
+        // successful run over zero challenges — indistinguishable from "nothing
+        // changed in that period" unless we say so here.
+        if (since && until && until < since) {
+            toast.error('Updated Until must not be earlier than Updated Since')
+            return
+        }
+
         setIsRunning(true)
         setLastRun(undefined)
 
@@ -118,6 +131,7 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
                     status: bulk.status ? [bulk.status] : undefined,
                     tracks: bulk.track ? [bulk.track] : undefined,
                     types: bulk.type ? [bulk.type] : undefined,
+                    updatedDateEnd: bulk.updatedUntil.trim() || undefined,
                     updatedDateStart: bulk.updatedSince.trim() || undefined,
                 }
                 const report = await bulkIngestChallengesInRag(filters)
@@ -232,6 +246,13 @@ export const IngestChallengesPanel: FC<IngestChallengesPanelProps> = props => {
                             placeholder='YYYY-MM-DD'
                             value={bulk.updatedSince}
                             onChange={handleBulkChange('updatedSince')}
+                            disabled={bulkDisabled}
+                        />
+                        <TextField
+                            label='Updated Until'
+                            placeholder='YYYY-MM-DD'
+                            value={bulk.updatedUntil}
+                            onChange={handleBulkChange('updatedUntil')}
                             disabled={bulkDisabled}
                         />
                     </div>

@@ -29,9 +29,15 @@ jest.mock('~/libs/ui', () => {
         }),
         Tooltip: (props: {
             children: JSX.Element
+            disableTooltip?: boolean
             strategy?: string
         }): JSX.Element => (
-            <span data-tooltip-strategy={props.strategy}>{props.children}</span>
+            <span
+                data-tooltip-disabled={props.disableTooltip ? 'true' : 'false'}
+                data-tooltip-strategy={props.strategy}
+            >
+                {props.children}
+            </span>
         ),
     }
 }, { virtual: true })
@@ -91,6 +97,7 @@ function competitionFixture(overrides: Partial<ChallengeOpportunity> = {}): Chal
         }],
         skills: [{ name: 'Figma' }, { name: 'User Experience Design' }],
         status: 'ACTIVE',
+        tags: ['Application Front-End Design'],
         track: { name: 'Design', track: 'DESIGN' },
         type: { name: 'First2Finish' },
         ...overrides,
@@ -170,8 +177,10 @@ describe('OpportunityListCard competition presentation', () => {
             .toBeInTheDocument()
         expect(screen.getByText('—'))
             .toBeInTheDocument()
+        expect(screen.getByText('Application Front-End Design').className)
+            .toContain('tagLabel')
         expect(screen.getByText('Figma').className)
-            .toContain('primarySkill')
+            .not.toContain('tagLabel')
         expect(screen.queryByText(/intentionally absent/))
             .not.toBeInTheDocument()
     })
@@ -206,6 +215,7 @@ describe('OpportunityListCard competition presentation', () => {
                             { name: 'UI' },
                             { name: 'Architecture' },
                         ],
+                        tags: [],
                     })}
                     kind='competitions'
                     view='grid'
@@ -222,6 +232,41 @@ describe('OpportunityListCard competition presentation', () => {
             .toBeInTheDocument()
     })
 
+    it('marks an overdue phase deadline in the alert red', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({
+                        currentPhase: {
+                            isOpen: true,
+                            name: 'Screening',
+                            scheduledEndDate: '2026-08-13T12:00:00.000Z',
+                            scheduledStartDate: '2026-08-13T00:00:00.000Z',
+                        },
+                        phases: undefined,
+                    })}
+                    kind='competitions'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Past due').className)
+            .toContain('timeLeftPastDue')
+        expect(opportunityListCardStyles)
+            .toContain('#c1294f')
+    })
+
+    it('does not mark a phase that is still running', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={competitionFixture()} kind='competitions' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('30m left').className)
+            .not.toContain('timeLeftPastDue')
+    })
+
     it('preserves the Figma spacing between grid skills and the divider', () => {
         const competitionMainRules = Array.from(
             opportunityListCardStyles.matchAll(/(?:^|\n)\s*\.competitionMain\s*\{([^}]*)\}/g),
@@ -232,6 +277,49 @@ describe('OpportunityListCard competition presentation', () => {
             .toEqual(expect.arrayContaining([expect.stringContaining('gap: 15px;')]))
         expect(competitionMainRules.some(rule => /\bgap:\s*0;/.test(rule)))
             .toBe(false)
+    })
+
+    it('renders ampersands in engagement copy rather than their character reference', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={{
+                        description: '<p>Engagement Model: Time &amp; Material (T&amp;M)</p>',
+                        id: 'engagement-id',
+                        role: 'SOFTWARE_DEVELOPER',
+                        status: 'OPEN',
+                        title: 'Product Manager &amp; Analyst',
+                    }}
+                    kind='engagements'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('link', { name: 'Product Manager & Analyst' }))
+            .toBeInTheDocument()
+        expect(screen.getByText(/Engagement Model: Time & Material T&M/))
+            .toBeInTheDocument()
+        expect(screen.queryByText(/&amp;/))
+            .not.toBeInTheDocument()
+    })
+
+    it('draws the winner medal at its 14:18 artwork ratio', () => {
+        const medalBlock = (opportunityListCardStyles
+            .match(/\.winnerMedal\s*\{[\s\S]*?\n\}/) ?? [''])[0]
+
+        expect(medalBlock)
+            .toContain('width: 16px')
+        expect(medalBlock)
+            .toContain('height: 20px')
+        expect(medalBlock)
+            .not.toContain('width: 20px')
+
+        const medalArtwork = readFileSync(
+            `${__dirname}/../assets/medal-1.svg`,
+            'utf8',
+        )
+        expect(medalArtwork)
+            .not.toContain('preserveAspectRatio="none"')
     })
 
     it('deep-links every active competition metric without nesting card links', () => {
@@ -590,7 +678,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toContain('stateApplied')
     })
 
-    it('shows selected and applied states for member engagement results', () => {
+    it('shows accepted and applied states for member engagement results', () => {
         const selected: EngagementOpportunity = {
             applicationStatus: 'ACCEPTED',
             id: 'selected-engagement',
@@ -609,7 +697,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByText('Selected').className)
+        expect(screen.getByText('Accepted').className)
             .toContain('stateAccepted')
         rerender(
             <MemoryRouter>
@@ -636,6 +724,40 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         expect(screen.getByText('Selected').className)
             .toContain('stateAccepted')
         expect(screen.queryByText('Application closed'))
+            .not.toBeInTheDocument()
+    })
+
+    it('keeps a pending offer on Selected until the member accepts it', () => {
+        const pendingOffer: EngagementOpportunity = {
+            assignments: [{ status: 'SELECTED' }],
+            id: 'pending-offer-engagement',
+            status: 'OPEN',
+            title: 'Pending offer engagement',
+        }
+        const acceptedOffer: EngagementOpportunity = {
+            assignments: [{ status: 'ASSIGNED' }],
+            id: 'accepted-offer-engagement',
+            status: 'OPEN',
+            title: 'Accepted offer engagement',
+        }
+        const { rerender }: RenderResult = render(
+            <MemoryRouter>
+                <OpportunityListCard item={pendingOffer} kind='engagements' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Selected'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Accepted'))
+            .not.toBeInTheDocument()
+        rerender(
+            <MemoryRouter>
+                <OpportunityListCard item={acceptedOffer} kind='engagements' />
+            </MemoryRouter>,
+        )
+        expect(screen.getByText('Assigned'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Selected'))
             .not.toBeInTheDocument()
     })
 
@@ -757,7 +879,7 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .not.toBeInTheDocument()
     })
 
-    it('lets My Work override the owning API state with the selected treatment', () => {
+    it('lets My Work override the owning API state with the accepted treatment', () => {
         const item: EngagementOpportunity = {
             id: 'accepted-engagement',
             status: 'OPEN',
@@ -766,14 +888,14 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
         render(
             <MemoryRouter>
                 <OpportunityListCard
-                    applicationState='Selected'
+                    applicationState='Accepted'
                     item={item}
                     kind='engagements'
                 />
             </MemoryRouter>,
         )
 
-        const state = screen.getByText('Selected')
+        const state = screen.getByText('Accepted')
         expect(state.className)
             .toContain('stateAccepted')
         expect(state.querySelector('svg'))
@@ -876,6 +998,88 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             .toEqual([['Tag'], ['UICollectionView']])
         expect(screen.getByRole('link', { name: /Review post check/ }))
             .toHaveAttribute('href', '/opportunities/review/review-search-skills')
+    })
+
+    it.each([
+        ['Registration', 'phase-registration.svg'],
+        ['Checkpoint Submission', 'phase-submission.svg'],
+        ['Screening', 'phase-screening.svg'],
+        ['AI Screening', 'phase-ai-screening.svg'],
+        ['AI Review', 'phase-ai-screening.svg'],
+        ['Review', 'phase-review.svg'],
+        ['Appeals', 'phase-appeals.svg'],
+        ['Appeals Response', 'phase-appeals-response.svg'],
+        ['Winners', 'phase-winners.svg'],
+        ['Final Fixes', 'phase-final-fixes.svg'],
+        ['Approval', 'phase-approval.svg'],
+        ['On Hold', 'phase-on-hold.svg'],
+        ['Post-Mortem', 'phase-review.svg'],
+    ])('uses the %s phase glyph on the competition card', (phaseName, asset) => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({
+                        currentPhase: {
+                            isOpen: true,
+                            name: phaseName,
+                            scheduledEndDate: '2026-08-14T01:00:00.000Z',
+                            scheduledStartDate: '2026-08-13T00:00:00.000Z',
+                        },
+                        phases: undefined,
+                    })}
+                    kind='competitions'
+                />
+            </MemoryRouter>,
+        )
+
+        const label = screen.getByText(phaseName === 'Registration' ? 'Registration' : phaseName)
+        expect(label.querySelector('svg')?.textContent)
+            .toBe(asset)
+    })
+
+    it.each([
+        ['.competitionMain'],
+        ['.main'],
+    ])('clamps %s card titles to two lines in every view', selector => {
+        const titleRule = new RegExp(`\\n\\${selector} \\{[^{]*h3 \\{([^}]*)\\}`)
+            .exec(opportunityListCardStyles)?.[1]
+
+        expect(titleRule)
+            .toContain('-webkit-line-clamp: 2;')
+        expect(titleRule)
+            .toContain('overflow: hidden;')
+        expect(titleRule)
+            .toContain('text-overflow: ellipsis;')
+    })
+
+    it('suppresses the title tooltip while the whole title is visible', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={competitionFixture()} kind='competitions' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Topcoder Opportunities Challenge' }).parentElement)
+            .toHaveAttribute('data-tooltip-disabled', 'true')
+    })
+
+    it('shows the title tooltip once the title is clipped by its line clamp', () => {
+        const scrollHeight = jest.spyOn(HTMLElement.prototype, 'scrollHeight', 'get')
+            .mockReturnValue(120)
+        const clientHeight = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get')
+            .mockReturnValue(60)
+
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={competitionFixture()} kind='competitions' />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Topcoder Opportunities Challenge' }).parentElement)
+            .toHaveAttribute('data-tooltip-disabled', 'false')
+
+        scrollHeight.mockRestore()
+        clientHeight.mockRestore()
     })
 
     it('positions review title tooltips outside the card clipping context', () => {

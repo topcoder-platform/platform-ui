@@ -732,6 +732,8 @@ export function buildOpportunityPageUrl(
         // even a single facet must be sent as `tracks[]=Dev` / `types[]=MM`.
         appendValues(url, 'tracks[]', filters.tracks)
         appendValues(url, 'types[]', filters.types)
+        // Community hosts such as TopGear list only their group's challenges.
+        appendValues(url, 'groups[]', filters.groups)
         if (filters.applied && filters.memberId) {
             url.searchParams.set('memberId', filters.memberId)
             if (filters.resourceRoleId) {

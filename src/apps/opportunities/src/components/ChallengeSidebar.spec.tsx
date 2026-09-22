@@ -112,6 +112,7 @@ const marathonChallenge: ChallengeOpportunity = {
 function renderSidebar(
     aiReviewConfig?: ChallengeAiReviewConfig,
     sidebarChallenge: ChallengeOpportunity = challenge,
+    showReviewStyle: boolean = true,
 ): void {
     render(
         <MemoryRouter>
@@ -120,6 +121,7 @@ function renderSidebar(
                 challenge={sidebarChallenge}
                 onContactTeam={jest.fn()}
                 onShowTerms={jest.fn()}
+                showReviewStyle={showReviewStyle}
             />
         </MemoryRouter>,
     )
@@ -136,9 +138,25 @@ describe('ChallengeSidebar Review Style', () => {
         })
     })
 
-    it('shows manual review with the Figma explanation when no AI config exists', () => {
+    it('does not show review style for non-development challenges', () => {
         renderSidebar()
 
+        expect(screen.queryByRole('heading', { name: 'Review Style' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('does not show review style for anonymous viewers on development challenges', () => {
+        renderSidebar(undefined, developmentChallenge, false)
+
+        expect(screen.queryByRole('heading', { name: 'Review Style' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('shows manual review when no AI config exists for development challenges', () => {
+        renderSidebar(undefined, developmentChallenge)
+
+        expect(screen.getByRole('heading', { name: 'Review Style' }))
+            .toBeInTheDocument()
         expect(screen.getByText('Manual'))
             .toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'About Manual' }))
@@ -147,11 +165,6 @@ describe('ChallengeSidebar Review Style', () => {
             .toBeInTheDocument()
         expect(screen.queryByText(/Instant Review is/))
             .not.toBeInTheDocument()
-        const heading = screen.getByRole('heading', { name: 'Review Style' })
-        expect(heading.querySelector('img'))
-            .not.toBeNull()
-        expect(heading.querySelector('svg'))
-            .toBeNull()
     })
 
     it('shows AI-only review and the disabled Instant Review state', () => {
@@ -160,7 +173,7 @@ describe('ChallengeSidebar Review Style', () => {
             id: 'ai-only-config',
             instantReview: false,
             mode: 'AI_ONLY',
-        })
+        }, developmentChallenge)
 
         expect(screen.getByText('AI only'))
             .toBeInTheDocument()
@@ -178,7 +191,7 @@ describe('ChallengeSidebar Review Style', () => {
             id: 'ai-gating-config',
             instantReview: true,
             mode: 'AI_GATING',
-        })
+        }, developmentChallenge)
 
         expect(screen.getByText('AI Gating'))
             .toBeInTheDocument()
@@ -188,7 +201,7 @@ describe('ChallengeSidebar Review Style', () => {
             'AI performs a preliminary review, then the Community Review Board evaluates submissions that pass.',
         ))
             .toBeInTheDocument()
-        expect(screen.getByText('You will receive AI feedback during the submission phase'))
+        expect(screen.getByText('You will receive AI feedback during the submission phase.'))
             .toBeInTheDocument()
     })
 
@@ -240,7 +253,7 @@ describe('ChallengeSidebar Review Style', () => {
             .not.toBeNull()
     })
 
-    it('uses the dedicated Review App host and hides Review Style for Marathon Matches', () => {
+    it('uses the dedicated Review App host and hides review style for Marathon Matches', () => {
         renderSidebar(undefined, marathonChallenge)
 
         expect(screen.getByRole('link', { name: 'View Review App' }))

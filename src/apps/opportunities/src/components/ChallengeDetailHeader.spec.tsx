@@ -1,4 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+import { readFileSync } from 'fs'
+
 import '@testing-library/jest-dom'
 import { fireEvent, render, RenderResult, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
@@ -15,6 +17,11 @@ jest.mock('~/libs/ui', () => {
         }),
     }
 }, { virtual: true })
+
+const challengeDetailHeaderStyles = readFileSync(
+    `${__dirname}/ChallengeDetailHeader.module.scss`,
+    'utf8',
+)
 
 /** Creates an active, overlapping registration/submission challenge fixture. */
 function challengeFixture(overrides: Partial<ChallengeOpportunity> = {}): ChallengeOpportunity {
@@ -141,6 +148,36 @@ describe('ChallengeDetailHeader actions and presentation', () => {
                 ?.startsWith('/opportunities/competitions?search='))
         expect(links.map(link => link.textContent))
             .toEqual(labels)
+    })
+
+    it('renders authored tags as outlined pills ahead of the filled skill chips', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        skills: [{ name: 'Figma' }, { name: 'Algorithms' }],
+                        tags: ['Application Front-End Design', 'Algorithms'],
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        const labels = screen.getAllByRole('link')
+            .filter(link => (link.getAttribute('href') ?? '')
+                .includes('/opportunities/competitions?search='))
+        expect(labels.map(link => link.textContent))
+            .toEqual(['Application Front-End Design', 'Algorithms', 'Figma'])
+        expect(labels[0].className)
+            .toContain('tagLabel')
+        expect(labels[1].className)
+            .toContain('tagLabel')
+        expect(labels[2].className)
+            .not.toContain('tagLabel')
     })
 
     it('uses the compact QA label for Quality Assurance challenges', () => {
@@ -365,6 +402,86 @@ describe('ChallengeDetailHeader actions and presentation', () => {
         expect(screen.queryByText('Challenge completed'))
             .not.toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Register' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Submit a solution' }))
+            .toBeDisabled()
+    })
+
+    it('uses the authored disabled treatment instead of a blanket opacity', () => {
+        const secondaryBlock = (challengeDetailHeaderStyles
+            .match(/\n\.secondary \{[\s\S]*?\n\}/) ?? [''])[0]
+        const primaryBlock = (challengeDetailHeaderStyles
+            .match(/\n\.primary \{[\s\S]*?\n\}/) ?? [''])[0]
+        const actionCardBlock = (challengeDetailHeaderStyles
+            .match(/\n\.actionCard \{[\s\S]*?\n\}/) ?? [''])[0]
+
+        expect(secondaryBlock)
+            .toContain('border-color: rgba(255, 255, 255, .1)')
+        expect(secondaryBlock)
+            .toContain('color: rgba(255, 255, 255, .15)')
+        expect(primaryBlock)
+            .toContain('background: rgba(255, 255, 255, .1)')
+        expect(primaryBlock)
+            .toContain('color: rgba(255, 255, 255, .15)')
+        expect(actionCardBlock)
+            .not.toContain('opacity: .55')
+    })
+
+    it('reads the cancellation instead of the open Post-Mortem phase for a zero-submission challenge', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        currentPhase: {
+                            isOpen: true,
+                            name: 'Post-Mortem',
+                            scheduledEndDate: '2026-08-18T00:00:00.000Z',
+                        },
+                        currentPhaseNames: ['Post-Mortem'],
+                        phases: [
+                            {
+                                isOpen: false,
+                                name: 'Registration',
+                                scheduledEndDate: '2026-08-13T00:00:00.000Z',
+                            },
+                            {
+                                isOpen: false,
+                                name: 'Submission',
+                                scheduledEndDate: '2026-08-13T00:00:00.000Z',
+                            },
+                            {
+                                isOpen: true,
+                                name: 'Post-Mortem',
+                                scheduledEndDate: '2026-08-18T00:00:00.000Z',
+                            },
+                        ],
+                        status: 'CANCELLED_ZERO_SUBMISSIONS',
+                    })}
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Cancelled zero submissions'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Post-Mortem'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText(/phase closes in/))
+            .not.toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+
+        expect(screen.queryByText('Post-Mortem'))
+            .not.toBeInTheDocument()
+        expect(screen.getByText('Registration'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Submission'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Unregister' }))
             .toBeDisabled()
         expect(screen.getByRole('button', { name: 'Submit a solution' }))
             .toBeDisabled()

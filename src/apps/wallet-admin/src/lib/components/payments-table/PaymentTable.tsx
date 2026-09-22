@@ -129,7 +129,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 <td className={classNames('body-small', styles.description, useCompactDescription && styles.descriptionCompact)}>
                                     {payment.description}
                                 </td>
-                                <td className={classNames('body-small-bold', styles.paymentColumn)}>{payment.grossAmount}</td>
+                                <td className={classNames('body-small-bold', styles.paymentColumn)}>{payment.totalAmount}</td>
                                 <td className={classNames('body-small', styles.capitalize, styles.type)}>{payment.type}</td>
                                 <td className={classNames('body-small-bold', styles.capitalize, styles.statusColumn)}>{payment.status}</td>
                                 <td className={classNames('body-small-bold', styles.dateColumn)}>{payment.createDate}</td>

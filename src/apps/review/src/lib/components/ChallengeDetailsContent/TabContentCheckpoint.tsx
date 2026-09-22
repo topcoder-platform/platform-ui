@@ -10,6 +10,8 @@ import type { ChallengeDetailContextModel } from '../../models'
 import type { useRoleProps } from '../../hooks'
 import { Screening } from '../../models'
 import { useRole } from '../../hooks'
+import { useSubmissionDownloadAccess } from '../../hooks/useSubmissionDownloadAccess'
+import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import { ChallengeDetailContext } from '../../contexts'
 import { hasSubmitterPassedThreshold } from '../../utils/reviewScoring'
 import TableCheckpointSubmissions from '../TableCheckpointSubmissions/TableCheckpointSubmissions'
@@ -40,9 +42,37 @@ export const TabContentCheckpoint: FC<Props> = (props: Props) => {
         hasCheckpointReviewerRole,
     }: useRoleProps = useRole()
 
+    const { currentMemberId }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
+
+    // Every other submitter-facing tab decides "is this row mine?" from the signed-in
+    // member id. Checkpoint tabs used to rely on the challenge resource list alone, so a
+    // submitter whose own resource row was missing from that list saw an empty Checkpoint
+    // Submission, Checkpoint Screening, and Checkpoint Review tab even though the
+    // submissions were loaded (PM-6340).
     const myMemberIds = useMemo<Set<string>>(
-        () => new Set((myResources ?? []).map(resource => resource.memberId)),
-        [myResources],
+        () => {
+            const memberIds = new Set(
+                (myResources ?? [])
+                    .map(resource => `${resource.memberId ?? ''}`.trim())
+                    .filter(Boolean),
+            )
+
+            if (currentMemberId) {
+                memberIds.add(`${currentMemberId}`.trim())
+            }
+
+            return memberIds
+        },
+        [currentMemberId, myResources],
+    )
+
+    /** Matches a checkpoint row against the signed-in member, tolerating id types. */
+    const isMyRow = useCallback(
+        (memberId?: string): boolean => {
+            const normalized = `${memberId ?? ''}`.trim()
+            return !!normalized && myMemberIds.has(normalized)
+        },
+        [myMemberIds],
     )
 
     const derivedChallengeStatus = props.challengeStatus
@@ -117,20 +147,18 @@ export const TabContentCheckpoint: FC<Props> = (props: Props) => {
                     return true
                 }
 
-                if (row.memberId && myMemberIds.has(row.memberId)) {
-                    return true
-                }
-
-                return false
+                return isMyRow(row.memberId)
             })
         },
         [
             props.checkpoint,
+            hasCheckpointReviewerRole,
+            hasCheckpointScreenerRole,
             isPrivilegedRole,
             isChallengeCompleted,
             hasPassedCheckpointScreeningThreshold,
             checkpointScreenerResourceIds,
-            myMemberIds,
+            isMyRow,
         ],
     )
 
@@ -154,21 +182,17 @@ export const TabContentCheckpoint: FC<Props> = (props: Props) => {
                     return true
                 }
 
-                if (row.memberId && myMemberIds.has(row.memberId)) {
-                    return true
-                }
-
-                return false
+                return isMyRow(row.memberId)
             })
         },
         [
             props.checkpointReview,
+            filterCheckpointReviewByScreeningResult,
             isPrivilegedRole,
             isChallengeCompleted,
             hasPassedCheckpointReviewThreshold,
             checkpointReviewerResourceIds,
-            myMemberIds,
-            checkpointScreeningOutcome,
+            isMyRow,
         ],
     )
 

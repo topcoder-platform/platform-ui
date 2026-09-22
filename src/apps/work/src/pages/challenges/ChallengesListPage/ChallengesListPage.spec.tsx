@@ -90,6 +90,14 @@ jest.mock('../../../lib/components', () => ({
         </button>
     ),
     ChallengesTable: () => <div>Challenges Table</div>,
+    CopilotOpportunitiesModal: (props: { onClose: () => void; projectId: string }) => (
+        <div data-testid='copilot-opportunities-modal'>
+            <span>{`Copilot Requests for ${props.projectId}`}</span>
+            <button onClick={props.onClose} type='button'>
+                Close Copilot Requests
+            </button>
+        </div>
+    ),
     ErrorMessage: (props: { message: string }) => <div>{props.message}</div>,
     Pagination: (props: { onPerPageChange: (perPage: number) => void }) => {
         function handlePerPageChange(): void {
@@ -567,5 +575,159 @@ describe('ChallengesListPage', () => {
             .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
         expect(requestCopilotLink.compareDocumentPosition(createChallengeButton))
             .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    })
+
+    it('renders the copilot actions for a project without a billing account', () => {
+        mockedUseFetchChallenges.mockReturnValue({
+            challenges: [],
+            error: undefined,
+            isLoading: false,
+            isValidating: false,
+            metadata: {
+                page: 1,
+                perPage: 10,
+                total: 0,
+                totalPages: 0,
+            },
+            mutate: jest.fn(),
+        })
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: 200,
+                name: 'Payment Testing',
+                status: 'active',
+            },
+        })
+
+        renderPage(
+            '/projects/200/challenges',
+            '/projects/:projectId/challenges',
+            {
+                ...defaultContextValue,
+                isCopilot: false,
+                isManager: true,
+                loginUserInfo: {
+                    ...defaultContextValue.loginUserInfo,
+                    roles: ['manager'],
+                } as WorkAppContextModel['loginUserInfo'],
+                userRoles: ['manager'],
+            },
+        )
+
+        const pageContent = screen.getByTestId('page-content')
+
+        expect(within(pageContent)
+            .getByRole('link', { name: 'Request Copilot' })
+            .getAttribute('href'))
+            .toBe('https://copilots.example.com/requests/new?projectId=200')
+        expect(within(pageContent)
+            .queryByRole('button', { name: 'View Request' }))
+            .not
+            .toBeNull()
+    })
+
+    it('toggles the copilot opportunities modal from the View Request action', () => {
+        mockedUseFetchChallenges.mockReturnValue({
+            challenges: [],
+            error: undefined,
+            isLoading: false,
+            isValidating: false,
+            metadata: {
+                page: 1,
+                perPage: 10,
+                total: 0,
+                totalPages: 0,
+            },
+            mutate: jest.fn(),
+        })
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: 200,
+                name: 'Payment Testing',
+                status: 'active',
+            },
+        })
+
+        renderPage(
+            '/projects/200/challenges',
+            '/projects/:projectId/challenges',
+            {
+                ...defaultContextValue,
+                isAdmin: true,
+                isCopilot: false,
+                loginUserInfo: {
+                    ...defaultContextValue.loginUserInfo,
+                    roles: ['administrator'],
+                } as WorkAppContextModel['loginUserInfo'],
+                userRoles: ['administrator'],
+            },
+        )
+
+        expect(screen.queryByTestId('copilot-opportunities-modal'))
+            .toBeNull()
+
+        fireEvent.click(screen.getByRole('button', { name: 'View Request' }))
+
+        expect(screen.getByTestId('copilot-opportunities-modal').textContent)
+            .toContain('Copilot Requests for 200')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Close Copilot Requests' }))
+
+        expect(screen.queryByTestId('copilot-opportunities-modal'))
+            .toBeNull()
+    })
+
+    it('hides the copilot actions for completed projects', () => {
+        mockedUseFetchChallenges.mockReturnValue({
+            challenges: [],
+            error: undefined,
+            isLoading: false,
+            isValidating: false,
+            metadata: {
+                page: 1,
+                perPage: 10,
+                total: 0,
+                totalPages: 0,
+            },
+            mutate: jest.fn(),
+        })
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                billingAccountId: 80001059,
+                id: 200,
+                name: 'Payment Testing',
+                status: 'completed',
+            },
+        })
+
+        renderPage(
+            '/projects/200/challenges',
+            '/projects/:projectId/challenges',
+            {
+                ...defaultContextValue,
+                isCopilot: false,
+                isManager: true,
+                loginUserInfo: {
+                    ...defaultContextValue.loginUserInfo,
+                    roles: ['manager'],
+                } as WorkAppContextModel['loginUserInfo'],
+                userRoles: ['manager'],
+            },
+        )
+
+        const pageContent = screen.getByTestId('page-content')
+
+        expect(within(pageContent)
+            .queryByRole('link', { name: 'Request Copilot' }))
+            .toBeNull()
+        expect(within(pageContent)
+            .queryByRole('button', { name: 'View Request' }))
+            .toBeNull()
     })
 })

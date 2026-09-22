@@ -7,10 +7,21 @@ interface EngagementAssignmentSummary {
     updatedAt?: string
 }
 
+/**
+ * Authored pill labels for engagement application and assignment statuses.
+ *
+ * The vocabulary is the one PM-6084 specified, so a member reads the same word
+ * here, on the Engagements assignment card, and in the Engagements API's own
+ * display labels. The distinction that matters is `selected` vs `assigned`:
+ * `SELECTED` means a talent manager has extended an offer that is still waiting
+ * on the member's Accept Offer, while `ASSIGNED` means the member took it. Only
+ * `accepted` - the application status a member sets by accepting - reads
+ * "Accepted" (PM-6335).
+ */
 const STATUS_LABELS: Record<string, string> = {
-    accepted: 'Selected',
+    accepted: 'Accepted',
     applied: 'Applied',
-    approved: 'Selected',
+    approved: 'Accepted',
     assigned: 'Assigned',
     completed: 'Completed',
     offerdeclined: 'Offer Declined',

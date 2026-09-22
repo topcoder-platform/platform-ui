@@ -48,6 +48,12 @@ sudo yarn start
   The frontend cannot recover rows removed by the API's history-privacy filter.
 - PM-6307 regression coverage uses two submissions from one member, with the older
   screening still pending, plus a completed submission from another member.
+- The Checkpoint Submission, Checkpoint Screening, and Checkpoint Review tabs decide
+  whether a row belongs to the viewer from the signed-in member id, the same rule the
+  Submissions and Screening tabs use, rather than from the challenge resource list
+  alone. A submitter whose own resource row is missing from that list would otherwise
+  see empty checkpoint tabs while every other tab still rendered (PM-6340). Rows from
+  other members remain hidden from an unprivileged submitter.
 
 ### Winners result identity:
 

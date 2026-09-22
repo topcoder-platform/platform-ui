@@ -6,6 +6,26 @@ is `/opportunities`; domain tabs use `/opportunities/:kind`, challenge details
 use `/opportunities/challenge/:challengeId`, and review details use
 `/opportunities/review/:reviewOpportunityId`.
 
+## TopGear community host
+
+Community-app's Wipro community (`topgear.<domain>`, formerly also served at
+`wipro.<domain>`) is replaced by this app on the `topgear` host. When the
+first hostname label is `topgear`:
+
+- the host root redirects to `/opportunities`, and the legacy `/challenges`
+  aliases continue to redirect to the Opportunities routes;
+- the listing renders community-app's TopGear challenge-listing banner
+  (`assets/topgear-challenges-banner.png`) instead of the masthead, the four
+  category cells, and the public summary request;
+- only competitions are offered. `/opportunities/:kind` for any other category
+  redirects to `/opportunities`, and Browse Competitions with its filters,
+  sorting, and pagination is unchanged;
+- competitions are limited to the TopGear Topcoder group through the Challenge
+  API `groups[]` parameter. The group defaults to community-app's
+  `b7f7c0f8-8ee8-409e-9e5c-33404983b635` and is configurable with
+  `REACT_APP_TOPGEAR_GROUP_ID`. Members outside the group receive an empty
+  listing from the API, matching community-app's group-restricted community.
+
 The four headline metrics come from one `GET /v6/opportunities/summary`
 request. List content is requested lazily from its owning API as members switch
 tabs, filter, sort, or paginate. Do not prefetch bucket-sized list payloads.
@@ -21,8 +41,10 @@ My Work requests at most the first 100 member records from each owning API in
 parallel, then applies its shared opportunity-type and track facets, global
 sorting, and pagination in the client. Owner-specific lifecycle values are
 normalized to All, Active, and Past. Competition cards read Registered;
-approved, accepted, or selected non-competition applications read Accepted;
-the remaining member applications read Applied. Summary counts retain the
+approved or accepted non-competition applications read Accepted; the remaining
+member applications read Applied. Engagements carry the fuller PM-6084
+vocabulary described below, so an offer still awaiting the member reads
+Selected rather than Accepted. Summary counts retain the
 owner-reported totals even when an owner has more than 100 records. Once the
 authenticated profile is available, four count-only owner requests load those
 totals independently of the selected Browse/My Work destination. The masthead
@@ -43,6 +65,22 @@ their owner-specific skill facet where supported.
 On mobile, Search, ownership, and Status remain immediately visible while the
 Track, Type, or Role facets sit behind the accessible More filters control.
 Desktop keeps every available facet expanded.
+
+Engagements state their authored Status choices directly: `Open for
+application`, `My engagements`, and `Completed`. The separate ownership checkbox
+is therefore omitted for that domain only; the other domains keep it. `My engagements` is an
+ownership filter wearing a status label, so it deliberately applies no lifecycle
+status and returns the member's open, in-progress, and completed engagements in
+one list, each card carrying its own state pill. Those pills use the PM-6084
+vocabulary: `Applied`, `Under Review`, `Shortlisted`, `Selected`, `Assigned`,
+`Completed`, `Rejected`, `Offer Declined`, and `Terminated`. `Selected` and
+`Assigned` are deliberately distinct, because the Engagements API uses
+`SELECTED` for an offer a talent manager has extended and `ASSIGNED` only once
+the member has pressed Accept Offer; labelling a pending offer `Accepted`
+contradicted the Accept Offer button still showing on the same engagement
+(PM-6335). `Accepted` is reserved for the `ACCEPTED` application status the
+member sets themselves. Anonymous visitors never see the option because they own
+no engagements.
 
 On narrow layouts, Browse keeps the member's decision flow in document order:
 the title is followed by filters, then the sort/view toolbar, and finally the
@@ -205,8 +243,12 @@ contract. Every track-specific field and action receives a visible mobile key,
 while Submission Date sorting stays above the card and continues to request
 owner-sorted pages.
 Marathon My Submissions uses compact column spacing so the complete scorer table
-fits within its desktop card. Narrow table layouts retain contained horizontal
-overflow until phone record cards take over at the mobile breakpoint.
+fits within its desktop card. The Submission ID and Submission Date columns keep
+a wider share of that budget, and cells use 12px horizontal padding, so long
+submission IDs and long month names stay clearly separated instead of running
+together. The column budget itself is unchanged, so the desktop scrollbar stays
+gone. Narrow table layouts retain contained horizontal overflow until phone
+record cards take over at the mobile breakpoint.
 
 The My Submissions heading keeps its Review App handoff, but phone layouts
 stack that action below the heading copy at full content width so neither the
@@ -258,8 +300,9 @@ field is present for the caller.
   title/description search resolves matching standardized skill IDs and retries
   through the API's `requiredSkills` filter so skill and technology terms stay
   discoverable without weakening normal project search. The authored `My
-  engagements` view sends both `appliedByMe=true` and `includePrivate=true` so
-  accepted or assigned private work remains visible to the current member.
+  engagements` Status choice sends both `appliedByMe=true` and
+  `includePrivate=true`, and no `status`, so accepted or assigned private work
+  and finished engagements all remain visible to the current member.
   Public engagement cards hydrate the caller's status from that same complete
   member-scoped feed, retaining terminal rejected-offer assignments that the
   narrower `my-assignments` collection intentionally excludes.
@@ -550,7 +593,11 @@ summaries expose bounded starter excerpts, participant snapshots, unique
 authenticated view counts, and current-member watch state. The
 environment-specific Vanilla URL is retained only as a recovery link when the
 v6 API is unavailable or the member is signed out. Forum counts come from the
-complete API result, including topics created by the current member.
+complete API result, including topics created by the current member. Opening a
+topic, creating one, and returning to the topic list all swap the panel without
+changing the route, so each of those transitions resets the page scroll offset;
+otherwise a member who opened a topic from far down the list would land in the
+middle of the discussion they just opened.
 Unregistered administrators
 receive the registered read and monitoring tabs, including Submissions, the
 metadata-enabled Marathon Dashboard, and Forum, while My Submissions and upload

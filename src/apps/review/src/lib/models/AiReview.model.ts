@@ -1,3 +1,5 @@
+export type AiReviewMode = 'AI_GATING' | 'AI_ONLY'
+
 export type AiReviewDecisionStatus = 'PENDING' | 'PASSED' | 'FAILED' | 'ERROR' | 'HUMAN_OVERRIDE'
 
 export type AiReviewDecisionEscalationStatus = 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED'
@@ -34,7 +36,8 @@ export interface AiReviewConfig {
     challengeId: string
     version: number
     minPassingThreshold: number
-    mode: string
+    mode: AiReviewMode
+    instantReview: boolean
     autoFinalize: boolean
     formula?: Record<string, unknown>
     templateId?: string | null

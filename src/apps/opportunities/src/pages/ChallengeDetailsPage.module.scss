@@ -79,6 +79,26 @@
             line-height: 16px;
             padding: 0 2px;
         }
+
+        /*
+         * Marks a tab whose content has unread activity. The teal count keeps its
+         * treatment and gains a red dot, so unread forum posts are visible from
+         * the tab rail without opening the tab.
+         */
+        span.unreadBadge {
+            position: relative;
+
+            &::after {
+                background: #c1294f;
+                border-radius: 50%;
+                content: '';
+                height: 6px;
+                position: absolute;
+                right: -3px;
+                top: -3px;
+                width: 6px;
+            }
+        }
     }
 
     button:disabled {
@@ -432,16 +452,16 @@
 .myMarathonTable {
     th,
     td {
-        padding-inline: 8px;
+        padding-inline: 12px;
     }
 
-    th:first-child { width: 120px; }
-    th:nth-child(2) { width: 190px; }
-    th:nth-child(3) { width: 150px; }
-    th:nth-child(4) { width: 140px; }
-    th:nth-child(5),
-    th:nth-child(6) { width: 160px; }
-    th:nth-child(7) { width: 120px; }
+    th:first-child { width: 172px; }
+    th:nth-child(2) { width: 200px; }
+    th:nth-child(3) { width: 156px; }
+    th:nth-child(4) { width: 142px; }
+    th:nth-child(5) { width: 106px; }
+    th:nth-child(6) { width: 150px; }
+    th:nth-child(7) { width: 114px; }
 
     th:nth-child(2),
     td:nth-child(2) {
@@ -454,7 +474,7 @@
 
     .scoreColumn {
         overflow-wrap: anywhere;
-        padding-inline: 8px;
+        padding-inline: 12px;
         text-align: right;
     }
 }

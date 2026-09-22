@@ -60,6 +60,23 @@
     text-decoration: none;
 }
 
+.viewRequestButton {
+    background: none;
+    border: 0;
+    color: $link-blue-dark;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0;
+    white-space: nowrap;
+}
+
+.viewRequestButton:hover,
+.viewRequestButton:focus {
+    color: $link-blue-dark;
+    text-decoration: underline;
+}
+
 .projectTitleActions {
     display: inline-flex;
     align-items: center;

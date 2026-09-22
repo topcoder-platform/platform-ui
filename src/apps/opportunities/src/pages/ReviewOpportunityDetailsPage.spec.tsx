@@ -176,7 +176,7 @@ describe('ReviewOpportunityDetailsPage', () => {
             .toBeInTheDocument()
         expect(screen.getByText('$1.98').parentElement?.parentElement)
             .toHaveTextContent('Base payment')
-        expect(screen.getByText(/19 June, 2026/))
+        expect(screen.getByText(/19 Jun 2026/))
             .toBeInTheDocument()
         expect(screen.getByText('How to become a reviewer?'))
             .toBeInTheDocument()
@@ -225,13 +225,33 @@ describe('ReviewOpportunityDetailsPage', () => {
             .toBeInTheDocument()
         expect(screen.queryByRole('columnheader', { name: 'Completed reviews' }))
             .not.toBeInTheDocument()
-        expect(screen.getByText('12 June, 2026, 9:35'))
+        expect(screen.getByText('12 Jun 2026, 09:35'))
             .toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'DaraK' }))
             .toHaveAttribute('href', expect.stringMatching(/\/DaraK$/))
         expect(screen.queryByText('cancelled-member'))
             .not.toBeInTheDocument()
         expect(screen.getByText('1 - 2 of 2 items'))
+            .toBeInTheDocument()
+    })
+
+    it('drops the repeated year from a review period that opens and closes in one year', () => {
+        renderPage()
+
+        expect(screen.getByText('22 Jun - 24 Jun 2026'))
+            .toBeInTheDocument()
+    })
+
+    it('keeps both years on a review period that crosses into the next year', () => {
+        mockUseSWR.mockReturnValue({
+            data: reviewFixture({ duration: 172800, startDate: '2026-12-31T00:00:00' }),
+            isValidating: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage()
+
+        expect(screen.getByText('31 Dec 2026 - 2 Jan 2027'))
             .toBeInTheDocument()
     })
 

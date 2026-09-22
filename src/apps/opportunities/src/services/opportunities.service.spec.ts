@@ -268,6 +268,27 @@ describe('opportunities service normalization', () => {
             .toBe(false)
     })
 
+    it('limits competitions to the requested community groups', () => {
+        const topgear = new URL(buildOpportunityPageUrl('competitions', {
+            groups: ['b7f7c0f8-8ee8-409e-9e5c-33404983b635'],
+            page: 1,
+            perPage: 10,
+            statuses: ['ACTIVE'],
+        }))
+        const everyone = new URL(buildOpportunityPageUrl('competitions', {
+            page: 1,
+            perPage: 10,
+            statuses: ['ACTIVE'],
+        }))
+
+        expect(topgear.searchParams.getAll('groups[]'))
+            .toEqual(['b7f7c0f8-8ee8-409e-9e5c-33404983b635'])
+        expect(topgear.searchParams.has('groups'))
+            .toBe(false)
+        expect(everyone.searchParams.has('groups[]'))
+            .toBe(false)
+    })
+
     it('maps My competitions to every Challenge API resource role for the member', () => {
         const url = new URL(buildOpportunityPageUrl('competitions', {
             applied: true,

@@ -1,3 +1,4 @@
+export * from './ai-review-config.utils'
 export * from './copy-text-to-clipboard'
 export * from './files'
 export * from './generic-data-object.type'

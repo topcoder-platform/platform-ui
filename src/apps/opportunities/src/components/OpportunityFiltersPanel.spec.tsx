@@ -2,7 +2,11 @@
 import '@testing-library/jest-dom'
 import { fireEvent, render, screen } from '@testing-library/react'
 
-import { OpportunityFiltersPanel } from './OpportunityFiltersPanel'
+import {
+    COMPLETED_ENGAGEMENTS_STATUS,
+    MY_ENGAGEMENTS_STATUS,
+    OpportunityFiltersPanel,
+} from './OpportunityFiltersPanel'
 
 jest.mock('~/libs/ui', () => {
     const Icon = (): JSX.Element => <svg />
@@ -70,20 +74,20 @@ describe('OpportunityFiltersPanel', () => {
             .toHaveBeenCalledWith('TSK', true)
     })
 
-    it('uses the authored unified search and supported My engagements filter', () => {
-        const onAppliedChange = jest.fn()
+    it('uses the authored unified search and the member scoped engagements filters', () => {
         const onRoleChange = jest.fn()
+        const onStatusChange = jest.fn()
 
         render(
             <OpportunityFiltersPanel
                 applied={false}
                 isAuthenticated
                 kind='engagements'
-                onAppliedChange={onAppliedChange}
+                onAppliedChange={jest.fn()}
                 onReset={jest.fn()}
                 onRoleChange={onRoleChange}
                 onSearchChange={jest.fn()}
-                onStatusChange={jest.fn()}
+                onStatusChange={onStatusChange}
                 onTrackChange={jest.fn()}
                 onTypeChange={jest.fn()}
                 search=''
@@ -98,12 +102,17 @@ describe('OpportunityFiltersPanel', () => {
             .not.toBeInTheDocument()
         expect(screen.getByText('Search skills, technologies, projects'))
             .toBeInTheDocument()
-        expect(screen.getByText('Completed'))
-            .toBeInTheDocument()
-        const myEngagements = screen.getByRole('checkbox', { name: 'My engagements' })
-        fireEvent.click(myEngagements)
-        expect(onAppliedChange)
-            .toHaveBeenCalledWith(true)
+        expect(screen.queryByRole('checkbox', { name: 'My engagements' }))
+            .not.toBeInTheDocument()
+        expect(screen.getAllByRole('radio')
+            .map(radio => radio.closest('label')?.textContent))
+            .toEqual(['Open for application', 'My engagements', 'Completed'])
+        fireEvent.click(screen.getByRole('radio', { name: 'My engagements' }))
+        expect(onStatusChange)
+            .toHaveBeenCalledWith(MY_ENGAGEMENTS_STATUS)
+        fireEvent.click(screen.getByRole('radio', { name: 'Completed' }))
+        expect(onStatusChange)
+            .toHaveBeenCalledWith(COMPLETED_ENGAGEMENTS_STATUS)
         fireEvent.click(screen.getByRole('combobox', { name: 'Role' }))
         expect(screen.getByRole('listbox'))
             .toBeInTheDocument()
@@ -114,6 +123,36 @@ describe('OpportunityFiltersPanel', () => {
             .toHaveBeenCalledWith('SOFTWARE_DEVELOPER')
         expect(screen.getByText('Select e.g. “Software Engineer”'))
             .toHaveAttribute('id', 'engagements-role-description')
+    })
+
+    it('hides the owner-scoped engagements status from anonymous visitors', () => {
+        render(
+            <OpportunityFiltersPanel
+                applied={false}
+                isAuthenticated={false}
+                kind='engagements'
+                onAppliedChange={jest.fn()}
+                onReset={jest.fn()}
+                onRoleChange={jest.fn()}
+                onSearchChange={jest.fn()}
+                onStatusChange={jest.fn()}
+                onTrackChange={jest.fn()}
+                onTypeChange={jest.fn()}
+                search=''
+                selectedRole=''
+                status='OPEN'
+                tracks={[]}
+                types={[]}
+            />,
+        )
+
+        expect(screen.getAllByRole('radio')
+            .map(radio => radio.closest('label')?.textContent))
+            .toEqual(['Open for application'])
+        expect(screen.queryByText('My engagements'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Completed'))
+            .not.toBeInTheDocument()
     })
 
     it('matches the authored review track facets without an extra Type section', () => {

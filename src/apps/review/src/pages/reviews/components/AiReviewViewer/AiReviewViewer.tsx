@@ -38,6 +38,7 @@ const AiReviewViewer: FC = () => {
     const navigate = useAppNavigate()
     const workflowRunIsFailed = [
         AiWorkflowRunStatusEnum.FAILURE,
+        AiWorkflowRunStatusEnum.TIMEOUT,
     ].includes(workflowRun?.status as AiWorkflowRunStatusEnum)
 
     const tabItems: SelectOption[] = [
@@ -65,8 +66,17 @@ const AiReviewViewer: FC = () => {
         workflowRun && [
             AiWorkflowRunStatusEnum.CANCELLED,
             AiWorkflowRunStatusEnum.FAILURE,
+            AiWorkflowRunStatusEnum.TIMEOUT,
         ].includes(workflowRun.status)
     ), [workflowRun])
+
+    const failedRunMessage = useMemo(() => {
+        if (workflowRun?.status === AiWorkflowRunStatusEnum.TIMEOUT) {
+            return 'AI run timed out - no scorecard results are available'
+        }
+
+        return 'AI run failed - no scorecard results are available'
+    }, [workflowRun?.status])
 
     const back = useCallback(async (e?: React.MouseEvent<HTMLAnchorElement>) => {
         e?.preventDefault()
@@ -103,7 +113,7 @@ const AiReviewViewer: FC = () => {
 
             {isFailedRun ? (
                 <div>
-                    AI run failed - no scorecard results are available
+                    {failedRunMessage}
                 </div>
             ) : (
                 <>

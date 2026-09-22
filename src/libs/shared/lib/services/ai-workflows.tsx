@@ -363,6 +363,8 @@ export interface BulkIngestionFilters {
     tracks?: string[]
     /** ISO date (YYYY-MM-DD) — only ingest challenges updated on or after this. */
     updatedDateStart?: string
+    /** ISO date (YYYY-MM-DD) — only ingest challenges updated on or before this. */
+    updatedDateEnd?: string
     dryRun?: boolean
     concurrency?: number
 }

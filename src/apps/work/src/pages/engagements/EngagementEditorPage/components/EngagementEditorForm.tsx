@@ -6,6 +6,7 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
@@ -577,6 +578,74 @@ function getPayloadRequiredMemberCount(
 }
 
 /**
+ * Keeps private-assignment slots the user is still filling in when the form is
+ * reset from a freshly saved or refetched engagement.
+ *
+ * Autosave and SWR revalidation both replace form values with the server's view
+ * of the engagement. Until a newly picked member has complete assignment
+ * details, the API has nothing to return for that slot, so an unguarded reset
+ * silently discards the handle that was just selected and the member can never
+ * be added (PM-6316).
+ *
+ * @param defaults form defaults derived from the persisted engagement.
+ * @param current form values captured immediately before the reset.
+ * @returns the defaults with any not-yet-persisted assignment slot restored.
+ * @throws Does not throw.
+ */
+function mergePendingAssignmentSlots(
+    defaults: EngagementEditorFormData,
+    current: EngagementEditorFormData | undefined,
+): EngagementEditorFormData {
+    if (!current?.isPrivate || !Array.isArray(current.assignedMemberHandles)) {
+        return defaults
+    }
+
+    const persistedMemberHandles = new Set(
+        (defaults.assignedMemberHandles || [])
+            .map(memberHandle => String(memberHandle || '')
+                .trim())
+            .filter(Boolean),
+    )
+    const assignedMemberHandles = [...(defaults.assignedMemberHandles || [])]
+    const assignmentDetails = [...(defaults.assignmentDetails || [])]
+
+    current.assignedMemberHandles.forEach((rawMemberHandle, index) => {
+        const memberHandle = String(rawMemberHandle || '')
+            .trim()
+
+        if (!memberHandle || persistedMemberHandles.has(memberHandle)) {
+            return
+        }
+
+        persistedMemberHandles.add(memberHandle)
+
+        const pendingDetail = current.assignmentDetails?.[index]
+
+        assignedMemberHandles.push(memberHandle)
+        assignmentDetails[assignedMemberHandles.length - 1] = (
+            pendingDetail && String(pendingDetail.memberHandle || '')
+                .trim() === memberHandle
+        )
+            ? pendingDetail
+            : undefined as unknown as AssignmentDetailsFormValue
+    })
+
+    if (assignedMemberHandles.length === (defaults.assignedMemberHandles || []).length) {
+        return defaults
+    }
+
+    return {
+        ...defaults,
+        assignedMemberHandles,
+        assignmentDetails,
+        requiredMemberCount: Math.max(
+            Number(defaults.requiredMemberCount) || 0,
+            assignedMemberHandles.length,
+        ),
+    }
+}
+
+/**
  * Converts engagement editor form state into the API payload.
  *
  * @param values engagement editor form values.
@@ -661,6 +730,14 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
             ? String(props.engagement.id)
             : undefined,
     )
+    const [isAssignmentEditorOpen, setIsAssignmentEditorOpen] = useState<boolean>(false)
+    // Remembers which props last seeded the form so closing the assignment
+    // dialog cannot replay a reset and discard unrelated edits.
+    const appliedResetSourceRef = useRef<{
+        engagement?: Engagement
+        leadPrefill?: EngagementLeadPrefill
+        projectId: number | string
+    } | undefined>(undefined)
     const [isGeneratingDescription, setIsGeneratingDescription] = useState<boolean>(false)
     const [isSaving, setIsSaving] = useState<boolean>(false)
     const [saveError, setSaveError] = useState<string | undefined>()
@@ -768,7 +845,10 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                     }
                 }
 
-                reset(getDefaultValues(savedEngagement, props.projectId, props.leadPrefill))
+                reset(mergePendingAssignmentSlots(
+                    getDefaultValues(savedEngagement, props.projectId, props.leadPrefill),
+                    getValues(),
+                ))
 
                 if (!options.isAutosave) {
                     showSuccessToast(
@@ -802,6 +882,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
         },
         [
             currentEngagementId,
+            getValues,
             lockedAssignmentDetails,
             navigate,
             props.isEditMode,
@@ -846,7 +927,12 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
     )
 
     useAutosave<EngagementEditorFormData>({
-        enabled: !!currentEngagementId && formState.isDirty && formState.isValid,
+        // An autosave while the assignment dialog is open resets the form under
+        // it, clearing the handle the dialog is collecting details for (PM-6316).
+        enabled: !!currentEngagementId
+            && formState.isDirty
+            && formState.isValid
+            && !isAssignmentEditorOpen,
         formValues: values,
         onSave: async nextValues => {
             await saveEngagement(nextValues, {
@@ -856,11 +942,44 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
     })
 
     useEffect(() => {
+        // A revalidated engagement must not replace form state while the
+        // assignment dialog is open; the reset is deferred until it closes.
+        if (isAssignmentEditorOpen) {
+            return
+        }
+
+        const appliedResetSource = appliedResetSourceRef.current
+
+        if (
+            appliedResetSource
+            && appliedResetSource.engagement === props.engagement
+            && appliedResetSource.leadPrefill === props.leadPrefill
+            && appliedResetSource.projectId === props.projectId
+        ) {
+            return
+        }
+
+        appliedResetSourceRef.current = {
+            engagement: props.engagement,
+            leadPrefill: props.leadPrefill,
+            projectId: props.projectId,
+        }
+
         setCurrentEngagementId(props.engagement?.id
             ? String(props.engagement.id)
             : undefined)
-        reset(getDefaultValues(props.engagement, props.projectId, props.leadPrefill))
-    }, [props.engagement, props.leadPrefill, props.projectId, reset])
+        reset(mergePendingAssignmentSlots(
+            getDefaultValues(props.engagement, props.projectId, props.leadPrefill),
+            getValues(),
+        ))
+    }, [
+        getValues,
+        isAssignmentEditorOpen,
+        props.engagement,
+        props.leadPrefill,
+        props.projectId,
+        reset,
+    ])
 
     const handleAIAutowrite = useCallback(async (): Promise<void> => {
         if (isGeneratingDescription) {
@@ -1068,6 +1187,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                                 : undefined}
                             hideCheckbox
                             lockedAssignedMemberHandles={lockedAssignedMemberHandles}
+                            onAssignmentEditorOpenChange={setIsAssignmentEditorOpen}
                         />
                     )}
 

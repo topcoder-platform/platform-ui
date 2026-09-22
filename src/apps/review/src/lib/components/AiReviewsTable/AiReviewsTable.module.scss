@@ -42,6 +42,27 @@
     cursor: pointer;
 }
 
+.decisionRebuildButton {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    padding: 6px;
+
+    &:disabled,
+    &.disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+}
+
+.decisionRebuildIcon {
+    color: $black-80;
+}
+
 .reviewsTable {
     width: 100%;
     border-collapse: collapse;
@@ -128,7 +149,8 @@
 }
 
 .row-failed,
-.row-failed-score {
+.row-failed-score,
+.row-timeout {
     .resultCol {
         color: $red-140;
     }

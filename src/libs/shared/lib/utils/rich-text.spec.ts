@@ -44,6 +44,26 @@ describe('rich-text utils', () => {
             .toContain('rel="noopener noreferrer"')
     })
 
+    it('renders uploaded images from markdown image markup', () => {
+        const rendered = renderRichTextToHtml(
+            '![diagram.png](https://cdn.filestackcontent.com/q8SsiXd3Tke41bxChthJ)',
+        )
+
+        expect(rendered)
+            .toContain('src="https://cdn.filestackcontent.com/q8SsiXd3Tke41bxChthJ"')
+        expect(rendered)
+            .toContain('alt="diagram.png"')
+    })
+
+    it('removes images with unsafe source urls', () => {
+        const unsafeScheme = `java${'script'}:`
+        const rendered = renderRichTextToHtml(`<img src="${unsafeScheme}alert(1)" alt="bad">`)
+
+        expect(rendered)
+            .not
+            .toContain(unsafeScheme)
+    })
+
     it('supports markdown strikethrough markup', () => {
         const rendered = renderRichTextToHtml('~~deleted~~')
 
