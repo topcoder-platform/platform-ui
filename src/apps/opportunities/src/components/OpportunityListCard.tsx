@@ -25,6 +25,7 @@ import {
     ReviewOpportunity,
 } from '../models'
 import { engagementOpportunityState } from '../utils/engagement-status.utils'
+import { formatOpportunityDate } from '../utils/opportunity-date.utils'
 
 import { ReactComponent as ApplicationWaitlistedIcon } from '../assets/application-waitlisted.svg'
 import { ReactComponent as ChallengeTypeIcon } from '../assets/challenge-type.svg'
@@ -277,16 +278,11 @@ const SkillFilterTag: FC<SkillFilterTagProps> = props => {
  * Formats a date for compact card metadata.
  *
  * @param value ISO date from an owning API.
- * @returns localized date, or `TBD` when absent/invalid.
+ * @returns `17 Sep 2026` in the viewer's timezone, or `TBD` when absent/invalid.
  * @throws Does not throw.
  */
 function formatDate(value?: string): string {
-    if (!value) return 'TBD'
-    const date = new Date(value)
-    return Number.isNaN(date.getTime())
-        ? 'TBD'
-        : new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
-            .format(date)
+    return formatOpportunityDate(value, 'TBD')
 }
 
 /**
