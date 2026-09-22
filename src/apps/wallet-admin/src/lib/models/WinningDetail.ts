@@ -81,6 +81,10 @@ export interface Winning {
     createDate: string
     grossAmount: string
     grossAmountNumber: number
+    /** Formatted payment total, including billing markup, shown in the payments listing. */
+    totalAmount: string
+    /** Numeric payment total, including billing markup, backing {@link Winning.totalAmount}. */
+    totalAmountNumber: number
     status: string
     releaseDate: string
     releaseDateObj: Date
@@ -101,6 +105,8 @@ export interface WinningDetail {
     description: string
     /** Gross member amount across current installments; absent on older Finance deployments. */
     grossAmount?: number
+    /** Payment total including billing markup; absent on older Finance deployments. */
+    totalAmount?: number
     externalId: string
     attributes: {
         assignmentId?: number | string

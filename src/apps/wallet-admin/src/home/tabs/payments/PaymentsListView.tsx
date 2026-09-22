@@ -207,6 +207,36 @@ function getWinningAssignmentId(payment: WinningDetail): string | undefined {
 }
 
 /**
+ * Resolves the payment total, including billing markup, for a finance winning row.
+ *
+ * @param payment raw finance winning row returned by the payouts API.
+ * @param grossAmount member gross amount used when no total is reported.
+ * @returns the payment total rounded to cents, or the gross amount as a fallback.
+ * @remarks Prefers the Finance total summary. Older responses report the total
+ * only on each installment, where every installment repeats the same
+ * payment-level total, so identical values are used once instead of added.
+ */
+function resolveTotalAmount(payment: WinningDetail, grossAmount: number): number {
+    if (payment.totalAmount !== undefined && Number.isFinite(payment.totalAmount)) {
+        return payment.totalAmount
+    }
+
+    const installmentTotals = payment.details
+        .map(installment => Number(installment.totalAmount))
+        .filter(amount => Number.isFinite(amount))
+
+    if (installmentTotals.length === 0) {
+        return grossAmount
+    }
+
+    const total = new Set(installmentTotals).size === 1
+        ? installmentTotals[0]
+        : installmentTotals.reduce((sum, amount) => sum + amount, 0)
+
+    return Number(total.toFixed(2))
+}
+
+/**
  * Converts a raw finance winning row into the wallet-admin view model.
  *
  * @param payment raw finance winning row returned by the payouts API.
@@ -214,8 +244,9 @@ function getWinningAssignmentId(payment: WinningDetail): string | undefined {
  * @returns the normalized winning record rendered by the payments table.
  * @throws RangeError when currency/date formatting receives an invalid value.
  * @remarks Uses the Finance gross summary, falling back to summed installment
- * gross amounts for compatible older responses. Repeated totalAmount values
- * are never added. The release date and hold status use the primary installment.
+ * gross amounts for compatible older responses. The payment column renders the
+ * total amount resolved by {@link resolveTotalAmount}, which includes billing
+ * markup. The release date and hold status use the primary installment.
  */
 // eslint-disable-next-line complexity
 function convertPaymentToWinning(payment: WinningDetail, handleMap: Map<number, string>): Winning {
@@ -226,6 +257,7 @@ function convertPaymentToWinning(payment: WinningDetail, handleMap: Map<number, 
     const grossAmount = payment.grossAmount ?? Number(payment.details
         .reduce((total, installment) => total + Number(installment.grossAmount), 0)
         .toFixed(2))
+    const totalAmount = resolveTotalAmount(payment, grossAmount)
 
     let formattedReleaseDate
     if (diffHours > 0 && diffHours <= 24) {
@@ -274,6 +306,8 @@ function convertPaymentToWinning(payment: WinningDetail, handleMap: Map<number, 
         releaseDate: formattedReleaseDate,
         releaseDateObj: releaseDate,
         status,
+        totalAmount: formatCurrency(String(totalAmount), payment.details[0].currency),
+        totalAmountNumber: totalAmount,
         type: payment.category.replaceAll('_', ' ')
             .toLowerCase(),
         winnerId: payment.winnerId,
