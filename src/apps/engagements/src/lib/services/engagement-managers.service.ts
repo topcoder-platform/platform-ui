@@ -6,7 +6,7 @@ import type { AssignEngagementManagerRequest, EngagementManager } from '../model
 const ENGAGEMENTS_URL = `${EnvironmentConfig.API.V6}/engagements`
 
 const managersUrl = (engagementId: string): string => (
-    `${ENGAGEMENTS_URL}/${engagementId}/managers`
+    `${ENGAGEMENTS_URL}/engagements/${engagementId}/managers`
 )
 
 /**

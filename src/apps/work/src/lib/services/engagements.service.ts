@@ -953,7 +953,7 @@ export async function fetchTimesheetPaymentSummary(
         const query = new URLSearchParams({ fromDate, toDate })
 
         return xhrGetAsync<TimesheetPaymentSummary>(
-            `${ENGAGEMENTS_ROOT_API_URL}/${engagementId}/assignments/${assignmentId}`
+            `${ENGAGEMENTS_ROOT_API_URL}/engagements/${engagementId}/assignments/${assignmentId}`
             + `/timesheets/summary?${query.toString()}`,
         )
     } catch (error) {
@@ -976,7 +976,7 @@ export async function linkTimesheetEntriesToPayment(
 ): Promise<void> {
     try {
         await xhrPostAsync<{ entryIds: string[], paymentReference: string }, unknown>(
-            `${ENGAGEMENTS_ROOT_API_URL}/${engagementId}/assignments/${assignmentId}`
+            `${ENGAGEMENTS_ROOT_API_URL}/engagements/${engagementId}/assignments/${assignmentId}`
             + '/timesheets/entries/payments',
             { entryIds, paymentReference },
         )
@@ -997,7 +997,7 @@ export async function fetchEngagementManagers(
 ): Promise<EngagementManager[]> {
     try {
         return xhrGetAsync<EngagementManager[]>(
-            `${ENGAGEMENTS_ROOT_API_URL}/${engagementId}/managers`,
+            `${ENGAGEMENTS_ROOT_API_URL}/engagements/${engagementId}/managers`,
         )
     } catch (error) {
         throw normalizeError(error, 'Failed to fetch engagement managers')
@@ -1018,7 +1018,7 @@ export async function assignEngagementManager(
 ): Promise<EngagementManager> {
     try {
         return xhrPostAsync<AssignEngagementManagerPayload, EngagementManager>(
-            `${ENGAGEMENTS_ROOT_API_URL}/${engagementId}/managers`,
+            `${ENGAGEMENTS_ROOT_API_URL}/engagements/${engagementId}/managers`,
             manager,
         )
     } catch (error) {
@@ -1037,7 +1037,7 @@ export async function removeEngagementManager(
 ): Promise<void> {
     try {
         await xhrDeleteAsync(
-            `${ENGAGEMENTS_ROOT_API_URL}/${engagementId}/managers/${managerUserId}`,
+            `${ENGAGEMENTS_ROOT_API_URL}/engagements/${engagementId}/managers/${managerUserId}`,
         )
     } catch (error) {
         throw normalizeError(error, 'Failed to remove engagement manager')
