@@ -125,9 +125,9 @@ The semantic HTML table provides keyboard sorting, `aria-sort`, and a focusable
 horizontal scroll region for wide reports; the shared Table component performs
 client sorting and is intentionally not used for this server-paginated report.
 
-Refresh preserves filters and sorting. Visible tabs poll every 60 seconds and
-refresh on returning from a hidden tab; obsolete requests are aborted and
-ignored. Failed refreshes keep the prior snapshot visibly marked as stale;
+Refresh preserves filters and sorting. The page loads on entry and when view
+controls change; the Refresh button requests fresh Salesforce data. Obsolete
+requests are aborted and ignored. Failed refreshes keep the prior snapshot visibly marked as stale;
 401/403 responses remove it. Loading, retry, empty and upstream truncation states
 are explicit. `allData: false` warns that filters and totals cover only received
 rows, because Salesforce Analytics caps report details at 2,000 records.
