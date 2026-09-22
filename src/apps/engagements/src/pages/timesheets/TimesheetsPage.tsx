@@ -113,7 +113,7 @@ const TimesheetsPage: FC = () => {
                 <LoadingSpinner />
             )}
 
-            {error || !timesheet && (
+            {(!!error || !timesheet) && (
                 <p className={styles.error} role='alert'>{error ?? ACCESS_DENIED_MESSAGE}</p>
             )}
 

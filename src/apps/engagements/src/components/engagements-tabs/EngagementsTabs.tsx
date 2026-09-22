@@ -3,11 +3,16 @@ import { useNavigate } from 'react-router-dom'
 
 import { useProfileContext } from '~/libs/core'
 import { TabsNavbar, TabsNavItem } from '~/libs/ui'
+import {
+    hasAdminRole,
+    hasManagerRole,
+    useFetchEngagementTimesheets,
+    UseFetchEngagementTimesheetsResult,
+} from '~/apps/work/src/lib'
 
 import { rootRoute } from '../../engagements.routes'
 
 import styles from './EngagementsTabs.module.scss'
-import { hasAdminRole, hasManagerRole, useFetchEngagementManagers, useFetchEngagementTimesheets } from '~/apps/work/src/lib'
 
 export type EngagementsTab = 'opportunities' | 'applications' | 'assignments' | 'timesheets'
 
@@ -20,7 +25,7 @@ const EngagementsTabs: FC<EngagementsTabsProps> = (props: EngagementsTabsProps) 
     const profileContext = useProfileContext()
     const isLoggedIn = profileContext.isLoggedIn
     const userRoles = profileContext.profile?.roles ?? []
-    const { timesheets } = useFetchEngagementTimesheets()
+    const { timesheets }: UseFetchEngagementTimesheetsResult = useFetchEngagementTimesheets()
     const isAdminOrManager = hasAdminRole(userRoles) || hasManagerRole(userRoles) || timesheets.length
 
     const tabsConfig = useMemo<TabsNavItem<EngagementsTab>[]>(() => {

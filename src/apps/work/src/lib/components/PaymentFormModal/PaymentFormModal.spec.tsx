@@ -4,13 +4,13 @@ import {
     screen,
 } from '@testing-library/react'
 
+import { ChangeEvent } from 'react'
 import type { Assignment } from '../../models'
-import { fetchTimesheetPaymentSummary } from '../../services'
 
 import PaymentFormModal from './PaymentFormModal'
 
 interface MockDatePickerProps {
-    onChange?: (date: Date | null) => void
+    onChange?: (date: Date | undefined) => void
     selected?: Date
 }
 
@@ -25,12 +25,12 @@ const mockDatePicker = jest.fn((props: unknown) => {
         <input
             data-has-props={String(props !== undefined)}
             data-testid='payment-date-picker'
-            onChange={event => {
+            onChange={function (event: ChangeEvent<HTMLInputElement>) {
                 const [year, month, day] = event.target.value.split('-')
                     .map(Number)
 
                 typedProps.onChange?.(
-                    year && month && day ? new Date(year, month - 1, day) : null,
+                    year && month && day ? new Date(year, month - 1, day) : undefined,
                 )
             }}
             type='text'
