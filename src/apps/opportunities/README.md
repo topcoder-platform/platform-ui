@@ -615,8 +615,10 @@ throughout every challenge forum. Topic authors may edit their own unlocked
 topics, but deletion remains administrator-only to match the legacy forum.
 
 The Report an Issue dialog preserves the Figma subject, category, and
-1000-character description while keeping attachments optional. Files upload
-through the authenticated `POST /v6/support/attachments` multipart endpoint
+1000-character description while keeping attachments optional. Uploaded files
+show a bold filename and a status label that changes from Uploading to Uploaded.
+The sent state uses a concise left-aligned confirmation and a Close button.
+Files upload through the authenticated `POST /v6/support/attachments` multipart endpoint
 with a 2 MiB-per-file UI limit, so the browser does not connect directly to an
 S3 bucket. Because support-api-v6 accepts only `challengeId` and Markdown
 `description` when creating the ticket, the client serializes the subject,
