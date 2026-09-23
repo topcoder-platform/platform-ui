@@ -247,11 +247,11 @@ describe('engagement agreement timing', () => {
                 status: 403,
             },
         })
-        mockGetAssignments.mockImplementation(async ({ page }: { page?: number }) => ({
-            data: page === 1
+        mockGetAssignments.mockImplementation(async params => ({
+            data: params?.page === 1
                 ? [{ ...engagement, nanoId: 'another-engagement' }]
                 : [{ ...engagement, isPrivate: true }],
-            page: page || 1,
+            page: params?.page || 1,
             perPage: 100,
             total: 2,
             totalPages: 2,
