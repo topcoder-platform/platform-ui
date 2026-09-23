@@ -489,8 +489,11 @@ The Figma keeps separate Provisional Score and Final Score columns and uses
 score from Challenge API winners or a sibling submission; protected winner
 scores are requested only for authenticated members. Winner cards prefer an
 exact-member final Review Summation when project-result rows are absent or
-contain a zero placeholder, including completed Design challenges. They use the Figma medal assets, card
-fills, dividers, and 48px avatars; long first-place scores start on a new line.
+contain a zero placeholder, including completed Design challenges. Completed
+podium cards show a zero score when no canonical score is available to an
+authenticated member. The remaining-winners table still distinguishes an
+unavailable score from a real zero. Cards use the Figma medal assets, fills,
+dividers, and 48px avatars; long first-place scores start on a new line.
 Cards without a placement prize omit the empty prize mark. The remaining-winners
 table initially orders available final
 scores high-to-low, matching its downward sort indicator, and the accessible

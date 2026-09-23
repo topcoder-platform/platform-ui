@@ -2409,7 +2409,7 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                     {rankedWinners.slice(0, 3)
                         .map(entry => (
                             <WinnerCard
-                                finalScore={entry.finalScore}
+                                finalScore={entry.finalScore ?? (showWinnerFinalScores ? 0 : undefined)}
                                 key={`${entry.placement}-${entry.winner.userId ?? entry.winner.handle ?? 'winner'}`}
                                 placement={entry.placement}
                                 prize={entry.prize}
