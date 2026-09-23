@@ -432,7 +432,6 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                     target='_blank'
                                 >
                                     Read the FAQ.
-                                    <IconOutline.ExternalLinkIcon aria-hidden='true' />
                                 </a>
                             </p>
                         </div>
@@ -456,7 +455,6 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                     target='_blank'
                                 >
                                     Policy
-                                    <IconOutline.ExternalLinkIcon aria-hidden='true' />
                                 </a>
                                 .
                             </p>
@@ -482,7 +480,6 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                     target='_blank'
                                 >
                                     how to pass screening
-                                    <IconOutline.ExternalLinkIcon aria-hidden='true' />
                                 </a>
                                 .
                             </p>

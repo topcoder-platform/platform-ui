@@ -205,7 +205,9 @@ to their authored subtype icons and member-facing labels.
   with no open phase omit the phase display instead of inventing one. The
   compact mobile card keeps the remaining-time value on the same heading row
   as the current phase, matching the authored design above its progress rail.
-- The right rail shows submissions and registrants from Challenge API. It also
+- The right rail shows submissions and registrants from Challenge API. Design
+  guidance links in its text appear as plain teal links without an external
+  arrow or underline. It also
   reserves the Figma Posts row; until Challenge API publishes `numOfPosts`, the
   value is an em dash rather than a fabricated discussion or forum count.
 
