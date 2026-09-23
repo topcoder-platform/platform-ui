@@ -2474,6 +2474,30 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveTextContent('with a final score of 99.75')
     })
 
+    it('shows zero final scores on every podium card when completed results have no score', () => {
+        mockProfile = { handle: 'viewer', userId: 123 }
+        mockChallenge = {
+            ...mockChallenge,
+            status: 'COMPLETED',
+            winners: [
+                { handle: 'first', placement: 1, userId: '1' },
+                { handle: 'second', placement: 2, userId: '2' },
+                { handle: 'third', placement: 3, userId: '3' },
+            ],
+        }
+        mockProjectResults = [
+            { finalScore: 0, placement: 1, userId: '1' },
+            { finalScore: 0, placement: 2, userId: '2' },
+        ]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'Winners' }))
+
+        screen.getAllByRole('article')
+            .forEach(card => expect(card)
+                .toHaveTextContent('with a final score of 0'))
+    })
+
     it('toggles the remaining Marathon winners by final score', () => {
         mockProfile = { handle: 'viewer', userId: 123 }
         mockChallenge = {
