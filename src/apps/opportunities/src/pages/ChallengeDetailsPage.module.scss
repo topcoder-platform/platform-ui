@@ -942,6 +942,7 @@
     border-radius: 50%;
     color: #161616;
     display: flex;
+    flex: 0 0 48px;
     font-size: 16px;
     font-weight: 700;
     height: 48px;
@@ -958,6 +959,7 @@
 
 .place1 .winnerMedal {
     background: rgba(210, 161, 6, .1);
+    flex-basis: 60px;
 
     img {
         height: 30px;
