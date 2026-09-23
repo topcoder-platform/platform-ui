@@ -887,8 +887,14 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toHaveLength(4)
         expect(container.querySelector('.timelineItems'))
             .toHaveStyle({
-                gridTemplateColumns: '88px minmax(0, 1fr) minmax(0, 1fr) 88px',
+                gridTemplateColumns: 'repeat(4, minmax(160px, 1fr))',
             })
+        expect(container.querySelector('.timelineRail'))
+            .toHaveStyle({
+                gridTemplateColumns: 'repeat(4, minmax(160px, 1fr))',
+            })
+        expect(container.querySelector('.timelineGraphic'))
+            .toHaveStyle({ '--timeline-min-width': '652px' })
     })
 
     it.each([
@@ -977,7 +983,7 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .not.toBeInTheDocument()
         expect(container.querySelector('.timelineItems'))
             .toHaveStyle({
-                gridTemplateColumns: '88px minmax(0, 1fr) minmax(0, 1fr) 88px',
+                gridTemplateColumns: 'repeat(4, minmax(160px, 1fr))',
             })
     })
 

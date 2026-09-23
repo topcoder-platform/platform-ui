@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-no-bind */
-import { CSSProperties, FC, Fragment, useState } from 'react'
+import { CSSProperties, FC, useState } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
@@ -527,16 +527,11 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const denseFeaturedPrizes = challengePrizes.length > 3
     const labels = challengeLabels(props.challenge)
     const expandedTimeline = challengeTimelineItems(props.challenge, phase)
-    const displayedTimelinePhases = expandedTimeline.slice(1, -1)
     const timelineGridStyle: CSSProperties = {
-        gridTemplateColumns: [
-            '88px',
-            ...displayedTimelinePhases.map(() => 'minmax(0, 1fr)'),
-            '88px',
-        ].join(' '),
+        gridTemplateColumns: `repeat(${expandedTimeline.length}, minmax(160px, 1fr))`,
     }
     const timelineWidthStyle = {
-        '--timeline-min-width': `${176 + displayedTimelinePhases.length * 140}px`,
+        '--timeline-min-width': `${expandedTimeline.length * 160 + (expandedTimeline.length - 1) * 4}px`,
     } as CSSProperties
 
     return (
@@ -734,24 +729,9 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                 {`Time zone: ${timelineTimezone()}`}
                             </small>
                             <div className={styles.timelineGraphic} style={timelineWidthStyle}>
-                                <div aria-hidden='true' className={styles.timelineRail}>
+                                <div aria-hidden='true' className={styles.timelineRail} style={timelineGridStyle}>
                                     {expandedTimeline.map((item, index) => (
-                                        <Fragment key={item.key}>
-                                            {index > 0 && (
-                                                <span
-                                                    className={classNames(
-                                                        styles.timelineConnector,
-                                                        styles[timelineConnectorState(
-                                                            expandedTimeline[index - 1].state,
-                                                            item.state,
-                                                        )],
-                                                    )}
-                                                    data-state={timelineConnectorState(
-                                                        expandedTimeline[index - 1].state,
-                                                        item.state,
-                                                    )}
-                                                />
-                                            )}
+                                        <span className={styles.timelineMilestone} key={item.key}>
                                             <span
                                                 className={classNames(
                                                     styles.timelineNode,
@@ -761,7 +741,22 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                             >
                                                 <img alt='' src={item.icon} />
                                             </span>
-                                        </Fragment>
+                                            {index < expandedTimeline.length - 1 && (
+                                                <span
+                                                    className={classNames(
+                                                        styles.timelineConnector,
+                                                        styles[timelineConnectorState(
+                                                            item.state,
+                                                            expandedTimeline[index + 1].state,
+                                                        )],
+                                                    )}
+                                                    data-state={timelineConnectorState(
+                                                        item.state,
+                                                        expandedTimeline[index + 1].state,
+                                                    )}
+                                                />
+                                            )}
+                                        </span>
                                     ))}
                                 </div>
                                 <ol className={styles.timelineItems} style={timelineGridStyle}>

@@ -236,9 +236,9 @@ remain in an aligned, content-sized row to the right. Each mobile row owns its
 marker and connector, so wrapped dates and enlarged text grow the rail instead
 of overlapping the following milestone. The mobile prize/action card follows
 the expanded timeline instead of interrupting it. Wider layouts retain the
-horizontal timeline and its overflow fallback for tablet-sized screens. Each
-desktop date stays on one line; timelines with many phases scroll horizontally
-so date labels remain aligned with their rail nodes.
+horizontal timeline and its overflow fallback for tablet-sized screens. The
+desktop rail and labels share equal columns wide enough for single-line dates;
+timelines with many phases scroll horizontally as one unit.
 
 On phone viewports, Registrants preserves its semantic table while presenting
 each API row as the Figma key/value card. Registration Date remains a
@@ -500,8 +500,8 @@ Winner stats use the Members API top-level track totals; Development does not
 add the nested AI Engineering value a second time. Quality Assurance winner
 cards use the compact `QA` label and always include member ratings, including
 the two- and three-winner podium layouts.
-The remaining-winners table keeps track wins on one line, uses dark header
-labels and a right-aligned Final Score sort control, and omits the Prize column.
+The remaining-winners table keeps track wins on one line, uses #161616 for every
+header label and sort control, right-aligns Final Score, and omits the Prize column.
 An empty Winners tab reflects the challenge lifecycle: cancelled challenges
 state that no winners were selected, drafts explain that judging has not run,
 and active challenges retain the ongoing-review guidance.
