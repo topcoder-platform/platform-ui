@@ -410,6 +410,8 @@ describe('ChallengeSidebar Review Style', () => {
             .toContain('inlineAnchor')
         expect(faqLink.className)
             .toContain('inlineAnchor')
+        expect([faqLink, policyLink, screeningLink].every(link => !link.querySelector('svg')))
+            .toBe(true)
         expect(policyLink.parentElement)
             .toHaveTextContent('the Policy.')
         expect(screeningLink.parentElement)
