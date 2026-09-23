@@ -487,10 +487,12 @@ The Figma keeps separate Provisional Score and Final Score columns and uses
 `-` when a final value is not yet available. Winners use Review API's canonical
 `GET /v6/projectResult` member-and-placement result instead of inferring a
 score from Challenge API winners or a sibling submission; protected winner
-scores are requested only for authenticated members. Marathon winner cards
-prefer an exact-member final Review Summation when legacy project-result rows
-contain a zero placeholder. Their separators use the corresponding podium
-placement color. The remaining-winners table initially orders available final
+scores are requested only for authenticated members. Winner cards prefer an
+exact-member final Review Summation when project-result rows are absent or
+contain a zero placeholder, including completed Design challenges. They use the Figma medal assets, card
+fills, dividers, and 48px avatars; long first-place scores start on a new line.
+Cards without a placement prize omit the empty prize mark. The remaining-winners
+table initially orders available final
 scores high-to-low, matching its downward sort indicator, and the accessible
 Final Score header toggles low-to-high; unavailable scores remain after scored
 rows in either direction and the three-card podium remains placement-ordered.

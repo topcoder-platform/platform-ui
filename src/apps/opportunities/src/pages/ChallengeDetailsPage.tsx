@@ -107,9 +107,9 @@ import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
 import { ReactComponent as SortIcon } from '../assets/sort.svg'
 import { ReactComponent as DeleteIcon } from '../assets/submission-delete.svg'
-import medal1 from '../assets/medal-1.svg'
-import medal2 from '../assets/medal-2.svg'
-import medal3 from '../assets/medal-3.svg'
+import medal1 from '../assets/winner-card-medal-1.svg'
+import medal2 from '../assets/winner-card-medal-2.svg'
+import medal3 from '../assets/winner-card-medal-3.svg'
 import resetIcon from '../assets/reset.svg'
 import winnerThanksIcon from '../assets/winner-thanks.svg'
 
@@ -2183,22 +2183,28 @@ const WinnerCard: FC<WinnerCardProps> = props => {
     const placeClass = props.placement <= 3
         ? styles[`place${props.placement}`]
         : styles.otherPlace
+    const finalScore = props.finalScore === undefined
+        ? undefined
+        : formatMarathonFinalScore(props.finalScore, '')
+    const stackedScore = props.placement === 1 && (finalScore?.length ?? 0) > 8
     return (
         <article className={`${styles.winnerCard} ${placeClass}`}>
             <span aria-hidden='true' className={styles.winnerMedal}>
                 {medal ? <img alt='' src={medal} /> : props.placement}
             </span>
             <strong className={styles.winnerPlacement}>{placementLabel(props.placement)}</strong>
-            {props.finalScore !== undefined && (
-                <span className={styles.winnerScore}>
+            {finalScore !== undefined && (
+                <span className={`${styles.winnerScore} ${stackedScore ? styles.winnerScoreStacked : ''}`}>
                     with a final score of
                     {' '}
-                    <strong>{formatMarathonFinalScore(props.finalScore, '')}</strong>
+                    <strong>{finalScore}</strong>
                 </span>
             )}
-            <span className={styles.winnerPrize}>
-                {winnerPrizeLabel(props.prize)}
-            </span>
+            {props.prize && (
+                <span className={styles.winnerPrize}>
+                    {winnerPrizeLabel(props.prize)}
+                </span>
+            )}
             <span className={styles.winnerDivider} />
             <MemberHandle
                 handle={handle}
@@ -2309,8 +2315,8 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
     const winnerReviewSummationResponse: SWRResponse<ChallengeReviewSummation[], Error> = useSWR(
-        winners?.length && props.memberId && isMarathonMatchChallenge(props.challenge)
-            ? ['opportunities:mm-review-summations', props.challenge.id]
+        winners?.length && props.memberId
+            ? ['opportunities:winner-review-summations', props.challenge.id]
             : undefined,
         () => getChallengeReviewSummations(props.challenge.id),
         { revalidateOnFocus: false, shouldRetryOnError: false },
