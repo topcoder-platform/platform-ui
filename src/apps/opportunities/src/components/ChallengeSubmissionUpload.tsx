@@ -24,6 +24,16 @@ import {
     createChallengeUrlSubmission,
 } from '../services'
 import { challengeSubmissionMode } from '../utils/challenge-detail.utils'
+import { ReactComponent as DeleteIcon } from '../assets/submission-delete.svg'
+import { ReactComponent as FileIcon } from '../assets/submission-file.svg'
+import { ReactComponent as JpgIcon } from '../assets/submission-file-jpg.svg'
+import { ReactComponent as TxtIcon } from '../assets/submission-file-txt.svg'
+import { ReactComponent as ZipIcon } from '../assets/submission-file-zip.svg'
+import { ReactComponent as HelpIcon } from '../assets/submission-help.svg'
+import { ReactComponent as LightbulbIcon } from '../assets/submission-lightbulb.svg'
+import { ReactComponent as RequiredFilesIcon } from '../assets/submission-required-files.svg'
+import { ReactComponent as TipsIcon } from '../assets/submission-tips.svg'
+import { ReactComponent as UploadIcon } from '../assets/submission-upload.svg'
 
 import { challengeCatalogKey } from './challenge-card.utils'
 import styles from './ChallengeSubmissionUpload.module.scss'
@@ -45,9 +55,10 @@ interface ChallengeSubmissionUploadProps {
 }
 
 /** Renders the compact extension badge used by Design required-file rows. */
-const FileTypeIcon: FC<{ extension: 'JPG' | 'TXT' | 'ZIP' }> = props => (
-    <span aria-hidden='true' className={styles.fileTypeIcon}>{props.extension}</span>
-)
+const FileTypeIcon: FC<{ extension: 'JPG' | 'TXT' | 'ZIP' }> = props => {
+    const Icon = props.extension === 'ZIP' ? ZipIcon : props.extension === 'TXT' ? TxtIcon : JpgIcon
+    return <Icon aria-hidden='true' className={styles.fileTypeIcon} />
+}
 
 /**
  * Selects the Review API submission type represented by the currently open phase.
@@ -390,7 +401,9 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                         <h3>
                             {urlMode
                                 ? <IconOutline.LinkIcon aria-hidden='true' />
-                                : <IconOutline.DocumentAddIcon aria-hidden='true' />}
+                                : designChallenge
+                                    ? <RequiredFilesIcon aria-hidden='true' />
+                                    : <IconOutline.DocumentAddIcon aria-hidden='true' />}
                             {urlMode ? 'Steps for Submission:' : 'Required Files'}
                         </h3>
                         {urlMode ? (
@@ -466,24 +479,34 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                     {!urlMode && (
                         <section className={styles.infoCard}>
                             <h3>
-                                <IconOutline.BadgeCheckIcon aria-hidden='true' />
+                                {designChallenge
+                                    ? <TipsIcon aria-hidden='true' />
+                                    : <IconOutline.BadgeCheckIcon aria-hidden='true' />}
                                 Submission tips
                             </h3>
                             <ul className={styles.tips}>
                                 <li>
-                                    <IconOutline.SunIcon aria-hidden='true' />
+                                    {designChallenge
+                                        ? <LightbulbIcon aria-hidden='true' />
+                                        : <IconOutline.SunIcon aria-hidden='true' />}
                                     Upload a single ZIP file only
                                 </li>
                                 <li>
-                                    <IconOutline.SunIcon aria-hidden='true' />
+                                    {designChallenge
+                                        ? <LightbulbIcon aria-hidden='true' />
+                                        : <IconOutline.SunIcon aria-hidden='true' />}
                                     Do not password protect the files
                                 </li>
                                 <li>
-                                    <IconOutline.SunIcon aria-hidden='true' />
+                                    {designChallenge
+                                        ? <LightbulbIcon aria-hidden='true' />
+                                        : <IconOutline.SunIcon aria-hidden='true' />}
                                     Include all files as per guidelines
                                 </li>
                                 <li>
-                                    <IconOutline.SunIcon aria-hidden='true' />
+                                    {designChallenge
+                                        ? <LightbulbIcon aria-hidden='true' />
+                                        : <IconOutline.SunIcon aria-hidden='true' />}
                                     Keep your handle out of your files and file names
                                 </li>
                             </ul>
@@ -491,7 +514,9 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                     )}
                     <section className={styles.infoCard}>
                         <h3>
-                            <IconOutline.QuestionMarkCircleIcon aria-hidden='true' />
+                            {designChallenge
+                                ? <HelpIcon aria-hidden='true' />
+                                : <IconOutline.QuestionMarkCircleIcon aria-hidden='true' />}
                             Need help?
                         </h3>
                         {urlMode ? (
@@ -612,7 +637,9 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                         onDrop={dropFile}
                                         type='button'
                                     >
-                                        <IconOutline.UploadIcon aria-hidden='true' />
+                                        {designChallenge
+                                            ? <UploadIcon aria-hidden='true' />
+                                            : <IconOutline.UploadIcon aria-hidden='true' />}
                                         <span>Drop your file(s) here or</span>
                                         <strong>Browse</strong>
                                     </button>
@@ -623,8 +650,13 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                             {file && (
                                 <div className={styles.uploadedFile}>
                                     <strong aria-live='polite'>{uploading ? 'Uploading' : 'Ready to upload'}</strong>
-                                    <div className={styles.fileRow}>
-                                        <IconOutline.PhotographIcon aria-hidden='true' />
+                                    <div className={classNames(styles.fileRow, {
+                                        [styles.designFileRow]: designChallenge,
+                                    })}
+                                    >
+                                        {designChallenge
+                                            ? <FileIcon aria-hidden='true' />
+                                            : <IconOutline.PhotographIcon aria-hidden='true' />}
                                         <div className={styles.fileCopy}>
                                             <strong>{file.name}</strong>
                                             <span>
@@ -641,7 +673,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                         >
                                             {uploading
                                                 ? <IconOutline.XIcon aria-hidden='true' />
-                                                : <IconOutline.TrashIcon aria-hidden='true' />}
+                                                : <DeleteIcon aria-hidden='true' />}
                                         </button>
                                         {uploading && (
                                             <div className={styles.uploadProgress}>
@@ -678,7 +710,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                         >
                                             {uploading
                                                 ? <IconOutline.XIcon aria-hidden='true' />
-                                                : <IconOutline.TrashIcon aria-hidden='true' />}
+                                                : <DeleteIcon aria-hidden='true' />}
                                         </button>
                                     </div>
                                 </div>

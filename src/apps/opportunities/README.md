@@ -539,7 +539,11 @@ member's registration before submission. The active phase selects `CONTEST_SUBMI
 authoritative for registration, phase, winner, submission-limit, and file
 validation. Design shows the four expected inner deliverables, while
 Development, Marathon Match, and Quality Assurance direct members to their
-Requirements content in ZIP mode. Successful submissions expose the created
+Requirements content in ZIP mode.
+Design submission guidance, upload, file, and checkbox controls use the Figma
+icons; Opportunities delete actions share the same Figma trash icon. The native
+agreement checkbox keeps keyboard focus and a rounded checked state.
+Successful submissions expose the created
 submission ID and refresh challenge and member submission counts without
 leaving the confirmation state. ZIP mode's declaration opens the public Topcoder
 Terms of Use; URL mode preserves the exact TopGear declaration and opens

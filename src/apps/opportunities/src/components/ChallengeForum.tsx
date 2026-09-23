@@ -11,6 +11,7 @@ import {
 import useSWR, { SWRResponse } from 'swr'
 
 import { BaseModal, ConfirmModal, IconOutline } from '~/libs/ui'
+import { ReactComponent as DeleteIcon } from '../assets/submission-delete.svg'
 
 import {
     ChallengeOpportunity,
@@ -638,7 +639,7 @@ const ForumTopicCard: FC<{
                         )}
                         {props.canDelete && !props.topic.locked && (
                             <button onClick={() => props.onDelete(props.topic)} type='button'>
-                                <IconOutline.TrashIcon aria-hidden='true' />
+                                <DeleteIcon aria-hidden='true' />
                                 Delete
                             </button>
                         )}
@@ -1259,7 +1260,7 @@ const ForumPostCard: FC<{
                     )}
                     {props.canDelete && !props.detail.topic.locked && (
                         <button onClick={() => props.onDelete(post)} type='button'>
-                            <IconOutline.TrashIcon aria-hidden='true' />
+                            <DeleteIcon aria-hidden='true' />
                             Delete
                         </button>
                     )}
