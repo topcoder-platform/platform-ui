@@ -266,6 +266,61 @@ describe('Marathon Match challenge detail utilities', () => {
             .toBe(true)
     })
 
+    it('withholds a system score until the latest system tests finish', () => {
+        const submission = {
+            finalScore: 99,
+            id: 'system-running',
+            provisionalScore: 90,
+            reviewSummation: [{
+                aggregateScore: 99,
+                id: 'system-result',
+                isFinal: true,
+                metadata: { testProgress: 0.6, testStatus: 'IN_PROGRESS' },
+            }],
+        }
+
+        expect(marathonSubmissionScores(submission))
+            .toEqual({ finalScore: undefined, provisionalScore: 90 })
+        expect(shouldShowFinalSubmissionScores({
+            id: 'system-running',
+            name: 'System running',
+            phases: [],
+            type: 'Marathon Match',
+        }, [submission]))
+            .toBe(false)
+
+        expect(marathonSubmissionScores({
+            ...submission,
+            reviewSummation: [{
+                ...submission.reviewSummation[0],
+                metadata: { testProgress: 0.6, testStatus: 'PASSED' },
+            }],
+        }).finalScore)
+            .toBeUndefined()
+        expect(marathonSubmissionScores({
+            ...submission,
+            reviewSummation: [{
+                ...submission.reviewSummation[0],
+                metadata: { testProgress: 1, testStatus: 'PASSED' },
+            }],
+        }).finalScore)
+            .toBe(99)
+        expect(marathonSubmissionScores({
+            ...submission,
+            reviewSummation: [{
+                ...submission.reviewSummation[0],
+                metadata: { testProgressDetails: { progress: 25, status: 'IN_PROGRESS' } },
+            }],
+        }).finalScore)
+            .toBeUndefined()
+        expect(marathonSubmissionScores({
+            finalScore: 99,
+            id: 'legacy-system-running',
+            review: [{ status: 'IN_PROGRESS' }],
+        }).finalScore)
+            .toBeUndefined()
+    })
+
     it('attaches challenge-level summations only to their matching attempts', () => {
         expect(attachMarathonReviewSummations(
             [{ id: 'one' }, { id: 'two' }],
