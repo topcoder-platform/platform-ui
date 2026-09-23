@@ -16,6 +16,7 @@ import {
 } from '~/apps/support/src/lib/services/support-attachment.service'
 import { createSupportTicket } from '~/apps/support/src/lib/services/support.service'
 import { BaseModal, Button, IconOutline } from '~/libs/ui'
+import { ReactComponent as DeleteIcon } from '../assets/submission-delete.svg'
 
 import styles from './ReportIssueModal.module.scss'
 
@@ -437,7 +438,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
                                         onClick={() => removeAttachment(attachment.id)}
                                         type='button'
                                     >
-                                        <IconOutline.TrashIcon aria-hidden='true' />
+                                        <DeleteIcon aria-hidden='true' />
                                     </button>
                                 </div>
                             ))}

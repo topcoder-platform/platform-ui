@@ -149,26 +149,16 @@
     }
 
     svg {
-        flex: 0 0 16px;
-        height: 16px;
-        width: 16px;
+        flex: 0 0 20px;
+        height: 20px;
+        width: 20px;
     }
 }
 
 .fileTypeIcon {
-    align-items: center;
-    border: 1.5px solid #161616;
-    border-radius: 1px;
-    box-sizing: border-box;
-    display: inline-flex;
-    flex: 0 0 16px;
-    font-size: 6px;
-    font-weight: 800;
-    height: 18px;
-    justify-content: center;
-    letter-spacing: -0.25px;
-    line-height: 8px;
-    width: 16px;
+    flex: 0 0 20px;
+    height: 20px;
+    width: 20px;
 }
 
 .tips svg {
@@ -399,6 +389,15 @@
     }
 }
 
+.designFileRow {
+    grid-template-columns: 24px minmax(0, 1fr) 20px;
+
+    > svg:first-child {
+        height: 24px;
+        width: 24px;
+    }
+}
+
 .fileCopy {
     display: flex;
     flex-direction: column;
@@ -461,16 +460,29 @@
 .agreement {
     align-items: center;
     display: flex;
-    font-size: 14px;
+    font-size: 16px;
     gap: 8px;
     height: 32px;
     line-height: 20px;
 
     input {
-        accent-color: #007d79;
+        appearance: none;
+        border: 1px solid #a8a8a8;
+        border-radius: 4px;
+        flex: 0 0 16px;
         height: 16px;
         margin: 0;
         width: 16px;
+
+        &:checked {
+            background: url('../assets/submission-checkbox-checked.svg') center / 16px 16px no-repeat;
+            border: 0;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #007d79;
+            outline-offset: 2px;
+        }
     }
 
     &:has(input:disabled) {
