@@ -283,6 +283,7 @@ describe('Marathon Match challenge detail utilities', () => {
             .toEqual({ finalScore: undefined, provisionalScore: 90 })
         expect(shouldShowFinalSubmissionScores({
             id: 'system-running',
+            name: 'System running',
             phases: [],
             type: 'Marathon Match',
         }, [submission]))
