@@ -57,6 +57,11 @@
     }
 }
 
+.titleText {
+    position: relative;
+    z-index: 1;
+}
+
 .cardTooltip {
     background: #001e2e !important;
     border-radius: 4px !important;

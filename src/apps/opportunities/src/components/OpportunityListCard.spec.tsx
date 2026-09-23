@@ -1059,7 +1059,8 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('heading', { name: 'Topcoder Opportunities Challenge' }).parentElement)
+        expect(screen.getByRole('heading', { name: 'Topcoder Opportunities Challenge' })
+            .querySelector('[data-tooltip-disabled]'))
             .toHaveAttribute('data-tooltip-disabled', 'true')
     })
 
@@ -1075,7 +1076,8 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('heading', { name: 'Topcoder Opportunities Challenge' }).parentElement)
+        expect(screen.getByRole('heading', { name: 'Topcoder Opportunities Challenge' })
+            .querySelector('[data-tooltip-disabled]'))
             .toHaveAttribute('data-tooltip-disabled', 'false')
 
         scrollHeight.mockRestore()
@@ -1095,10 +1097,26 @@ describe('OpportunityListCard owner-specific grid presentation', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('heading', { name: 'Long review opportunity title' }).parentElement)
+        expect(screen.getByRole('heading', { name: 'Long review opportunity title' })
+            .querySelector('[data-tooltip-strategy]'))
             .toHaveAttribute('data-tooltip-strategy', 'fixed')
         expect(screen.getByRole('heading', { name: 'Long review opportunity title' }).className)
             .toContain('reviewTitle')
+    })
+
+    it('attaches title tooltips to the visible text inside the full-card link', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard item={competitionFixture()} kind='competitions' />
+            </MemoryRouter>,
+        )
+
+        const titleLink = screen.getByRole('link', { name: 'Topcoder Opportunities Challenge' })
+        const trigger = titleLink.querySelector('[data-tooltip-disabled]')
+        expect(trigger)
+            .toContainHTML('titleText')
+        expect(trigger?.parentElement)
+            .toBe(titleLink)
     })
 
     it('shows approved and rejected Review API application decisions', () => {
