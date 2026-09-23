@@ -161,7 +161,8 @@ applications as `PENDING`. Browse and My Work cards render that caller state as 
 while capacity remains full, then naturally return to `Applied` if a position
 reopens or to `Approved` when the reviewer is selected.
 
-Long card titles expose their complete value in the authored dark tooltip.
+Long card titles expose their complete value in the authored dark tooltip only
+when the title is clipped and the pointer hovers the visible title text.
 When a card has more skills than fit in its visible skill row, its `+n` control
 exposes the hidden skill names in the corresponding bullet-list tooltip. The
 Engagement role filter uses the authored four-row keyboard-accessible listbox
