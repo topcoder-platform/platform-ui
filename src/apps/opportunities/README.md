@@ -201,6 +201,8 @@ to their authored subtype icons and member-facing labels.
 - `currentPhase` is preferred for the phase chip. Older responses fall back to
   the latest-started open phase. Progress uses actual then scheduled dates,
   clamps to 0–100%, and may derive the end from the phase duration in seconds.
+  The Approval chip uses the phase seal with its checkmark centered inside the
+  seal, matching the authored phase tag reference.
   Competition pages revalidate once a minute and when focus returns; cards
   with no open phase omit phase progress; stalled challenges show their lifecycle
   status in its place, even if an old phase remains marked open. The
