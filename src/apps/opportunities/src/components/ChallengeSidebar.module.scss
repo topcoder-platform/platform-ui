@@ -115,6 +115,10 @@
 
     a.promoLink {
         margin-top: 16px;
+
+        img {
+            filter: brightness(0) invert(1);
+        }
     }
 }
 
@@ -135,6 +139,10 @@
 .card a.learningLink {
     display: block;
     width: fit-content;
+
+    & + .learningLink {
+        margin-top: 16px;
+    }
 
     img {
         display: inline-block;

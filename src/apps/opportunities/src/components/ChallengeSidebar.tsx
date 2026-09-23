@@ -251,6 +251,9 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
             <IconOutline.ExternalLinkIcon />
         </a>
     )
+    const reviewAppDescription = designChallenge
+        ? 'The place to track your screening and review scores.'
+        : 'The place to see your scores and feedback, and improve before the final review.'
 
     return (
         <aside className={styles.sidebar}>
@@ -284,7 +287,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                 </div>
             </section>
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarReviewIcon} />} title='Review App'>
-                <p>The place to see your scores and feedback, and improve before the final review.</p>
+                <p>{reviewAppDescription}</p>
                 <a
                     href={challengeReviewAppUrl(props.challenge.id)}
                     rel='noreferrer'
@@ -368,7 +371,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                             rel='noreferrer'
                             target='_blank'
                         >
-                            How to compete in design challenges
+                            How to Compete in Design Challenges
                             <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                         </a>
                         <a
@@ -377,10 +380,10 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                             rel='noreferrer'
                             target='_blank'
                         >
-                            How to approach checkpoint
+                            How to Approach the Checkpoint
                             {' '}
                             <span className={styles.learningLinkEnd}>
-                                feedback
+                                Feedback
                                 <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                             </span>
                         </a>
