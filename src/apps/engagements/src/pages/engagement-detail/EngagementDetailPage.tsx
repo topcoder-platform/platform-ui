@@ -16,7 +16,7 @@ import {
     checkExistingApplication,
     getEngagementByNanoId,
 } from '../../lib/services'
-import { getMyAssignedEngagements } from '../../lib/services/engagements.service'
+import { getEngagements, getMyAssignedEngagements } from '../../lib/services/engagements.service'
 import {
     formatDate,
     formatDuration,
@@ -84,26 +84,49 @@ const isAssignedMemberToEngagement = (
     ))
 }
 
-/** Finds a private engagement through the caller-scoped assignments endpoint. */
+/**
+ * Finds an assigned private engagement in caller-scoped collections.
+ * The broader applied-by-me feed includes selected assignments omitted by
+ * the narrower my-assignments endpoint. Both paths require a matching member ID.
+ *
+ * @param nanoId engagement route identifier.
+ * @param userId current member identifier.
+ * @returns the assigned engagement, or undefined when neither feed contains it.
+ * @throws Propagates an API failure when both caller-scoped feeds fail.
+ */
 const findMyAssignedEngagement = async (
     nanoId: string,
     userId: number | string,
 ): Promise<Engagement | undefined> => {
-    const searchPage = async (page: number): Promise<Engagement | undefined> => {
-        const response = await getMyAssignedEngagements({
-            page,
-            perPage: ASSIGNMENTS_LOOKUP_PAGE_SIZE,
-        })
+    const search = async (
+        loadPage: (page: number) => Promise<{ data: Engagement[]; totalPages: number }>,
+        page = 1,
+    ): Promise<Engagement | undefined> => {
+        const response = await loadPage(page)
         const match = response.data.find(candidate => (
             candidate.nanoId === nanoId
             && isAssignedMemberToEngagement(candidate.assignments, userId)
         ))
         if (match) return match
-
-        return page < response.totalPages ? searchPage(page + 1) : undefined
+        return page < response.totalPages ? search(loadPage, page + 1) : undefined
     }
 
-    return searchPage(1)
+    try {
+        const assigned = await search(page => getMyAssignedEngagements({
+            page,
+            perPage: ASSIGNMENTS_LOOKUP_PAGE_SIZE,
+        }))
+        if (assigned) return assigned
+    } catch {
+        // The applied-by-me collection can still verify the assignment.
+    }
+
+    return search(page => getEngagements({
+        appliedByMe: true,
+        includePrivate: true,
+        page,
+        perPage: ASSIGNMENTS_LOOKUP_PAGE_SIZE,
+    }))
 }
 
 type PrivateEngagementAccess = {

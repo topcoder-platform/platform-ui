@@ -20,6 +20,7 @@ import {
 } from '../lib/services'
 import {
     acceptAssignmentOffer,
+    getEngagements,
     getMyAssignedEngagements,
     rejectAssignmentOffer,
 } from '../lib/services/engagements.service'
@@ -39,6 +40,7 @@ const mockCreateApplication = createApplication as jest.MockedFunction<typeof cr
 const mockGetUserData = getUserDataForApplication as jest.MockedFunction<typeof getUserDataForApplication>
 const mockUpdateUserData = updateUserDataForApplication as jest.MockedFunction<typeof updateUserDataForApplication>
 const mockGetAssignments = getMyAssignedEngagements as jest.MockedFunction<typeof getMyAssignedEngagements>
+const mockGetEngagements = getEngagements as jest.MockedFunction<typeof getEngagements>
 const mockAcceptOffer = acceptAssignmentOffer as jest.MockedFunction<typeof acceptAssignmentOffer>
 const mockRejectOffer = rejectAssignmentOffer as jest.MockedFunction<typeof rejectAssignmentOffer>
 
@@ -148,6 +150,7 @@ jest.mock('../lib/services', () => ({
 
 jest.mock('../lib/services/engagements.service', () => ({
     acceptAssignmentOffer: jest.fn(),
+    getEngagements: jest.fn(),
     getMyAssignedEngagements: jest.fn(),
     rejectAssignmentOffer: jest.fn(),
 }))
@@ -222,6 +225,7 @@ describe('engagement agreement timing', () => {
             name: 'Example Member', email: 'member@example.com', mobileNumber: '+12345',
         })
         mockGetAssignments.mockResolvedValue({ data: [engagement], page: 1, perPage: 20, total: 1, totalPages: 1 })
+        mockGetEngagements.mockResolvedValue({ data: [], page: 1, perPage: 100, total: 0, totalPages: 0 })
     })
 
     it.each(['unsigned', 'unavailable'])('opens the application without checking %s agreements', async state => {
@@ -265,6 +269,35 @@ describe('engagement agreement timing', () => {
             .not.toBeInTheDocument()
         expect(mockGetAssignments)
             .toHaveBeenCalledWith({ page: 2, perPage: 100 })
+    })
+
+    it('opens a selected private engagement from the broader member feed', async () => {
+        mockGetEngagement.mockRejectedValue({
+            response: {
+                data: { message: 'You are not authorized to access this private engagement.' },
+                status: 403,
+            },
+        })
+        mockGetAssignments.mockResolvedValue({ data: [], page: 1, perPage: 100, total: 0, totalPages: 0 })
+        mockGetEngagements.mockResolvedValue({
+            data: [{ ...engagement, isPrivate: true }],
+            page: 1,
+            perPage: 100,
+            total: 1,
+            totalPages: 1,
+        })
+
+        render(<EngagementDetailPage />)
+
+        expect(await screen.findByRole('heading', { name: engagement.title }))
+            .toBeInTheDocument()
+        expect(mockGetEngagements)
+            .toHaveBeenCalledWith({
+                appliedByMe: true,
+                includePrivate: true,
+                page: 1,
+                perPage: 100,
+            })
     })
 
     it('keeps an unrelated private engagement restricted', async () => {
