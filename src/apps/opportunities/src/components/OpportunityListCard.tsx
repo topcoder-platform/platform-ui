@@ -818,22 +818,22 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                                     : registrationOpen ? 'Open for registration' : 'Registration closed'}
                         </span>
                     </div>
-                    <Tooltip
-                        className={styles.cardTooltip}
-                        content={title}
-                        disableTooltip={!titleClipped}
-                        place='bottom'
-                        strategy='fixed'
-                    >
-                        <h3 ref={titleRef}>
-                            <Link
-                                className={styles.titleLink}
-                                to={challengeDetailPath(item.id)}
+                    <h3 ref={titleRef}>
+                        <Link
+                            className={styles.titleLink}
+                            to={challengeDetailPath(item.id)}
+                        >
+                            <Tooltip
+                                className={styles.cardTooltip}
+                                content={title}
+                                disableTooltip={!titleClipped}
+                                place='bottom'
+                                strategy='fixed'
                             >
-                                {title}
-                            </Link>
-                        </h3>
-                    </Tooltip>
+                                <span className={styles.titleText}>{title}</span>
+                            </Tooltip>
+                        </Link>
+                    </h3>
                     {visibleSkills.length > 0 && (
                         <div className={styles.skills}>
                             {visibleSkills.map(entry => (
@@ -1014,29 +1014,29 @@ export const OpportunityListCard: FC<OpportunityListCardProps> = props => {
                         </span>
                     )}
                 </div>
-                <Tooltip
-                    className={styles.cardTooltip}
-                    content={card.title}
-                    disableTooltip={!titleClipped}
-                    place='bottom'
-                    strategy='fixed'
+                <h3
+                    className={classNames({
+                        [styles.reviewTitle]: props.kind === 'reviews' && props.view !== 'grid',
+                    })}
+                    ref={titleRef}
                 >
-                    <h3
-                        className={classNames({
-                            [styles.reviewTitle]: props.kind === 'reviews' && props.view !== 'grid',
-                        })}
-                        ref={titleRef}
+                    <Link
+                        className={styles.titleLink}
+                        rel={props.kind === 'engagements' ? 'noreferrer' : undefined}
+                        target={props.kind === 'engagements' ? '_blank' : undefined}
+                        to={card.href}
                     >
-                        <Link
-                            className={styles.titleLink}
-                            rel={props.kind === 'engagements' ? 'noreferrer' : undefined}
-                            target={props.kind === 'engagements' ? '_blank' : undefined}
-                            to={card.href}
+                        <Tooltip
+                            className={styles.cardTooltip}
+                            content={card.title}
+                            disableTooltip={!titleClipped}
+                            place='bottom'
+                            strategy='fixed'
                         >
-                            {card.title}
-                        </Link>
-                    </h3>
-                </Tooltip>
+                            <span className={styles.titleText}>{card.title}</span>
+                        </Tooltip>
+                    </Link>
+                </h3>
                 {visibleSkills.length > 0 && (
                     <div className={styles.skills}>
                         {visibleSkills.map((skill: string) => (

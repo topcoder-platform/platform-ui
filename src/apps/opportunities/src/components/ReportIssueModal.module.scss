@@ -24,6 +24,10 @@
     }
 }
 
+.successModal {
+    width: 520px !important;
+}
+
 .modalHeading {
     align-items: flex-start;
     display: flex;
@@ -210,6 +214,7 @@
 
     > strong {
         font-size: 12px;
+        font-weight: 700;
         line-height: 16px;
     }
 }
@@ -241,6 +246,7 @@
 
         strong {
             font-size: 14px;
+            font-weight: 700;
             line-height: 20px;
         }
 
@@ -300,34 +306,21 @@
 }
 
 .success {
-    align-items: center;
     color: #161616;
-    display: flex;
-    flex-direction: column;
     font-family: 'Nunito Sans', sans-serif;
-    padding: 24px 0;
-    text-align: center;
-
-    svg {
-        color: #007d79;
-        height: 52px;
-        width: 52px;
-    }
-
-    h3 {
-        color: #161616;
-        font-family: 'Figtree', sans-serif;
-        font-size: 20px;
-        line-height: 32px;
-        margin: 16px 0 4px;
-        text-transform: none;
-    }
+    text-align: left;
 
     p {
         font-size: 14px;
         line-height: 20px;
         margin: 0;
     }
+}
+
+.successModal .modalTitle {
+    font-size: 20px;
+    line-height: 28px;
+    margin-bottom: 24px;
 }
 
 @media (max-width: 640px) {

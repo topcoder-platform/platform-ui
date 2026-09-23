@@ -533,6 +533,9 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
             '88px',
         ].join(' '),
     }
+    const timelineWidthStyle = {
+        '--timeline-min-width': `${176 + displayedTimelinePhases.length * 140}px`,
+    } as CSSProperties
 
     return (
         <header className={styles.header}>
@@ -718,7 +721,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                             <small className={styles.timelineTimezone}>
                                 {`Time zone: ${timelineTimezone()}`}
                             </small>
-                            <div className={styles.timelineGraphic}>
+                            <div className={styles.timelineGraphic} style={timelineWidthStyle}>
                                 <div aria-hidden='true' className={styles.timelineRail}>
                                     {expandedTimeline.map((item, index) => (
                                         <Fragment key={item.key}>

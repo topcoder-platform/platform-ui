@@ -106,6 +106,7 @@ import {
 import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
 import { ReactComponent as SortIcon } from '../assets/sort.svg'
+import { ReactComponent as DeleteIcon } from '../assets/submission-delete.svg'
 import medal1 from '../assets/winner-card-medal-1.svg'
 import medal2 from '../assets/winner-card-medal-2.svg'
 import medal3 from '../assets/winner-card-medal-3.svg'
@@ -1759,7 +1760,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                                 : 'Submission deletion is closed'}
                                                             type='button'
                                                         >
-                                                            <IconOutline.TrashIcon aria-hidden='true' />
+                                                            <DeleteIcon aria-hidden='true' />
                                                         </button>
                                                     )}
                                                     {!isMarathonMatch && (
@@ -2433,7 +2434,6 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                                         }}
                                         order={scoreSortOrder}
                                     />
-                                    <th>Prize</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -2467,7 +2467,6 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                                                 <td className={styles.winnerTableScore}>
                                                     {formatMarathonFinalScore(entry.finalScore, '-')}
                                                 </td>
-                                                <td>{winnerPrizeLabel(entry.prize)}</td>
                                             </tr>
                                         )
                                     })}

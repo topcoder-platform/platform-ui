@@ -161,7 +161,8 @@ applications as `PENDING`. Browse and My Work cards render that caller state as 
 while capacity remains full, then naturally return to `Applied` if a position
 reopens or to `Approved` when the reviewer is selected.
 
-Long card titles expose their complete value in the authored dark tooltip.
+Long card titles expose their complete value in the authored dark tooltip only
+when the title is clipped and the pointer hovers the visible title text.
 When a card has more skills than fit in its visible skill row, its `+n` control
 exposes the hidden skill names in the corresponding bullet-list tooltip. The
 Engagement role filter uses the authored four-row keyboard-accessible listbox
@@ -204,9 +205,14 @@ to their authored subtype icons and member-facing labels.
   with no open phase omit the phase display instead of inventing one. The
   compact mobile card keeps the remaining-time value on the same heading row
   as the current phase, matching the authored design above its progress rail.
-- The right rail shows submissions and registrants from Challenge API. It also
+- The right rail shows submissions and registrants from Challenge API. Design
+  guidance links in its text appear as plain teal links without an external
+  arrow or underline. It also
   reserves the Figma Posts row; until Challenge API publishes `numOfPosts`, the
   value is an em dash rather than a fabricated discussion or forum count.
+  Design challenges use screening and review score copy for the Review App,
+  title case educational links with more space between them, and a white arrow
+  in the program banner.
 
 ## Challenge detail timeline
 
@@ -230,7 +236,9 @@ remain in an aligned, content-sized row to the right. Each mobile row owns its
 marker and connector, so wrapped dates and enlarged text grow the rail instead
 of overlapping the following milestone. The mobile prize/action card follows
 the expanded timeline instead of interrupting it. Wider layouts retain the
-horizontal timeline and its overflow fallback for tablet-sized screens.
+horizontal timeline and its overflow fallback for tablet-sized screens. Each
+desktop date stays on one line; timelines with many phases scroll horizontally
+so date labels remain aligned with their rail nodes.
 
 On phone viewports, Registrants preserves its semantic table while presenting
 each API row as the Figma key/value card. Registration Date remains a
@@ -377,6 +385,8 @@ registers or agrees on a member's behalf. Terms API HTML retains its semantic
 structure and safe links, but document-authored inline styles are removed so
 modal-scoped Figtree headings, Nunito Sans body copy, and spacing remain
 authoritative.
+The compact Important Reminder uses the Figma teal action buttons and rounded
+checkmark asset without a footer separator.
 DocuSign-template terms, plus NDA-titled terms that use the environment's
 legacy DocuSign template fallback, replace placeholder Terms API text with the
 embedded recipient view in both registration and passive review. The frame
@@ -490,6 +500,8 @@ Winner stats use the Members API top-level track totals; Development does not
 add the nested AI Engineering value a second time. Quality Assurance winner
 cards use the compact `QA` label and always include member ratings, including
 the two- and three-winner podium layouts.
+The remaining-winners table keeps track wins on one line, uses dark header
+labels and a right-aligned Final Score sort control, and omits the Prize column.
 An empty Winners tab reflects the challenge lifecycle: cancelled challenges
 state that no winners were selected, drafts explain that judging has not run,
 and active challenges retain the ongoing-review guidance.
@@ -529,7 +541,11 @@ member's registration before submission. The active phase selects `CONTEST_SUBMI
 authoritative for registration, phase, winner, submission-limit, and file
 validation. Design shows the four expected inner deliverables, while
 Development, Marathon Match, and Quality Assurance direct members to their
-Requirements content in ZIP mode. Successful submissions expose the created
+Requirements content in ZIP mode.
+Design submission guidance, upload, file, and checkbox controls use the Figma
+icons; Opportunities delete actions share the same Figma trash icon. The native
+agreement checkbox keeps keyboard focus and a rounded checked state.
+Successful submissions expose the created
 submission ID and refresh challenge and member submission counts without
 leaving the confirmation state. ZIP mode's declaration opens the public Topcoder
 Terms of Use; URL mode preserves the exact TopGear declaration and opens
@@ -609,8 +625,10 @@ throughout every challenge forum. Topic authors may edit their own unlocked
 topics, but deletion remains administrator-only to match the legacy forum.
 
 The Report an Issue dialog preserves the Figma subject, category, and
-1000-character description while keeping attachments optional. Files upload
-through the authenticated `POST /v6/support/attachments` multipart endpoint
+1000-character description while keeping attachments optional. Uploaded files
+show a bold filename and a status label that changes from Uploading to Uploaded.
+The sent state uses a concise left-aligned confirmation and a Close button.
+Files upload through the authenticated `POST /v6/support/attachments` multipart endpoint
 with a 2 MiB-per-file UI limit, so the browser does not connect directly to an
 S3 bucket. Because support-api-v6 accepts only `challengeId` and Markdown
 `description` when creating the ticket, the client serializes the subject,
