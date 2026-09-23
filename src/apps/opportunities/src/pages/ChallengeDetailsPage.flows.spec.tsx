@@ -57,9 +57,9 @@ let mockSubmissionsLoaded: boolean
 let mockWinnerStats: Record<string, unknown>[]
 const challengeDetailStyles = readFileSync(`${__dirname}/ChallengeDetailsPage.module.scss`, 'utf8')
 
-jest.mock('../assets/medal-1.svg', () => 'medal-1')
-jest.mock('../assets/medal-2.svg', () => 'medal-2')
-jest.mock('../assets/medal-3.svg', () => 'medal-3')
+jest.mock('../assets/winner-card-medal-1.svg', () => 'winner-card-medal-1')
+jest.mock('../assets/winner-card-medal-2.svg', () => 'winner-card-medal-2')
+jest.mock('../assets/winner-card-medal-3.svg', () => 'winner-card-medal-3')
 jest.mock('./ChallengeDetailsPage.module.scss', () => ({
     __esModule: true,
     default: new Proxy({}, {
@@ -528,6 +528,10 @@ describe('ChallengeDetailsPage member flows', () => {
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:mm-review-summations') {
+                return swrResponse(mockReviewSummations)
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:winner-review-summations') {
                 return swrResponse(mockReviewSummations)
             }
 
@@ -2443,6 +2447,29 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toHaveTextContent('with a final score of 0')
     })
 
+    it('shows a completed Design winner score from its final review summation', () => {
+        mockProfile = { handle: 'viewer', userId: 123 }
+        mockChallenge = {
+            ...mockChallenge,
+            status: 'COMPLETED',
+            track: 'Design',
+            type: 'Challenge',
+            winners: [{ handle: 'winner', placement: 1, userId: '42' }],
+        }
+        mockProjectResults = []
+        mockReviewSummations = [{
+            aggregateScore: 99.75,
+            isFinal: true,
+            submitterId: '42',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'Winners' }))
+
+        expect(screen.getByRole('article'))
+            .toHaveTextContent('with a final score of 99.75')
+    })
+
     it('toggles the remaining Marathon winners by final score', () => {
         mockProfile = { handle: 'viewer', userId: 123 }
         mockChallenge = {
@@ -2470,6 +2497,12 @@ describe('ChallengeDetailsPage member flows', () => {
 
         expect(screen.getAllByRole('article')[0])
             .toHaveTextContent('with a final score of 99.797812')
+        expect(screen.getAllByRole('article')[0].querySelector('.winnerScoreStacked strong'))
+            .toHaveTextContent('99.797812')
+        expect(screen.getAllByRole('article')
+            .slice(0, 3)
+            .every(card => !card.querySelector('.winnerPrize')))
+            .toBe(true)
         const table = screen.getByRole('table', { name: 'Remaining winners' })
         expect(within(table)
             .getByRole('cell', { name: '70.123456789' }))
