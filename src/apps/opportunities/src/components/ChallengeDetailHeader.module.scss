@@ -498,10 +498,22 @@
 }
 
 .timelineRail {
-    align-items: center;
-    display: flex;
+    display: grid;
     gap: 4px;
     width: 100%;
+}
+
+.timelineMilestone {
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.timelineMilestone > .timelineConnector {
+    left: calc(50% + 22px);
+    position: absolute;
+    right: calc(-50% + 18px);
+    top: 14px;
 }
 
 .mobileTimelineMarker {
@@ -579,16 +591,6 @@
 
         &.upcoming {
             color: rgba(255, 255, 255, .6);
-        }
-
-        &:first-child {
-            padding-right: 8px;
-            text-align: left;
-        }
-
-        &:last-child {
-            padding-left: 8px;
-            text-align: right;
         }
 
         strong {
