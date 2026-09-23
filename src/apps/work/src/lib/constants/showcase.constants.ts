@@ -1,8 +1,7 @@
 /**
- * SMU options, named to match the Salesforce `Reporting SMU` codes so an
- * imported opportunity maps onto a project without translation.
+ * SMU options displayed in project and showcase forms.
  */
-export const SMU_VALUES = ['APME', 'EURP', 'AMR1', 'AMR2', 'Others']
+export const SMU_VALUES = ['AMPE', 'EURP', 'AMR1', 'AM2', 'Others']
 
 /**
  * SMU labels used before the Salesforce naming alignment, mapped to their
@@ -10,8 +9,10 @@ export const SMU_VALUES = ['APME', 'EURP', 'AMR1', 'AMR2', 'Others']
  */
 export const LEGACY_SMU_VALUES: Readonly<{ [legacyValue: string]: string }> = {
     Americas1: 'AMR1',
-    Americas2: 'AMR2',
-    APMEA: 'APME',
+    Americas2: 'AM2',
+    AMR2: 'AM2',
+    APME: 'AMPE',
+    APMEA: 'AMPE',
     Europe: 'EURP',
 }
 
