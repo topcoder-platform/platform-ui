@@ -108,8 +108,9 @@ jest.mock('../../../lib/components', () => ({
         </div>
     ),
     EngagementsFilter: function MockEngagementsFilter(props: {
-        filters: { status?: string[]; title?: string }
-        onFiltersChange: (nextFilters: { status?: string[]; title?: string }) => void
+        filters: { memberHandle?: string; status?: string[]; title?: string }
+        onFiltersChange: (nextFilters: { memberHandle?: string; status?: string[]; title?: string }) => void
+        showMemberHandleFilter?: boolean
     }) {
         function handleApplyTitleFilter(): void {
             props.onFiltersChange({
@@ -122,6 +123,13 @@ jest.mock('../../../lib/components', () => ({
             props.onFiltersChange({
                 ...props.filters,
                 status: ['Open', 'Active'],
+            })
+        }
+
+        function handleApplyMemberHandleFilter(): void {
+            props.onFiltersChange({
+                ...props.filters,
+                memberHandle: 'assigned_member',
             })
         }
 
@@ -139,6 +147,11 @@ jest.mock('../../../lib/components', () => ({
                 >
                     Apply status filter
                 </button>
+                {props.showMemberHandleFilter && (
+                    <button type='button' onClick={handleApplyMemberHandleFilter}>
+                        Apply member handle filter
+                    </button>
+                )}
             </div>
         )
     },
@@ -710,6 +723,26 @@ describe('EngagementsListPage', () => {
         expect(within(rows[1])
             .getByText('Older engagement'))
             .toBeTruthy()
+    })
+
+    it('finds assigned engagements by member handle on the admin list', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [
+                { ...sampleEngagement, assignedMemberHandles: ['Assigned_Member'] },
+                { ...olderEngagement, assignedMemberHandles: ['other_member'] },
+            ],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/engagements', '/engagements')
+        fireEvent.click(screen.getByRole('button', { name: 'Apply member handle filter' }))
+
+        expect(screen.getByText(sampleEngagement.title))
+            .toBeTruthy()
+        expect(screen.queryByText(olderEngagement.title))
+            .toBeNull()
     })
 
     it('does not render delete actions for non-admin talent managers', () => {

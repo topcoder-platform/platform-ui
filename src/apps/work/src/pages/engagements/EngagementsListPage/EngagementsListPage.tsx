@@ -191,13 +191,11 @@ function getAssignedMemberHandles(engagement: Engagement): string[] {
         .map(assignment => assignment.memberHandle)
         .filter(Boolean)
 
-    if (assignmentHandles.length > 0) {
-        return assignmentHandles
-    }
-
-    return Array.isArray(engagement.assignedMemberHandles)
+    const assignedMemberHandles = Array.isArray(engagement.assignedMemberHandles)
         ? engagement.assignedMemberHandles.filter(Boolean)
         : []
+
+    return [...new Set([...assignmentHandles, ...assignedMemberHandles])]
 }
 
 function getExternalEngagementViewUrl(engagement: Engagement): string {
@@ -441,6 +439,7 @@ export const EngagementsListPage: FC = () => {
     })
 
     const [filters, setFilters] = useState<EngagementsListFilters>(() => ({
+        memberHandle: undefined,
         projectName: undefined,
         sortBy: isAllEngagementsPage
             ? 'createdAt'
@@ -522,6 +521,9 @@ export const EngagementsListPage: FC = () => {
     }, [engagementsResult.engagements, projectId])
 
     const filteredEngagements = useMemo(() => {
+        const memberHandleFilter = (filters.memberHandle || '')
+            .trim()
+            .toLowerCase()
         const titleFilter = (filters.title || '')
             .trim()
             .toLowerCase()
@@ -531,6 +533,9 @@ export const EngagementsListPage: FC = () => {
         const fallbackProjectName = projectResult.project?.name || ''
 
         const filteredResults = engagementsResult.engagements
+            .filter(engagement => !memberHandleFilter || getAssignedMemberHandles(engagement)
+                .some(handle => handle.toLowerCase()
+                    .includes(memberHandleFilter)))
             .filter(engagement => {
                 if (!titleFilter) {
                     return true
@@ -595,6 +600,7 @@ export const EngagementsListPage: FC = () => {
             })
     }, [
         engagementsResult.engagements,
+        filters.memberHandle,
         filters.projectName,
         filters.sortBy,
         filters.sortOrder,
@@ -860,6 +866,7 @@ export const EngagementsListPage: FC = () => {
             <div className={styles.container}>
                 <EngagementsFilter
                     filters={filters}
+                    showMemberHandleFilter={contextValue.isAdmin && isAllEngagementsPage}
                     showProjectNameFilter={isAllEngagementsPage}
                     onFiltersChange={handleFiltersChange}
                 />

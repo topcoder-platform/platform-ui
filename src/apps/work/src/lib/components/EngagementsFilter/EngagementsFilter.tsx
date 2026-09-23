@@ -28,6 +28,7 @@ interface SelectOption {
 }
 
 export interface EngagementsListFilters {
+    memberHandle?: string
     projectName?: string
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
@@ -38,6 +39,7 @@ export interface EngagementsListFilters {
 
 interface EngagementsFilterProps {
     filters: EngagementsListFilters
+    showMemberHandleFilter?: boolean
     showProjectNameFilter?: boolean
     onFiltersChange: (nextFilters: EngagementsListFilters) => void
 }
@@ -131,11 +133,13 @@ function areStatusFiltersEqual(
 
 export const EngagementsFilter: FC<EngagementsFilterProps> = (props: EngagementsFilterProps) => {
     const filters = props.filters
+    const showMemberHandleFilter = !!props.showMemberHandleFilter
     const showProjectNameFilter = !!props.showProjectNameFilter
     const onFiltersChange = props.onFiltersChange
 
     const [titleInput, setTitleInput] = useState<string>(filters.title || '')
     const [projectNameInput, setProjectNameInput] = useState<string>(filters.projectName || '')
+    const [memberHandleInput, setMemberHandleInput] = useState<string>(filters.memberHandle || '')
     const [draftStatus, setDraftStatus] = useState<string[] | undefined>(filters.status)
     const [draftVisibility, setDraftVisibility] = useState<'private' | 'public' | undefined>(
         filters.visibility,
@@ -149,6 +153,10 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
     useEffect(() => {
         setProjectNameInput(filters.projectName || '')
     }, [filters.projectName])
+
+    useEffect(() => {
+        setMemberHandleInput(filters.memberHandle || '')
+    }, [filters.memberHandle])
 
     useEffect(() => {
         setDraftStatus(filters.status)
@@ -167,13 +175,18 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
         const timeout = window.setTimeout(() => {
             const normalizedTitle = titleInput.trim() || undefined
             const normalizedProjectName = projectNameInput.trim() || undefined
+            const normalizedMemberHandle = memberHandleInput.trim() || undefined
 
             if (
                 (filters.title || '') !== titleInput
                 || (filters.projectName || '') !== projectNameInput
+                || (filters.memberHandle || '') !== memberHandleInput
             ) {
                 onFiltersChange({
                     ...filters,
+                    memberHandle: showMemberHandleFilter
+                        ? normalizedMemberHandle
+                        : undefined,
                     projectName: showProjectNameFilter
                         ? normalizedProjectName
                         : undefined,
@@ -185,7 +198,15 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
         return () => {
             window.clearTimeout(timeout)
         }
-    }, [filters, onFiltersChange, projectNameInput, showProjectNameFilter, titleInput])
+    }, [
+        filters,
+        memberHandleInput,
+        onFiltersChange,
+        projectNameInput,
+        showMemberHandleFilter,
+        showProjectNameFilter,
+        titleInput,
+    ])
 
     const statusOptions = useMemo<InputMultiselectOption[]>(() => getStatusOptions(), [])
 
@@ -225,6 +246,10 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
         setProjectNameInput(event.target.value)
     }
 
+    function handleMemberHandleChange(event: ChangeEvent<HTMLInputElement>): void {
+        setMemberHandleInput(event.target.value)
+    }
+
     function handleStatusChange(event: ChangeEvent<HTMLInputElement>): void {
         const options = (event.target.value || []) as unknown as InputMultiselectOption[]
         const selectedStatuses = options.map(option => option.value)
@@ -242,9 +267,13 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
     function handleApplyFilters(): void {
         const normalizedTitle = titleInput.trim() || undefined
         const normalizedProjectName = projectNameInput.trim() || undefined
+        const normalizedMemberHandle = memberHandleInput.trim() || undefined
 
         onFiltersChange({
             ...filters,
+            memberHandle: showMemberHandleFilter
+                ? normalizedMemberHandle
+                : undefined,
             projectName: showProjectNameFilter
                 ? normalizedProjectName
                 : undefined,
@@ -256,7 +285,8 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
 
     return (
         <div
-            className={`${styles.container}${showProjectNameFilter ? ` ${styles.withProjectFilter}` : ''}`}
+            className={`${styles.container}${showProjectNameFilter ? ` ${styles.withProjectFilter}` : ''}`
+                + `${showMemberHandleFilter ? ` ${styles.withMemberHandleFilter}` : ''}`}
         >
             <div className={styles.filterField}>
                 <label htmlFor='work-engagements-search'>Search by name</label>
@@ -287,6 +317,24 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
                             placeholder='Search by project name'
                             type='text'
                             value={projectNameInput}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {showMemberHandleFilter && (
+                <div className={styles.filterField}>
+                    <label htmlFor='work-engagements-member-search'>Search by assigned member</label>
+                    <div className={styles.searchInputWrap}>
+                        <IconOutline.SearchIcon className={styles.searchIcon} />
+                        <input
+                            id='work-engagements-member-search'
+                            aria-label='Search engagements by assigned member handle'
+                            className={styles.searchInput}
+                            onChange={handleMemberHandleChange}
+                            placeholder='Member handle'
+                            type='text'
+                            value={memberHandleInput}
                         />
                     </div>
                 </div>
