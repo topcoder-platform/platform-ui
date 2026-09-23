@@ -2427,7 +2427,6 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                                         }}
                                         order={scoreSortOrder}
                                     />
-                                    <th>Prize</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -2461,7 +2460,6 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                                                 <td className={styles.winnerTableScore}>
                                                     {formatMarathonFinalScore(entry.finalScore, '-')}
                                                 </td>
-                                                <td>{winnerPrizeLabel(entry.prize)}</td>
                                             </tr>
                                         )
                                     })}
