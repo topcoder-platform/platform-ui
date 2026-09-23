@@ -93,23 +93,12 @@ interface StatusOption {
 export const MY_ENGAGEMENTS_STATUS = 'MINE'
 
 /**
- * Status value for the Engagements "Completed" filter.
- *
- * It is sent to the Engagements API as the lifecycle status, but `OpportunitiesPage`
- * also scopes the query to the signed-in member, so the bucket lists the
- * engagements this member worked on rather than every completed engagement on
- * the platform.
- */
-export const COMPLETED_ENGAGEMENTS_STATUS = 'COMPLETED'
-
-/**
  * Returns the status values understood by the active owning API.
  *
- * Engagements pair the public "Open for application" bucket with two member
- * scoped buckets, matching the Aug 2026 Opportunities design: a member browsing
- * engagements chooses between what is open to apply for, everything they are
- * already part of, and the ones they have finished. Both member scoped buckets
- * are hidden from anonymous visitors, who have no engagements of their own.
+ * Engagements pair the public "Open for application" bucket with a member
+ * scoped membership bucket: a member chooses between open engagements and all
+ * engagements they are already part of. The membership bucket is hidden from
+ * anonymous visitors, who have no engagements of their own.
  *
  * @param kind opportunity domain.
  * @param isAuthenticated whether a member profile is available for owner-scoped filters.
@@ -139,7 +128,6 @@ function statusOptions(kind: OpportunityKind, isAuthenticated: boolean): StatusO
             ...(isAuthenticated
                 ? [
                     { label: MY_LABELS.engagements, value: MY_ENGAGEMENTS_STATUS },
-                    { label: 'Completed', value: COMPLETED_ENGAGEMENTS_STATUS },
                 ]
                 : []),
         ]

@@ -52,7 +52,6 @@ jest.mock('~/libs/ui', () => {
 }, { virtual: true })
 
 jest.mock('../components', () => ({
-    COMPLETED_ENGAGEMENTS_STATUS: 'COMPLETED',
     MY_ENGAGEMENTS_STATUS: 'MINE',
     OpportunityFiltersPanel: (props: {
         onAppliedChange: (checked: boolean) => void
@@ -60,12 +59,10 @@ jest.mock('../components', () => ({
     }) => {
         const selectMyCompetitions = (): void => props.onAppliedChange(true)
         const selectMyEngagements = (): void => props.onStatusChange('MINE')
-        const selectCompletedEngagements = (): void => props.onStatusChange('COMPLETED')
         return (
             <aside aria-label='Opportunity filters'>
                 <button onClick={selectMyCompetitions} type='button'>My competitions</button>
                 <button onClick={selectMyEngagements} type='button'>My engagements</button>
-                <button onClick={selectCompletedEngagements} type='button'>Completed engagements</button>
             </aside>
         )
     },
@@ -468,43 +465,6 @@ describe('OpportunitiesPage', () => {
             .toHaveBeenLastCalledWith('engagements', expect.objectContaining({
                 applied: true,
                 statuses: undefined,
-            })))
-    })
-
-    it('scopes the Completed engagements status to the signed-in member', async () => {
-        mockedGetOpportunitySummary.mockResolvedValue({
-            competitions: { count: 0 },
-            copilots: { count: 0 },
-            engagements: { count: 2 },
-            reviews: { count: 0 },
-        })
-        mockedGetOpportunityPage.mockResolvedValue({
-            items: [],
-            page: 1,
-            perPage: 10,
-            total: 0,
-            totalPages: 0,
-        })
-
-        render(
-            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
-                <MemoryRouter initialEntries={['/opportunities/engagements']}>
-                    <Routes>
-                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
-                    </Routes>
-                </MemoryRouter>
-            </SWRConfig>,
-        )
-
-        await waitFor(() => expect(mockedGetOpportunityPage)
-            .toHaveBeenCalledWith('engagements', expect.anything()))
-
-        fireEvent.click(screen.getByRole('button', { name: 'Completed engagements' }))
-
-        await waitFor(() => expect(mockedGetOpportunityPage)
-            .toHaveBeenLastCalledWith('engagements', expect.objectContaining({
-                applied: true,
-                statuses: ['COMPLETED'],
             })))
     })
 

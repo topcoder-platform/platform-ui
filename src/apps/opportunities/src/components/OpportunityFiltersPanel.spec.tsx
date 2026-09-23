@@ -3,7 +3,6 @@ import '@testing-library/jest-dom'
 import { fireEvent, render, screen } from '@testing-library/react'
 
 import {
-    COMPLETED_ENGAGEMENTS_STATUS,
     MY_ENGAGEMENTS_STATUS,
     OpportunityFiltersPanel,
 } from './OpportunityFiltersPanel'
@@ -106,13 +105,10 @@ describe('OpportunityFiltersPanel', () => {
             .not.toBeInTheDocument()
         expect(screen.getAllByRole('radio')
             .map(radio => radio.closest('label')?.textContent))
-            .toEqual(['Open for application', 'My engagements', 'Completed'])
+            .toEqual(['Open for application', 'My engagements'])
         fireEvent.click(screen.getByRole('radio', { name: 'My engagements' }))
         expect(onStatusChange)
             .toHaveBeenCalledWith(MY_ENGAGEMENTS_STATUS)
-        fireEvent.click(screen.getByRole('radio', { name: 'Completed' }))
-        expect(onStatusChange)
-            .toHaveBeenCalledWith(COMPLETED_ENGAGEMENTS_STATUS)
         fireEvent.click(screen.getByRole('combobox', { name: 'Role' }))
         expect(screen.getByRole('listbox'))
             .toBeInTheDocument()
