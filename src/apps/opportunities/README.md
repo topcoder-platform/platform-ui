@@ -207,6 +207,9 @@ to their authored subtype icons and member-facing labels.
 - The right rail shows submissions and registrants from Challenge API. It also
   reserves the Figma Posts row; until Challenge API publishes `numOfPosts`, the
   value is an em dash rather than a fabricated discussion or forum count.
+  Design challenges use screening and review score copy for the Review App,
+  title case educational links with more space between them, and a white arrow
+  in the program banner.
 
 ## Challenge detail timeline
 
