@@ -482,6 +482,7 @@
     grid-column: 1 / -1;
     margin: 0;
     max-width: none;
+    min-width: 0;
     overflow-x: auto;
     padding-top: 24px;
     position: relative;
@@ -494,6 +495,7 @@
     flex-direction: column;
     gap: 8px;
     min-width: var(--timeline-min-width);
+    max-width: 100%;
     width: 100%;
 }
 
@@ -610,7 +612,7 @@
     margin-top: 4px;
 
     time {
-        white-space: nowrap;
+        overflow-wrap: anywhere;
     }
 }
 
