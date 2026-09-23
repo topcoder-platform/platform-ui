@@ -747,6 +747,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const progress = Math.round(phaseTiming.progressPercent)
     const registrationOpen = challengeRegistrationIsOpen(item)
     const completed = challengeCatalogKey(item.status) === 'completed'
+    const stalled = challengeCatalogKey(item.status) === 'stalled'
     const visibleWinners = completed
         ? (item.winners ?? [])
             .map((winner, index) => ({
@@ -881,7 +882,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                             ))}
                         </Link>
                     )}
-                    {!completed && phase && (
+                    {!completed && !stalled && phase && (
                         <div className={styles.phase}>
                             <div className={styles.phaseHeading}>
                                 <span className={styles.phaseLabel}>
@@ -904,6 +905,13 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                                 role='progressbar'
                             >
                                 <span style={{ width: `${progress}%` }} />
+                            </div>
+                        </div>
+                    )}
+                    {stalled && (
+                        <div className={styles.phase}>
+                            <div className={styles.phaseHeading}>
+                                <span className={styles.phaseLabel}>Stalled</span>
                             </div>
                         </div>
                     )}
