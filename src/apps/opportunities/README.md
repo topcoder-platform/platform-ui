@@ -496,6 +496,8 @@ Winner stats use the Members API top-level track totals; Development does not
 add the nested AI Engineering value a second time. Quality Assurance winner
 cards use the compact `QA` label and always include member ratings, including
 the two- and three-winner podium layouts.
+The remaining-winners table keeps track wins on one line, uses dark header
+labels and a right-aligned Final Score sort control, and omits the Prize column.
 An empty Winners tab reflects the challenge lifecycle: cancelled challenges
 state that no winners were selected, drafts explain that judging has not run,
 and active challenges retain the ongoing-review guidance.

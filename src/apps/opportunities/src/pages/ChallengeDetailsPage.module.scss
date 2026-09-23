@@ -286,6 +286,7 @@
 
     th {
         border-bottom-color: #a8a8a8;
+        color: #161616;
         font-weight: 700;
         height: 52px;
     }
@@ -1053,11 +1054,10 @@
     }
 
     th:first-child { width: 64px; }
-    th:nth-child(2) { width: 336px; }
-    th:nth-child(3) { width: 152px; }
+    th:nth-child(2) { width: 384px; }
+    th:nth-child(3) { white-space: nowrap; width: 180px; }
     th:nth-child(4) { width: 112px; }
-    th:nth-child(5),
-    th:nth-child(6) { width: 148px; }
+    th:nth-child(5) { width: 220px; }
 
     td:first-child {
         font-weight: 700;
@@ -1065,8 +1065,7 @@
 
     td:nth-child(3),
     td:nth-child(4),
-    td:nth-child(5),
-    td:nth-child(6) {
+    td:nth-child(5) {
         text-align: right;
     }
 }
