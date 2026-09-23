@@ -280,7 +280,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
                 <Button
                     className={styles.actionButton}
                     customRadius
-                    label='Done'
+                    label='Close'
                     noCaps
                     onClick={close}
                     primary
@@ -313,7 +313,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
             )}
             bodyClassName={styles.modalBody}
             center
-            classNames={{ modal: styles.modal }}
+            classNames={{ modal: created ? `${styles.modal} ${styles.successModal}` : styles.modal }}
             onClose={close}
             open={props.open}
             showCloseIcon={false}
@@ -336,9 +336,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
         >
             {created ? (
                 <div className={styles.success}>
-                    <IconOutline.CheckCircleIcon />
-                    <h3>Thank you for reporting this issue.</h3>
-                    <p>The Platform Team will follow up through your support ticket.</p>
+                    <p>Your report has been sent to the team. Someone will get back to you shortly.</p>
                 </div>
             ) : (
                 <div className={styles.form}>
@@ -416,7 +414,7 @@ export const ReportIssueModal: FC<ReportIssueModalProps> = props => {
                     </div>
                     {attachments.length > 0 && (
                         <div className={styles.attachments}>
-                            <strong>Uploading</strong>
+                            <strong>{uploading ? 'Uploading' : uploadFailed ? 'Upload failed' : 'Uploaded'}</strong>
                             {attachments.map(attachment => (
                                 <div className={styles.attachmentRow} key={attachment.id}>
                                     <IconOutline.PhotographIcon aria-hidden='true' />
