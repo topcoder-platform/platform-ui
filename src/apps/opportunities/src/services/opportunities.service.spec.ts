@@ -141,7 +141,7 @@ describe('opportunities service normalization', () => {
             .toBe('1')
     })
 
-    it('loads member-work totals on count-only owner pages', async () => {
+    it('loads member-work totals using filtered engagement rows and count-only other owners', async () => {
         const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
         const totals: Record<string, number> = {
             '/v6/challenges': 40,
@@ -152,7 +152,13 @@ describe('opportunities service normalization', () => {
         get.mockImplementation(async requestUrl => {
             const url = new URL(String(requestUrl))
             return {
-                data: [],
+                data: url.pathname === '/v6/engagements/engagements'
+                    ? Array.from({ length: 30 }, (_, index) => ({
+                        id: `engagement-${index}`,
+                        status: 'ACTIVE',
+                        title: `Engagement ${index}`,
+                    }))
+                    : [],
                 headers: {
                     get: (name: string) => (name === 'x-total'
                         ? String(totals[url.pathname] ?? 0)
@@ -180,7 +186,7 @@ describe('opportunities service normalization', () => {
         expect(byPath.get('/v6/challenges')?.searchParams.get('resourceRoleId'))
             .toBeNull()
         expect(byPath.get('/v6/engagements/engagements')?.searchParams.get('perPage'))
-            .toBe('1')
+            .toBe('1000')
         expect(byPath.get('/v6/engagements/engagements')?.searchParams.get('appliedByMe'))
             .toBe('true')
         expect(byPath.get('/v6/projects/copilots/opportunities')?.searchParams.get('pageSize'))
@@ -393,6 +399,40 @@ describe('opportunities service normalization', () => {
             return [url.searchParams.get('page'), url.searchParams.get('perPage')]
         }))
             .toEqual([['1', '1000'], ['2', '1000']])
+    })
+
+    it('excludes cancelled and terminated member engagements before paging', async () => {
+        const get = xhrGlobalInstance.get as jest.MockedFunction<typeof xhrGlobalInstance.get>
+        get.mockReset()
+        get.mockResolvedValueOnce({
+            data: {
+                data: [
+                    { id: 'cancelled', status: 'CANCELLED', title: 'Cancelled' },
+                    {
+                        assignments: [{ status: 'TERMINATED' }],
+                        id: 'terminated',
+                        status: 'ACTIVE',
+                        title: 'Terminated',
+                    },
+                    { applicationStatus: 'APPLIED', id: 'open', status: 'OPEN', title: 'Open' },
+                    { assignments: [{ status: 'COMPLETED' }], id: 'closed', status: 'CLOSED', title: 'Completed' },
+                ],
+                meta: { page: 1, perPage: 1000, totalCount: 4, totalPages: 1 },
+            },
+            headers: { get: () => undefined },
+        })
+
+        await expect(getOpportunityPage('engagements', {
+            applied: true,
+            page: 2,
+            perPage: 1,
+        })).resolves.toMatchObject({
+            items: [{ id: 'closed' }],
+            total: 2,
+            totalPages: 2,
+        })
+        expect(new URL(String(get.mock.calls[0][0])).searchParams.get('appliedByMe'))
+            .toBe('true')
     })
 
     it('retries an empty engagement text search with matching standardized skill IDs', async () => {

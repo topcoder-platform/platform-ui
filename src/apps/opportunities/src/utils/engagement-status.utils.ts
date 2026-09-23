@@ -58,6 +58,14 @@ const TERMINAL_LIFECYCLE_STATUS_KEYS: Set<string> = new Set([
     'closed',
 ])
 
+const EXCLUDED_MY_ENGAGEMENT_STATUS_KEYS: Set<string> = new Set([
+    'cancelled',
+    'offerdeclined',
+    'offerrejected',
+    'rejected',
+    'terminated',
+])
+
 function statusKey(value: unknown): string {
     return String(value ?? '')
         .toLowerCase()
@@ -104,6 +112,18 @@ export function engagementMemberStatus(item: EngagementOpportunity): string | un
     const assignmentStatus = [...(item.assignments ?? [])]
         .sort(compareAssignments)[0]?.status
     return assignmentStatus ?? item.applicationStatus ?? item.myApplication?.status
+}
+
+/**
+ * Keeps in-progress and completed member work in My engagements.
+ *
+ * @param item member-scoped engagement, including its latest assignment state.
+ * @returns false for cancelled engagements or ended member relationships.
+ * @throws Does not throw.
+ */
+export function isMyEngagementVisible(item: EngagementOpportunity): boolean {
+    return !EXCLUDED_MY_ENGAGEMENT_STATUS_KEYS.has(statusKey(item.status))
+        && !EXCLUDED_MY_ENGAGEMENT_STATUS_KEYS.has(statusKey(engagementMemberStatus(item)))
 }
 
 /** Maps raw engagement, application, and assignment statuses to authored labels. */

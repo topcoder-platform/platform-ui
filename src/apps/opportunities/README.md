@@ -71,7 +71,10 @@ application` and `My engagements`. The separate ownership checkbox
 is therefore omitted for that domain only; the other domains keep it. `My engagements` is an
 ownership filter wearing a status label, so it deliberately applies no lifecycle
 status and returns the member's open, in-progress, and completed engagements in
-one list, each card carrying its own state pill. Those pills use the PM-6084
+one list, each card carrying its own state pill. The member-scoped results are
+filtered before pagination to exclude cancelled engagements and terminated,
+declined, or rejected member relationships, while completed work remains visible.
+Those pills use the PM-6084
 vocabulary: `Applied`, `Under Review`, `Shortlisted`, `Selected`, `Assigned`,
 `Completed`, `Rejected`, `Offer Declined`, and `Terminated`. `Selected` and
 `Assigned` are deliberately distinct, because the Engagements API uses
@@ -314,7 +317,9 @@ field is present for the caller.
   discoverable without weakening normal project search. The authored `My
   engagements` Status choice sends both `appliedByMe=true` and
   `includePrivate=true`, and no `status`, so accepted or assigned private work
-  and finished engagements all remain visible to the current member.
+  and completed engagements remain visible to the current member. The engagement
+  detail route also checks this caller-scoped feed when the narrower assignments
+  collection omits a selected private engagement.
   Public engagement cards hydrate the caller's status from that same complete
   member-scoped feed, retaining terminal rejected-offer assignments that the
   narrower `my-assignments` collection intentionally excludes.

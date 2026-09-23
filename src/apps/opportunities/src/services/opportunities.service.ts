@@ -39,6 +39,7 @@ import {
     ReviewOpportunity,
 } from '../models'
 import { sortOpportunityItems } from '../utils/opportunity-listing.utils'
+import { isMyEngagementVisible } from '../utils/engagement-status.utils'
 
 import { getMemberProfilesByUserIds } from './member-profile.service'
 
@@ -645,10 +646,10 @@ export async function getOpportunitySummary(): Promise<OpportunitySummary> {
 }
 
 /**
- * Loads authenticated member-work totals without downloading list-sized
- * result sets. Each owning API remains authoritative for its membership and
- * application rules, while a failed owner rejects the whole count instead of
- * displaying a misleading partial total.
+ * Loads authenticated member-work totals. Engagements are filtered before
+ * counting so cancelled and terminated relationships do not inflate My Work;
+ * other owners use their count-only pages. A failed owner rejects the whole
+ * count instead of displaying a misleading partial total.
  *
  * @param memberId authenticated member identifier used by Challenge API.
  * @returns owner-reported totals for all four My Work opportunity domains.
@@ -1386,6 +1387,33 @@ export async function getOpportunityPage(
     const perPage = Math.max(1, filters.perPage)
     if (kind === 'copilots' && requiresLegacyCopilotDiscovery(filters)) {
         return getLegacyCopilotPage(filters)
+    }
+
+    if (kind === 'engagements' && filters.applied && !filters.statuses?.length) {
+        let allItems = await loadClientSortItems('engagements', filters)
+        if (filters.search?.trim() && !allItems.length && !filters.skills?.length) {
+            const skillIds = await resolveEngagementSkillIds(filters.search)
+            if (skillIds.length) {
+                allItems = await loadClientSortItems('engagements', {
+                    ...filters,
+                    search: undefined,
+                    skills: skillIds,
+                })
+            }
+        }
+
+        const visibleItems = sortOpportunityItems(
+            allItems.filter(isMyEngagementVisible),
+            filters.sort ?? 'newest',
+        )
+        const offset = (page - 1) * perPage
+        return {
+            items: visibleItems.slice(offset, offset + perPage),
+            page,
+            perPage,
+            total: visibleItems.length,
+            totalPages: Math.ceil(visibleItems.length / perPage),
+        }
     }
 
     if (kind === 'reviews' && filters.tracks?.some(track => opportunityFacetKey(track) === 'ai')) {
