@@ -17,7 +17,6 @@ import {
 import { IconOutline } from '~/libs/ui'
 
 import {
-    COMPLETED_ENGAGEMENTS_STATUS,
     MY_ENGAGEMENTS_STATUS,
     OpportunityFiltersPanel,
     OpportunityHero,
@@ -199,13 +198,8 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
     // "My engagements" is an ownership filter wearing a status label: it must not
     // narrow the lifecycle, so the member sees open, in-progress, and completed rows.
     const myEngagements = kind === 'engagements' && status === MY_ENGAGEMENTS_STATUS
-    // "Completed" keeps the lifecycle status but is still member scoped, so the
-    // bucket lists the engagements this member worked on rather than every
-    // completed engagement on the platform.
-    const myCompletedEngagements = kind === 'engagements' && status === COMPLETED_ENGAGEMENTS_STATUS
-
     const filters = useMemo<OpportunityFilters>(() => ({
-        applied: applied || myEngagements || myCompletedEngagements,
+        applied: applied || myEngagements,
         groups,
         memberId: profile?.userId === undefined ? undefined : String(profile.userId),
         page,
@@ -220,7 +214,6 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
         applied,
         deferredSearch,
         groups,
-        myCompletedEngagements,
         myEngagements,
         page,
         perPage,
