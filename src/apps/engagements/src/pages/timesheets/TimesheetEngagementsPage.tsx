@@ -1,7 +1,13 @@
 import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { debounce } from 'lodash'
 import { useNavigate } from 'react-router-dom'
 
-import { Button, ContentLayout, LoadingSpinner } from '~/libs/ui'
+import {
+    Button,
+    ContentLayout,
+    InputSelect,
+    InputText,
+} from '~/libs/ui'
 
 import type { TimesheetEngagementRow, TimesheetRollupStatus } from '../../lib/models'
 import { TimesheetViewerRole } from '../../lib/models'
@@ -12,6 +18,12 @@ import { EngagementsTabs } from '../../components'
 import styles from './TimesheetsPage.module.scss'
 
 const PER_PAGE = 20
+
+const TIMESHEET_STATUS_OPTIONS = [
+    { label: 'All', value: '' },
+    { label: 'Pending Approval', value: 'Pending Approval' },
+    { label: 'Approved', value: 'Approved' },
+]
 
 interface Filters {
     assignee: string
@@ -91,14 +103,27 @@ const TimesheetEngagementsPage: FC = () => {
 
     const handleFilterChange = useCallback((
         field: keyof Filters,
-    ) => function onFilterChange(event: ChangeEvent<HTMLInputElement & HTMLSelectElement>) {
+    ) => function onFilterChange(event: ChangeEvent<HTMLInputElement>) {
         setFilters(current => ({ ...current, [field]: event.target.value }))
     }, [])
 
-    const handleApplyFilters = useCallback(() => {
-        setPage(1)
-        setAppliedFilters(filters)
-    }, [filters])
+    const handleFilterBlur = useCallback(() => undefined, [])
+
+    const debouncedApplyFilters = useMemo(
+        () => debounce((nextFilters: Filters) => {
+            setPage(1)
+            setAppliedFilters(nextFilters)
+        }, 300),
+        [],
+    )
+
+    useEffect(() => {
+        debouncedApplyFilters(filters)
+
+        return () => {
+            debouncedApplyFilters.cancel()
+        }
+    }, [debouncedApplyFilters, filters])
 
     const handleClearFilters = useCallback(() => {
         setPage(1)
@@ -114,59 +139,99 @@ const TimesheetEngagementsPage: FC = () => {
         row.assigneeName ? `${row.assigneeName} (${row.assigneeHandle})` : row.assigneeHandle
     ), [])
 
+    const skeletonRows = useMemo(() => Array.from({ length: 4 }, (_, index) => index), [])
+
     return (
         <ContentLayout title='Timesheets'>
             <EngagementsTabs activeTab='timesheets' />
             <div className={styles.page}>
                 <section className={styles.filters}>
-                    <label htmlFor='timesheet-filter-title'>
-                        Engagement title
-                        <input
-                            id='timesheet-filter-title'
-                            onChange={handleFilterChange('title')}
-                            type='text'
-                            value={filters.title}
-                        />
-                    </label>
-                    <label htmlFor='timesheet-filter-assignee'>
-                        Assignee
-                        <input
-                            id='timesheet-filter-assignee'
-                            onChange={handleFilterChange('assignee')}
-                            type='text'
-                            value={filters.assignee}
-                        />
-                    </label>
-                    {isAdministrator && (
-                        <label htmlFor='timesheet-filter-manager'>
-                            Manager
-                            <input
-                                id='timesheet-filter-manager'
-                                onChange={handleFilterChange('manager')}
+                    <div className={styles.filterGrid}>
+                        <div className={styles.field}>
+                            <InputText
+                                dirty
+                                forceUpdateValue
+                                label='Engagement title'
+                                name='title'
+                                placeholder='Enter engagement title'
                                 type='text'
-                                value={filters.manager}
+                                value={filters.title}
+                                onBlur={handleFilterBlur}
+                                onChange={handleFilterChange('title')}
+                                tabIndex={0}
                             />
-                        </label>
-                    )}
-                    <label htmlFor='timesheet-filter-status'>
-                        Timesheet status
-                        <select
-                            id='timesheet-filter-status'
-                            onChange={handleFilterChange('status')}
-                            value={filters.status}
-                        >
-                            <option value=''>All</option>
-                            <option value='Pending Approval'>Pending Approval</option>
-                            <option value='Approved'>Approved</option>
-                        </select>
-                    </label>
+                        </div>
+                        <div className={styles.field}>
+                            <InputText
+                                type='text'
+                                dirty
+                                forceUpdateValue
+                                name='asignee'
+                                label='Asignee'
+                                placeholder='Enter asignee'
+                                value={filters.assignee}
+                                onBlur={handleFilterBlur}
+                                onChange={handleFilterChange('assignee')}
+                                tabIndex={0}
+                            />
+                        </div>
+                        {isAdministrator && (
+                            <div className={styles.field}>
+                                <InputText
+                                    type='text'
+                                    dirty
+                                    forceUpdateValue
+                                    name='manager'
+                                    label='Manager'
+                                    placeholder='Enter manager'
+                                    value={filters.manager}
+                                    onBlur={handleFilterBlur}
+                                    onChange={handleFilterChange('manager')}
+                                tabIndex={0}
+                                />
+                            </div>
+                        )}
+                        <div className={styles.field}>
+                            <InputSelect
+                                dirty
+                                name='status'
+                                label='Status'
+                                placeholder='Select status'
+                                value={filters.status}
+                                onChange={handleFilterChange('status')}
+                                options={TIMESHEET_STATUS_OPTIONS}
+                                tabIndex={0}
+                            />
+                        </div>
+                    </div>
                     <div className={styles.filterActions}>
-                        <Button label='Apply' onClick={handleApplyFilters} primary size='sm' />
-                        <Button label='Clear' onClick={handleClearFilters} secondary size='sm' />
+                        <Button label='Clear Filters' onClick={handleClearFilters} secondary size='sm' />
                     </div>
                 </section>
 
-                {isLoading && <LoadingSpinner />}
+                {isLoading && (
+                    <div className={styles.loadingState}>
+                        <table className={styles.listTable}>
+                            <thead>
+                                <tr>
+                                    <td scope='col' colSpan={isAdministrator ? 4 : 3}>Loading engagement timesheets...</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {skeletonRows.map(index => (
+                                    <tr key={`timesheet-skeleton-${index}`}>
+                                        <td><div className={styles.skeletonCell} /></td>
+                                        <td><div className={styles.skeletonCell} /></td>
+                                        {isAdministrator && (
+                                            <td><div className={styles.skeletonCell} /></td>
+                                        )}
+                                        <td><div className={styles.skeletonAction} /></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
 
                 {!isLoading && error && (
                     <p className={styles.error} role='alert'>{error}</p>

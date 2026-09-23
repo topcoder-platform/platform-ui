@@ -48,7 +48,7 @@ const EngagementsTabs: FC<EngagementsTabsProps> = (props: EngagementsTabsProps) 
         }
 
         return tabs
-    }, [isLoggedIn])
+    }, [isLoggedIn, isAdminOrManager])
 
     const activeTab = useMemo(
         () => (tabsConfig.some(tab => tab.id === props.activeTab) ? props.activeTab : 'opportunities'),
