@@ -261,6 +261,31 @@ function averageReviewScore(values: unknown[]): number | undefined {
 }
 
 /**
+ * A system-test summation can already contain an aggregate while its tests
+ * are still running. Keep that aggregate provisional until the run finishes.
+ *
+ * @param summation latest system-test summation.
+ * @returns whether the scorer has completed successfully.
+ */
+function systemSummationIsComplete(summation: ChallengeReviewSummation): boolean {
+    if (summation.isPassing === false) return false
+
+    const metadata = summation.metadata ?? {}
+    const details = metadata.testProgressDetails
+    const detailRecord = details && typeof details === 'object' && !Array.isArray(details)
+        ? details as Record<string, unknown>
+        : {}
+    const status = testStatusValue(metadata.testStatus ?? detailRecord.status)
+    const progress = testProgressValue(metadata.testProgress ?? detailRecord.progress)
+
+    if (status && status !== 'Passed') return false
+    if (progress !== undefined && progress < 100) return false
+
+    // Older completed summations have no scorer lifecycle metadata.
+    return true
+}
+
+/**
  * Identifies Marathon Match challenges across v6 names, catalog IDs, and tags.
  *
  * @param challenge Challenge API detail record.
@@ -334,12 +359,14 @@ export function marathonSubmissionScores(
             ?? finiteScore(submission.provisionalScore)
             ?? finiteScore(submission.initialScore)
             ?? averageReviewScore((submission.review ?? []).map(review => review.initialScore))
-    const finalScore = testStatusValue(final?.metadata?.testStatus) === 'Cancelled'
-        ? undefined
-        : finiteScore(final?.aggregateScore)
-            ?? finiteScore(submission.finalScore)
-            ?? finiteScore(submission.aiDecisionScore)
-            ?? averageReviewScore((submission.review ?? []).map(review => review.finalScore ?? review.score))
+    const legacySystemReviewInProgress = (submission.review ?? [])
+        .some(review => testStatusValue(review.status) === 'In progress')
+    const finalScore = final
+        ? systemSummationIsComplete(final) ? finiteScore(final.aggregateScore) : undefined
+        : legacySystemReviewInProgress ? undefined
+            : finiteScore(submission.finalScore)
+                ?? finiteScore(submission.aiDecisionScore)
+                ?? averageReviewScore((submission.review ?? []).map(review => review.finalScore ?? review.score))
     return { finalScore, provisionalScore }
 }
 
