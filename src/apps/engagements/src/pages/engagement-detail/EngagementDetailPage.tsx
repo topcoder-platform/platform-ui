@@ -16,6 +16,7 @@ import {
     checkExistingApplication,
     getEngagementByNanoId,
 } from '../../lib/services'
+import { getMyAssignedEngagements } from '../../lib/services/engagements.service'
 import {
     formatDate,
     formatDuration,
@@ -38,6 +39,7 @@ const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
 
 const PRIVATE_ENGAGEMENT_ROLE_KEYWORDS = ['project manager', 'task manager', 'talent manager', 'admin']
 const PRIVATE_ENGAGEMENT_ACCESS_DENIED_MESSAGE = 'You are not authorized to access this private engagement.'
+const ASSIGNMENTS_LOOKUP_PAGE_SIZE = 100
 
 const formatEnumLabel = (value?: string): string | undefined => {
     if (!value) {
@@ -80,6 +82,28 @@ const isAssignedMemberToEngagement = (
     return assignments.some(assignment => (
         assignment.memberId && String(assignment.memberId) === normalizedUserId
     ))
+}
+
+/** Finds a private engagement through the caller-scoped assignments endpoint. */
+const findMyAssignedEngagement = async (
+    nanoId: string,
+    userId: number | string,
+): Promise<Engagement | undefined> => {
+    const searchPage = async (page: number): Promise<Engagement | undefined> => {
+        const response = await getMyAssignedEngagements({
+            page,
+            perPage: ASSIGNMENTS_LOOKUP_PAGE_SIZE,
+        })
+        const match = response.data.find(candidate => (
+            candidate.nanoId === nanoId
+            && isAssignedMemberToEngagement(candidate.assignments, userId)
+        ))
+        if (match) return match
+
+        return page < response.totalPages ? searchPage(page + 1) : undefined
+    }
+
+    return searchPage(1)
 }
 
 type PrivateEngagementAccess = {
@@ -270,6 +294,18 @@ const EngagementDetailPage: FC = () => {
                 return
             }
 
+            if (status === 403 && isLoggedIn && userId !== undefined) {
+                try {
+                    const assignedEngagement = await findMyAssignedEngagement(nanoId, userId)
+                    if (assignedEngagement) {
+                        setEngagement(assignedEngagement)
+                        return
+                    }
+                } catch {
+                    // Retain the original private-access response when the fallback fails.
+                }
+            }
+
             if (isPrivateEngagementAccessDeniedError(err)) {
                 setPrivateAccessDenied(true)
                 return
@@ -279,7 +315,7 @@ const EngagementDetailPage: FC = () => {
         } finally {
             setLoading(false)
         }
-    }, [nanoId, navigate])
+    }, [isLoggedIn, nanoId, navigate, userId])
 
     const checkApplication = useCallback(async (): Promise<void> => {
         if (!isLoggedIn || !engagement?.id || userId === undefined || isEngagementCreator || isPrivateEngagement) {
