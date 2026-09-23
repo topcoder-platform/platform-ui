@@ -13,6 +13,10 @@
     &.withProjectFilter {
         grid-template-columns: repeat(4, minmax(0, 1fr)) max-content;
     }
+
+    &.withMemberHandleFilter {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
 .filterField {
