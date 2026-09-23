@@ -237,7 +237,8 @@ marker and connector, so wrapped dates and enlarged text grow the rail instead
 of overlapping the following milestone. The mobile prize/action card follows
 the expanded timeline instead of interrupting it. Wider layouts retain the
 horizontal timeline and its overflow fallback for tablet-sized screens. The
-desktop rail and labels share equal columns wide enough for single-line dates;
+desktop rail and labels share equal columns; dates can wrap when space is tight,
+and the timeline grid may shrink within the masthead without creating a stray scrollbar;
 timelines with many phases scroll horizontally as one unit.
 
 On phone viewports, Registrants preserves its semantic table while presenting
