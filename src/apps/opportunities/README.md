@@ -377,6 +377,8 @@ registers or agrees on a member's behalf. Terms API HTML retains its semantic
 structure and safe links, but document-authored inline styles are removed so
 modal-scoped Figtree headings, Nunito Sans body copy, and spacing remain
 authoritative.
+The compact Important Reminder uses the Figma teal action buttons and rounded
+checkmark asset without a footer separator.
 DocuSign-template terms, plus NDA-titled terms that use the environment's
 legacy DocuSign template fallback, replace placeholder Terms API text with the
 embedded recipient view in both registration and passive review. The frame

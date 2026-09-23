@@ -678,6 +678,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                 onClick={close}
                 secondary
                 size='lg'
+                uiv2={compactRegistration}
             />
             <Button
                 disabled={(compactRegistration && !accepted)
@@ -696,6 +697,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                 onClick={accept}
                 primary
                 size='lg'
+                uiv2={compactRegistration}
             />
         </>
     ) : (
