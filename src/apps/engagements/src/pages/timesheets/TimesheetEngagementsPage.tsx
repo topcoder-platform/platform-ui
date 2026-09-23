@@ -201,11 +201,12 @@ const TimesheetEngagementsPage: FC = () => {
                                 onChange={handleFilterChange('status')}
                                 options={TIMESHEET_STATUS_OPTIONS}
                                 tabIndex={0}
+                                classNameWrapper={styles.selectFilter}
                             />
                         </div>
                     </div>
                     <div className={styles.filterActions}>
-                        <Button label='Clear Filters' onClick={handleClearFilters} secondary size='sm' />
+                        <Button label='Clear Filters' onClick={handleClearFilters} secondary />
                     </div>
                 </section>
 
