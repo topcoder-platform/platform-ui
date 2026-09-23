@@ -402,6 +402,29 @@
     }
 }
 
+.checkpointAward {
+    align-items: baseline;
+    color: rgba(255, 255, 255, .6);
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 12px;
+    gap: 4px;
+    justify-content: center;
+    line-height: 16px;
+    text-align: center;
+
+    strong {
+        color: #3ddbd9;
+        font-family: 'Figtree', sans-serif;
+        font-size: 22px;
+        line-height: 24px;
+    }
+}
+
+.checkpointCount {
+    color: #3ddbd9;
+}
+
 .actions {
     display: flex;
     flex-direction: column;

@@ -575,6 +575,36 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toHaveLength(2)
     })
 
+    it('shows the checkpoint award count and amount beneath placement prizes', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        prizeSets: [
+                            { prizes: [{ type: 'USD', value: 1000 }], type: 'PLACEMENT' },
+                            {
+                                prizes: Array.from({ length: 5 }, () => ({ type: 'USD', value: 100 })),
+                                type: 'CHECKPOINT',
+                            },
+                        ],
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('5x'))
+            .toBeInTheDocument()
+        expect(screen.getByText('$100'))
+            .toBeInTheDocument()
+        expect(screen.getByText('checkpoint prizes'))
+            .toBeInTheDocument()
+    })
+
     it('replaces detail prizes with the leaderboard label for fun challenges', () => {
         render(
             <MemoryRouter>

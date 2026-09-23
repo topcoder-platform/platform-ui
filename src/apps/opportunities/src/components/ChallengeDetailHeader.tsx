@@ -40,6 +40,7 @@ import timelineWinnersIcon from '../assets/timeline-winners.svg'
 
 import {
     challengeCatalogKey,
+    challengeCheckpointAwards,
     challengeCurrentPhase,
     challengeIsCancelled,
     ChallengePlacementPrize,
@@ -211,7 +212,7 @@ function challengeLabels(challenge: ChallengeOpportunity): ChallengeLabel[] {
  * @returns localized currency, point, or typed-value label.
  * @throws Does not throw; unsupported currency codes fall back to typed text.
  */
-function formatPrize(prize: ChallengePlacementPrize): string {
+function formatPrize(prize: Pick<ChallengePlacementPrize, 'type' | 'value'>): string {
     const type = prize.type?.trim()
         .toUpperCase()
     const number = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 })
@@ -482,6 +483,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const phase = cancelled || isPostMortemPhase(currentPhase) ? undefined : currentPhase
     const phaseCopy = phaseSummary(phase, props.challenge.status)
     const challengePrizes = challengePlacementPrizes(props.challenge)
+    const checkpointAwards = challengeCheckpointAwards(props.challenge)
     const type = catalogName(props.challenge.type, 'Challenge')
     const track = challengeTrackLabel(props.challenge.track, 'Competition')
     const trackKey = challengeCatalogKey(props.challenge.track)
@@ -660,8 +662,18 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                                 )}
                                             </>
                                         )
-                                        : <strong>Prize details coming soon</strong>}
+                                        : !checkpointAwards.length && (
+                                            <strong>Prize details coming soon</strong>
+                                        )}
                             </div>
+                            {checkpointAwards.map(award => (
+                                <div className={styles.checkpointAward} key={`${award.type}-${award.value}`}>
+                                    <span>additional</span>
+                                    <span className={styles.checkpointCount}>{`${award.count}x`}</span>
+                                    <strong>{formatPrize(award)}</strong>
+                                    <span>{award.count === 1 ? 'checkpoint prize' : 'checkpoint prizes'}</span>
+                                </div>
+                            ))}
                         </div>
                         {!taskChallenge && (
                             <div className={styles.actions}>
