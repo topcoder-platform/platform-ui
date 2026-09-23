@@ -202,7 +202,8 @@ to their authored subtype icons and member-facing labels.
   the latest-started open phase. Progress uses actual then scheduled dates,
   clamps to 0–100%, and may derive the end from the phase duration in seconds.
   Competition pages revalidate once a minute and when focus returns; cards
-  with no open phase omit the phase display instead of inventing one. The
+  with no open phase omit phase progress; stalled challenges show their lifecycle
+  status in its place, even if an old phase remains marked open. The
   compact mobile card keeps the remaining-time value on the same heading row
   as the current phase, matching the authored design above its progress rail.
 - The right rail shows submissions and registrants from Challenge API. Design

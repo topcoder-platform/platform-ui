@@ -114,6 +114,27 @@ describe('OpportunityListCard competition presentation', () => {
         jest.restoreAllMocks()
     })
 
+    it('shows the stalled lifecycle status when no phase is open', () => {
+        render(
+            <MemoryRouter>
+                <OpportunityListCard
+                    item={competitionFixture({
+                        currentPhase: undefined,
+                        currentPhaseNames: [],
+                        phases: [],
+                        status: 'STALLED',
+                    })}
+                    kind='competitions'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Stalled'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('progressbar'))
+            .not.toBeInTheDocument()
+    })
+
     it('renders placement prizes, accurate registration state, and current phase progress', () => {
         render(
             <MemoryRouter>
