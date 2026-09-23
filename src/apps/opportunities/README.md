@@ -231,7 +231,9 @@ remain in an aligned, content-sized row to the right. Each mobile row owns its
 marker and connector, so wrapped dates and enlarged text grow the rail instead
 of overlapping the following milestone. The mobile prize/action card follows
 the expanded timeline instead of interrupting it. Wider layouts retain the
-horizontal timeline and its overflow fallback for tablet-sized screens.
+horizontal timeline and its overflow fallback for tablet-sized screens. Each
+desktop date stays on one line; timelines with many phases scroll horizontally
+so date labels remain aligned with their rail nodes.
 
 On phone viewports, Registrants preserves its semantic table while presenting
 each API row as the Figma key/value card. Registration Date remains a
