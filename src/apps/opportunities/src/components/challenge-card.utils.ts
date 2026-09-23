@@ -166,6 +166,33 @@ export function challengePlacementPrizes(challenge: ChallengeOpportunity): Chall
         })
 }
 
+export interface ChallengeCheckpointAward {
+    count: number
+    type?: string
+    value: number
+}
+
+/** Groups checkpoint prizes by their actual amount and reward type for the challenge header. */
+export function challengeCheckpointAwards(challenge: ChallengeOpportunity): ChallengeCheckpointAward[] {
+    const checkpointSet = (challenge.prizeSets ?? [])
+        .find(prizeSet => challengeCatalogKey(prizeSet.type) === 'checkpoint')
+    const groups = new Map<string, ChallengeCheckpointAward>()
+    const prizes = checkpointSet?.prizes ?? []
+
+    prizes.forEach(prize => {
+        if (typeof prize.value !== 'number' || !Number.isFinite(prize.value) || prize.value < 0) return
+        const key = JSON.stringify([prize.type?.toUpperCase() ?? 'USD', prize.value])
+        const group = groups.get(key)
+        if (group) {
+            group.count += 1
+        } else {
+            groups.set(key, { count: 1, type: prize.type, value: prize.value })
+        }
+    })
+
+    return [...groups.values()]
+}
+
 /**
  * Resolves the challenge's aggregate placement-prize value.
  *
