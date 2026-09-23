@@ -357,13 +357,35 @@ describe('ProjectEditorForm', () => {
             .toBeTruthy()
     })
 
+    it('shows the revised SMU labels for previously saved values', () => {
+        render(
+            <MemoryRouter>
+                <ProjectEditorForm
+                    canManage
+                    isEdit
+                    projectDetail={{
+                        description: 'Description',
+                        details: { smu: 'AMR2' },
+                        id: 'project-1',
+                        name: 'Project',
+                        status: 'active',
+                    }}
+                    projectTypes={[]}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('AM2'))
+            .toBeTruthy()
+    })
+
     it('populates the shared metadata from a Salesforce opportunity and links to it', async () => {
         mockedFetchSalesforceOpportunity.mockResolvedValue({
             closeDate: '2026-07-31',
             customer: 'Novartis Pharmaceuticals',
             id: '006UN00000XamntYAB',
             name: 'EMEA - AWS - PS BFSI',
-            smu: 'AMR1',
+            smu: 'APME',
             url: 'https://topcoder.my.salesforce.com/006UN00000XamntYAB',
         })
 
@@ -394,7 +416,7 @@ describe('ProjectEditorForm', () => {
             .toBe('Novartis Pharmaceuticals'))
         expect((screen.getByLabelText('Deal Close Date') as HTMLInputElement).value)
             .toBe('2026-07-31')
-        expect(screen.getByText('AMR1'))
+        expect(screen.getByText('AMPE'))
             .toBeTruthy()
         expect(screen.getByRole('link', { name: 'View in Salesforce' })
             .getAttribute('href'))

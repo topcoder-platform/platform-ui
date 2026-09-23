@@ -9,7 +9,7 @@ import { useFormContext } from 'react-hook-form'
 import classNames from 'classnames'
 
 import { isSalesforceOpportunityId } from '../../constants/salesforce.constants'
-import { SMU_VALUES } from '../../constants/showcase.constants'
+import { normalizeSmuValue, SMU_VALUES } from '../../constants/showcase.constants'
 import {
     fetchSalesforceOpportunity,
     SalesforceOpportunity,
@@ -62,7 +62,7 @@ export const ProjectMetadataFields: FC<ProjectMetadataFieldsProps> = props => {
             }
 
             if (opportunity.smu) {
-                setValue('smu', opportunity.smu, options)
+                setValue('smu', normalizeSmuValue(opportunity.smu), options)
                 setValue(
                     'smuOther',
                     opportunity.smu === 'Others' ? opportunity.smuOther || '' : '',
