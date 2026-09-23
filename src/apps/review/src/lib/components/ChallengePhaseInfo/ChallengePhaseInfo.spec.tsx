@@ -44,8 +44,8 @@ describe('ChallengePhaseInfo', () => {
             name: 'Challenge',
             phases: [],
             submissions: [],
-            track: { name: 'Design' },
-            type: { abbreviation: 'DS', name: 'Design' },
+            track: { id: 'design', name: 'Design' },
+            type: { abbreviation: 'DS', id: 'design', name: 'Design' },
             typeId: 'design',
         } as ChallengeInfo
 
