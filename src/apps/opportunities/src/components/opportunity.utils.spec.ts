@@ -48,12 +48,14 @@ describe('opportunity presentation utilities', () => {
             '## [Getting Started](https://topcoder.com)',
             'Body',
             '### Getting Started',
+            '#### Detailed Steps',
         ].join('\n')
 
         expect(extractTableOfContents(markdown))
             .toEqual([
                 { id: 'getting-started-2', label: 'Getting Started', level: 2 },
                 { id: 'getting-started-4', label: 'Getting Started', level: 3 },
+                { id: 'detailed-steps-5', label: 'Detailed Steps', level: 4 },
             ])
         expect(headingSlug('API & UI Requirements!'))
             .toBe('api-ui-requirements')
