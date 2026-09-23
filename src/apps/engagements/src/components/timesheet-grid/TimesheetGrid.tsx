@@ -119,7 +119,6 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
     return (
         <div className={styles.gridWrapper}>
             <table className={styles.grid}>
-                <caption className={styles.caption}>Timesheet entries</caption>
                 <thead>
                     <tr>
                         <th scope='col' className={styles.selectColumn}>

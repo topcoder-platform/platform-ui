@@ -190,6 +190,8 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
                 {isApprovedView && (
                     <>
                         <InputDatePicker
+                            classNameWrapper={styles.dateFilterWrapper}
+                            className={styles.dateFilter}
                             date={toPickerDate(fromDate)}
                             disabled={false}
                             isClearable
@@ -199,6 +201,8 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
                             }}
                         />
                         <InputDatePicker
+                            classNameWrapper={styles.dateFilterWrapper}
+                            className={styles.dateFilter}
                             date={toPickerDate(toDate)}
                             disabled={false}
                             isClearable

@@ -178,6 +178,14 @@
     }
 }
 
+.dateFilter {
+    margin-bottom: 0;
+
+    &Wrapper {
+        justify-content: flex-end;
+    }
+}
+
 @keyframes shimmer {
     100% {
         transform: translateX(100%);

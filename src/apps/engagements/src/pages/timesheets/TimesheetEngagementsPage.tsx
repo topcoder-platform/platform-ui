@@ -187,7 +187,7 @@ const TimesheetEngagementsPage: FC = () => {
                                     value={filters.manager}
                                     onBlur={handleFilterBlur}
                                     onChange={handleFilterChange('manager')}
-                                tabIndex={0}
+                                    tabIndex={0}
                                 />
                             </div>
                         )}
@@ -215,18 +215,22 @@ const TimesheetEngagementsPage: FC = () => {
                         <table className={styles.listTable}>
                             <thead>
                                 <tr>
-                                    <td scope='col' colSpan={isAdministrator ? 4 : 3}>Loading engagement timesheets...</td>
+                                    <td
+                                        colSpan={isAdministrator ? 4 : 3}
+                                    >
+                                        Loading engagement timesheets...
+                                    </td>
                                 </tr>
                             </thead>
                             <tbody>
                                 {skeletonRows.map(index => (
                                     <tr key={`timesheet-skeleton-${index}`}>
-                                        <td><div className={styles.skeletonCell} /></td>
-                                        <td><div className={styles.skeletonCell} /></td>
+                                        <td><div className={styles.skeletonCell} aria-label='loading cell' /></td>
+                                        <td><div className={styles.skeletonCell} aria-label='loading cell' /></td>
                                         {isAdministrator && (
-                                            <td><div className={styles.skeletonCell} /></td>
+                                            <td><div className={styles.skeletonCell} aria-label='loading cell' /></td>
                                         )}
-                                        <td><div className={styles.skeletonAction} /></td>
+                                        <td><div className={styles.skeletonAction} aria-label='loading cell' /></td>
                                     </tr>
                                 ))}
                             </tbody>
