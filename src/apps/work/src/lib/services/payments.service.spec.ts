@@ -9,6 +9,7 @@ import {
 import {
     fetchAssignmentPaymentSplits,
     fetchAssignmentPayments,
+    getPaymentReference,
 } from './payments.service'
 import {
     searchProfilesByUserIds,
@@ -129,5 +130,25 @@ describe('fetchAssignmentPaymentSplits', () => {
                     paymentId: 'payment-5245',
                 },
             ])
+    })
+})
+
+describe('getPaymentReference', () => {
+    it('prefers the finance winning id when present', () => {
+        expect(getPaymentReference({
+            id: 'win-123',
+            paymentId: 'payment-999',
+        }))
+            .toBe('win-123')
+    })
+
+    it('falls back to payment id when winning id is missing', () => {
+        expect(getPaymentReference({ paymentId: 'payment-999' }))
+            .toBe('payment-999')
+    })
+
+    it('returns undefined when neither id exists', () => {
+        expect(getPaymentReference({}))
+            .toBeUndefined()
     })
 })

@@ -37,6 +37,8 @@ export interface TimesheetRow {
     /** Absent until the row has been saved. */
     id?: string
     isPaid: boolean
+    paidAt?: string
+    paymentReference?: string
     outsideAssignmentWindow: boolean
     remarks: string
     reopenedAt?: string
@@ -175,6 +177,8 @@ const toRow = (workDate: string, entry?: TimesheetEntry): TimesheetRow => ({
     hoursWorked: entry?.hoursWorked ?? '',
     id: entry?.id,
     isPaid: entry?.isPaid ?? false,
+    paidAt: entry?.paidAt ?? undefined,
+    paymentReference: entry?.paymentReference ?? undefined,
     outsideAssignmentWindow: entry?.outsideAssignmentWindow ?? false,
     remarks: entry?.remarks ?? '',
     reopenedAt: entry?.reopenedAt ?? undefined,

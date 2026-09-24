@@ -100,7 +100,7 @@ const entry = (overrides: Partial<TimesheetEntry> = {}): TimesheetEntry => ({
     submittedAt: null,
     workDate: '2026-09-07',
     ...overrides,
-})
+} as TimesheetEntry)
 
 const timesheet = (entries: TimesheetEntry[] = []): TimesheetView => ({
     assignment: {

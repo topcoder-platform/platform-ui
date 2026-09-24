@@ -24,6 +24,9 @@ import {
     useFetchProjectBillingAccount,
 } from '../../../lib/hooks'
 import {
+    createMemberPayment,
+    getPaymentReference,
+    linkTimesheetEntriesToPayment,
     partiallyUpdateEngagement,
 } from '../../../lib/services'
 import {
@@ -72,9 +75,36 @@ jest.mock('../../../lib/components', () => ({
     CompleteAssignmentModal: (): JSX.Element => <></>,
     ErrorMessage: (props: { message: string }): JSX.Element => <div>{props.message}</div>,
     LoadingSpinner: (): JSX.Element => <div>Loading</div>,
-    PaymentFormModal: (props: { open: boolean }): JSX.Element => (
+    PaymentFormModal: (props: {
+        onConfirm: (data: {
+            amount: number
+            entryIds: string[]
+            hoursWorked: number
+            remarks?: string
+            title: string
+        }) => Promise<void>
+        open: boolean
+    }): JSX.Element => (
         props.open
-            ? <div>Create Payment</div>
+            ? (
+                <div>
+                    <div>Create Payment</div>
+                    <button
+                        onClick={() => {
+                            props.onConfirm({
+                                amount: 220,
+                                entryIds: ['ts-entry-1', 'ts-entry-2'],
+                                hoursWorked: 8,
+                                remarks: 'weekly payout',
+                                title: 'Work Period Sep 7 - Sep 13',
+                            })
+                        }}
+                        type='button'
+                    >
+                        Submit Payment
+                    </button>
+                </div>
+            )
             : <></>
     ),
     PaymentHistoryModal: (): JSX.Element => <></>,
@@ -108,6 +138,8 @@ jest.mock('../../../lib/hooks', () => ({
 
 jest.mock('../../../lib/services', () => ({
     createMemberPayment: jest.fn(),
+    getPaymentReference: jest.fn(),
+    linkTimesheetEntriesToPayment: jest.fn(),
     partiallyUpdateEngagement: jest.fn(),
     updateEngagementAssignmentStatus: jest.fn(),
 }))
@@ -190,6 +222,11 @@ const mockedUseFetchProjectBillingAccount = useFetchProjectBillingAccount as jes
 >
 const mockedPartiallyUpdateEngagement = partiallyUpdateEngagement as jest.MockedFunction<
     typeof partiallyUpdateEngagement
+>
+const mockedCreateMemberPayment = createMemberPayment as jest.MockedFunction<typeof createMemberPayment>
+const mockedGetPaymentReference = getPaymentReference as jest.MockedFunction<typeof getPaymentReference>
+const mockedLinkTimesheetEntriesToPayment = linkTimesheetEntriesToPayment as jest.MockedFunction<
+    typeof linkTimesheetEntriesToPayment
 >
 const mockedShowErrorToast = showErrorToast as jest.MockedFunction<typeof showErrorToast>
 
@@ -455,6 +492,56 @@ describe('EngagementPaymentPage', () => {
             .toHaveBeenCalledWith('Cannot create engagement payments because the project billing account is inactive.')
         expect(screen.queryByText('Create Payment'))
             .toBeNull()
+    })
+
+    it('warns with payment id and entry ids when payment linking fails', async () => {
+        mockedUseFetchEngagement.mockReturnValue({
+            engagement: {
+                assignments: [assignment],
+                title: 'Test Engagement',
+            },
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+        } as unknown as ReturnType<typeof useFetchEngagement>)
+
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+            project: {
+                billingAccountId: 'billing-account-1',
+                name: 'Test Project',
+            },
+        } as unknown as ReturnType<typeof useFetchProject>)
+
+        mockedCreateMemberPayment.mockResolvedValue({ id: 'win-1' } as never)
+        mockedGetPaymentReference.mockReturnValue('win-1')
+        mockedLinkTimesheetEntriesToPayment.mockRejectedValue(new Error('Link API failed'))
+
+        render(
+            <MemoryRouter initialEntries={['/projects/project-1/engagements/engagement-1/assignments']}>
+                <Routes>
+                    <Route
+                        element={<EngagementPaymentPage />}
+                        path='/projects/:projectId/engagements/:engagementId/assignments'
+                    />
+                </Routes>
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Pay' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submit Payment' }))
+
+        await waitFor(() => {
+            expect(mockedShowErrorToast)
+                .toHaveBeenCalledWith(expect.stringContaining('Payment win-1 was created'))
+        })
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(expect.stringContaining('ts-entry-1, ts-entry-2'))
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(expect.stringContaining('Link API failed'))
     })
 })
 

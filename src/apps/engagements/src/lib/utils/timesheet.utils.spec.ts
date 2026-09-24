@@ -34,7 +34,7 @@ const entry = (overrides: Partial<TimesheetEntry> = {}): TimesheetEntry => ({
     submittedAt: null,
     workDate: '2026-09-07',
     ...overrides,
-})
+} as TimesheetEntry)
 
 const row = (overrides: Partial<TimesheetRow> = {}): TimesheetRow => ({
     dayLabel: 'Monday',

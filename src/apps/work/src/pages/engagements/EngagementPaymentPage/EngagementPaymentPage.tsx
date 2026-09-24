@@ -895,17 +895,20 @@ export const EngagementPaymentPage: FC = () => {
                 } catch (linkError) {
                     const entryLabel = data.entryIds.length === 1 ? 'entry' : 'entries'
                     const linkMessage = linkError instanceof Error ? linkError.message : ''
+                    const entryIdsText = data.entryIds.join(', ')
 
                     showErrorToast(
                         `Payment ${paymentReference} was created, but ${data.entryIds.length} `
-                        + `approved timesheet ${entryLabel} could not be marked as paid. ${
+                        + `approved timesheet ${entryLabel} (${entryIdsText}) could not be marked as paid. ${
                             `Reconcile them before paying this period again. ${linkMessage}`.trim()}`,
                     )
                 }
             } else if (data.entryIds.length && !paymentReference) {
+                const entryIdsText = data.entryIds.join(', ')
+
                 showErrorToast(
                     `Payment was created, but it returned no identifier, so ${data.entryIds.length} `
-                    + 'approved timesheet entries could not be marked as paid. Reconcile them before '
+                    + `approved timesheet entries (${entryIdsText}) could not be marked as paid. Reconcile them before `
                     + 'paying this period again.',
                 )
             }
