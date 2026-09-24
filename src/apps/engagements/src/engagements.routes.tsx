@@ -31,6 +31,14 @@ const MyAssignmentsPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/my-assignments'),
     'MyAssignmentsPage',
 )
+const TimesheetsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/timesheets'),
+    'TimesheetsPage',
+)
+const TimesheetEngagementsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/timesheets'),
+    'TimesheetEngagementsPage',
+)
 
 export const rootRoute: string = (
     EnvironmentConfig.SUBDOMAIN === AppSubdomain.engagements ? '' : `/${AppSubdomain.engagements}`
@@ -87,6 +95,20 @@ export const engagementsRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <MyAssignmentsPage />,
                 id: 'My Assignments',
                 route: 'assignments',
+            },
+            {
+                authRequired: true,
+                children: [],
+                element: <TimesheetEngagementsPage />,
+                id: 'Timesheets',
+                route: 'timesheets',
+            },
+            {
+                authRequired: true,
+                children: [],
+                element: <TimesheetsPage />,
+                id: 'Timesheet',
+                route: ':engagementId/timesheets/:assignmentId',
             },
         ],
         domain: AppSubdomain.engagements,

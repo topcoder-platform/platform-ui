@@ -1,0 +1,244 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    display: grid;
+    gap: 20px;
+    padding: 0 0 16px;
+    position: relative;
+}
+
+.header {
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    background: $tc-white;
+}
+
+.title {
+    margin: 0;
+}
+
+.headerFacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin: 0;
+}
+
+.fact {
+    display: grid;
+    gap: 2px;
+
+    dt {
+        @include font-weight-bold;
+    }
+
+    dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+}
+
+.view {
+    display: grid;
+    gap: 16px;
+}
+
+.rangeSection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+    padding: 16px 18px;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    background: $tc-white;
+}
+
+.error {
+    margin: 0;
+    color: $red-100;
+}
+
+.pending {
+    margin: 0;
+    color: $black-60;
+}
+
+.statusField {
+    display: grid;
+    gap: 6px;
+
+    select {
+        padding: 8px;
+        border: 1px solid $black-40;
+        border-radius: 6px;
+    }
+}
+
+.partialResult {
+    margin: 0;
+    color: $turq-160;
+}
+
+.adminActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.filters {
+    display: grid;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    background: $black-5;
+    margin-bottom: 24px;
+
+    label {
+        display: grid;
+        gap: 4px;
+    }
+
+    // input,
+    // select {
+    //     padding: 8px;
+    //     border: 1px solid $black-40;
+    //     border-radius: 6px;
+    // }
+}
+
+.filterGrid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+
+    @include ltelg {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include ltemd {
+        grid-template-columns: 1fr;
+    }
+}
+
+.field {
+    min-width: 0;
+}
+
+.filterActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.loadingState {
+    display: block;
+}
+
+.skeletonCell,
+.skeletonAction {
+    position: relative;
+    height: 18px;
+    border-radius: 8px;
+    background: $black-5;
+    overflow: hidden;
+}
+
+.skeletonAction {
+    width: 62px;
+    height: 28px;
+}
+
+.skeletonCell::after,
+.skeletonAction::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba($black-40, 0.2), transparent);
+    animation: shimmer 1.6s infinite;
+}
+
+.selectFilter {
+    label :last-child {
+        margin-top: 0;
+    }
+}
+
+.dateFilter {
+    margin-bottom: 0;
+
+    &Wrapper {
+        justify-content: flex-end;
+    }
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.listTable {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid $black-10;
+    }
+
+    th {
+        @include font-weight-bold;
+    }
+}
+
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+@include ltemd {
+    .listTable {
+        thead {
+            display: none;
+        }
+
+        tr {
+            display: grid;
+            gap: 4px;
+            padding: 8px 0;
+            border-bottom: 1px solid $black-10;
+        }
+
+        td {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 0;
+
+            &::before {
+                content: attr(data-label);
+                @include font-weight-bold;
+            }
+        }
+    }
+}

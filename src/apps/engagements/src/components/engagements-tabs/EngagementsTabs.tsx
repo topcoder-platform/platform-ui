@@ -3,12 +3,18 @@ import { useNavigate } from 'react-router-dom'
 
 import { useProfileContext } from '~/libs/core'
 import { TabsNavbar, TabsNavItem } from '~/libs/ui'
+import {
+    hasAdminRole,
+    hasManagerRole,
+    useFetchEngagementTimesheets,
+    UseFetchEngagementTimesheetsResult,
+} from '~/apps/work/src/lib'
 
 import { rootRoute } from '../../engagements.routes'
 
 import styles from './EngagementsTabs.module.scss'
 
-export type EngagementsTab = 'opportunities' | 'applications' | 'assignments'
+export type EngagementsTab = 'opportunities' | 'applications' | 'assignments' | 'timesheets'
 
 interface EngagementsTabsProps {
     activeTab: EngagementsTab
@@ -18,6 +24,9 @@ const EngagementsTabs: FC<EngagementsTabsProps> = (props: EngagementsTabsProps) 
     const navigate = useNavigate()
     const profileContext = useProfileContext()
     const isLoggedIn = profileContext.isLoggedIn
+    const userRoles = profileContext.profile?.roles ?? []
+    const { timesheets }: UseFetchEngagementTimesheetsResult = useFetchEngagementTimesheets()
+    const isAdminOrManager = hasAdminRole(userRoles) || hasManagerRole(userRoles) || timesheets.length
 
     const tabsConfig = useMemo<TabsNavItem<EngagementsTab>[]>(() => {
         const tabs: TabsNavItem<EngagementsTab>[] = [
@@ -31,8 +40,15 @@ const EngagementsTabs: FC<EngagementsTabsProps> = (props: EngagementsTabsProps) 
             )
         }
 
+        if (isAdminOrManager) {
+            tabs.push({
+                id: 'timesheets',
+                title: 'Timesheets',
+            })
+        }
+
         return tabs
-    }, [isLoggedIn])
+    }, [isLoggedIn, isAdminOrManager])
 
     const activeTab = useMemo(
         () => (tabsConfig.some(tab => tab.id === props.activeTab) ? props.activeTab : 'opportunities'),
@@ -47,6 +63,11 @@ const EngagementsTabs: FC<EngagementsTabsProps> = (props: EngagementsTabsProps) 
 
         if (tabId === 'applications') {
             navigate(`${rootRoute}/my-applications`)
+            return
+        }
+
+        if (tabId === 'timesheets') {
+            navigate(`${rootRoute}/timesheets`)
             return
         }
 

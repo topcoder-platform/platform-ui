@@ -269,6 +269,23 @@ export function canCreateEngagement(userRoles: string[]): boolean {
     return hasAdminRole(userRoles) || checkTalentManager(userRoles)
 }
 
+/**
+ * Returns whether the supplied user roles may assign or remove engagement managers.
+ *
+ * Mirrors the engagements API's administrator definition for timesheets, which is the platform's
+ * privileged role set: administrators plus Topcoder Project, Task, and Talent Managers. Keeping the
+ * two in step matters because the API is the gate - a UI that offers the control to anyone else just
+ * produces a 403.
+ *
+ * @param userRoles caller roles from the decoded auth token or app context.
+ * @returns `true` when the caller can change engagement manager assignments.
+ */
+export function canManageEngagementManagers(userRoles: string[]): boolean {
+    return hasAdminRole(userRoles)
+        || hasManagerRole(userRoles)
+        || hasTaskManagerRole(userRoles)
+}
+
 export function checkIsAdmin(token: string): boolean {
     const roles = getTokenRoles(token)
 

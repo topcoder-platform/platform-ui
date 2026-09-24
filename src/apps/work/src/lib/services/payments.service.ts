@@ -33,6 +33,11 @@ interface MemberPaymentPayload {
         assignmentId: number | string
         memberHandle: string
         remarks: string
+        /**
+         * Approved timesheet entries this payment covers. Traceability runs both ways: from the payment
+         * to the entries here, and from each entry back to the payment via its stored reference.
+         */
+        timesheetEntryIds?: string[]
     }
     category: string
     description: string
@@ -242,6 +247,7 @@ export async function createMemberPayment(
     amount: number | string,
     hoursWorked: number | string,
     billingAccountId: number | string,
+    timesheetEntryIds: string[] = [],
 ): Promise<AssignmentPayment> {
     const numericAmount = Number(amount)
     const numericHoursWorked = Number(hoursWorked)
@@ -252,6 +258,7 @@ export async function createMemberPayment(
             assignmentId,
             memberHandle,
             remarks: remarks.trim(),
+            timesheetEntryIds: timesheetEntryIds.length ? timesheetEntryIds : undefined,
         },
         category: 'ENGAGEMENT_PAYMENT',
         description: title.trim(),
@@ -264,6 +271,8 @@ export async function createMemberPayment(
                 totalAmount: numericAmount,
             },
         ],
+        // Stays the assignment id: payment history is fetched by external id, and the entries a
+        // payment consumed are carried in attributes instead.
         externalId: String(assignmentId),
         hoursWorked: Number.isFinite(numericHoursWorked) && numericHoursWorked > 0
             ? numericHoursWorked
@@ -349,4 +358,18 @@ export async function getPaymentsByAssignmentId(
     assignmentId: number | string,
 ): Promise<AssignmentPayment[]> {
     return fetchAssignmentPayments(assignmentId)
+}
+
+/**
+ * Durable identifier to record against the timesheet entries a payment consumed.
+ *
+ * Prefers the winning id the finance API returns, falling back to the payment id. Confirm with the
+ * finance team which of the two survives before relying on it for reconciliation.
+ */
+export function getPaymentReference(payment: AssignmentPayment | undefined): string | undefined {
+    const reference = payment?.id ?? payment?.paymentId
+
+    return reference === undefined || reference === null || reference === ''
+        ? undefined
+        : String(reference)
 }

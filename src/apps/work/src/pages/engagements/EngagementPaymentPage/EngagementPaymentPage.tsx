@@ -5,6 +5,7 @@
 import {
     FC,
     useCallback,
+    useContext,
     useEffect,
     useMemo,
     useRef,
@@ -26,6 +27,7 @@ import {
 
 import {
     CompleteAssignmentModal,
+    EngagementManagersField,
     ErrorMessage,
     LoadingSpinner,
     PaymentFormData,
@@ -38,23 +40,32 @@ import {
 } from '../../../lib/components/form'
 import {
     useFetchEngagement,
+    useFetchEngagementManagers,
     useFetchProject,
     useFetchProjectBillingAccount,
 } from '../../../lib/hooks'
 import {
     ASSIGNMENT_SOURCES,
     ASSIGNMENT_SOURCE_LABELS,
+    ENGAGEMENTS_APP_URL,
 } from '../../../lib/constants'
 import {
     Assignment,
+    WorkAppContextModel,
 } from '../../../lib/models'
 import {
+    WorkAppContext,
+} from '../../../lib/contexts'
+import {
     createMemberPayment,
+    getPaymentReference,
+    linkTimesheetEntriesToPayment,
     partiallyUpdateEngagement,
     updateEngagementAssignmentStatus,
 } from '../../../lib/services'
 import {
     calculateAssignmentRatePerWeek,
+    canManageEngagementManagers,
     deserializeTentativeAssignmentDate,
     formatAssignmentDaysLeftInEngagement,
     getAssignmentPaymentCycle,
@@ -185,6 +196,19 @@ function isAssignedStatus(status: string): boolean {
     return status
         .trim()
         .toUpperCase() === 'ASSIGNED'
+}
+
+/**
+ * Timesheet page for an engagement and assignee, in the Engagements Portal.
+ *
+ * A convenience only: the portal resolves the caller's role server-side and refuses anyone with no
+ * relationship to the assignment, so linking here grants nothing.
+ */
+function buildTimesheetUrl(
+    engagementId: number | string,
+    assignmentId: number | string,
+): string {
+    return `${ENGAGEMENTS_APP_URL}/${engagementId}/timesheets/${assignmentId}`
 }
 
 function canEditAssignment(status: string): boolean {
@@ -764,8 +788,17 @@ export const EngagementPaymentPage: FC = () => {
     const hasScrolledToHighlightedAssignment = useRef<boolean>(false)
 
     const engagementResult = useFetchEngagement(engagementId)
+    const engagementManagersResult = useFetchEngagementManagers(engagementId)
     const projectResult = useFetchProject(projectId)
     const projectBillingAccountResult = useFetchProjectBillingAccount(projectId)
+    const workAppContext = useContext(WorkAppContext) as WorkAppContextModel
+    // Mirrors the engagements API's administrator definition for timesheets. The API is the gate, so
+    // offering the control to anyone else would only produce a 403.
+    const canManageManagers = canManageEngagementManagers(workAppContext.userRoles ?? [])
+    const refreshEngagementManagers = useCallback(() => {
+        engagementManagersResult.mutate()
+            .catch(() => undefined)
+    }, [engagementManagersResult])
 
     const assignments = useMemo(() => {
         if (!Array.isArray(engagementResult.engagement?.assignments)) {
@@ -831,7 +864,7 @@ export const EngagementPaymentPage: FC = () => {
         setIsSubmittingPayment(true)
 
         try {
-            await createMemberPayment(
+            const payment = await createMemberPayment(
                 paymentMember.id,
                 paymentMember.memberId,
                 paymentMember.memberHandle,
@@ -841,8 +874,42 @@ export const EngagementPaymentPage: FC = () => {
                 data.amount,
                 data.hoursWorked,
                 billingAccountId,
+                data.entryIds,
             )
             showSuccessToast('Payment created successfully')
+
+            // Linked after the payment exists, deliberately. If this call fails the payment is real
+            // but its entries are unmarked - recoverable, and far safer than marking them first and
+            // stranding approved hours as unpayable if payment creation then failed. Either way the
+            // operator is told, so nothing is left silently unreconciled.
+            const paymentReference = getPaymentReference(payment)
+
+            if (data.entryIds.length && paymentReference) {
+                try {
+                    await linkTimesheetEntriesToPayment(
+                        engagementId,
+                        paymentMember.id,
+                        data.entryIds,
+                        paymentReference,
+                    )
+                } catch (linkError) {
+                    const entryLabel = data.entryIds.length === 1 ? 'entry' : 'entries'
+                    const linkMessage = linkError instanceof Error ? linkError.message : ''
+
+                    showErrorToast(
+                        `Payment ${paymentReference} was created, but ${data.entryIds.length} `
+                        + `approved timesheet ${entryLabel} could not be marked as paid. ${
+                            `Reconcile them before paying this period again. ${linkMessage}`.trim()}`,
+                    )
+                }
+            } else if (data.entryIds.length && !paymentReference) {
+                showErrorToast(
+                    `Payment was created, but it returned no identifier, so ${data.entryIds.length} `
+                    + 'approved timesheet entries could not be marked as paid. Reconcile them before '
+                    + 'paying this period again.',
+                )
+            }
+
             setPaymentMember(undefined)
         } catch (error) {
             const message = error instanceof Error
@@ -1016,6 +1083,13 @@ export const EngagementPaymentPage: FC = () => {
             pageTitle={pageTitle}
         >
             <div className={styles.container}>
+                <EngagementManagersField
+                    canEdit={canManageManagers}
+                    engagementId={engagementId}
+                    isLoading={engagementManagersResult.isLoading}
+                    managers={engagementManagersResult.managers}
+                    onChange={refreshEngagementManagers}
+                />
                 {assignments.length === 0
                     ? <div className={styles.empty}>No assigned members found.</div>
                     : (
@@ -1167,6 +1241,20 @@ export const EngagementPaymentPage: FC = () => {
                                                         size='sm'
                                                     />
                                                 </Link>
+                                                <a
+                                                    href={buildTimesheetUrl(
+                                                        engagementId,
+                                                        assignment.id,
+                                                    )}
+                                                    rel='noreferrer'
+                                                    target='_blank'
+                                                >
+                                                    <Button
+                                                        label='View Timesheet'
+                                                        secondary
+                                                        size='sm'
+                                                    />
+                                                </a>
                                                 <Button
                                                     label='Show Payment History'
                                                     onClick={() => setHistoryMember(assignment)}
@@ -1231,6 +1319,7 @@ export const EngagementPaymentPage: FC = () => {
             />
 
             <PaymentFormModal
+                engagementId={engagementId}
                 billingAccountId={projectBillingAccountResult.billingAccount?.id
                     || projectResult.project?.billingAccountId}
                 billingAccountMarkup={projectBillingAccountResult.billingAccount?.markup}

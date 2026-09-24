@@ -14,11 +14,14 @@ import {
     ENGAGEMENTS_ROOT_API_URL,
 } from '../constants'
 import {
+    AssignEngagementManagerPayload,
     Assignment,
     Engagement,
     EngagementFilters,
+    EngagementManager,
     PaginationModel,
     Skill,
+    TimesheetPaymentSummary,
 } from '../models'
 import {
     fromEngagementAnticipatedStartApi,
@@ -931,5 +934,112 @@ export async function createMemberExperience(
         )
     } catch (error) {
         throw normalizeError(error, 'Failed to create member experience')
+    }
+}
+
+/**
+ * Approved, unpaid hours for a payment period.
+ *
+ * Only approved entries count, and entries a payment already consumed are excluded from the totals and
+ * reported separately, so the operator can see why the total is lower than the member's logged hours.
+ */
+export async function fetchTimesheetPaymentSummary(
+    engagementId: number | string,
+    assignmentId: number | string,
+    fromDate: string,
+    toDate: string,
+): Promise<TimesheetPaymentSummary> {
+    try {
+        const query = new URLSearchParams({ fromDate, toDate })
+
+        return xhrGetAsync<TimesheetPaymentSummary>(
+            `${ENGAGEMENTS_ROOT_API_URL}/engagements/${engagementId}/assignments/${assignmentId}`
+            + `/timesheets/summary?${query.toString()}`,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to load approved timesheet hours')
+    }
+}
+
+/**
+ * Records that a payment consumed these approved entries.
+ *
+ * Called after the payment exists. A crash in between leaves the entries unmarked, which is visible and
+ * recoverable; marking first and then failing to create the payment would strand approved hours as
+ * permanently unpayable.
+ */
+export async function linkTimesheetEntriesToPayment(
+    engagementId: number | string,
+    assignmentId: number | string,
+    entryIds: string[],
+    paymentReference: string,
+): Promise<void> {
+    try {
+        await xhrPostAsync<{ entryIds: string[], paymentReference: string }, unknown>(
+            `${ENGAGEMENTS_ROOT_API_URL}/engagements/${engagementId}/assignments/${assignmentId}`
+            + '/timesheets/entries/payments',
+            { entryIds, paymentReference },
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to link the payment to the approved timesheet entries')
+    }
+}
+
+/**
+ * Lists the managers authorized to approve timesheets on an engagement.
+ *
+ * These are the same endpoints the Engagements Portal timesheet page uses. There is one manager list
+ * behind both apps, which is what makes a change made in either one visible in the other without any
+ * synchronization between them.
+ */
+export async function fetchEngagementManagers(
+    engagementId: number | string,
+): Promise<EngagementManager[]> {
+    try {
+        return xhrGetAsync<EngagementManager[]>(
+            `${ENGAGEMENTS_ROOT_API_URL}/engagements/${engagementId}/managers`,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to fetch engagement managers')
+    }
+}
+
+/**
+ * Grants a member timesheet approval authority on an engagement.
+ *
+ * Keyed on the member's user id; the handle and name come along as display values from the member
+ * picker, which saves the API a member lookup. A member already assigned is rejected server-side,
+ * and re-assigning someone previously removed reactivates their record rather than creating a
+ * duplicate.
+ */
+export async function assignEngagementManager(
+    engagementId: number | string,
+    manager: AssignEngagementManagerPayload,
+): Promise<EngagementManager> {
+    try {
+        return xhrPostAsync<AssignEngagementManagerPayload, EngagementManager>(
+            `${ENGAGEMENTS_ROOT_API_URL}/engagements/${engagementId}/managers`,
+            manager,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to assign engagement manager')
+    }
+}
+
+/**
+ * Revokes a manager's timesheet approval authority.
+ *
+ * Soft-deleted server-side, so approvals this manager already made keep their attribution.
+ */
+export async function removeEngagementManager(
+    engagementId: number | string,
+    managerUserId: string,
+): Promise<void> {
+    try {
+        await xhrDeleteAsync(
+            `${ENGAGEMENTS_ROOT_API_URL}/engagements/${engagementId}/managers/${managerUserId}`,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to remove engagement manager')
     }
 }

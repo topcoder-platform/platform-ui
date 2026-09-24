@@ -70,6 +70,31 @@ export interface Application {
     yearsOfExperience: number
 }
 
+/**
+ * A manager authorized to approve timesheets on an engagement.
+ *
+ * The list lives in the engagements API and is shared with the Engagements Portal: both apps read and
+ * write the same endpoints, so a manager added in either one shows up in the other.
+ */
+export interface EngagementManager {
+    handle: string
+    name: string | null
+    userId: string
+}
+
+/**
+ * Identity of the member being granted approval authority.
+ *
+ * `userId` is the authoritative field - authority is keyed on it. `handle` and `name` are display
+ * values the caller already has from the member picker, sent so the API does not have to look the
+ * member up again.
+ */
+export interface AssignEngagementManagerPayload {
+    handle?: string
+    name?: string
+    userId: string
+}
+
 export interface Engagement {
     account?: string
     anticipatedStart: EngagementAnticipatedStart | string
@@ -84,6 +109,7 @@ export interface Engagement {
     durationWeeks: number
     id: number | string
     isPrivate: boolean
+    managers?: EngagementManager[]
     project?: {
         id?: number | string
         name?: string
@@ -102,6 +128,20 @@ export interface Engagement {
     title: string
     updatedAt: string
     workload: EngagementWorkload | string
+}
+
+/**
+ * Approved, unpaid hours available for a payment period.
+ *
+ * `totalHours` is an exact decimal string: it is multiplied by the hourly rate to produce money, so it
+ * never travels as a float.
+ */
+export interface TimesheetPaymentSummary {
+    alreadyPaidEntryIds: string[]
+    entryIds: string[]
+    ratePerHour: string | null
+    totalDays: number
+    totalHours: string
 }
 
 export interface EngagementFilters {

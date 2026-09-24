@@ -66,6 +66,11 @@ interface AssignmentCardProps {
     contactEmail?: string
     onViewPayments: () => void
     onDocumentExperience: () => void
+    /**
+     * Opens the timesheet for this engagement and assignment. Rendered alongside the other
+     * assigned-only actions, so it appears exactly when the member is actually on the engagement.
+     */
+    onOpenTimesheet?: () => void
     onAcceptOffer?: () => void
     onRejectOffer?: () => void
     onContactTalentManager: (contactEmail?: string) => void
@@ -299,6 +304,15 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                             textWrap
                             className={styles.actionButton}
                         />
+                        {props.onOpenTimesheet && (
+                            <Button
+                                label='Timesheet'
+                                onClick={props.onOpenTimesheet}
+                                secondary
+                                textWrap
+                                className={styles.actionButton}
+                            />
+                        )}
                     </>
                 )}
                 {renderOfferActions(
