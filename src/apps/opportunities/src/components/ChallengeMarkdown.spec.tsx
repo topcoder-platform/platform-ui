@@ -52,6 +52,24 @@ describe('ChallengeDescription', () => {
             .toBe('## Markdown requirements')
     })
 
+    it('gives fourth-level headings the same fragment as their table-of-contents link', () => {
+        render(<ChallengeDescription content='#### Detailed Steps' format='markdown' />)
+
+        const h4 = mockMarkdownProps[0].components as {
+            h4: (props: Record<string, unknown>) => JSX.Element
+        }
+        const heading = h4.h4({
+            children: 'Detailed Steps',
+            level: 4,
+            node: { position: { start: { line: 1 } } },
+        })
+
+        expect(heading.type)
+            .toBe('h4')
+        expect(heading.props.id)
+            .toBe('detailed-steps-1')
+    })
+
     it('parses and sanitizes safe inline forum HTML such as underline markup', () => {
         render(<ChallengeDescription content='A <u>formatted</u> note' format='markdown' />)
 

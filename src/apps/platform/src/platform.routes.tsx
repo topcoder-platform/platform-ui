@@ -21,7 +21,7 @@ import { procurementRoutes } from '~/apps/procurement'
 import { statusRoutes } from '~/apps/status'
 import { supportRoutes } from '~/apps/support'
 import { thriveRoutes } from '~/apps/thrive'
-import { legacyOpportunityRoutes, opportunitiesRoutes } from '~/apps/opportunities'
+import { legacyOpportunityRoutes, opportunitiesRoutes, topgearRoutes } from '~/apps/opportunities'
 import { analyticsRoutes } from '~/apps/analytics'
 import { contactRoutes } from '~/apps/contact'
 import { gigsRoutes } from '~/apps/gigs'
@@ -60,6 +60,7 @@ export const platformRoutes: Array<PlatformRoute> = [
     // is determined by finding the first route
     // that matches the current path
     ...onboardingRoutes,
+    ...topgearRoutes,
     ...legacyOpportunityRoutes,
     ...opportunitiesRoutes,
     ...gigsRoutes,

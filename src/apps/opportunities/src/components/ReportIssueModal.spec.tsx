@@ -152,6 +152,8 @@ describe('ReportIssueModal', () => {
 
         expect(await screen.findByText('Screenshot.png'))
             .toBeInTheDocument()
+        expect(await screen.findByText('Uploaded'))
+            .toBeInTheDocument()
         expect(await screen.findByText('1.1 MB'))
             .toBeInTheDocument()
         expect(screen.getByText('Attach Screenshots, Files'))
@@ -174,7 +176,9 @@ describe('ReportIssueModal', () => {
                     '- [Screenshot.png](https://files.example/Screenshot.png)',
                 ].join('\n'),
             }))
-        expect(await screen.findByText('Thank you for reporting this issue.'))
+        expect(await screen.findByText('Your report has been sent to the team. Someone will get back to you shortly.'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Close' }))
             .toBeInTheDocument()
         expect(mockedUploadAttachment)
             .toHaveBeenCalledWith(file)

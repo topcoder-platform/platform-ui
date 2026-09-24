@@ -44,6 +44,11 @@ import {
     REVIEW_PROCESS_LEARNING_URL,
     REVIEWER_LEARNING_URL,
 } from '../utils'
+import {
+    formatOpportunityDate,
+    formatOpportunityDateRange,
+    formatOpportunityDateTime,
+} from '../utils/opportunity-date.utils'
 
 import styles from './ReviewOpportunityDetailsPage.module.scss'
 
@@ -82,46 +87,22 @@ function challengeField(opportunity: ReviewOpportunity, key: string, fallback: s
  * Formats a Review API timestamp in the long date style used by the detail design.
  *
  * @param value ISO date value from Review or Challenge API data.
- * @returns `day month, year`, or `TBD` when the value is invalid.
+ * @returns `day month year` such as `17 Sep 2026`, or `TBD` when the value is invalid.
  * @throws Does not throw.
  */
 function formatDate(value?: string): string {
-    if (!value) return 'TBD'
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return 'TBD'
-    const parts = new Intl.DateTimeFormat('en-GB', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    })
-        .formatToParts(date)
-    const day = parts.find(part => part.type === 'day')?.value
-    const month = parts.find(part => part.type === 'month')?.value
-    const year = parts.find(part => part.type === 'year')?.value
-    return day && month && year ? `${day} ${month}, ${year}` : 'TBD'
+    return formatOpportunityDate(value, 'TBD')
 }
 
 /**
  * Formats a Review API application timestamp with its local display time.
  *
  * @param value ISO application date.
- * @returns `day month, year, hour:minute`, or `TBD` for invalid input.
+ * @returns `day month year, hour:minute` such as `17 Sep 2026, 14:39`, or `TBD` for invalid input.
  * @throws Does not throw.
  */
 function formatApplicationDate(value?: string): string {
-    if (!value) return 'TBD'
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return 'TBD'
-    const dateLabel = formatDate(value)
-    const timeParts = new Intl.DateTimeFormat('en-GB', {
-        hour: 'numeric',
-        hour12: false,
-        minute: '2-digit',
-    })
-        .formatToParts(date)
-    const hour = timeParts.find(part => part.type === 'hour')?.value.replace(/^0/, '')
-    const minute = timeParts.find(part => part.type === 'minute')?.value
-    return hour && minute ? `${dateLabel}, ${hour}:${minute}` : dateLabel
+    return formatOpportunityDateTime(value, 'TBD')
 }
 
 /**
@@ -129,7 +110,8 @@ function formatApplicationDate(value?: string): string {
  *
  * @param startDate ISO assignment start.
  * @param duration assignment duration in seconds.
- * @returns a long-date range, or `TBD` when either value is unavailable.
+ * @returns a range such as `14 Sep - 15 Sep 2026`, dropping the repeated year
+ * when both ends share it, or `TBD` when either value is unavailable.
  * @throws Does not throw.
  */
 function reviewPeriod(startDate?: string, duration?: number): string {
@@ -138,13 +120,8 @@ function reviewPeriod(startDate?: string, duration?: number): string {
     if (Number.isNaN(start.getTime())) return 'TBD'
     const end = new Date(start.getTime() + (duration * 1000))
     if (Number.isNaN(end.getTime())) return 'TBD'
-    const startLabel = formatDate(start.toISOString())
-    const endLabel = formatDate(end.toISOString())
-    if (start.getFullYear() === end.getFullYear()) {
-        return `${startLabel.replace(`, ${start.getFullYear()}`, '')} - ${endLabel}`
-    }
 
-    return `${startLabel} - ${endLabel}`
+    return formatOpportunityDateRange(start.toISOString(), end.toISOString(), 'TBD')
 }
 
 /**

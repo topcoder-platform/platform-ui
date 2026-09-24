@@ -1,4 +1,4 @@
-import { decodeToken } from 'tc-auth-lib'
+import { decodeToken } from '@topcoder-platform/tc-auth-lib'
 
 import { PROJECT_ROLES } from '../constants'
 import { PROJECT_MEMBER_INVITE_STATUS } from '../constants/project-roles.constants'

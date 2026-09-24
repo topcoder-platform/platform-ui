@@ -75,9 +75,25 @@
         padding: 4px;
     }
 
+    /*
+     * Unread activity is teal with a red dot, matching the challenge tab rail.
+     * The dot appears only while topics are actually unread.
+     */
     .newCount {
+        background: #d9fbfb;
+        color: #007d79;
+        position: relative;
+    }
+
+    .newCount.hasUnread::after {
         background: #c1294f;
-        color: #fff;
+        border-radius: 50%;
+        content: '';
+        height: 6px;
+        position: absolute;
+        right: -3px;
+        top: -3px;
+        width: 6px;
     }
 }
 
@@ -286,11 +302,15 @@
         }
     }
 
+    /*
+     * The unread count reads as teal with a red dot, matching the challenge tab
+     * rail, rather than as a solid red alert badge.
+     */
     em {
         align-items: center;
-        background: #c1294f;
-        border-radius: 8px;
-        color: #fff;
+        background: #d9fbfb;
+        border-radius: 2px;
+        color: #007d79;
         display: inline-flex;
         font-size: 11px;
         font-style: normal;
@@ -299,6 +319,18 @@
         justify-content: center;
         min-width: 16px;
         padding: 0 4px;
+        position: relative;
+
+        &::after {
+            background: #c1294f;
+            border-radius: 50%;
+            content: '';
+            height: 6px;
+            position: absolute;
+            right: -3px;
+            top: -3px;
+            width: 6px;
+        }
     }
 }
 
@@ -342,10 +374,12 @@
 
     > div {
         display: grid;
-        font-size: 12px;
+
+        /* Authored size for the Last post / Created rows in both info rails. */
+        font-size: 14px;
         gap: 8px;
-        grid-template-columns: 64px 1fr;
-        line-height: 16px;
+        grid-template-columns: 72px 1fr;
+        line-height: 20px;
     }
 
     dt {
@@ -357,10 +391,6 @@
     }
 }
 
-.discussionInfo dl > div {
-    font-size: 14px;
-    line-height: 20px;
-}
 
 .member {
     align-items: center;
@@ -374,8 +404,12 @@
         font-weight: 700;
         line-height: 20px;
         overflow: hidden;
+
+        /* Stays above the topic card overlay so the profile link still works. */
+        position: relative;
         text-decoration: none;
         text-overflow: ellipsis;
+        z-index: 2;
     }
 }
 
@@ -425,6 +459,30 @@
     grid-template-columns: minmax(0, 647px) 200px;
     min-height: 260px;
     padding: 24px;
+    position: relative;
+
+    &:has(.topicOverlay:hover) .topicTitle {
+        color: #007d79;
+        text-decoration: underline;
+    }
+}
+
+/*
+ * Makes the upper card open the topic. It sits above the static copy but below
+ * the title, member links, and the footer actions, which keep their own
+ * behavior. The footer row raises itself out of the overlay so the action
+ * buttons and the surrounding space stay reserved for them.
+ */
+.topicOverlay {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    border-radius: inherit;
+    cursor: pointer;
+    inset: 0;
+    padding: 0;
+    position: absolute;
+    z-index: 1;
 }
 
 .topicMain {
@@ -467,6 +525,7 @@
 
 .topicTitle {
     appearance: none;
+    align-self: flex-start;
     background: transparent;
     border: 0;
     color: #161616;
@@ -477,7 +536,9 @@
     line-height: 38px;
     margin: 4px 0 0;
     padding: 0;
+    position: relative;
     text-align: left;
+    z-index: 2;
 
     &:hover,
     &:focus-visible {
@@ -488,7 +549,9 @@
 
 .createdBy {
     align-items: center;
-    color: #6f6f6f;
+
+    /* Authored copy: the byline reads at full text contrast, not as muted meta. */
+    color: #161616;
     display: flex;
     flex-wrap: wrap;
     font-size: 12px;
@@ -574,8 +637,12 @@
     a {
         display: inline-flex;
         height: 32px;
+
+        /* Stays above the topic card overlay so the profile link still works. */
+        position: relative;
         text-decoration: none;
         width: 32px;
+        z-index: 2;
     }
 
     a + a {
@@ -888,7 +955,7 @@
     font-size: 16px;
     -webkit-line-clamp: 3;
     line-height: 22px;
-    margin: 20px 0 0;
+    margin: 16px 0 0;
     overflow: hidden;
     -webkit-box-orient: vertical;
 
@@ -925,6 +992,8 @@
     line-height: 16px;
     margin-top: auto;
     padding-top: 20px;
+    position: relative;
+    z-index: 2;
 }
 
 .topicActions,

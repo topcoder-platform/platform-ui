@@ -5,6 +5,7 @@ import useSWR, { SWRResponse } from 'swr'
 import { ChallengeSubmissionAiWorkflowRun } from '../models'
 import { getChallengeSubmissionAiWorkflowRuns } from '../services'
 import { submissionAiReviewAppUrl } from '../utils'
+import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 
 import styles from './SubmissionAiReviewDetails.module.scss'
 
@@ -67,23 +68,14 @@ export function submissionAiWorkflowRunResult(
 }
 
 /**
- * Formats a workflow completion timestamp for the Opportunities locale.
+ * Formats a workflow completion timestamp in the shared Community date style.
  *
  * @param value ISO timestamp returned by Review API.
- * @returns localized date/time or a dash when missing/invalid.
+ * @returns `17 Sep 2026, 14:39` in the viewer's timezone, or a dash when missing/invalid.
  * @throws Does not throw.
  */
 function workflowReviewDate(value: string | undefined): string {
-    if (!value) return '-'
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return '-'
-    return date.toLocaleString('en-US', {
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    })
+    return formatOpportunityDateTime(value, '-')
 }
 
 /**

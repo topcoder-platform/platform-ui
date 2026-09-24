@@ -79,6 +79,26 @@
             line-height: 16px;
             padding: 0 2px;
         }
+
+        /*
+         * Marks a tab whose content has unread activity. The teal count keeps its
+         * treatment and gains a red dot, so unread forum posts are visible from
+         * the tab rail without opening the tab.
+         */
+        span.unreadBadge {
+            position: relative;
+
+            &::after {
+                background: #c1294f;
+                border-radius: 50%;
+                content: '';
+                height: 6px;
+                position: absolute;
+                right: -3px;
+                top: -3px;
+                width: 6px;
+            }
+        }
     }
 
     button:disabled {
@@ -176,6 +196,10 @@
     margin-left: 18px;
 }
 
+.deeplyNestedToc {
+    margin-left: 36px;
+}
+
 .tableSection,
 .winnersSection,
 .mySubmissionsEmpty {
@@ -266,6 +290,7 @@
 
     th {
         border-bottom-color: #a8a8a8;
+        color: #161616;
         font-weight: 700;
         height: 52px;
     }
@@ -432,16 +457,16 @@
 .myMarathonTable {
     th,
     td {
-        padding-inline: 8px;
+        padding-inline: 12px;
     }
 
-    th:first-child { width: 120px; }
-    th:nth-child(2) { width: 190px; }
-    th:nth-child(3) { width: 150px; }
-    th:nth-child(4) { width: 140px; }
-    th:nth-child(5),
-    th:nth-child(6) { width: 160px; }
-    th:nth-child(7) { width: 120px; }
+    th:first-child { width: 172px; }
+    th:nth-child(2) { width: 200px; }
+    th:nth-child(3) { width: 156px; }
+    th:nth-child(4) { width: 142px; }
+    th:nth-child(5) { width: 106px; }
+    th:nth-child(6) { width: 150px; }
+    th:nth-child(7) { width: 114px; }
 
     th:nth-child(2),
     td:nth-child(2) {
@@ -454,7 +479,7 @@
 
     .scoreColumn {
         overflow-wrap: anywhere;
-        padding-inline: 8px;
+        padding-inline: 12px;
         text-align: right;
     }
 }
@@ -847,6 +872,12 @@
     padding: 32px;
     text-align: center;
 
+    .avatar {
+        flex-basis: 48px;
+        height: 48px;
+        width: 48px;
+    }
+
     .member {
         flex-direction: column;
         gap: 8px;
@@ -859,21 +890,15 @@
 }
 
 .place1 {
-    background: #fffdf7;
+    background: rgba(252, 244, 214, .1);
     border-color: #f1c21b;
     flex-basis: 345px;
     height: 381px;
     order: 2;
 
     .winnerMedal {
-        height: 64px;
-        width: 64px;
-    }
-
-    .avatar {
-        flex-basis: 64px;
-        height: 64px;
-        width: 64px;
+        height: 60px;
+        width: 60px;
     }
 
     .winnerPrize {
@@ -882,27 +907,27 @@
     }
 
     .winnerDivider {
-        background: #f1c21b;
+        background: #fddc69;
     }
 }
 
 .place2 {
-    background: #f7fbff;
-    border-color: #82cfff;
+    background: rgba(229, 243, 255, .2);
+    border-color: #87b0ce;
     order: 1;
 
     .winnerDivider {
-        background: #82cfff;
+        background: #c7e7ff;
     }
 }
 
 .place3 {
-    background: #fff3eb;
+    background: rgba(255, 242, 232, .2);
     border-color: #ffb784;
     order: 3;
 
     .winnerDivider {
-        background: #ffb784;
+        background: #ffd9be;
     }
 }
 
@@ -913,10 +938,11 @@
 
 .winnerMedal {
     align-items: center;
-    background: #e5f6ff;
+    background: rgba(108, 150, 178, .1);
     border-radius: 50%;
     color: #161616;
     display: flex;
+    flex: 0 0 48px;
     font-size: 16px;
     font-weight: 700;
     height: 48px;
@@ -925,24 +951,34 @@
     width: 48px;
 
     img {
-        height: 26px;
-        width: 20px;
+        height: 24px;
+        object-fit: contain;
+        width: 18.667px;
     }
 }
 
 .place1 .winnerMedal {
-    background: #fcf4d6;
+    background: rgba(210, 161, 6, .1);
+    flex-basis: 60px;
 
     img {
-        height: 31px;
-        width: 24px;
+        height: 30px;
+        width: 23.333px;
     }
+}
+
+.place3 .winnerMedal {
+    background: rgba(255, 131, 43, .1);
 }
 
 .winnerPlacement {
     font-size: 16px;
     font-weight: 700;
     line-height: 22px;
+}
+
+.place1 .winnerPlacement {
+    color: #302400;
 }
 
 .place2 .winnerPlacement {
@@ -961,6 +997,10 @@
     strong {
         font-weight: 700;
     }
+}
+
+.winnerScoreStacked strong {
+    display: block;
 }
 
 .winnerPrize {
@@ -1021,6 +1061,7 @@
 
     th {
         border-bottom-color: #a8a8a8;
+        color: #161616;
         font-weight: 700;
     }
 
@@ -1033,11 +1074,10 @@
     }
 
     th:first-child { width: 64px; }
-    th:nth-child(2) { width: 336px; }
-    th:nth-child(3) { width: 152px; }
+    th:nth-child(2) { width: 384px; }
+    th:nth-child(3) { white-space: nowrap; width: 180px; }
     th:nth-child(4) { width: 112px; }
-    th:nth-child(5),
-    th:nth-child(6) { width: 148px; }
+    th:nth-child(5) { width: 220px; }
 
     td:first-child {
         font-weight: 700;
@@ -1045,8 +1085,7 @@
 
     td:nth-child(3),
     td:nth-child(4),
-    td:nth-child(5),
-    td:nth-child(6) {
+    td:nth-child(5) {
         text-align: right;
     }
 }

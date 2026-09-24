@@ -11,6 +11,7 @@ import {
 import useSWR, { SWRResponse } from 'swr'
 
 import { BaseModal, ConfirmModal, IconOutline } from '~/libs/ui'
+import { ReactComponent as DeleteIcon } from '../assets/submission-delete.svg'
 
 import {
     ChallengeOpportunity,
@@ -41,6 +42,7 @@ import {
     challengeForumUrl,
     memberProfileUrl,
 } from '../utils'
+import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 import { ChallengeMarkdown } from './ChallengeMarkdown'
 import { OpportunityPagination } from './OpportunityPagination'
 import styles from './ChallengeForum.module.scss'
@@ -121,23 +123,14 @@ const COMMENT_CHARACTER_LIMIT = 500
 const TOPIC_CHARACTER_LIMIT = 16000
 
 /**
- * Formats a Forums API timestamp in the authored day-month-year presentation.
+ * Formats a Forums API timestamp in the shared Community app presentation.
  *
  * @param value optional ISO timestamp.
- * @returns formatted local date and time, or an em dash.
+ * @returns formatted local date and time such as `17 Sep 2026, 14:39`, or an em dash.
  * @throws Does not throw.
  */
 export function formatForumDate(value?: string): string {
-    if (!value) return '—'
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return '—'
-    const month = new Intl.DateTimeFormat('en-US', { month: 'long' })
-        .format(date)
-    const hour = String(date.getHours())
-        .padStart(2, '0')
-    const minute = String(date.getMinutes())
-        .padStart(2, '0')
-    return `${date.getDate()} ${month}, ${date.getFullYear()}, ${hour}:${minute}`
+    return formatOpportunityDateTime(value, '—')
 }
 
 /**
@@ -415,7 +408,7 @@ const ForumOverview: FC<{
         <section className={styles.overview}>
             <h2>Challenge Forum</h2>
             <div className={styles.overviewStats}>
-                <span className={styles.newCount}>
+                <span className={unread > 0 ? `${styles.newCount} ${styles.hasUnread}` : styles.newCount}>
                     {unread}
                     {' '}
                     new
@@ -561,6 +554,10 @@ const DiscussionInfo: FC<{
 /**
  * Renders one topic summary card with watch and owner mutation actions.
  *
+ * The upper area of the card — title, byline, excerpt, and the metrics rail —
+ * opens the topic. The footer row is reserved for the Edit, Delete, and Watch
+ * actions, and member links stay clickable throughout.
+ *
  * @param props topic data, current member, projections, and mutation callbacks.
  * @returns Figma-aligned topic card.
  * @throws Does not throw; callbacks own API error handling.
@@ -584,6 +581,18 @@ const ForumTopicCard: FC<{
         : styles.topicCard
     return (
         <article className={cardClass}>
+            {/*
+              * Aria-hidden and unreachable by keyboard on purpose: it duplicates the
+              * title button so the whole upper card opens the topic, while the title
+              * stays the single control announced to assistive technology.
+              */}
+            <button
+                aria-hidden='true'
+                className={styles.topicOverlay}
+                onClick={() => props.onSelect(props.topic.id)}
+                tabIndex={-1}
+                type='button'
+            />
             <div className={styles.topicMain}>
                 <div className={styles.tags}>
                     {props.topic.isAnnouncement && <span className={styles.announcement}>Announcement</span>}
@@ -630,7 +639,7 @@ const ForumTopicCard: FC<{
                         )}
                         {props.canDelete && !props.topic.locked && (
                             <button onClick={() => props.onDelete(props.topic)} type='button'>
-                                <IconOutline.TrashIcon aria-hidden='true' />
+                                <DeleteIcon aria-hidden='true' />
                                 Delete
                             </button>
                         )}
@@ -1251,7 +1260,7 @@ const ForumPostCard: FC<{
                     )}
                     {props.canDelete && !props.detail.topic.locked && (
                         <button onClick={() => props.onDelete(post)} type='button'>
-                            <IconOutline.TrashIcon aria-hidden='true' />
+                            <DeleteIcon aria-hidden='true' />
                             Delete
                         </button>
                     )}
@@ -1554,6 +1563,21 @@ const ForumTopicView: FC<{
 }
 
 /**
+ * Returns the viewport to the top of the challenge page.
+ *
+ * Forum navigation swaps the panel's contents without changing the route, so the
+ * browser keeps the previous scroll offset. A member who opens a topic from far
+ * down the list would otherwise land in the middle of — or past the end of — the
+ * discussion they just opened.
+ *
+ * @returns void after resetting the vertical scroll offset.
+ * @throws Does not throw; environments without `scrollTo` are ignored.
+ */
+function resetForumScroll(): void {
+    window.scrollTo?.({ left: 0, top: 0 })
+}
+
+/**
  * Renders the authenticated Challenge Discussion experience against forums-api-v6.
  *
  * The component keeps every communication workflow inside Opportunities:
@@ -1676,9 +1700,16 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         setCreatingTopic(false)
         setSelectedTopicId(topicId)
         setMutationError(undefined)
+        resetForumScroll()
         markForumTopicRead(topicId)
             .then(() => response.mutate())
             .catch(() => undefined)
+    }
+
+    /** Closes the open discussion and returns the member to the topic list. */
+    const closeTopic = (): void => {
+        setSelectedTopicId(undefined)
+        resetForumScroll()
     }
 
     /**
@@ -1707,6 +1738,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
             setCreateAsAnnouncement(false)
             setCreatingTopic(false)
             setSelectedTopicId(created.topic.id)
+            resetForumScroll()
             return true
         } catch (error) {
             setMutationError(forumErrorMessage(error))
@@ -1829,7 +1861,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         if (detailResponse.error || !detailResponse.data) {
             return (
                 <div className={styles.detailError}>
-                    <button onClick={() => setSelectedTopicId(undefined)} type='button'>Back to topics</button>
+                    <button onClick={closeTopic} type='button'>Back to topics</button>
                     <ForumFallback
                         externalUrl={externalUrl}
                         text='This topic could not be loaded from the v6 Forums API.'
@@ -1844,7 +1876,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 canDeletePosts={!!props.canDeleteTopics}
                 detail={detailResponse.data}
                 memberId={props.memberId}
-                onBack={() => setSelectedTopicId(undefined)}
+                onBack={closeTopic}
                 onChanged={refreshForum}
                 profilesByMemberId={profilesByMemberId}
             />

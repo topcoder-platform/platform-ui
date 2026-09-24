@@ -1,11 +1,15 @@
 /* eslint-disable react/jsx-no-bind */
-import { CSSProperties, FC, Fragment, useState } from 'react'
+import { CSSProperties, FC, useState } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { ChallengeOpportunity, ChallengePhase } from '../models'
 import { isTaskChallenge } from '../utils/challenge-type.utils'
 import { challengeTrackLabel } from '../utils/challenge-winner.utils'
+import {
+    formatOpportunityDateRange,
+    formatOpportunityDateTime,
+} from '../utils/opportunity-date.utils'
 import challengeCalendarIcon from '../assets/challenge-calendar.svg'
 import challengeChevronIcon from '../assets/challenge-chevron.svg'
 import challengeClockIcon from '../assets/challenge-clock.svg'
@@ -36,12 +40,15 @@ import timelineWinnersIcon from '../assets/timeline-winners.svg'
 
 import {
     challengeCatalogKey,
+    challengeCheckpointAwards,
     challengeCurrentPhase,
+    challengeIsCancelled,
     ChallengePlacementPrize,
     challengePlacementPrizes,
     challengeRegistrationIsOpen,
     challengeSubmissionIsOpen,
     FUN_CHALLENGE_PRIZE_LABEL,
+    isPostMortemPhase,
 } from './challenge-card.utils'
 import styles from './ChallengeDetailHeader.module.scss'
 
@@ -94,14 +101,7 @@ function catalogName(value: string | { name?: string } | undefined, fallback: st
  * @throws Does not throw; malformed dates use the fallback label.
  */
 function dateRange(startValue?: string, endValue?: string): string {
-    const start = startValue ? new Date(startValue) : undefined
-    const end = endValue ? new Date(endValue) : undefined
-    if (!start || Number.isNaN(start.getTime())) return 'Schedule to be announced'
-    const month = new Intl.DateTimeFormat('en-US', { month: 'long' })
-    const startLabel = `${start.getDate()} ${month.format(start)}`
-    if (!end || Number.isNaN(end.getTime())) return `${startLabel}, ${start.getFullYear()}`
-    const endLabel = `${end.getDate()} ${month.format(end)}, ${end.getFullYear()}`
-    return `${startLabel} - ${endLabel}`
+    return formatOpportunityDateRange(startValue, endValue, 'Schedule to be announced')
 }
 
 /**
@@ -173,6 +173,38 @@ function phaseSummary(
     }
 }
 
+/** One authored tag or standardized skill shown in the challenge masthead. */
+interface ChallengeLabel {
+    /** Authored challenge tags read as outlined pills; skills read as filled chips. */
+    isTag: boolean
+    label: string
+}
+
+/**
+ * Deduplicates a challenge's authored tags and standardized skills, flagging
+ * which is which so the masthead can render them differently.
+ *
+ * Tags come first, matching the Aug 2026 Opportunities design, and a skill that
+ * repeats a tag is dropped rather than shown twice.
+ *
+ * @param challenge Challenge API detail response.
+ * @returns non-empty labels in stable source order, tags before skills.
+ * @throws Does not throw.
+ */
+function challengeLabels(challenge: ChallengeOpportunity): ChallengeLabel[] {
+    const seen = new Set<string>()
+    return [
+        ...(challenge.tags ?? []).map(label => ({ isTag: true, label })),
+        ...(challenge.skills ?? []).map(skill => ({ isTag: false, label: skill.name })),
+    ]
+        .map(entry => ({ ...entry, label: entry.label?.trim() ?? '' }))
+        .filter(entry => {
+            if (!entry.label || seen.has(entry.label)) return false
+            seen.add(entry.label)
+            return true
+        })
+}
+
 /**
  * Formats one typed placement prize without assuming every reward is USD.
  *
@@ -180,7 +212,7 @@ function phaseSummary(
  * @returns localized currency, point, or typed-value label.
  * @throws Does not throw; unsupported currency codes fall back to typed text.
  */
-function formatPrize(prize: ChallengePlacementPrize): string {
+function formatPrize(prize: Pick<ChallengePlacementPrize, 'type' | 'value'>): string {
     const type = prize.type?.trim()
         .toUpperCase()
     const number = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 })
@@ -300,6 +332,8 @@ function challengeTimelineEnd(challenge: ChallengeOpportunity): string | undefin
  * Builds the Figma timeline sequence from Challenge API boundaries and phases.
  * Authored phases stay chronological, with Registration first when valid starts match.
  * Task timelines omit Iterative Review because that phase is not member-facing for Tasks.
+ * Every timeline omits Post-Mortem, which Autopilot opens for the copilot after a
+ * cancellation and which community-app never showed to members.
  *
  * @param challenge Challenge API detail response.
  * @param selected API-authoritative current phase.
@@ -316,8 +350,9 @@ function challengeTimelineItems(
     const endTimestamp = timelineTimestamp(endDate)
     const taskChallenge = isTaskChallenge(challenge)
     const authoredPhases = (challenge.phases ?? []).filter(item => (
-        !taskChallenge || !challengeCatalogKey(item.name)
-            .includes('iterativereview')
+        !isPostMortemPhase(item)
+        && (!taskChallenge || !challengeCatalogKey(item.name)
+            .includes('iterativereview'))
     ))
     const phases = authoredPhases
         .map((item, index) => ({ index, item }))
@@ -402,27 +437,14 @@ function timelineConnectorState(
  * Formats one timeline timestamp as the two-row Figma date content expects.
  *
  * @param value ISO timestamp returned by Challenge API.
- * @returns local day, month, year, hour, and minute, or the schedule fallback.
+ * @returns local `day month year, hour:minute` such as `17 Sep 2026, 14:39`, or the schedule fallback.
  * @throws Does not throw; malformed dates use the fallback label.
  */
 function timelineDate(value?: string): string {
     const timestamp = timelineTimestamp(value)
     if (timestamp === undefined) return 'To be announced'
-    const parts = new Intl.DateTimeFormat('en-GB', {
-        day: 'numeric',
-        hour: '2-digit',
-        hour12: false,
-        minute: '2-digit',
-        month: 'long',
-        year: 'numeric',
-    })
-        .formatToParts(new Date(timestamp))
-    const day = parts.find(part => part.type === 'day')?.value
-    const month = parts.find(part => part.type === 'month')?.value
-    const year = parts.find(part => part.type === 'year')?.value
-    const hour = parts.find(part => part.type === 'hour')?.value
-    const minute = parts.find(part => part.type === 'minute')?.value
-    return `${day} ${month}, ${year}, ${hour}:${minute}`
+    return formatOpportunityDateTime(new Date(timestamp)
+        .toISOString(), 'To be announced')
 }
 
 /**
@@ -441,8 +463,12 @@ function timelineTimezone(): string {
 
 /**
  * Renders the Figma challenge title, authored tags, standardized skills, phase
- * context, prizes, and competition member actions. Tags precede skills, with
+ * context, prizes, and competition member actions. Tags precede skills and read
+ * as outlined pills so they are distinct from the filled skill chips, with
  * blank and duplicate labels omitted. Assignment-only Task challenges omit actions.
+ * Featured placement prizes shrink to a compact size for long or point-based
+ * labels and to a dense size once lower placement prizes are also shown, and the
+ * row wraps so wide amounts stay inside the prize frame.
  *
  * @param props challenge and registration state.
  * @returns dark challenge detail masthead with Task-aware action visibility.
@@ -450,9 +476,14 @@ function timelineTimezone(): string {
  */
 export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const [timelineOpen, setTimelineOpen] = useState(false)
-    const phase = challengeCurrentPhase(props.challenge)
+    const cancelled = challengeIsCancelled(props.challenge)
+    const currentPhase = challengeCurrentPhase(props.challenge)
+    // A cancelled challenge keeps its Post-Mortem phase open for the copilot. The
+    // masthead must read the cancellation, not a countdown to that phase's close.
+    const phase = cancelled || isPostMortemPhase(currentPhase) ? undefined : currentPhase
     const phaseCopy = phaseSummary(phase, props.challenge.status)
     const challengePrizes = challengePlacementPrizes(props.challenge)
+    const checkpointAwards = challengeCheckpointAwards(props.challenge)
     const type = catalogName(props.challenge.type, 'Challenge')
     const track = challengeTrackLabel(props.challenge.track, 'Competition')
     const trackKey = challengeCatalogKey(props.challenge.track)
@@ -460,14 +491,10 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const registrationOpen = challengeRegistrationIsOpen(props.challenge)
     const submissionOpen = challengeSubmissionIsOpen(props.challenge)
     const challengeStatusKey = challengeCatalogKey(props.challenge.status)
-    const showInactiveActions = [
-        'canceled',
-        'canceledclientrequest',
-        'cancelled',
-        'cancelledclientrequest',
-        'completed',
-        'draft',
-    ].includes(challengeStatusKey)
+    // Every cancellation reason reads as a cancelled challenge, including the
+    // `CANCELLED_ZERO_SUBMISSIONS` status Autopilot sets when a challenge closes
+    // with nothing submitted.
+    const showInactiveActions = cancelled || ['completed', 'draft'].includes(challengeStatusKey)
     const registrationUnavailable = props.registrationLoading || props.registrationError
     const canUnregister = props.isRegistered
         && !props.hasSubmitted
@@ -495,20 +522,17 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
             .toUpperCase()
         return prizeType === 'POINT' || prizeType === 'POINTS' || featuredPrizeLabels[index].length > 8
     })
-    const labels = Array.from(new Set([
-        ...(props.challenge.tags ?? []),
-        ...(props.challenge.skills ?? []).map(skill => skill.name),
-    ].map(label => label.trim())
-        .filter(Boolean)))
+    // Per design, the top tier drops to 22px once the card also has to carry
+    // lower placement prizes, so the three featured amounts stay inside the frame.
+    const denseFeaturedPrizes = challengePrizes.length > 3
+    const labels = challengeLabels(props.challenge)
     const expandedTimeline = challengeTimelineItems(props.challenge, phase)
-    const displayedTimelinePhases = expandedTimeline.slice(1, -1)
     const timelineGridStyle: CSSProperties = {
-        gridTemplateColumns: [
-            '88px',
-            ...displayedTimelinePhases.map(() => 'minmax(0, 1fr)'),
-            '88px',
-        ].join(' '),
+        gridTemplateColumns: `repeat(${expandedTimeline.length}, minmax(160px, 1fr))`,
     }
+    const timelineWidthStyle = {
+        '--timeline-min-width': `${expandedTimeline.length * 160 + (expandedTimeline.length - 1) * 4}px`,
+    } as CSSProperties
 
     return (
         <header className={styles.header}>
@@ -538,16 +562,15 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                         </div>
                         <h1>{props.challenge.name}</h1>
                         {labels.length > 0 && (
-                            <div className={classNames(styles.skills, {
-                                [styles.designSkills]: trackKey === 'design',
-                            })}
-                            >
-                                {labels.map(label => (
+                            <div className={styles.skills}>
+                                {labels.map(entry => (
                                     <Link
-                                        key={label}
-                                        to={`/opportunities/competitions?search=${encodeURIComponent(label)}`}
+                                        className={classNames({ [styles.tagLabel]: entry.isTag })}
+                                        key={entry.label}
+                                        to={`/opportunities/competitions?search=${
+                                            encodeURIComponent(entry.label)}`}
                                     >
-                                        {label}
+                                        {entry.label}
                                     </Link>
                                 ))}
                             </div>
@@ -593,6 +616,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                             <>
                                                 <div className={classNames(styles.featuredPrizes, {
                                                     [styles.compactFeaturedPrizes]: compactFeaturedPrizes,
+                                                    [styles.denseFeaturedPrizes]: denseFeaturedPrizes,
                                                 })}
                                                 >
                                                     {featuredPrizes.map((prize, index) => {
@@ -601,6 +625,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                                             <strong
                                                                 className={classNames({
                                                                     [styles.compactPrize]: compactFeaturedPrizes,
+                                                                    [styles.densePrize]: denseFeaturedPrizes,
                                                                 })}
                                                                 key={`placement-${prize.placement}`}
                                                             >
@@ -632,8 +657,18 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                                 )}
                                             </>
                                         )
-                                        : <strong>Prize details coming soon</strong>}
+                                        : !checkpointAwards.length && (
+                                            <strong>Prize details coming soon</strong>
+                                        )}
                             </div>
+                            {checkpointAwards.map(award => (
+                                <div className={styles.checkpointAward} key={`${award.type}-${award.value}`}>
+                                    <span>additional</span>
+                                    <span className={styles.checkpointCount}>{`${award.count}x`}</span>
+                                    <strong>{formatPrize(award)}</strong>
+                                    <span>{award.count === 1 ? 'checkpoint prize' : 'checkpoint prizes'}</span>
+                                </div>
+                            ))}
                         </div>
                         {!taskChallenge && (
                             <div className={styles.actions}>
@@ -693,25 +728,10 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                             <small className={styles.timelineTimezone}>
                                 {`Time zone: ${timelineTimezone()}`}
                             </small>
-                            <div className={styles.timelineGraphic}>
-                                <div aria-hidden='true' className={styles.timelineRail}>
+                            <div className={styles.timelineGraphic} style={timelineWidthStyle}>
+                                <div aria-hidden='true' className={styles.timelineRail} style={timelineGridStyle}>
                                     {expandedTimeline.map((item, index) => (
-                                        <Fragment key={item.key}>
-                                            {index > 0 && (
-                                                <span
-                                                    className={classNames(
-                                                        styles.timelineConnector,
-                                                        styles[timelineConnectorState(
-                                                            expandedTimeline[index - 1].state,
-                                                            item.state,
-                                                        )],
-                                                    )}
-                                                    data-state={timelineConnectorState(
-                                                        expandedTimeline[index - 1].state,
-                                                        item.state,
-                                                    )}
-                                                />
-                                            )}
+                                        <span className={styles.timelineMilestone} key={item.key}>
                                             <span
                                                 className={classNames(
                                                     styles.timelineNode,
@@ -721,7 +741,22 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                             >
                                                 <img alt='' src={item.icon} />
                                             </span>
-                                        </Fragment>
+                                            {index < expandedTimeline.length - 1 && (
+                                                <span
+                                                    className={classNames(
+                                                        styles.timelineConnector,
+                                                        styles[timelineConnectorState(
+                                                            item.state,
+                                                            expandedTimeline[index + 1].state,
+                                                        )],
+                                                    )}
+                                                    data-state={timelineConnectorState(
+                                                        item.state,
+                                                        expandedTimeline[index + 1].state,
+                                                    )}
+                                                />
+                                            )}
+                                        </span>
                                     ))}
                                 </div>
                                 <ol className={styles.timelineItems} style={timelineGridStyle}>

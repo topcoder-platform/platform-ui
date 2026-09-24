@@ -54,7 +54,7 @@ jest.mock('../../../lib/components/payments-table/PaymentTable', () => ({
                 <div>Payment Table</div>
                 {props.payments.map((payment: any) => (
                     <div key={payment.id}>
-                        <span>{payment.grossAmount}</span>
+                        <span>{payment.totalAmount}</span>
                         <button
                             type='button'
                             onClick={() => props.onSelectionChange?.({ [payment.id]: payment })}
@@ -308,7 +308,7 @@ describe('PaymentsListView', () => {
         },
     )
 
-    it('keeps the single-installment member amount separate from billing markup', async () => {
+    it('shows the single-installment payment total including billing markup', async () => {
         mockedGetPayments.mockResolvedValue({
             ...paymentsResponse,
             winnings: [{
@@ -323,9 +323,9 @@ describe('PaymentsListView', () => {
 
         render(<PaymentsListView profile={{ roles: ['Payment Admin'] } as any} />)
 
-        expect(await screen.findByText('$2,400.00'))
+        expect(await screen.findByText('$3,000.00'))
             .toBeTruthy()
-        expect(screen.queryByText('$3,000.00'))
+        expect(screen.queryByText('$2,400.00'))
             .toBeNull()
     })
 

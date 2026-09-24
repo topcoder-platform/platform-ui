@@ -42,6 +42,11 @@ let mockAiWorkflowRunErrors: Record<string, Error>
 let mockMemberProfiles: Record<string, unknown>[]
 let mockMemberResource: { id: string; roleName?: string } | undefined
 let mockMySubmissionCount: number | undefined
+let mockForumTopics: {
+    data: Array<{ unread: boolean }>
+    sourceTotalCount: number
+    truncated: boolean
+} | undefined
 let mockProjectResults: Record<string, unknown>[]
 let mockPreviewSubmissions: Record<string, unknown>[]
 let mockRegistrants: Record<string, unknown>[]
@@ -52,9 +57,9 @@ let mockSubmissionsLoaded: boolean
 let mockWinnerStats: Record<string, unknown>[]
 const challengeDetailStyles = readFileSync(`${__dirname}/ChallengeDetailsPage.module.scss`, 'utf8')
 
-jest.mock('../assets/medal-1.svg', () => 'medal-1')
-jest.mock('../assets/medal-2.svg', () => 'medal-2')
-jest.mock('../assets/medal-3.svg', () => 'medal-3')
+jest.mock('../assets/winner-card-medal-1.svg', () => 'winner-card-medal-1')
+jest.mock('../assets/winner-card-medal-2.svg', () => 'winner-card-medal-2')
+jest.mock('../assets/winner-card-medal-3.svg', () => 'winner-card-medal-3')
 jest.mock('./ChallengeDetailsPage.module.scss', () => ({
     __esModule: true,
     default: new Proxy({}, {
@@ -291,6 +296,7 @@ jest.mock('../utils', () => ({
         type?: string
     }): boolean => challenge.type === 'Marathon Match'
         && challenge.metadata?.some(item => item.name === 'show_data_dashboard' && item.value === true) === true,
+    marathonLeaderboardIsPublic: (challenge: { type?: string }): boolean => challenge.type === 'Marathon Match',
     marathonSubmissionScores: (submission: {
         aiDecisionScore?: number
         finalScore?: number
@@ -428,6 +434,7 @@ describe('ChallengeDetailsPage member flows', () => {
         mockMemberProfiles = []
         mockMemberResource = undefined
         mockMySubmissionCount = undefined
+        mockForumTopics = undefined
         mockProjectResults = []
         mockPreviewSubmissions = []
         mockRegistrants = []
@@ -505,6 +512,10 @@ describe('ChallengeDetailsPage member flows', () => {
                 }
             }
 
+            if (Array.isArray(key) && key[0] === 'opportunities:forum-topics') {
+                return swrResponse(mockForumTopics)
+            }
+
             if (Array.isArray(key) && key[0] === 'opportunities:my-submission-count') {
                 return {
                     ...swrResponse(mockMySubmissionCount),
@@ -517,6 +528,10 @@ describe('ChallengeDetailsPage member flows', () => {
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:mm-review-summations') {
+                return swrResponse(mockReviewSummations)
+            }
+
+            if (Array.isArray(key) && key[0] === 'opportunities:winner-review-summations') {
                 return swrResponse(mockReviewSummations)
             }
 
@@ -553,6 +568,73 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(screen.queryByRole('tab', { name: /^Submissions/ }))
             .not.toBeInTheDocument()
         expect(screen.queryByRole('tab', { name: 'Forum' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('publishes the Marathon Match leaderboard to signed out visitors', () => {
+        mockChallenge = {
+            ...mockChallenge,
+            type: 'Marathon Match',
+        }
+        mockSubmissions = [{
+            id: 'submission-1',
+            submittedDate: '2026-06-03T09:30:00.000Z',
+            submitterHandle: 'coder',
+            submitterMaxRating: 1500,
+        }]
+        mockReviewSummations = [{
+            aggregateScore: 88.5,
+            id: 'summation-1',
+            isProvisional: true,
+            submissionId: 'submission-1',
+        }]
+
+        renderPage()
+
+        expect(screen.getAllByRole('tab')
+            .map(tab => tab.textContent))
+            .toEqual(['Requirements', 'Registrants8', 'Submissions5', 'Winners'])
+
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        expect(screen.getByRole('columnheader', { name: 'Provisional Score' }))
+            .toBeInTheDocument()
+        expect(screen.getByText('88.5'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: /Sign in/ }))
+            .not.toBeInTheDocument()
+    })
+
+    it('publishes the gated Marathon Match dashboard to signed out visitors', () => {
+        mockChallenge = {
+            ...mockChallenge,
+            metadata: [{ name: 'show_data_dashboard', value: true }],
+            type: 'Marathon Match',
+        }
+        mockReviewSummations = [{
+            aggregateScore: 88.5,
+            createdAt: '2026-06-03T09:30:00.000Z',
+            id: 'summation-1',
+            isProvisional: true,
+            reviewedDate: '2026-06-03T09:30:00.000Z',
+            submissionId: 'submission-1',
+            submitterHandle: 'coder',
+        }]
+
+        renderPage('/opportunities/challenge/challenge-id?tab=dashboard')
+
+        expect(screen.getAllByRole('tab')
+            .map(tab => tab.textContent))
+            .toEqual(['Requirements', 'Registrants8', 'Submissions5', 'Dashboard', 'Winners'])
+        expect(screen.getByText('Challenge Activity'))
+            .toBeInTheDocument()
+    })
+
+    it('keeps non-Marathon submissions behind sign in for signed out visitors', () => {
+        renderPage('/opportunities/challenge/challenge-id?tab=submissions')
+
+        expect(screen.queryByRole('tab', { name: /^Submissions/ }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('tab', { name: 'Dashboard' }))
             .not.toBeInTheDocument()
     })
 
@@ -809,6 +891,46 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.queryByText(/topic deletion/))
             .not.toBeInTheDocument()
+    })
+
+    it('marks the Forum tab count while topics are unread', () => {
+        mockProfile = { handle: 'copilot', roles: ['Copilot'], userId: 123 }
+        mockMemberResource = { id: 'copilot-resource', roleName: 'Copilot' }
+        mockForumTopics = {
+            data: [{ unread: false }, { unread: true }],
+            sourceTotalCount: 14,
+            truncated: false,
+        }
+
+        renderPage()
+
+        expect(within(screen.getByRole('tab', { name: 'Forum 14' }))
+            .getByText('14'))
+            .toHaveClass('unreadBadge')
+    })
+
+    it('leaves the Forum tab count unmarked when every topic has been read', () => {
+        mockProfile = { handle: 'copilot', roles: ['Copilot'], userId: 123 }
+        mockMemberResource = { id: 'copilot-resource', roleName: 'Copilot' }
+        mockForumTopics = {
+            data: [{ unread: false }],
+            sourceTotalCount: 14,
+            truncated: false,
+        }
+
+        renderPage()
+
+        expect(within(screen.getByRole('tab', { name: 'Forum 14' }))
+            .getByText('14'))
+            .not.toHaveClass('unreadBadge')
+    })
+
+    it('gives the unread tab badge a red dot over the teal count', () => {
+        const tabsBlock = (challengeDetailStyles.match(/\.tabs\s*\{[\s\S]*?\n\}/) ?? [''])[0]
+        expect(tabsBlock)
+            .toContain('span.unreadBadge')
+        expect(tabsBlock)
+            .toContain('background: #c1294f')
     })
 
     it('keeps the metadata-gated Design submissions gallery public', () => {
@@ -2017,11 +2139,40 @@ describe('ChallengeDetailsPage member flows', () => {
 
     it('keeps the Marathon Match submissions table compact on desktop', () => {
         expect(challengeDetailStyles)
-            .toMatch(/\.myMarathonTable\s*\{[\s\S]*?th,\s*td\s*\{\s*padding-inline: 8px;/)
+            .toMatch(/\.myMarathonTable\s*\{[\s\S]*?th,\s*td\s*\{\s*padding-inline: 12px;/)
         expect(challengeDetailStyles)
             .toMatch(/\.myMarathonTableCard\s*\{[\s\S]*?\.myMarathonTable\s*\{\s*min-width: 1040px;/)
         expect(challengeDetailStyles)
             .not.toContain('min-width: 1280px;')
+    })
+
+    it('gives the Marathon Match submission id and date columns breathing room', () => {
+        const marathonBlock = (challengeDetailStyles.match(/\.myMarathonTable\s*\{[\s\S]*?\n\}/g) ?? [])
+            .find(block => block.includes('th:first-child')) ?? ''
+        const widthFor = (selector: string): number => Number(
+            new RegExp(`${selector}\\s*\\{\\s*width: (\\d+)px;`)
+                .exec(marathonBlock)?.[1] ?? '0',
+        )
+        const submissionIdWidth = widthFor('th:first-child')
+        const submissionDateWidth = widthFor('th:nth-child\\(2\\)')
+        const columnWidths = [
+            submissionIdWidth,
+            submissionDateWidth,
+            widthFor('th:nth-child\\(3\\)'),
+            widthFor('th:nth-child\\(4\\)'),
+            widthFor('th:nth-child\\(5\\)'),
+            widthFor('th:nth-child\\(6\\)'),
+            widthFor('th:nth-child\\(7\\)'),
+        ]
+
+        expect(submissionIdWidth)
+            .toBeGreaterThanOrEqual(170)
+        expect(submissionDateWidth)
+            .toBeGreaterThanOrEqual(194)
+        // The fixed layout scales these proportionally, so the total must stay at the
+        // scroll-free budget proven in PM-6311.
+        expect(columnWidths.reduce((total, width) => total + width, 0))
+            .toBe(1040)
     })
 
     it('preserves full precision for both Marathon Match score phases in Submissions', () => {
@@ -2250,12 +2401,16 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(within(remainingWinners)
             .getByRole('columnheader', { name: 'Rating' }))
             .toBeInTheDocument()
+        expect(within(remainingWinners)
+            .queryByRole('columnheader', { name: 'Prize' }))
+            .not.toBeInTheDocument()
         const fourthRow = within(remainingWinners)
             .getByRole('row', { name: /^4th fourth You/ })
         expect(fourthRow)
             .toHaveTextContent('4th')
-        expect(fourthRow)
-            .toHaveTextContent('$50')
+        expect(within(fourthRow as HTMLElement)
+            .getAllByRole('cell'))
+            .toHaveLength(5)
         expect(fourthRow)
             .toHaveTextContent('4')
         expect(fourthRow)
@@ -2296,6 +2451,53 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toHaveTextContent('with a final score of 0')
     })
 
+    it('shows a completed Design winner score from its final review summation', () => {
+        mockProfile = { handle: 'viewer', userId: 123 }
+        mockChallenge = {
+            ...mockChallenge,
+            status: 'COMPLETED',
+            track: 'Design',
+            type: 'Challenge',
+            winners: [{ handle: 'winner', placement: 1, userId: '42' }],
+        }
+        mockProjectResults = []
+        mockReviewSummations = [{
+            aggregateScore: 99.75,
+            isFinal: true,
+            submitterId: '42',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'Winners' }))
+
+        expect(screen.getByRole('article'))
+            .toHaveTextContent('with a final score of 99.75')
+    })
+
+    it('shows zero final scores on every podium card when completed results have no score', () => {
+        mockProfile = { handle: 'viewer', userId: 123 }
+        mockChallenge = {
+            ...mockChallenge,
+            status: 'COMPLETED',
+            winners: [
+                { handle: 'first', placement: 1, userId: '1' },
+                { handle: 'second', placement: 2, userId: '2' },
+                { handle: 'third', placement: 3, userId: '3' },
+            ],
+        }
+        mockProjectResults = [
+            { finalScore: 0, placement: 1, userId: '1' },
+            { finalScore: 0, placement: 2, userId: '2' },
+        ]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'Winners' }))
+
+        screen.getAllByRole('article')
+            .forEach(card => expect(card)
+                .toHaveTextContent('with a final score of 0'))
+    })
+
     it('toggles the remaining Marathon winners by final score', () => {
         mockProfile = { handle: 'viewer', userId: 123 }
         mockChallenge = {
@@ -2323,6 +2525,12 @@ describe('ChallengeDetailsPage member flows', () => {
 
         expect(screen.getAllByRole('article')[0])
             .toHaveTextContent('with a final score of 99.797812')
+        expect(screen.getAllByRole('article')[0].querySelector('.winnerScoreStacked strong'))
+            .toHaveTextContent('99.797812')
+        expect(screen.getAllByRole('article')
+            .slice(0, 3)
+            .every(card => !card.querySelector('.winnerPrize')))
+            .toBe(true)
         const table = screen.getByRole('table', { name: 'Remaining winners' })
         expect(within(table)
             .getByRole('cell', { name: '70.123456789' }))

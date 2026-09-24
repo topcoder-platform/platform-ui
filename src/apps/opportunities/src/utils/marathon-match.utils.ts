@@ -261,6 +261,31 @@ function averageReviewScore(values: unknown[]): number | undefined {
 }
 
 /**
+ * A system-test summation can already contain an aggregate while its tests
+ * are still running. Keep that aggregate provisional until the run finishes.
+ *
+ * @param summation latest system-test summation.
+ * @returns whether the scorer has completed successfully.
+ */
+function systemSummationIsComplete(summation: ChallengeReviewSummation): boolean {
+    if (summation.isPassing === false) return false
+
+    const metadata = summation.metadata ?? {}
+    const details = metadata.testProgressDetails
+    const detailRecord = details && typeof details === 'object' && !Array.isArray(details)
+        ? details as Record<string, unknown>
+        : {}
+    const status = testStatusValue(metadata.testStatus ?? detailRecord.status)
+    const progress = testProgressValue(metadata.testProgress ?? detailRecord.progress)
+
+    if (status && status !== 'Passed') return false
+    if (progress !== undefined && progress < 100) return false
+
+    // Older completed summations have no scorer lifecycle metadata.
+    return true
+}
+
+/**
  * Identifies Marathon Match challenges across v6 names, catalog IDs, and tags.
  *
  * @param challenge Challenge API detail record.
@@ -277,6 +302,25 @@ export function isMarathonMatchChallenge(challenge: ChallengeOpportunity): boole
         || values.includes('mm')
         || MARATHON_MATCH_TYPE_IDS.has(type?.id?.trim()
             .toLowerCase() ?? '')
+}
+
+/**
+ * Reports whether a challenge exposes its leaderboard and Dashboard to signed
+ * out visitors.
+ *
+ * Marathon Match challenge details have always been public, but the scoreboard
+ * that makes them interesting was not (PM-6293). Marathon Matches now publish
+ * their submission leaderboard and, when `show_data_dashboard` is set, their
+ * score-over-time dashboard while the challenge runs. Review API remains the
+ * authority: it re-checks challenge whitelist and group visibility, and it
+ * withholds member-private submission fields from anonymous callers.
+ *
+ * @param challenge Challenge API detail record.
+ * @returns true when anonymous visitors may read the challenge's scores.
+ * @throws Does not throw.
+ */
+export function marathonLeaderboardIsPublic(challenge: ChallengeOpportunity): boolean {
+    return isMarathonMatchChallenge(challenge)
 }
 
 /**
@@ -315,12 +359,14 @@ export function marathonSubmissionScores(
             ?? finiteScore(submission.provisionalScore)
             ?? finiteScore(submission.initialScore)
             ?? averageReviewScore((submission.review ?? []).map(review => review.initialScore))
-    const finalScore = testStatusValue(final?.metadata?.testStatus) === 'Cancelled'
-        ? undefined
-        : finiteScore(final?.aggregateScore)
-            ?? finiteScore(submission.finalScore)
-            ?? finiteScore(submission.aiDecisionScore)
-            ?? averageReviewScore((submission.review ?? []).map(review => review.finalScore ?? review.score))
+    const legacySystemReviewInProgress = (submission.review ?? [])
+        .some(review => testStatusValue(review.status) === 'In progress')
+    const finalScore = final
+        ? systemSummationIsComplete(final) ? finiteScore(final.aggregateScore) : undefined
+        : legacySystemReviewInProgress ? undefined
+            : finiteScore(submission.finalScore)
+                ?? finiteScore(submission.aiDecisionScore)
+                ?? averageReviewScore((submission.review ?? []).map(review => review.finalScore ?? review.score))
     return { finalScore, provisionalScore }
 }
 
@@ -368,9 +414,38 @@ export function shouldShowFinalSubmissionScores(
 }
 
 /**
+ * Ranks the scorer phases a summation can belong to.
+ *
+ * A submission advances Example -> Provisional -> System, so the furthest phase
+ * describes the process the submission is actually in. Example runs are
+ * diagnostic warm-ups and must never speak for the row, which is what
+ * community-app's "Current Tests Process" column shows.
+ */
+const TEST_PROCESS_PRIORITY: Record<NonNullable<MarathonTestProgress['process']>, number> = {
+    Example: 1,
+    Provisional: 2,
+    System: 3,
+}
+
+/**
+ * Ranks scorer statuses within a single phase.
+ *
+ * A cancellation or an active run is more newsworthy than a settled result, so
+ * a stale passing run cannot hide either of them.
+ */
+function testStatusPriority(status: MarathonTestProgress['status']): number {
+    if (status === 'Cancelled') return 2
+    if (status === 'In progress') return 1
+    return 0
+}
+
+/**
  * Resolves the most relevant member-safe scorer progress metadata, then falls
  * back to virus-scan, review, score, and submission lifecycle fields.
- * Uses the newest result per phase so stale progress cannot hide a cancellation.
+ * Candidates are ranked by scorer phase first and by status second, so a
+ * cancelled Example run cannot displace the submission's provisional or system
+ * result, and the newest result per phase is used so stale progress cannot hide
+ * a cancellation within that phase.
  *
  * @param submission Review API submission with attached summations.
  * @param challenge optional Challenge API context used to identify the active scoring phase.
@@ -399,26 +474,19 @@ export function marathonSubmissionTestProgress(
             })
             const progress = testProgressValue(metadata.testProgress ?? detailRecord.progress)
             const status = testStatusValue(metadata.testStatus ?? detailRecord.status)
-            const priority = status === 'Cancelled'
-                ? 5
-                : status === 'In progress'
-                    ? 4
-                    : process === 'System'
-                        ? 3
-                        : process === 'Provisional'
-                            ? 2
-                            : 1
             return {
                 index,
-                priority,
                 process,
+                processPriority: process ? TEST_PROCESS_PRIORITY[process] : 0,
                 progress,
                 status,
+                statusPriority: testStatusPriority(status),
                 timestamp: summationTimestamp(summation),
             }
         })
         .filter(candidate => candidate.process || candidate.status || candidate.progress !== undefined)
-        .sort((first, second) => second.priority - first.priority
+        .sort((first, second) => second.processPriority - first.processPriority
+            || second.statusPriority - first.statusPriority
             || second.timestamp - first.timestamp
             || second.index - first.index)
     const current = candidates[0]

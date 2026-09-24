@@ -43,6 +43,7 @@ interface EngagementPrivateSectionProps {
     hideCheckbox?: boolean
     assignmentManagementPath?: string
     lockedAssignedMemberHandles?: string[]
+    onAssignmentEditorOpenChange?: (isOpen: boolean) => void
 }
 
 function toNumber(value: unknown): number {
@@ -152,6 +153,7 @@ export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
     const formContext = useFormContext<EngagementPrivateSectionForm>()
 
     const [activeAssignmentIndex, setActiveAssignmentIndex] = useState<number | undefined>()
+    const onAssignmentEditorOpenChange = props.onAssignmentEditorOpenChange
 
     const isPrivate = formContext.watch('isPrivate') === true
     const requiredMemberCount = toNumber(formContext.watch('requiredMemberCount'))
@@ -197,6 +199,15 @@ export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
         lockedAssignmentCount,
         requiredMemberCount,
     ])
+
+    // The editor form suspends autosave and engagement refetch resets while the
+    // assignment dialog is open; a reset underneath it would clear the handle the
+    // dialog is collecting details for and silently drop the new member (PM-6316).
+    useEffect(() => {
+        onAssignmentEditorOpenChange?.(activeAssignmentIndex !== undefined)
+    }, [activeAssignmentIndex, onAssignmentEditorOpenChange])
+
+    useEffect(() => () => onAssignmentEditorOpenChange?.(false), [onAssignmentEditorOpenChange])
 
     const activeMemberHandle = activeAssignmentIndex !== undefined
         ? assignedMemberHandles[activeAssignmentIndex]

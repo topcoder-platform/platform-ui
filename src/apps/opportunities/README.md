@@ -6,6 +6,26 @@ is `/opportunities`; domain tabs use `/opportunities/:kind`, challenge details
 use `/opportunities/challenge/:challengeId`, and review details use
 `/opportunities/review/:reviewOpportunityId`.
 
+## TopGear community host
+
+Community-app's Wipro community (`topgear.<domain>`, formerly also served at
+`wipro.<domain>`) is replaced by this app on the `topgear` host. When the
+first hostname label is `topgear`:
+
+- the host root redirects to `/opportunities`, and the legacy `/challenges`
+  aliases continue to redirect to the Opportunities routes;
+- the listing renders community-app's TopGear challenge-listing banner
+  (`assets/topgear-challenges-banner.png`) instead of the masthead, the four
+  category cells, and the public summary request;
+- only competitions are offered. `/opportunities/:kind` for any other category
+  redirects to `/opportunities`, and Browse Competitions with its filters,
+  sorting, and pagination is unchanged;
+- competitions are limited to the TopGear Topcoder group through the Challenge
+  API `groups[]` parameter. The group defaults to community-app's
+  `b7f7c0f8-8ee8-409e-9e5c-33404983b635` and is configurable with
+  `REACT_APP_TOPGEAR_GROUP_ID`. Members outside the group receive an empty
+  listing from the API, matching community-app's group-restricted community.
+
 The four headline metrics come from one `GET /v6/opportunities/summary`
 request. List content is requested lazily from its owning API as members switch
 tabs, filter, sort, or paginate. Do not prefetch bucket-sized list payloads.
@@ -21,8 +41,10 @@ My Work requests at most the first 100 member records from each owning API in
 parallel, then applies its shared opportunity-type and track facets, global
 sorting, and pagination in the client. Owner-specific lifecycle values are
 normalized to All, Active, and Past. Competition cards read Registered;
-approved, accepted, or selected non-competition applications read Accepted;
-the remaining member applications read Applied. Summary counts retain the
+approved or accepted non-competition applications read Accepted; the remaining
+member applications read Applied. Engagements carry the fuller PM-6084
+vocabulary described below, so an offer still awaiting the member reads
+Selected rather than Accepted. Summary counts retain the
 owner-reported totals even when an owner has more than 100 records. Once the
 authenticated profile is available, four count-only owner requests load those
 totals independently of the selected Browse/My Work destination. The masthead
@@ -43,6 +65,25 @@ their owner-specific skill facet where supported.
 On mobile, Search, ownership, and Status remain immediately visible while the
 Track, Type, or Role facets sit behind the accessible More filters control.
 Desktop keeps every available facet expanded.
+
+Engagements state their authored Status choices directly: `Open for
+application` and `My engagements`. The separate ownership checkbox
+is therefore omitted for that domain only; the other domains keep it. `My engagements` is an
+ownership filter wearing a status label, so it deliberately applies no lifecycle
+status and returns the member's open, in-progress, and completed engagements in
+one list, each card carrying its own state pill. The member-scoped results are
+filtered before pagination to exclude cancelled engagements and terminated,
+declined, or rejected member relationships, while completed work remains visible.
+Those pills use the PM-6084
+vocabulary: `Applied`, `Under Review`, `Shortlisted`, `Selected`, `Assigned`,
+`Completed`, `Rejected`, `Offer Declined`, and `Terminated`. `Selected` and
+`Assigned` are deliberately distinct, because the Engagements API uses
+`SELECTED` for an offer a talent manager has extended and `ASSIGNED` only once
+the member has pressed Accept Offer; labelling a pending offer `Accepted`
+contradicted the Accept Offer button still showing on the same engagement
+(PM-6335). `Accepted` is reserved for the `ACCEPTED` application status the
+member sets themselves. Anonymous visitors never see the option because they own
+no engagements.
 
 On narrow layouts, Browse keeps the member's decision flow in document order:
 the title is followed by filters, then the sort/view toolbar, and finally the
@@ -123,7 +164,8 @@ applications as `PENDING`. Browse and My Work cards render that caller state as 
 while capacity remains full, then naturally return to `Applied` if a position
 reopens or to `Approved` when the reviewer is selected.
 
-Long card titles expose their complete value in the authored dark tooltip.
+Long card titles expose their complete value in the authored dark tooltip only
+when the title is clipped and the pointer hovers the visible title text.
 When a card has more skills than fit in its visible skill row, its `+n` control
 exposes the hidden skill names in the corresponding bullet-list tooltip. The
 Engagement role filter uses the authored four-row keyboard-accessible listbox
@@ -162,13 +204,21 @@ to their authored subtype icons and member-facing labels.
 - `currentPhase` is preferred for the phase chip. Older responses fall back to
   the latest-started open phase. Progress uses actual then scheduled dates,
   clamps to 0–100%, and may derive the end from the phase duration in seconds.
+  The Approval chip uses the phase seal with its checkmark centered inside the
+  seal, matching the authored phase tag reference.
   Competition pages revalidate once a minute and when focus returns; cards
-  with no open phase omit the phase display instead of inventing one. The
+  with no open phase omit phase progress; stalled challenges show their lifecycle
+  status in its place, even if an old phase remains marked open. The
   compact mobile card keeps the remaining-time value on the same heading row
   as the current phase, matching the authored design above its progress rail.
-- The right rail shows submissions and registrants from Challenge API. It also
+- The right rail shows submissions and registrants from Challenge API. Design
+  guidance links in its text appear as plain teal links without an external
+  arrow or underline. It also
   reserves the Figma Posts row; until Challenge API publishes `numOfPosts`, the
   value is an em dash rather than a fabricated discussion or forum count.
+  Design challenges use screening and review score copy for the Review App,
+  title case educational links with more space between them, and a white arrow
+  in the program banner.
 
 ## Challenge detail timeline
 
@@ -192,7 +242,10 @@ remain in an aligned, content-sized row to the right. Each mobile row owns its
 marker and connector, so wrapped dates and enlarged text grow the rail instead
 of overlapping the following milestone. The mobile prize/action card follows
 the expanded timeline instead of interrupting it. Wider layouts retain the
-horizontal timeline and its overflow fallback for tablet-sized screens.
+horizontal timeline and its overflow fallback for tablet-sized screens. The
+desktop rail and labels share equal columns; dates can wrap when space is tight,
+and the timeline grid may shrink within the masthead without creating a stray scrollbar;
+timelines with many phases scroll horizontally as one unit.
 
 On phone viewports, Registrants preserves its semantic table while presenting
 each API row as the Figma key/value card. Registration Date remains a
@@ -205,8 +258,12 @@ contract. Every track-specific field and action receives a visible mobile key,
 while Submission Date sorting stays above the card and continues to request
 owner-sorted pages.
 Marathon My Submissions uses compact column spacing so the complete scorer table
-fits within its desktop card. Narrow table layouts retain contained horizontal
-overflow until phone record cards take over at the mobile breakpoint.
+fits within its desktop card. The Submission ID and Submission Date columns keep
+a wider share of that budget, and cells use 12px horizontal padding, so long
+submission IDs and long month names stay clearly separated instead of running
+together. The column budget itself is unchanged, so the desktop scrollbar stays
+gone. Narrow table layouts retain contained horizontal overflow until phone
+record cards take over at the mobile breakpoint.
 
 The My Submissions heading keeps its Review App handoff, but phone layouts
 stack that action below the heading copy at full content width so neither the
@@ -258,8 +315,11 @@ field is present for the caller.
   title/description search resolves matching standardized skill IDs and retries
   through the API's `requiredSkills` filter so skill and technology terms stay
   discoverable without weakening normal project search. The authored `My
-  engagements` view sends both `appliedByMe=true` and `includePrivate=true` so
-  accepted or assigned private work remains visible to the current member.
+  engagements` Status choice sends both `appliedByMe=true` and
+  `includePrivate=true`, and no `status`, so accepted or assigned private work
+  and completed engagements remain visible to the current member. The engagement
+  detail route also checks this caller-scoped feed when the narrower assignments
+  collection omits a selected private engagement.
   Public engagement cards hydrate the caller's status from that same complete
   member-scoped feed, retaining terminal rejected-offer assignments that the
   narrower `my-assignments` collection intentionally excludes.
@@ -334,6 +394,8 @@ registers or agrees on a member's behalf. Terms API HTML retains its semantic
 structure and safe links, but document-authored inline styles are removed so
 modal-scoped Figtree headings, Nunito Sans body copy, and spacing remain
 authoritative.
+The compact Important Reminder uses the Figma teal action buttons and rounded
+checkmark asset without a footer separator.
 DocuSign-template terms, plus NDA-titled terms that use the environment's
 legacy DocuSign template fallback, replace placeholder Terms API text with the
 embedded recipient view in both registration and passive review. The frame
@@ -434,10 +496,15 @@ The Figma keeps separate Provisional Score and Final Score columns and uses
 `-` when a final value is not yet available. Winners use Review API's canonical
 `GET /v6/projectResult` member-and-placement result instead of inferring a
 score from Challenge API winners or a sibling submission; protected winner
-scores are requested only for authenticated members. Marathon winner cards
-prefer an exact-member final Review Summation when legacy project-result rows
-contain a zero placeholder. Their separators use the corresponding podium
-placement color. The remaining-winners table initially orders available final
+scores are requested only for authenticated members. Winner cards prefer an
+exact-member final Review Summation when project-result rows are absent or
+contain a zero placeholder, including completed Design challenges. Completed
+podium cards show a zero score when no canonical score is available to an
+authenticated member. The remaining-winners table still distinguishes an
+unavailable score from a real zero. Cards use the Figma medal assets, fills,
+dividers, and 48px avatars; long first-place scores start on a new line.
+Cards without a placement prize omit the empty prize mark. The remaining-winners
+table initially orders available final
 scores high-to-low, matching its downward sort indicator, and the accessible
 Final Score header toggles low-to-high; unavailable scores remain after scored
 rows in either direction and the three-card podium remains placement-ordered.
@@ -445,6 +512,9 @@ Winner stats use the Members API top-level track totals; Development does not
 add the nested AI Engineering value a second time. Quality Assurance winner
 cards use the compact `QA` label and always include member ratings, including
 the two- and three-winner podium layouts.
+Placement medal circles keep their dimensions when winner-card content grows.
+The remaining-winners table keeps track wins on one line, uses #161616 for every
+header label and sort control, right-aligns Final Score, and omits the Prize column.
 An empty Winners tab reflects the challenge lifecycle: cancelled challenges
 state that no winners were selected, drafts explain that judging has not run,
 and active challenges retain the ongoing-review guidance.
@@ -484,7 +554,11 @@ member's registration before submission. The active phase selects `CONTEST_SUBMI
 authoritative for registration, phase, winner, submission-limit, and file
 validation. Design shows the four expected inner deliverables, while
 Development, Marathon Match, and Quality Assurance direct members to their
-Requirements content in ZIP mode. Successful submissions expose the created
+Requirements content in ZIP mode.
+Design submission guidance, upload, file, and checkbox controls use the Figma
+icons; Opportunities delete actions share the same Figma trash icon. The native
+agreement checkbox keeps keyboard focus and a rounded checked state.
+Successful submissions expose the created
 submission ID and refresh challenge and member submission counts without
 leaving the confirmation state. ZIP mode's declaration opens the public Topcoder
 Terms of Use; URL mode preserves the exact TopGear declaration and opens
@@ -550,7 +624,11 @@ summaries expose bounded starter excerpts, participant snapshots, unique
 authenticated view counts, and current-member watch state. The
 environment-specific Vanilla URL is retained only as a recovery link when the
 v6 API is unavailable or the member is signed out. Forum counts come from the
-complete API result, including topics created by the current member.
+complete API result, including topics created by the current member. Opening a
+topic, creating one, and returning to the topic list all swap the panel without
+changing the route, so each of those transitions resets the page scroll offset;
+otherwise a member who opened a topic from far down the list would land in the
+middle of the discussion they just opened.
 Unregistered administrators
 receive the registered read and monitoring tabs, including Submissions, the
 metadata-enabled Marathon Dashboard, and Forum, while My Submissions and upload
@@ -560,8 +638,10 @@ throughout every challenge forum. Topic authors may edit their own unlocked
 topics, but deletion remains administrator-only to match the legacy forum.
 
 The Report an Issue dialog preserves the Figma subject, category, and
-1000-character description while keeping attachments optional. Files upload
-through the authenticated `POST /v6/support/attachments` multipart endpoint
+1000-character description while keeping attachments optional. Uploaded files
+show a bold filename and a status label that changes from Uploading to Uploaded.
+The sent state uses a concise left-aligned confirmation and a Close button.
+Files upload through the authenticated `POST /v6/support/attachments` multipart endpoint
 with a 2 MiB-per-file UI limit, so the browser does not connect directly to an
 S3 bucket. Because support-api-v6 accepts only `challengeId` and Markdown
 `description` when creating the ticket, the client serializes the subject,

@@ -160,13 +160,25 @@ describe('My Work normalization', () => {
             id: 'engagement',
             title: 'Engagement',
         } as EngagementOpportunity)))
-            .toBe('Selected')
+            .toBe('Accepted')
         expect(myWorkState(workItem('engagements', {
             applicationStatus: 'UNDER_REVIEW',
             id: 'engagement-review',
             title: 'Review engagement',
         } as EngagementOpportunity)))
             .toBe('Under Review')
+        expect(myWorkState(workItem('engagements', {
+            assignments: [{ id: 'assignment-selected', status: 'SELECTED' }],
+            id: 'engagement-offered',
+            title: 'Offered engagement',
+        } as EngagementOpportunity)))
+            .toBe('Selected')
+        expect(myWorkState(workItem('engagements', {
+            assignments: [{ id: 'assignment-assigned', status: 'ASSIGNED' }],
+            id: 'engagement-assigned',
+            title: 'Assigned engagement',
+        } as EngagementOpportunity)))
+            .toBe('Assigned')
         expect(myWorkState(workItem('engagements', {
             assignments: [{
                 createdAt: '2026-02-10T11:00:00.000Z',

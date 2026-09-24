@@ -1,4 +1,4 @@
-import { decodeToken } from 'tc-auth-lib'
+import { decodeToken } from '@topcoder-platform/tc-auth-lib'
 
 import type {
     Challenge,
@@ -17,7 +17,7 @@ import {
     getProjectMemberRole,
 } from './permissions.utils'
 
-jest.mock('tc-auth-lib', () => ({
+jest.mock('@topcoder-platform/tc-auth-lib', () => ({
     decodeToken: jest.fn(),
 }))
 

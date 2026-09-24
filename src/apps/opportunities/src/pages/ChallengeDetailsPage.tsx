@@ -92,6 +92,7 @@ import {
     isMarathonMatchChallenge,
     isTaskChallenge,
     marathonDashboardIsEnabled,
+    marathonLeaderboardIsPublic,
     marathonSubmissionScores,
     marathonSubmissionTestProgress,
     memberProfileUrl,
@@ -102,11 +103,13 @@ import {
     ChallengeDetailTab,
     challengeDetailTabFromSearch,
 } from '../utils/challenge-detail-route.utils'
+import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
 import { ReactComponent as SortIcon } from '../assets/sort.svg'
-import medal1 from '../assets/medal-1.svg'
-import medal2 from '../assets/medal-2.svg'
-import medal3 from '../assets/medal-3.svg'
+import { ReactComponent as DeleteIcon } from '../assets/submission-delete.svg'
+import medal1 from '../assets/winner-card-medal-1.svg'
+import medal2 from '../assets/winner-card-medal-2.svg'
+import medal3 from '../assets/winner-card-medal-3.svg'
 import resetIcon from '../assets/reset.svg'
 import winnerThanksIcon from '../assets/winner-thanks.svg'
 
@@ -282,6 +285,8 @@ interface TabConfig {
     count?: number
     id: ChallengeTab
     label: string
+    /** Marks the tab's count badge with the unread dot. */
+    unread?: boolean
 }
 
 /**
@@ -317,20 +322,11 @@ function challengeMetadataFlag(challenge: ChallengeOpportunity, name: string): b
  * Formats an API timestamp used in submission and phase tables.
  *
  * @param value optional ISO timestamp.
- * @returns localized date and time, or an em dash.
+ * @returns localized date and time such as `17 Sep 2026, 14:39`, or an em dash.
  * @throws Does not throw.
  */
 function formatTimestamp(value?: string): string {
-    if (!value) return '—'
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return '—'
-    const month = new Intl.DateTimeFormat('en-US', { month: 'long' })
-        .format(date)
-    const hours = String(date.getHours())
-        .padStart(2, '0')
-    const minutes = String(date.getMinutes())
-        .padStart(2, '0')
-    return `${date.getDate()} ${month}, ${date.getFullYear()}, ${hours}:${minutes}`
+    return formatOpportunityDateTime(value, '—')
 }
 
 /**
@@ -422,6 +418,8 @@ export const ChallengeDetailsPage: FC = () => {
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
     const forumTopicCount = forumResponse.data?.sourceTotalCount ?? challenge?.numOfPosts
+    // Surfaced on the Forum tab so unread topics are visible without opening the tab.
+    const forumHasUnread = (forumResponse.data?.data ?? []).some(topic => topic.unread)
 
     useEffect(() => {
         setIssueOpen(false)
@@ -439,10 +437,13 @@ export const ChallengeDetailsPage: FC = () => {
     const tabs = useMemo<TabConfig[]>(() => {
         const designChallenge = catalogName(challenge?.track)
             .toLowerCase() === 'design'
+        // Marathon Match scores are public while the challenge runs, so the
+        // leaderboard and Dashboard stay listed for signed out visitors.
+        const publicMarathonLeaderboard = !!challenge && marathonLeaderboardIsPublic(challenge)
         return [
             { id: 'requirements', label: 'Requirements' },
             { count: challenge?.numOfRegistrants, id: 'registrants', label: 'Registrants' },
-            ...(!taskChallenge && (memberId || designChallenge)
+            ...(!taskChallenge && (memberId || designChallenge || publicMarathonLeaderboard)
                 ? [{
                     count: challenge?.numOfSubmissions,
                     id: 'submissions' as ChallengeTab,
@@ -454,19 +455,24 @@ export const ChallengeDetailsPage: FC = () => {
                 id: 'mine' as ChallengeTab,
                 label: 'My Submissions',
             }] : []),
-            ...(hasMemberTabAccess && challenge && marathonDashboardIsEnabled(challenge)
+            ...(challenge && marathonDashboardIsEnabled(challenge)
                 ? [{ id: 'dashboard' as ChallengeTab, label: 'Dashboard' }]
                 : []),
             ...(hasForumAccess
-                ? [{ count: forumTopicCount, id: 'forum' as ChallengeTab, label: 'Forum' }]
+                ? [{
+                    count: forumTopicCount,
+                    id: 'forum' as ChallengeTab,
+                    label: 'Forum',
+                    unread: forumHasUnread,
+                }]
                 : []),
             { id: 'winners', label: 'Winners' },
         ]
     }, [
         challenge,
+        forumHasUnread,
         forumTopicCount,
         hasForumAccess,
-        hasMemberTabAccess,
         isRegistered,
         memberId,
         mySubmissionCountResponse.data,
@@ -825,7 +831,11 @@ export const ChallengeDetailsPage: FC = () => {
                             type='button'
                         >
                             {tab.label}
-                            {(tab.count ?? 0) > 0 && <span>{tab.count}</span>}
+                            {(tab.count ?? 0) > 0 && (
+                                <span className={tab.unread ? styles.unreadBadge : undefined}>
+                                    {tab.count}
+                                </span>
+                            )}
                         </button>
                     ))}
                 </div>
@@ -937,7 +947,7 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
     if (props.activeTab === 'submissions') {
         const isDesign = catalogName(props.challenge.track)
             .toLowerCase() === 'design'
-        return props.memberId || isDesign
+        return props.memberId || isDesign || marathonLeaderboardIsPublic(props.challenge)
             ? (
                 <SubmissionsTab
                     canManageArtifacts={props.canManageArtifacts}
@@ -981,9 +991,7 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
     }
 
     if (props.activeTab === 'dashboard') {
-        return props.memberId
-            ? <MarathonDashboard challenge={props.challenge} />
-            : <SignInTab subject='the Marathon Match dashboard' />
+        return <MarathonDashboard challenge={props.challenge} />
     }
 
     if (props.activeTab === 'forum') {
@@ -1036,7 +1044,11 @@ const RequirementsTab: FC<{ challenge: ChallengeOpportunity }> = props => {
                     <h2>Table of Contents</h2>
                     <ol>
                         {toc.map((item: ChallengeTocItem) => (
-                            <li className={item.level === 3 ? styles.nestedToc : undefined} key={item.id}>
+                            <li
+                                className={item.level === 4 ? styles.deeplyNestedToc
+                                    : item.level === 3 ? styles.nestedToc : undefined}
+                                key={item.id}
+                            >
                                 <a href={`#${item.id}`}>{item.label}</a>
                             </li>
                         ))}
@@ -1752,7 +1764,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                                 : 'Submission deletion is closed'}
                                                             type='button'
                                                         >
-                                                            <IconOutline.TrashIcon aria-hidden='true' />
+                                                            <DeleteIcon aria-hidden='true' />
                                                         </button>
                                                     )}
                                                     {!isMarathonMatch && (
@@ -2175,22 +2187,28 @@ const WinnerCard: FC<WinnerCardProps> = props => {
     const placeClass = props.placement <= 3
         ? styles[`place${props.placement}`]
         : styles.otherPlace
+    const finalScore = props.finalScore === undefined
+        ? undefined
+        : formatMarathonFinalScore(props.finalScore, '')
+    const stackedScore = props.placement === 1 && (finalScore?.length ?? 0) > 8
     return (
         <article className={`${styles.winnerCard} ${placeClass}`}>
             <span aria-hidden='true' className={styles.winnerMedal}>
                 {medal ? <img alt='' src={medal} /> : props.placement}
             </span>
             <strong className={styles.winnerPlacement}>{placementLabel(props.placement)}</strong>
-            {props.finalScore !== undefined && (
-                <span className={styles.winnerScore}>
+            {finalScore !== undefined && (
+                <span className={`${styles.winnerScore} ${stackedScore ? styles.winnerScoreStacked : ''}`}>
                     with a final score of
                     {' '}
-                    <strong>{formatMarathonFinalScore(props.finalScore, '')}</strong>
+                    <strong>{finalScore}</strong>
                 </span>
             )}
-            <span className={styles.winnerPrize}>
-                {winnerPrizeLabel(props.prize)}
-            </span>
+            {props.prize && (
+                <span className={styles.winnerPrize}>
+                    {winnerPrizeLabel(props.prize)}
+                </span>
+            )}
             <span className={styles.winnerDivider} />
             <MemberHandle
                 handle={handle}
@@ -2301,8 +2319,8 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
     const winnerReviewSummationResponse: SWRResponse<ChallengeReviewSummation[], Error> = useSWR(
-        winners?.length && props.memberId && isMarathonMatchChallenge(props.challenge)
-            ? ['opportunities:mm-review-summations', props.challenge.id]
+        winners?.length && props.memberId
+            ? ['opportunities:winner-review-summations', props.challenge.id]
             : undefined,
         () => getChallengeReviewSummations(props.challenge.id),
         { revalidateOnFocus: false, shouldRetryOnError: false },
@@ -2391,7 +2409,7 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                     {rankedWinners.slice(0, 3)
                         .map(entry => (
                             <WinnerCard
-                                finalScore={entry.finalScore}
+                                finalScore={entry.finalScore ?? (showWinnerFinalScores ? 0 : undefined)}
                                 key={`${entry.placement}-${entry.winner.userId ?? entry.winner.handle ?? 'winner'}`}
                                 placement={entry.placement}
                                 prize={entry.prize}
@@ -2420,7 +2438,6 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                                         }}
                                         order={scoreSortOrder}
                                     />
-                                    <th>Prize</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -2454,7 +2471,6 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                                                 <td className={styles.winnerTableScore}>
                                                     {formatMarathonFinalScore(entry.finalScore, '-')}
                                                 </td>
-                                                <td>{winnerPrizeLabel(entry.prize)}</td>
                                             </tr>
                                         )
                                     })}

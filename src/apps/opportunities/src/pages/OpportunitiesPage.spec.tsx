@@ -11,6 +11,7 @@ import {
     MemoryRouter,
     Route,
     Routes,
+    useLocation,
 } from 'react-router-dom'
 import { SWRConfig } from 'swr'
 
@@ -22,6 +23,7 @@ import {
 import { OpportunitiesPage } from './OpportunitiesPage'
 
 let mockProfileRoles: string[] = []
+let mockSubdomain = 'platform-ui'
 
 jest.mock('~/libs/core', () => ({
     useProfileContext: () => ({
@@ -32,7 +34,12 @@ jest.mock('~/libs/core', () => ({
 }), { virtual: true })
 
 jest.mock('~/config', () => ({
-    EnvironmentConfig: { TOPCODER_URL: 'https://www.topcoder.example' },
+    AppSubdomain: { opportunities: 'opportunities', topgear: 'topgear' },
+    EnvironmentConfig: {
+        get SUBDOMAIN(): string { return mockSubdomain },
+        TOPCODER_URL: 'https://www.topcoder.example',
+        TOPGEAR: { GROUP_ID: 'topgear-group-id' },
+    },
 }), { virtual: true })
 
 jest.mock('~/libs/ui', () => {
@@ -45,11 +52,17 @@ jest.mock('~/libs/ui', () => {
 }, { virtual: true })
 
 jest.mock('../components', () => ({
-    OpportunityFiltersPanel: (props: { onAppliedChange: (checked: boolean) => void }) => {
+    MY_ENGAGEMENTS_STATUS: 'MINE',
+    OpportunityFiltersPanel: (props: {
+        onAppliedChange: (checked: boolean) => void
+        onStatusChange: (status: string) => void
+    }) => {
         const selectMyCompetitions = (): void => props.onAppliedChange(true)
+        const selectMyEngagements = (): void => props.onStatusChange('MINE')
         return (
             <aside aria-label='Opportunity filters'>
                 <button onClick={selectMyCompetitions} type='button'>My competitions</button>
+                <button onClick={selectMyEngagements} type='button'>My engagements</button>
             </aside>
         )
     },
@@ -66,6 +79,7 @@ jest.mock('../components', () => ({
     ),
     OpportunitySortSelect: () => <span>Sort choices</span>,
     OpportunityViewToggle: () => <span>View choices</span>,
+    TopgearHero: () => <output data-testid='topgear-hero'>TopGear banner</output>,
 }))
 
 jest.mock('../services', () => ({
@@ -80,10 +94,13 @@ const mockedGetRegistrationIds = getMemberChallengeRegistrationIds as jest.Mocke
     typeof getMemberChallengeRegistrationIds
 >
 
+const LocationProbe = (): JSX.Element => <output data-testid='location'>{useLocation().pathname}</output>
+
 describe('OpportunitiesPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         mockProfileRoles = []
+        mockSubdomain = 'platform-ui'
         mockedGetRegistrationIds.mockResolvedValue([])
     })
 
@@ -119,6 +136,106 @@ describe('OpportunitiesPage', () => {
             .toHaveTextContent('1'))
         expect(mockedGetOpportunitySummary)
             .toHaveBeenCalledTimes(1)
+    })
+
+    it('does not restrict competitions to a community group outside the TopGear host', async () => {
+        mockedGetOpportunitySummary.mockResolvedValue({
+            competitions: { count: 0 },
+            copilots: { count: 0 },
+            engagements: { count: 0 },
+            reviews: { count: 0 },
+        })
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [],
+            page: 1,
+            perPage: 10,
+            total: 0,
+            totalPages: 0,
+        })
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/competitions']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        await waitFor(() => expect(mockedGetOpportunityPage)
+            .toHaveBeenCalledWith('competitions', expect.objectContaining({ groups: undefined })))
+        expect(screen.queryByTestId('topgear-hero'))
+            .not.toBeInTheDocument()
+    })
+
+    it('shows the TopGear banner and lists only the community group on the TopGear host', async () => {
+        mockSubdomain = 'topgear'
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [{ id: 'topgear-challenge', name: 'TopGear challenge' }],
+            page: 1,
+            perPage: 10,
+            total: 1,
+            totalPages: 1,
+        })
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        expect(screen.getByTestId('topgear-hero'))
+            .toBeInTheDocument()
+        expect(screen.queryByTestId('competition-count'))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Browse Competitions' }))
+            .toBeInTheDocument()
+        await waitFor(() => expect(mockedGetOpportunityPage)
+            .toHaveBeenCalledWith('competitions', expect.objectContaining({
+                groups: ['topgear-group-id'],
+                statuses: ['ACTIVE'],
+            })))
+        expect(await screen.findByTestId('registration-topgear-challenge'))
+            .toBeInTheDocument()
+        expect(mockedGetOpportunitySummary)
+            .not.toHaveBeenCalled()
+    })
+
+    it('sends other opportunity categories back to the competition listing on the TopGear host', async () => {
+        mockSubdomain = 'topgear'
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [],
+            page: 1,
+            perPage: 10,
+            total: 0,
+            totalPages: 0,
+        })
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/engagements?search=React']}>
+                    <LocationProbe />
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities' />
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        await waitFor(() => expect(screen.getByTestId('location'))
+            .toHaveTextContent('/opportunities'))
+        await waitFor(() => expect(mockedGetOpportunityPage)
+            .toHaveBeenCalledWith('competitions', expect.anything()))
+        expect(mockedGetOpportunityPage)
+            .not.toHaveBeenCalledWith('engagements', expect.anything())
+        expect(mockedGetOpportunitySummary)
+            .not.toHaveBeenCalled()
     })
 
     it('places mobile sorting controls after the filters and before results', async () => {
@@ -309,6 +426,46 @@ describe('OpportunitiesPage', () => {
             .toHaveBeenLastCalledWith('competitions', expect.objectContaining({ applied: true })))
         expect(await screen.findByTestId('registration-managed-challenge'))
             .toHaveTextContent('false')
+    })
+
+    it('lists every owned engagement lifecycle behind the My engagements status', async () => {
+        mockedGetOpportunitySummary.mockResolvedValue({
+            competitions: { count: 0 },
+            copilots: { count: 0 },
+            engagements: { count: 2 },
+            reviews: { count: 0 },
+        })
+        mockedGetOpportunityPage.mockResolvedValue({
+            items: [],
+            page: 1,
+            perPage: 10,
+            total: 0,
+            totalPages: 0,
+        })
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MemoryRouter initialEntries={['/opportunities/engagements']}>
+                    <Routes>
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
+                    </Routes>
+                </MemoryRouter>
+            </SWRConfig>,
+        )
+
+        await waitFor(() => expect(mockedGetOpportunityPage)
+            .toHaveBeenLastCalledWith('engagements', expect.objectContaining({
+                applied: false,
+                statuses: ['OPEN'],
+            })))
+
+        fireEvent.click(screen.getByRole('button', { name: 'My engagements' }))
+
+        await waitFor(() => expect(mockedGetOpportunityPage)
+            .toHaveBeenLastCalledWith('engagements', expect.objectContaining({
+                applied: true,
+                statuses: undefined,
+            })))
     })
 
     it('links the copilot learning card to the published Thrive article', async () => {

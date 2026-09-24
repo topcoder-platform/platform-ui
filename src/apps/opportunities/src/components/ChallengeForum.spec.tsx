@@ -321,6 +321,31 @@ describe('ChallengeForum', () => {
             .toHaveBeenCalledWith('topic-1')
     })
 
+    it('resets the viewport when a topic is opened and closed', async () => {
+        const scrollTo = jest.spyOn(window, 'scrollTo')
+            .mockImplementation()
+
+        try {
+            render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+            expect(scrollTo)
+                .not.toHaveBeenCalled()
+
+            await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+            expect(scrollTo)
+                .toHaveBeenCalledWith({ left: 0, top: 0 })
+
+            scrollTo.mockClear()
+            // Inside a discussion the same accessible name belongs to the back control.
+            await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+            expect(scrollTo)
+                .toHaveBeenCalledWith({ left: 0, top: 0 })
+            expect(screen.getByRole('button', { name: /Create new topic/ }))
+                .toBeInTheDocument()
+        } finally {
+            scrollTo.mockRestore()
+        }
+    })
+
     it('creates a challenge topic without leaving Opportunities', async () => {
         render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
         fireEvent.click(screen.getByRole('button', { name: /Create new topic/ }))
@@ -549,6 +574,34 @@ describe('ChallengeForum', () => {
             .toBeInTheDocument()
         expect(mockUseSWR.mock.calls[0][0])
             .toBeUndefined()
+    })
+
+    it('opens the topic when the upper card is clicked, keeping the footer for actions', async () => {
+        const { container }: RenderResult = render(
+            <ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />,
+        )
+
+        const overlay = container.querySelector('.topicOverlay') as HTMLButtonElement
+        expect(overlay)
+            .toBeInTheDocument()
+        expect(overlay)
+            .toHaveAttribute('aria-hidden', 'true')
+        expect(overlay)
+            .toHaveAttribute('tabindex', '-1')
+
+        await act(async () => fireEvent.click(overlay))
+
+        expect(screen.getByText('Welcome **competitors**.'))
+            .toBeInTheDocument()
+    })
+
+    it('keeps the footer actions and member links above the topic card overlay', () => {
+        const overlayBlock = (forumStyles.match(/\.topicOverlay\s*\{[\s\S]*?\n\}/) ?? [''])[0]
+        const footerBlock = (forumStyles.match(/\.topicFooter\s*\{[\s\S]*?\n\}/) ?? [''])[0]
+        expect(overlayBlock)
+            .toContain('z-index: 1')
+        expect(footerBlock)
+            .toContain('z-index: 2')
     })
 
     it('matches the Figma desktop forum geometry and core tokens', () => {

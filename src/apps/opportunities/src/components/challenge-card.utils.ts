@@ -166,6 +166,33 @@ export function challengePlacementPrizes(challenge: ChallengeOpportunity): Chall
         })
 }
 
+export interface ChallengeCheckpointAward {
+    count: number
+    type?: string
+    value: number
+}
+
+/** Groups checkpoint prizes by their actual amount and reward type for the challenge header. */
+export function challengeCheckpointAwards(challenge: ChallengeOpportunity): ChallengeCheckpointAward[] {
+    const checkpointSet = (challenge.prizeSets ?? [])
+        .find(prizeSet => challengeCatalogKey(prizeSet.type) === 'checkpoint')
+    const groups = new Map<string, ChallengeCheckpointAward>()
+    const prizes = checkpointSet?.prizes ?? []
+
+    prizes.forEach(prize => {
+        if (typeof prize.value !== 'number' || !Number.isFinite(prize.value) || prize.value < 0) return
+        const key = JSON.stringify([prize.type?.toUpperCase() ?? 'USD', prize.value])
+        const group = groups.get(key)
+        if (group) {
+            group.count += 1
+        } else {
+            groups.set(key, { count: 1, type: prize.type, value: prize.value })
+        }
+    })
+
+    return [...groups.values()]
+}
+
 /**
  * Resolves the challenge's aggregate placement-prize value.
  *
@@ -213,6 +240,39 @@ function safeTimestamp(value: unknown): number | undefined {
  */
 function phaseStartTimestamp(phase: ChallengePhase): number | undefined {
     return safeTimestamp(phase.actualStartDate) ?? safeTimestamp(phase.scheduledStartDate)
+}
+
+/**
+ * Tests whether a phase is the copilot-facing Post-Mortem phase.
+ *
+ * Autopilot opens a Post-Mortem phase when a challenge is cancelled, and leaves
+ * it open while the copilot writes it up. It is internal bookkeeping rather than
+ * member-facing competition work, so community-app never surfaced it and the
+ * v6 challenge detail timeline leaves it out as well.
+ *
+ * @param phase Challenge API phase, or undefined.
+ * @returns true when the phase is Post-Mortem.
+ * @throws Does not throw.
+ */
+export function isPostMortemPhase(phase: ChallengePhase | undefined): boolean {
+    return challengeCatalogKey(phase?.name)
+        .includes('postmortem')
+}
+
+/**
+ * Tests whether a challenge was cancelled.
+ *
+ * Challenge API reports the reason in the status itself, for example
+ * `CANCELLED_ZERO_SUBMISSIONS` or `CANCELLED_CLIENT_REQUEST`, so every
+ * cancellation reason is matched rather than an enumerated subset.
+ *
+ * @param challenge challenge returned by Challenge API.
+ * @returns true for any cancelled status.
+ * @throws Does not throw.
+ */
+export function challengeIsCancelled(challenge: Pick<ChallengeOpportunity, 'status'>): boolean {
+    return challengeCatalogKey(challenge.status)
+        .startsWith('cancel')
 }
 
 /**

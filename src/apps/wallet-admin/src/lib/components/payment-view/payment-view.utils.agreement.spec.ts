@@ -20,6 +20,8 @@ const basePayment: Winning = {
     releaseDate: '01/01/2026',
     releaseDateObj: new Date('2026-01-01T00:00:00.000Z'),
     status: 'Owed',
+    totalAmount: '$0.00',
+    totalAmountNumber: 0,
     type: 'engagement payment',
 }
 

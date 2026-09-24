@@ -319,7 +319,7 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
                 isTask,
                 variant,
             }),
-            ...(!isSubmitterView ? [createRolesItem(myChallengeRoles)] : []),
+            createRolesItem(myChallengeRoles),
             ...createTaskItems({
                 formattedStartDate,
                 formattedTaskPayment,

@@ -192,10 +192,18 @@
     }
 }
 
-.designSkills a:first-child {
+/*
+ * Authored challenge tags read as outlined pills so they are visibly distinct
+ * from the filled standardized-skill chips beside them.
+ */
+.skills a.tagLabel {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, .6);
     padding: 3px;
+
+    &:hover {
+        background: rgba(255, 255, 255, .15);
+    }
 }
 
 .timeline {
@@ -257,10 +265,12 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    height: 252px;
     justify-content: space-between;
     justify-self: end;
     max-width: 100%;
+
+    /* Grows rather than clips when the prize rows wrap onto an extra line. */
+    min-height: 252px;
     padding: 24px;
     position: relative;
     width: 384px;
@@ -281,9 +291,12 @@
         width: 100%;
     }
 
+    /*
+     * The disabled treatment is authored per button variant below rather than as
+     * a blanket opacity, so the stroke, fill, and label each get their own value.
+     */
     button:disabled {
         cursor: not-allowed;
-        opacity: .55;
     }
 }
 
@@ -305,9 +318,11 @@
 }
 
 .prizes {
+    box-sizing: border-box;
     color: #3ddbd9;
     flex-direction: column;
     gap: 4px;
+    max-width: 100%;
     width: 100%;
 
     strong {
@@ -347,16 +362,27 @@
 }
 
 .featuredPrizes {
-    gap: 24px;
+    /* Wrapping keeps wide amounts inside the prize frame instead of bleeding
+       past the card border when three large placement prizes are shown. */
+    flex-wrap: wrap;
+    gap: 8px 24px;
 }
 
 .compactFeaturedPrizes {
-    flex-wrap: wrap;
     gap: 8px 20px;
 }
 
 .compactPrize {
     font-size: 24px !important;
+    min-width: 0;
+}
+
+.denseFeaturedPrizes {
+    gap: 8px 16px;
+}
+
+.densePrize {
+    font-size: 22px !important;
     min-width: 0;
 }
 
@@ -376,6 +402,29 @@
     }
 }
 
+.checkpointAward {
+    align-items: baseline;
+    color: rgba(255, 255, 255, .6);
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 12px;
+    gap: 4px;
+    justify-content: center;
+    line-height: 16px;
+    text-align: center;
+
+    strong {
+        color: #3ddbd9;
+        font-family: 'Figtree', sans-serif;
+        font-size: 22px;
+        line-height: 24px;
+    }
+}
+
+.checkpointCount {
+    color: #3ddbd9;
+}
+
 .actions {
     display: flex;
     flex-direction: column;
@@ -389,6 +438,12 @@
     border: 1px solid #fff;
     color: #fff;
     cursor: pointer;
+
+    /* Authored disabled treatment: a 10% white stroke with a 15% white label. */
+    &:disabled {
+        border-color: rgba(255, 255, 255, .1);
+        color: rgba(255, 255, 255, .15);
+    }
 }
 
 .primary {
@@ -403,10 +458,15 @@
         pointer-events: none;
     }
 
+    /* Authored disabled treatment: a 10% white fill with a 15% white label. */
     &:disabled {
-        background: rgba(0, 125, 121, .45);
+        background: rgba(255, 255, 255, .1);
         border-color: transparent;
-        color: rgba(255, 255, 255, .6);
+        color: rgba(255, 255, 255, .15);
+
+        img {
+            opacity: .15;
+        }
     }
 
     img {
@@ -422,6 +482,8 @@
     grid-column: 1 / -1;
     margin: 0;
     max-width: none;
+    min-width: 0;
+    overflow-x: auto;
     padding-top: 24px;
     position: relative;
     width: 100%;
@@ -432,14 +494,28 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    min-width: var(--timeline-min-width);
+    max-width: 100%;
     width: 100%;
 }
 
 .timelineRail {
-    align-items: center;
-    display: flex;
+    display: grid;
     gap: 4px;
     width: 100%;
+}
+
+.timelineMilestone {
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.timelineMilestone > .timelineConnector {
+    left: calc(50% + 22px);
+    position: absolute;
+    right: calc(-50% + 18px);
+    top: 14px;
 }
 
 .mobileTimelineMarker {
@@ -519,16 +595,6 @@
             color: rgba(255, 255, 255, .6);
         }
 
-        &:first-child {
-            padding-right: 8px;
-            text-align: left;
-        }
-
-        &:last-child {
-            padding-left: 8px;
-            text-align: right;
-        }
-
         strong {
             display: block;
             font-weight: 400;
@@ -544,6 +610,10 @@
     font-size: 12px;
     line-height: 16px;
     margin-top: 4px;
+
+    time {
+        overflow-wrap: anywhere;
+    }
 }
 
 .timelineTimezone {
@@ -692,6 +762,10 @@
         li > .timelineDates {
             grid-column: 2;
             grid-row: 2;
+
+            time {
+                white-space: normal;
+            }
         }
 
         .mobileTimelineMarker {

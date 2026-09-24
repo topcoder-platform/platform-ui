@@ -274,9 +274,9 @@ describe('ChallengeSidebar Review Style', () => {
             .toHaveAttribute('href', aiReviewersHelpUrl)
         expect(screen.getByRole('link', { name: 'Usable Code Rules' }))
             .toHaveAttribute('href', usableCodeRulesUrl)
-        expect(screen.queryByRole('link', { name: 'How to compete in design challenges' }))
+        expect(screen.queryByRole('link', { name: 'How to Compete in Design Challenges' }))
             .not.toBeInTheDocument()
-        expect(screen.queryByRole('link', { name: 'How to approach checkpoint feedback' }))
+        expect(screen.queryByRole('link', { name: 'How to Approach the Checkpoint Feedback' }))
             .not.toBeInTheDocument()
         expect(screen.queryByRole('heading', { name: 'Submission Format' }))
             .not.toBeInTheDocument()
@@ -337,22 +337,24 @@ describe('ChallengeSidebar Review Style', () => {
     it('shows design educational links for design challenges', () => {
         renderSidebar(undefined, designChallenge)
 
+        expect(screen.getByText('The place to track your screening and review scores.'))
+            .toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Topcoder Challenges Explained' }))
             .toHaveAttribute(
                 'href',
                 challengeExplainedUrl,
             )
-        expect(screen.getByRole('link', { name: 'How to compete in design challenges' }))
+        expect(screen.getByRole('link', { name: 'How to Compete in Design Challenges' }))
             .toHaveAttribute(
                 'href',
                 designChallengeLearningUrl,
             )
-        expect(screen.getByRole('link', { name: 'How to approach checkpoint feedback' }))
+        expect(screen.getByRole('link', { name: 'How to Approach the Checkpoint Feedback' }))
             .toHaveAttribute(
                 'href',
                 checkpointFeedbackLearningUrl,
             )
-        expect(screen.getByRole('link', { name: 'How to approach checkpoint feedback' }).className)
+        expect(screen.getByRole('link', { name: 'How to Approach the Checkpoint Feedback' }).className)
             .toContain('learningLink')
         expect(screen.getByRole('heading', { name: 'Source files' }))
             .toBeInTheDocument()
@@ -410,6 +412,8 @@ describe('ChallengeSidebar Review Style', () => {
             .toContain('inlineAnchor')
         expect(faqLink.className)
             .toContain('inlineAnchor')
+        expect([faqLink, policyLink, screeningLink].every(link => !link.querySelector('svg')))
+            .toBe(true)
         expect(policyLink.parentElement)
             .toHaveTextContent('the Policy.')
         expect(screeningLink.parentElement)

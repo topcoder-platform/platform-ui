@@ -19,7 +19,7 @@ jest.mock('react-toastify', () => ({
         error: jest.fn(),
     },
 }))
-jest.mock('tc-auth-lib', () => ({
+jest.mock('@topcoder-platform/tc-auth-lib', () => ({
     decodeToken: jest.fn(),
 }))
 jest.mock('../../../lib/services/resources.service', () => ({

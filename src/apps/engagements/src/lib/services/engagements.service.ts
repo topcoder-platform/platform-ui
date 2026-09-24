@@ -113,6 +113,7 @@ const hydrateEngagementSkills = async (engagements: Engagement[]): Promise<Engag
 }
 
 export interface GetEngagementsParams {
+    appliedByMe?: boolean
     page?: number
     perPage?: number
     status?: string
@@ -353,6 +354,7 @@ export const getEngagements = async (
     }
 
     if (params.search) queryParams.append('search', params.search)
+    if (params.appliedByMe) queryParams.append('appliedByMe', 'true')
     if (params.includePrivate) queryParams.append('includePrivate', 'true')
     if (params.skills?.length) {
         params.skills.forEach(skill => queryParams.append('requiredSkills', skill))

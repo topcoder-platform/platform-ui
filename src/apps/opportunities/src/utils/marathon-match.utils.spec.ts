@@ -5,6 +5,7 @@ import {
     formatMarathonScore,
     isMarathonMatchChallenge,
     marathonDashboardIsEnabled,
+    marathonLeaderboardIsPublic,
     marathonSubmissionScores,
     marathonSubmissionTestProgress,
     shouldShowFinalSubmissionScores,
@@ -50,6 +51,54 @@ describe('Marathon Match challenge detail utilities', () => {
             }],
         }))
             .toEqual({ process: 'Provisional', progress: 0, status: 'Cancelled' })
+    })
+
+    it('keeps a cancelled Example run from speaking for a scored submission', () => {
+        expect(marathonSubmissionTestProgress({
+            id: 'example-cancelled',
+            reviewSummation: [{
+                createdAt: '2026-09-15T17:36:30Z',
+                id: 'cancelled-example',
+                isExample: true,
+                metadata: { testProgress: 1, testStatus: 'CANCELLED' },
+            }, {
+                aggregateScore: 99.74,
+                createdAt: '2026-09-15T17:36:23Z',
+                id: 'passed-provisional',
+                isProvisional: true,
+                metadata: { testProgress: 1, testStatus: 'PASSED' },
+            }],
+        }))
+            .toEqual({ process: 'Provisional', progress: 100, status: 'Passed' })
+    })
+
+    it('still surfaces a cancellation raised by the furthest scorer phase', () => {
+        expect(marathonSubmissionTestProgress({
+            id: 'system-cancelled',
+            reviewSummation: [{
+                aggregateScore: 99.74,
+                id: 'passed-provisional',
+                isProvisional: true,
+                metadata: { testProgress: 1, testStatus: 'PASSED' },
+            }, {
+                id: 'cancelled-system',
+                isFinal: true,
+                metadata: { testStatus: 'CANCELLED' },
+            }],
+        }))
+            .toEqual({ process: 'System', progress: 0, status: 'Cancelled' })
+    })
+
+    it('falls back to an Example run when it is the only scorer result', () => {
+        expect(marathonSubmissionTestProgress({
+            id: 'example-only',
+            reviewSummation: [{
+                id: 'running-example',
+                isExample: true,
+                metadata: { testProgress: 0.4, testStatus: 'IN PROGRESS' },
+            }],
+        }))
+            .toEqual({ process: 'Example', progress: 40, status: 'In progress' })
     })
 
     it('does not graph cancelled attempts even if a stale positive score is attached', () => {
@@ -101,6 +150,15 @@ describe('Marathon Match challenge detail utilities', () => {
             name: 'Not MM',
             type: 'Challenge',
         }))
+            .toBe(false)
+    })
+
+    it('publishes the leaderboard only for Marathon Match challenges', () => {
+        expect(marathonLeaderboardIsPublic({ id: 'mm', name: 'MM', type: 'Marathon Match' }))
+            .toBe(true)
+        expect(marathonLeaderboardIsPublic({ id: 'tagged', name: 'Tagged', tags: ['MM'] }))
+            .toBe(true)
+        expect(marathonLeaderboardIsPublic({ id: 'dev', name: 'Dev', type: 'Challenge' }))
             .toBe(false)
     })
 
@@ -206,6 +264,61 @@ describe('Marathon Match challenge detail utilities', () => {
             status: 'COMPLETED',
         }, [finalSubmission]))
             .toBe(true)
+    })
+
+    it('withholds a system score until the latest system tests finish', () => {
+        const submission = {
+            finalScore: 99,
+            id: 'system-running',
+            provisionalScore: 90,
+            reviewSummation: [{
+                aggregateScore: 99,
+                id: 'system-result',
+                isFinal: true,
+                metadata: { testProgress: 0.6, testStatus: 'IN_PROGRESS' },
+            }],
+        }
+
+        expect(marathonSubmissionScores(submission))
+            .toEqual({ finalScore: undefined, provisionalScore: 90 })
+        expect(shouldShowFinalSubmissionScores({
+            id: 'system-running',
+            name: 'System running',
+            phases: [],
+            type: 'Marathon Match',
+        }, [submission]))
+            .toBe(false)
+
+        expect(marathonSubmissionScores({
+            ...submission,
+            reviewSummation: [{
+                ...submission.reviewSummation[0],
+                metadata: { testProgress: 0.6, testStatus: 'PASSED' },
+            }],
+        }).finalScore)
+            .toBeUndefined()
+        expect(marathonSubmissionScores({
+            ...submission,
+            reviewSummation: [{
+                ...submission.reviewSummation[0],
+                metadata: { testProgress: 1, testStatus: 'PASSED' },
+            }],
+        }).finalScore)
+            .toBe(99)
+        expect(marathonSubmissionScores({
+            ...submission,
+            reviewSummation: [{
+                ...submission.reviewSummation[0],
+                metadata: { testProgressDetails: { progress: 25, status: 'IN_PROGRESS' } },
+            }],
+        }).finalScore)
+            .toBeUndefined()
+        expect(marathonSubmissionScores({
+            finalScore: 99,
+            id: 'legacy-system-running',
+            review: [{ status: 'IN_PROGRESS' }],
+        }).finalScore)
+            .toBeUndefined()
     })
 
     it('attaches challenge-level summations only to their matching attempts', () => {

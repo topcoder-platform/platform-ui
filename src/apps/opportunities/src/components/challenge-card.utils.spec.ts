@@ -1,6 +1,7 @@
 import {
     challengeCatalogKey,
     challengeCatalogName,
+    challengeCheckpointAwards,
     challengeCurrentPhase,
     challengePhaseTiming,
     challengePlacementPrizes,
@@ -131,6 +132,26 @@ describe('challenge card data utilities', () => {
             prizeSets: [{ prizes: [{ value: 500 }], type: 'CHECKPOINT' }],
         }))
             .toEqual([])
+    })
+
+    it('groups checkpoint awards without mixing them into placement prizes', () => {
+        expect(challengeCheckpointAwards({
+            id: 'checkpoint-awards',
+            name: 'Checkpoint awards',
+            prizeSets: [{
+                prizes: [
+                    { type: 'USD', value: 100 },
+                    { type: 'USD', value: 100 },
+                    { type: 'USD', value: 50 },
+                    { type: 'USD', value: -1 },
+                ],
+                type: 'CHECKPOINT',
+            }],
+        }))
+            .toEqual([
+                { count: 2, type: 'USD', value: 100 },
+                { count: 1, type: 'USD', value: 50 },
+            ])
     })
 
     it('prefers the canonical overview total over a derived placement sum', () => {
