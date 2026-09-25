@@ -79,12 +79,14 @@ jest.mock('../../../lib/hooks', () => ({
     useFetchProjectsList: jest.fn(),
 }))
 jest.mock('../../../lib/constants', () => ({
+    PROJECT_ROLES: jest.requireActual('../../../lib/constants/project-roles.constants').PROJECT_ROLES,
     PROJECTS_PAGE_SIZE: 10,
 }))
 jest.mock('../../../lib/utils', () => ({
     checkCanEditProjectDetails:
         jest.requireActual('../../../lib/utils/permissions.utils').checkCanEditProjectDetails,
     checkCanManageProject: jest.requireActual('../../../lib/utils/permissions.utils').checkCanManageProject,
+    checkTalentManager: jest.requireActual('../../../lib/utils/permissions.utils').checkTalentManager,
 }))
 
 const mockedUseFetchProjectsList = useFetchProjectsList as jest.Mock

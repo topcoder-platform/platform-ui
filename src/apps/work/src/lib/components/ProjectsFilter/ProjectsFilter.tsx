@@ -352,6 +352,11 @@ export const ProjectsFilter: FC<ProjectsFilterProps> = (props: ProjectsFilterPro
 
     const noopCheckboxChange = (() => undefined) as (event: Event) => void
 
+    /**
+     * Toggles membership filtering while preserving the other project filters.
+     * @returns Nothing; notifies the listing through onFiltersChange.
+     * @throws Does not throw.
+     */
     function handleOnlyMyProjectsToggle(): void {
         updateFilters({
             memberOnly: !filters.memberOnly,
@@ -434,7 +439,7 @@ export const ProjectsFilter: FC<ProjectsFilterProps> = (props: ProjectsFilterPro
                         <InputCheckbox
                             checked={!!filters.memberOnly}
                             name='project-member-only'
-                            label='Only My Projects'
+                            label='My Projects'
                             onChange={noopCheckboxChange}
                             onClick={handleOnlyMyProjectsToggle}
                         />
