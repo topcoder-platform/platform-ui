@@ -1255,15 +1255,18 @@
 .editorShell {
     border: 1px solid #a8a8a8;
     border-radius: 4px;
-    overflow: hidden;
+    // Mention suggestions extend below the textarea and must escape the editor border.
+    overflow: visible;
 }
 
 .editorToolbar {
     align-items: stretch;
     border-bottom: 1px solid #e0e0e0;
+    border-radius: 3px 3px 0 0;
     display: flex;
     flex-wrap: wrap;
     min-height: 48px;
+    overflow: hidden;
 
     button {
         align-items: center;
@@ -1297,7 +1300,9 @@
 .editorPreview {
     background: #fff;
     border: 0;
+    border-radius: 0 0 3px 3px;
     box-sizing: border-box;
+    display: block;
     color: #161616;
     font: inherit;
     font-size: 14px;
