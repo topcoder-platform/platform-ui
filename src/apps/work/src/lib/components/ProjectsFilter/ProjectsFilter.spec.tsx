@@ -1,7 +1,10 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
     act,
+    fireEvent,
+    screen,
     render,
+    RenderResult,
 } from '@testing-library/react'
 
 import {
@@ -47,7 +50,9 @@ jest.mock('~/libs/ui', () => ({
     IconOutline: {
         SearchIcon: () => false,
     },
-    InputCheckbox: () => false,
+    InputCheckbox: (props: { checked: boolean; label: string; onClick: () => void }) => (
+        <input aria-label={props.label} checked={props.checked} onChange={props.onClick} type='checkbox' />
+    ),
 }), {
     virtual: true,
 })
@@ -62,6 +67,28 @@ describe('ProjectsFilter', () => {
         latestAsyncSelectProps = undefined
         jest.clearAllMocks()
         searchBillingAccountsMock.mockResolvedValue([])
+    })
+
+    it('toggles My Projects while retaining search and status filters', () => {
+        const onFiltersChange = jest.fn()
+        const filters: { keyword: string; status: 'active' } = { keyword: 'client', status: 'active' }
+        const { rerender }: RenderResult = render(
+            <ProjectsFilter filters={filters} isManager onFiltersChange={onFiltersChange} projects={[]} />,
+        )
+        fireEvent.click(screen.getByRole('checkbox', { name: 'My Projects' }))
+        expect(onFiltersChange)
+            .toHaveBeenLastCalledWith({ ...filters, memberOnly: true })
+        rerender(
+            <ProjectsFilter
+                filters={{ ...filters, memberOnly: true }}
+                isManager
+                onFiltersChange={onFiltersChange}
+                projects={[]}
+            />,
+        )
+        fireEvent.click(screen.getByRole('checkbox', { name: 'My Projects' }))
+        expect(onFiltersChange)
+            .toHaveBeenLastCalledWith({ ...filters, memberOnly: false })
     })
 
     it('includes matching billing accounts from visible project rows for project managers', async () => {
