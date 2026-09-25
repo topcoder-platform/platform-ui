@@ -208,7 +208,9 @@ to their authored subtype icons and member-facing labels.
   seal, matching the authored phase tag reference.
   Competition pages revalidate once a minute and when focus returns; cards
   with no open phase omit phase progress; stalled challenges show their lifecycle
-  status in its place, even if an old phase remains marked open. The
+  status in its place, even if an old phase remains marked open. Active challenges
+  without an open phase show Scheduled before registration starts and Stalled
+  afterwards, using the registration dates or challenge start date. The
   compact mobile card keeps the remaining-time value on the same heading row
   as the current phase, matching the authored design above its progress rail.
 - The right rail shows submissions and registrants from Challenge API. Design
