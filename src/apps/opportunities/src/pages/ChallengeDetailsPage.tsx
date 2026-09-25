@@ -78,6 +78,7 @@ import {
     getChallengeSubmissionPreviews,
     getChallengeSubmissions,
     getChallengeSubmitters,
+    getChallengeWinnerSubmissions,
     getMemberProfilesByUserIds,
     registerForChallenge,
     unregisterFromChallenge,
@@ -2268,6 +2269,7 @@ function winnerEmptyState(challenge: ChallengeOpportunity): WinnerEmptyState {
  * Renders challenge winners once present in the Challenge API response.
  *
  * @param props challenge with winner and prize data, plus the optional viewer ID.
+ * Enriches scores from results, summations, and latest winner submissions (including AI-only).
  * @returns winner podium or ongoing-challenge empty state.
  * @throws Does not throw; optional enrichment failures preserve winner rows.
  */
@@ -2326,6 +2328,22 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
 
+    const winnerSubmissionsResponse: SWRResponse<ChallengeSubmission[], Error> = useSWR(
+        winnerMemberIds.length && props.memberId
+            ? ['opportunities:winner-submissions', props.challenge.id, props.memberId, ...winnerMemberIds]
+            : undefined,
+        () => getChallengeWinnerSubmissions(props.challenge.id, winnerMemberIds),
+        { revalidateOnFocus: false, shouldRetryOnError: false },
+    )
+
+    const aiReviewConfigResponse: SWRResponse<ChallengeAiReviewConfig | undefined, Error> = useSWR(
+        winners?.length && props.memberId
+            ? ['opportunities:challenge-review-style', props.challenge.id]
+            : undefined,
+        () => getChallengeAiReviewConfig(props.challenge.id),
+        { revalidateOnFocus: false, shouldRetryOnError: false },
+    )
+
     if (!winners?.length) {
         const emptyState = winnerEmptyState(props.challenge)
         return (
@@ -2354,7 +2372,7 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
     const trackLabel = trackHeading === 'QA' ? trackHeading : trackHeading.toLowerCase()
     const showWinnerFinalScores = !!props.memberId && shouldShowFinalSubmissionScores(
         props.challenge,
-        [],
+        winnerSubmissionsResponse.data ?? [],
         [
             ...(projectResultResponse.data ?? []).map(result => result.finalScore),
             ...(winnerReviewSummationResponse.data ?? []).map(result => result.aggregateScore),
@@ -2374,6 +2392,8 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                     { ...entry.winner, placement: entry.placement },
                     projectResultResponse.data ?? [],
                     winnerReviewSummationResponse.data ?? [],
+                    winnerSubmissionsResponse.data ?? [],
+                    aiReviewConfigResponse.data?.mode === 'AI_ONLY',
                 )
                 : undefined,
             handle,
