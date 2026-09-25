@@ -107,6 +107,7 @@ function normalizedPlacement(value: unknown): number | undefined {
 /**
  * Resolves a winner's final score from Review API's exact-member aggregates or
  * canonical project result, falling back to the latest exact-member submission.
+ * Confirmed AI-only submission scores take priority over legacy stored placeholders.
  * The final summation is preferred for Marathon
  * records whose legacy project-result score is a zero placeholder. Both member
  * ID and placement still gate project results, preventing a sibling submission
@@ -116,7 +117,8 @@ function normalizedPlacement(value: unknown): number | undefined {
  * @param projectResults authorized Review API final-placement results.
  * @param reviewSummations authorized Review API aggregates for the challenge.
  * @param submissions latest authorized winner submissions, including AI-only final scores.
- * @returns canonical finite final score, or undefined.
+ * @param aiOnly whether Review API confirms this is an AI-only challenge.
+ * @returns canonical finite final score, preferring AI-only submission scores over legacy placeholders.
  * @throws Does not throw.
  */
 export function winnerFinalScore(
@@ -124,6 +126,7 @@ export function winnerFinalScore(
     projectResults: ChallengeProjectResult[],
     reviewSummations: ChallengeReviewSummation[] = [],
     submissions: ChallengeSubmission[] = [],
+    aiOnly: boolean = false,
 ): number | undefined {
     const winnerId = normalizedIdentifier(winner.userId)
     const winnerPlacement = normalizedPlacement(winner.placement)
@@ -136,7 +139,6 @@ export function winnerFinalScore(
         id: `winner-${winnerId}`,
         reviewSummation: matchingSummations,
     }).finalScore
-    if (summationScore !== undefined) return summationScore
 
     const result = projectResults.find(candidate => (
         normalizedIdentifier(candidate.userId) === winnerId
@@ -145,6 +147,12 @@ export function winnerFinalScore(
     const submission = submissions.find(candidate => (
         normalizedIdentifier(candidate.memberId) === winnerId && candidate.isLatest !== false
     ))
+    if (aiOnly && submission && (!result?.submissionId || result.submissionId === submission.id)) {
+        const aiFinalScore = finiteNumber(submission.finalScore)
+        if (aiFinalScore !== undefined) return aiFinalScore
+    }
+
+    if (summationScore !== undefined) return summationScore
     return (result ? finiteNumber(result.finalScore) : undefined)
         ?? (submission ? marathonSubmissionScores(submission).finalScore : undefined)
 }

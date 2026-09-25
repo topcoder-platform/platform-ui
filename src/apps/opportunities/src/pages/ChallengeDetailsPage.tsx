@@ -2336,6 +2336,14 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
 
+    const aiReviewConfigResponse: SWRResponse<ChallengeAiReviewConfig | undefined, Error> = useSWR(
+        winners?.length && props.memberId
+            ? ['opportunities:challenge-review-style', props.challenge.id]
+            : undefined,
+        () => getChallengeAiReviewConfig(props.challenge.id),
+        { revalidateOnFocus: false, shouldRetryOnError: false },
+    )
+
     if (!winners?.length) {
         const emptyState = winnerEmptyState(props.challenge)
         return (
@@ -2385,6 +2393,7 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                     projectResultResponse.data ?? [],
                     winnerReviewSummationResponse.data ?? [],
                     winnerSubmissionsResponse.data ?? [],
+                    aiReviewConfigResponse.data?.mode === 'AI_ONLY',
                 )
                 : undefined,
             handle,
