@@ -21,6 +21,7 @@ import {
     EngagementManager,
     PaginationModel,
     Skill,
+    TimesheetPaymentEntry,
     TimesheetPaymentSummary,
 } from '../models'
 import {
@@ -982,6 +983,24 @@ export async function linkTimesheetEntriesToPayment(
         )
     } catch (error) {
         throw normalizeError(error, 'Failed to link the payment to the approved timesheet entries')
+    }
+}
+
+/**
+ * Reconciliation query: which entries a payment reference consumed.
+ */
+export async function fetchTimesheetEntriesByPaymentReference(
+    engagementId: number | string,
+    assignmentId: number | string,
+    paymentReference: string,
+): Promise<TimesheetPaymentEntry[]> {
+    try {
+        return xhrGetAsync<TimesheetPaymentEntry[]>(
+            `${ENGAGEMENTS_ROOT_API_URL}/engagements/${engagementId}/assignments/${assignmentId}`
+            + `/timesheets/entries/payments/${encodeURIComponent(paymentReference)}`,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to reconcile payment entries')
     }
 }
 

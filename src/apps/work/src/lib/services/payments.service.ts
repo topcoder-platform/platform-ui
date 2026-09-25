@@ -56,6 +56,16 @@ interface PaymentsByAssignmentResponse {
     result?: AssignmentPayment[]
 }
 
+export interface TimesheetPaymentConflict {
+    entryIds: string[]
+    paymentReference: string
+}
+
+interface TimesheetPaymentConflictSummary {
+    conflicts: TimesheetPaymentConflict[]
+    overlappingEntryIds: string[]
+}
+
 function normalizeError(error: unknown, fallbackMessage: string): Error {
     const typedError = error as {
         message?: string
@@ -360,6 +370,84 @@ export async function getPaymentsByAssignmentId(
     return fetchAssignmentPayments(assignmentId)
 }
 
+function normalizeTimesheetEntryIds(payment: AssignmentPayment): string[] {
+    const rawEntryIds = payment.attributes?.timesheetEntryIds
+
+    if (!Array.isArray(rawEntryIds)) {
+        return []
+    }
+
+    const uniqueIds = new Set<string>()
+
+    rawEntryIds.forEach(rawEntryId => {
+        const entryId = String(rawEntryId || '')
+            .trim()
+
+        if (entryId) {
+            uniqueIds.add(entryId)
+        }
+    })
+
+    return [...uniqueIds]
+}
+
+/**
+ * Detects when selected timesheet entries already appear on another payment for this assignment.
+ *
+ * This closes the crash gap between payment creation and timesheet-link persistence: if a previous
+ * payment exists in finance but linking failed, the same entries are still protected from a second
+ * payout attempt.
+ */
+export async function findTimesheetPaymentConflicts(
+    assignmentId: number | string,
+    entryIds: string[],
+): Promise<TimesheetPaymentConflictSummary> {
+    const normalizedEntryIds = Array.from(new Set(
+        entryIds
+            .map(entryId => String(entryId || '')
+                .trim())
+            .filter(Boolean),
+    ))
+
+    if (!normalizedEntryIds.length) {
+        return {
+            conflicts: [],
+            overlappingEntryIds: [],
+        }
+    }
+
+    const selectedEntryIds = new Set(normalizedEntryIds)
+    const payments = await fetchAssignmentPaymentSplits(assignmentId)
+    const conflicts: TimesheetPaymentConflict[] = []
+    const overlappingEntryIds = new Set<string>()
+
+    payments.forEach(payment => {
+        const paymentEntryIds = normalizeTimesheetEntryIds(payment)
+
+        if (!paymentEntryIds.length) {
+            return
+        }
+
+        const matchedEntryIds = paymentEntryIds.filter(entryId => selectedEntryIds.has(entryId))
+
+        if (!matchedEntryIds.length) {
+            return
+        }
+
+        matchedEntryIds.forEach(entryId => overlappingEntryIds.add(entryId))
+
+        conflicts.push({
+            entryIds: matchedEntryIds,
+            paymentReference: getPaymentReference(payment) || 'unknown',
+        })
+    })
+
+    return {
+        conflicts,
+        overlappingEntryIds: [...overlappingEntryIds],
+    }
+}
+
 /**
  * Durable identifier to record against the timesheet entries a payment consumed.
  *
@@ -367,7 +455,28 @@ export async function getPaymentsByAssignmentId(
  * finance team which of the two survives before relying on it for reconciliation.
  */
 export function getPaymentReference(payment: AssignmentPayment | undefined): string | undefined {
-    const reference = payment?.id ?? payment?.paymentId
+    const candidate = payment as (AssignmentPayment & {
+        data?: {
+            id?: number | string
+            paymentId?: number | string
+            payment_id?: number | string
+            winningId?: number | string
+            winning_id?: number | string
+        }
+        payment_id?: number | string
+        winningId?: number | string
+        winning_id?: number | string
+    }) | undefined
+    const reference = candidate?.id
+        ?? candidate?.paymentId
+        ?? candidate?.winningId
+        ?? candidate?.winning_id
+        ?? candidate?.payment_id
+        ?? candidate?.data?.id
+        ?? candidate?.data?.paymentId
+        ?? candidate?.data?.winningId
+        ?? candidate?.data?.winning_id
+        ?? candidate?.data?.payment_id
 
     return reference === undefined || reference === null || reference === ''
         ? undefined
