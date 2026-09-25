@@ -4,6 +4,7 @@ import {
     ChallengeCatalogValue,
     ChallengeProjectResult,
     ChallengeReviewSummation,
+    ChallengeSubmission,
 } from '../models'
 
 import { marathonSubmissionScores } from './marathon-match.utils'
@@ -105,7 +106,8 @@ function normalizedPlacement(value: unknown): number | undefined {
 
 /**
  * Resolves a winner's final score from Review API's exact-member aggregates or
- * canonical project result. The final summation is preferred for Marathon
+ * canonical project result, falling back to the latest exact-member submission.
+ * The final summation is preferred for Marathon
  * records whose legacy project-result score is a zero placeholder. Both member
  * ID and placement still gate project results, preventing a sibling submission
  * or a same-placement record from being attributed to the wrong winner.
@@ -113,6 +115,7 @@ function normalizedPlacement(value: unknown): number | undefined {
  * @param winner Challenge API winner identity.
  * @param projectResults authorized Review API final-placement results.
  * @param reviewSummations authorized Review API aggregates for the challenge.
+ * @param submissions latest authorized winner submissions, including AI-only final scores.
  * @returns canonical finite final score, or undefined.
  * @throws Does not throw.
  */
@@ -120,6 +123,7 @@ export function winnerFinalScore(
     winner: ChallengeWinnerIdentity,
     projectResults: ChallengeProjectResult[],
     reviewSummations: ChallengeReviewSummation[] = [],
+    submissions: ChallengeSubmission[] = [],
 ): number | undefined {
     const winnerId = normalizedIdentifier(winner.userId)
     const winnerPlacement = normalizedPlacement(winner.placement)
@@ -138,5 +142,9 @@ export function winnerFinalScore(
         normalizedIdentifier(candidate.userId) === winnerId
         && normalizedPlacement(candidate.placement) === winnerPlacement
     ))
-    return result ? finiteNumber(result.finalScore) : undefined
+    const submission = submissions.find(candidate => (
+        normalizedIdentifier(candidate.memberId) === winnerId && candidate.isLatest !== false
+    ))
+    return (result ? finiteNumber(result.finalScore) : undefined)
+        ?? (submission ? marathonSubmissionScores(submission).finalScore : undefined)
 }

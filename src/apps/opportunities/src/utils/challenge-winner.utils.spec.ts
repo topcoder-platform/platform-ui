@@ -68,6 +68,30 @@ describe('challenge winner utilities', () => {
             .toBe(100)
     })
 
+    it('uses the AI-only final score from the latest exact-member submission', () => {
+        expect(winnerFinalScore(
+            { placement: 1, userId: '42' },
+            [],
+            [],
+            [
+                { finalScore: 99, id: 'other', memberId: '99' },
+                { finalScore: 90, id: 'old', isLatest: false, memberId: '42' },
+                { finalScore: 84, id: 'winner', isLatest: true, memberId: '42' },
+            ],
+        ))
+            .toBe(84)
+    })
+
+    it('preserves a canonical zero over a submission fallback', () => {
+        expect(winnerFinalScore(
+            { placement: 1, userId: '42' },
+            [{ finalScore: 0, placement: 1, userId: '42' }],
+            [],
+            [{ finalScore: 84, id: 'winner', memberId: '42' }],
+        ))
+            .toBe(0)
+    })
+
     it('does not infer a result from a handle or placement alone', () => {
         expect(winnerFinalScore(
             { handle: 'Winner', placement: 2 },

@@ -1659,6 +1659,26 @@ export async function getChallengeSubmissions(
 }
 
 /**
+ * Loads each winner's latest submission for final scores absent from project results.
+ * Requests are batched and member-scoped so large challenge lists cannot hide winners.
+ *
+ * @param challengeId challenge UUID.
+ * @param memberIds winner member IDs from Challenge API.
+ * @returns latest submissions visible to the caller.
+ * @throws Propagates Review API authorization and network errors.
+ */
+export async function getChallengeWinnerSubmissions(
+    challengeId: string,
+    memberIds: string[],
+): Promise<ChallengeSubmission[]> {
+    const pages = await loadPagesInBatches(
+        memberIds.map((_id, index) => index),
+        async index => (await getChallengeSubmissions(challengeId, 1, 1, memberIds[index])).items,
+    )
+    return pages.flat()
+}
+
+/**
  * Loads the AI workflow runs associated with one member submission.
  *
  * Opportunities uses these records for the expandable My Submissions review table.
