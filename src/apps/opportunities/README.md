@@ -617,7 +617,13 @@ rather than browser prompts; per-member
 thumbs-up/thumbs-down reactions, watch state, and read state remain inside the
 challenge detail page. The Markdown editor continues ordered and unordered
 lists on Enter; safe Markdown styling is retained in topic excerpts and full
-posts. Each visible post shows shared
+posts. Forum Markdown resolves `@handle`, `@{handle}`, and straight/curly quoted
+mentions to profile links colored by the member's public maximum rating; literal
+code and existing links are preserved. Typing `@` opens a debounced member search
+in topic, comment, reply, and edit composers. Arrow keys select suggestions,
+Enter/Tab or a click inserts `@"handle"`, and Escape dismisses the list. Profile
+lookup failures retain a neutral profile link, while search failures leave the
+draft editable and show a retry hint. Each visible post shows shared
 reaction counts and the current member's selected state; clicking the selected
 thumb again removes it, while clicking the other thumb switches it. Topic
 summaries expose bounded starter excerpts, participant snapshots, unique

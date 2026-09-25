@@ -43,6 +43,11 @@ let memberProfiles: MemberProfileSummary[] | undefined
 let topicCollection: ForumTopicCollection | undefined
 let topicDetail: ForumTopicDetail | undefined
 
+jest.mock('~/libs/core', () => ({
+    getRatingColor: jest.requireActual('../../../../libs/core/lib/profile/profile-functions/rating.functions')
+        .getRatingColor,
+}), { virtual: true })
+
 jest.mock('swr', () => ({
     __esModule: true,
     default: (...args: unknown[]) => mockUseSWR(...args),

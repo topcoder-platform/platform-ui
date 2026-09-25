@@ -25,6 +25,8 @@ export interface ChallengeTocItem {
 }
 
 interface ChallengeMarkdownProps {
+    components?: Components
+    rehypePlugins?: ReactMarkdownOptions['rehypePlugins']
     markdown: string
     onTableOfContents?: (items: ChallengeTocItem[]) => void
 }
@@ -140,7 +142,7 @@ const MARKDOWN_SANITIZE_SCHEMA = {
 /**
  * Renders a challenge Markdown specification with fragment-addressable headings.
  *
- * @param props specification Markdown and optional TOC observer.
+ * @param props specification Markdown, optional TOC observer, and trusted renderer extensions.
  * @returns safe Markdown presentation supporting GFM tables and hard breaks.
  * @throws Does not throw.
  */
@@ -155,10 +157,11 @@ export const ChallengeMarkdown: FC<ChallengeMarkdownProps> = props => {
     return (
         <article className={styles.markdown}>
             <Markdown
-                components={MARKDOWN_COMPONENTS}
+                components={{ ...MARKDOWN_COMPONENTS, ...props.components }}
                 rehypePlugins={[
                     rehypeRaw as any,
                     [rehypeSanitize, MARKDOWN_SANITIZE_SCHEMA] as any,
+                    ...(props.rehypePlugins ?? []),
                 ]}
                 remarkPlugins={[
                     [remarkGfm, { singleTilde: false }],
