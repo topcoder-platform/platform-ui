@@ -144,6 +144,14 @@ export interface TimesheetPaymentSummary {
     totalHours: string
 }
 
+export interface TimesheetPaymentEntry {
+    hoursWorked: string
+    id: string
+    paidAt: string
+    paymentReference: string
+    workDate: string
+}
+
 export interface EngagementFilters {
     countries?: string[]
     includePrivate?: boolean
@@ -162,8 +170,10 @@ export interface AssignmentPayment {
     amount?: number
     attributes?: {
         agreementRate?: number | string
+        assignmentId?: number | string
         hoursWorked?: number | string
         remarks?: string
+        timesheetEntryIds?: string[]
     }
     billingAccountId?: number | string
     challengeFee?: number | string

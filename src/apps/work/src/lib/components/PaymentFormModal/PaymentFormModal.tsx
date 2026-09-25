@@ -25,7 +25,10 @@ import {
     TimesheetPaymentSummary,
 } from '../../models'
 import {
+    fetchTimesheetEntriesByPaymentReference,
     fetchTimesheetPaymentSummary,
+    findTimesheetPaymentConflicts,
+    linkTimesheetEntriesToPayment,
 } from '../../services'
 import {
     calculatePaymentAmount,
@@ -68,6 +71,11 @@ interface ValidationErrors {
     fromDate?: string
     hoursWorked?: string
     toDate?: string
+}
+
+interface ReconciliationCandidate {
+    entryIds: string[]
+    paymentReference: string
 }
 
 function normalizeTitleSegment(value?: string): string {
@@ -131,6 +139,40 @@ function formatWorkDate(date: Date): string {
     ].join('-')
 }
 
+function toHourHundredths(value: string): number {
+    const normalized = String(value || '')
+        .trim()
+
+    if (!normalized) {
+        return 0
+    }
+
+    const sign = normalized.startsWith('-') ? -1 : 1
+    const unsigned = sign < 0
+        ? normalized.slice(1)
+        : normalized
+    const [wholePart, fractionPart = ''] = unsigned.split('.')
+    const whole = Number(wholePart || '0')
+    const fraction = Number((`${fractionPart}00`).slice(0, 2))
+
+    if (!Number.isFinite(whole) || !Number.isFinite(fraction)) {
+        return 0
+    }
+
+    return sign * ((whole * 100) + fraction)
+}
+
+function fromHourHundredths(value: number): string {
+    const normalized = Number.isFinite(value)
+        ? Math.max(0, Math.round(value))
+        : 0
+    const whole = Math.floor(normalized / 100)
+    const fraction = String(normalized % 100)
+        .padStart(2, '0')
+
+    return `${whole}.${fraction}`
+}
+
 const DateInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
     (props, ref): JSX.Element => (
         <input
@@ -158,6 +200,10 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
     const [summary, setSummary] = useState<TimesheetPaymentSummary | undefined>(undefined)
     const [isLoadingSummary, setIsLoadingSummary] = useState<boolean>(false)
     const [summaryError, setSummaryError] = useState<string | undefined>(undefined)
+    const [reconciliationCandidates, setReconciliationCandidates] = useState<ReconciliationCandidate[]>([])
+    const [isLinkingEntries, setIsLinkingEntries] = useState<boolean>(false)
+    const [linkEntriesMessage, setLinkEntriesMessage] = useState<string | undefined>(undefined)
+    const [summaryReloadToken, setSummaryReloadToken] = useState<number>(0)
 
     /**
      * Hours come from approved timesheet entries, never from the keyboard. That is what enforces
@@ -214,10 +260,18 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
     const resetState = useCallback((): void => {
         setErrors({})
         setFromDate(undefined)
+        setIsLinkingEntries(false)
+        setLinkEntriesMessage(undefined)
         setRemarks('')
+        setReconciliationCandidates([])
         setToDate(undefined)
+        setSummaryReloadToken(0)
         setSummary(undefined)
         setSummaryError(undefined)
+    }, [])
+
+    const refreshSummary = useCallback((): void => {
+        setSummaryReloadToken(previous => previous + 1)
     }, [])
 
     useEffect(() => {
@@ -248,35 +302,189 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         }
 
         setIsLoadingSummary(true)
-        setSummaryError(undefined)
+        setLinkEntriesMessage(undefined)
+        setSummaryError(undefined);
+        (async () => {
+            try {
+                const loaded = await fetchTimesheetPaymentSummary(
+                    engagementId,
+                    assignmentId,
+                    formatWorkDate(fromDate),
+                    formatWorkDate(toDate),
+                )
 
-        fetchTimesheetPaymentSummary(
-            engagementId,
-            assignmentId,
-            formatWorkDate(fromDate),
-            formatWorkDate(toDate),
-        )
-            .then(loaded => {
-                if (mounted) {
+                const conflictSummary = await findTimesheetPaymentConflicts(
+                    assignmentId,
+                    loaded.entryIds,
+                )
+
+                if (!mounted) {
+                    return
+                }
+
+                if (!conflictSummary.overlappingEntryIds.length) {
+                    setReconciliationCandidates([])
                     setSummary(loaded)
+                    return
                 }
-            })
-            .catch((error: Error) => {
+
+                const reconciliationByReference = new Map<string, Set<string>>()
+
+                conflictSummary.conflicts.forEach(conflict => {
+                    if (conflict.paymentReference === 'unknown') {
+                        return
+                    }
+
+                    if (!reconciliationByReference.has(conflict.paymentReference)) {
+                        reconciliationByReference.set(conflict.paymentReference, new Set())
+                    }
+
+                    const entryIdsForReference = reconciliationByReference.get(conflict.paymentReference)
+
+                    conflict.entryIds.forEach(entryId => {
+                        entryIdsForReference?.add(entryId)
+                    })
+                })
+
+                setReconciliationCandidates(
+                    [...reconciliationByReference.entries()]
+                        .map(([paymentReference, entryIds]) => ({
+                            entryIds: [...entryIds],
+                            paymentReference,
+                        }))
+                        .filter(candidate => candidate.entryIds.length > 0),
+                )
+
+                const uniqueReferences = Array.from(new Set(
+                    conflictSummary.conflicts
+                        .map(conflict => conflict.paymentReference)
+                        .filter(reference => reference !== 'unknown'),
+                ))
+
+                const paidHoursByEntryId = new Map<string, string>()
+
+                await Promise.all(uniqueReferences.map(async reference => {
+                    const paidEntries = await fetchTimesheetEntriesByPaymentReference(
+                        engagementId,
+                        assignmentId,
+                        reference,
+                    )
+
+                    paidEntries.forEach(entry => {
+                        if (conflictSummary.overlappingEntryIds.includes(entry.id)) {
+                            paidHoursByEntryId.set(entry.id, entry.hoursWorked)
+                        }
+                    })
+                }))
+
+                if (!mounted) {
+                    return
+                }
+
+                const unresolvedEntryIds = conflictSummary.overlappingEntryIds
+                    .filter(entryId => !paidHoursByEntryId.has(entryId))
+
+                const payableEntryIds = loaded.entryIds
+                    .filter(entryId => !conflictSummary.overlappingEntryIds.includes(entryId))
+                const excludedEntryIds = Array.from(new Set([
+                    ...loaded.alreadyPaidEntryIds,
+                    ...conflictSummary.overlappingEntryIds,
+                ]))
+
+                if (unresolvedEntryIds.length) {
+                    setSummary({
+                        ...loaded,
+                        alreadyPaidEntryIds: excludedEntryIds,
+                        entryIds: [],
+                        totalDays: 0,
+                        totalHours: '0.00',
+                    })
+                    setSummaryError(
+                        `Some approved entries were already attached to another payment
+                        but could not be fully reconciled (${unresolvedEntryIds.join(', ')}).
+                        To reconcile, link the excluded entries to their existing payments.`,
+                    )
+                    return
+                }
+
+                const excludedHoursHundredths = conflictSummary.overlappingEntryIds
+                    .reduce((total, entryId) => total + toHourHundredths(paidHoursByEntryId.get(entryId) || '0'), 0)
+                const adjustedHoursHundredths = toHourHundredths(loaded.totalHours) - excludedHoursHundredths
+
+                setSummary({
+                    ...loaded,
+                    alreadyPaidEntryIds: excludedEntryIds,
+                    entryIds: payableEntryIds,
+                    totalDays: payableEntryIds.length,
+                    totalHours: fromHourHundredths(adjustedHoursHundredths),
+                })
+            } catch (error) {
                 if (mounted) {
+                    const typedError = error as Error
+                    setReconciliationCandidates([])
                     setSummary(undefined)
-                    setSummaryError(error.message || 'Failed to load approved timesheet hours.')
+                    setSummaryError(typedError.message || 'Failed to load approved timesheet hours.')
                 }
-            })
-            .finally(() => {
+            } finally {
                 if (mounted) {
                     setIsLoadingSummary(false)
                 }
-            })
+            }
+        })()
 
         return () => {
             mounted = false
         }
-    }, [fromDate, props.engagementId, props.member?.id, props.open, toDate])
+    }, [fromDate, props.engagementId, props.member?.id, props.open, summaryReloadToken, toDate])
+
+    const handleLinkExcludedEntries = useCallback(async (): Promise<void> => {
+        const engagementId = props.engagementId
+        const assignmentId = props.member?.id
+
+        if (!engagementId || !assignmentId || !reconciliationCandidates.length) {
+            return
+        }
+
+        setIsLinkingEntries(true)
+        setLinkEntriesMessage(undefined)
+
+        const failedReferences: string[] = []
+
+        try {
+            for (const candidate of reconciliationCandidates) {
+                if (!candidate.entryIds.length) {
+                    // eslint-disable-next-line no-continue
+                    continue
+                }
+
+                try {
+                    // eslint-disable-next-line no-await-in-loop
+                    await linkTimesheetEntriesToPayment(
+                        engagementId,
+                        assignmentId,
+                        candidate.entryIds,
+                        candidate.paymentReference,
+                    )
+                } catch {
+                    failedReferences.push(candidate.paymentReference)
+                }
+            }
+
+            if (failedReferences.length) {
+                setLinkEntriesMessage(
+                    `Some entries could not be linked for payment
+                    reference${failedReferences.length === 1 ? '' : 's'} ${failedReferences.join(', ')}.
+                    Resolve those references and try again.`,
+                )
+                return
+            }
+
+            setLinkEntriesMessage('Excluded entries were linked successfully. Totals have been refreshed.')
+            refreshSummary()
+        } finally {
+            setIsLinkingEntries(false)
+        }
+    }, [props.engagementId, props.member?.id, reconciliationCandidates, refreshSummary])
 
     const handleCancel = useCallback((): void => {
         resetState()
@@ -515,6 +723,21 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                         : undefined}
                     {summaryError
                         ? <p className={styles.error}>{summaryError}</p>
+                        : undefined}
+                    {linkEntriesMessage
+                        ? <p className={styles.helperText}>{linkEntriesMessage}</p>
+                        : undefined}
+                    {reconciliationCandidates.length > 0
+                        ? (
+                            <div className={styles.actions}>
+                                <Button
+                                    disabled={isSubmitting || isLinkingEntries}
+                                    label={isLinkingEntries ? 'Linking Excluded Entries...' : 'Link Excluded Entries'}
+                                    onClick={handleLinkExcludedEntries}
+                                    secondary
+                                />
+                            </div>
+                        )
                         : undefined}
                     {errors.hoursWorked
                         ? <p className={styles.error}>{errors.hoursWorked}</p>

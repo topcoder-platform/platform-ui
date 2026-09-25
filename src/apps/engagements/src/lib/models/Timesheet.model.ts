@@ -27,6 +27,10 @@ export interface TimesheetEntry {
     hoursWorked: string
     id: string
     isPaid: boolean
+    /** Payment that consumed this entry; null while still unpaid. */
+    paymentReference: string | null
+    /** When the entry was linked to the payment that consumed it. */
+    paidAt: string | null
     /** True when the work date falls outside the assignment's start/end dates. Allowed, but flagged. */
     outsideAssignmentWindow: boolean
     remarks: string | null
