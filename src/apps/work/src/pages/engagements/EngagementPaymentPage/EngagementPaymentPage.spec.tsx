@@ -90,7 +90,7 @@ jest.mock('../../../lib/components', () => ({
                 <div>
                     <div>Create Payment</div>
                     <button
-                        onClick={() => {
+                        onClick={function () {
                             props.onConfirm({
                                 amount: 220,
                                 entryIds: ['ts-entry-1', 'ts-entry-2'],

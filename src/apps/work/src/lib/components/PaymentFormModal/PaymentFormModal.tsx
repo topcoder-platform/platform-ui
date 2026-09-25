@@ -153,7 +153,7 @@ function toHourHundredths(value: string): number {
         : normalized
     const [wholePart, fractionPart = ''] = unsigned.split('.')
     const whole = Number(wholePart || '0')
-    const fraction = Number((fractionPart + '00').slice(0, 2))
+    const fraction = Number((`${fractionPart}00`).slice(0, 2))
 
     if (!Number.isFinite(whole) || !Number.isFinite(fraction)) {
         return 0
@@ -303,9 +303,8 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
 
         setIsLoadingSummary(true)
         setLinkEntriesMessage(undefined)
-        setSummaryError(undefined)
-
-        void (async () => {
+        setSummaryError(undefined);
+        (async () => {
             try {
                 const loaded = await fetchTimesheetPaymentSummary(
                     engagementId,
@@ -401,7 +400,9 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                         totalHours: '0.00',
                     })
                     setSummaryError(
-                        `Some approved entries were already attached to another payment but could not be fully reconciled (${unresolvedEntryIds.join(', ')}). To reconcile, link the excluded entries to their existing payments.`,
+                        `Some approved entries were already attached to another payment
+                        but could not be fully reconciled (${unresolvedEntryIds.join(', ')}).
+                        To reconcile, link the excluded entries to their existing payments.`,
                     )
                     return
                 }
@@ -452,10 +453,12 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         try {
             for (const candidate of reconciliationCandidates) {
                 if (!candidate.entryIds.length) {
+                    // eslint-disable-next-line no-continue
                     continue
                 }
 
                 try {
+                    // eslint-disable-next-line no-await-in-loop
                     await linkTimesheetEntriesToPayment(
                         engagementId,
                         assignmentId,
@@ -469,7 +472,9 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
 
             if (failedReferences.length) {
                 setLinkEntriesMessage(
-                    `Some entries could not be linked for payment reference${failedReferences.length === 1 ? '' : 's'} ${failedReferences.join(', ')}. Resolve those references and try again.`,
+                    `Some entries could not be linked for payment
+                    reference${failedReferences.length === 1 ? '' : 's'} ${failedReferences.join(', ')}.
+                    Resolve those references and try again.`,
                 )
                 return
             }
