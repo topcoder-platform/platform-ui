@@ -627,7 +627,9 @@ posts. Forum Markdown resolves `@handle`, `@{handle}`, and straight/curly quoted
 mentions to profile links colored by the member's public maximum rating; literal
 code and existing links are preserved. Typing `@` opens a debounced member search
 in topic, comment, reply, and edit composers. Arrow keys select suggestions,
-Enter/Tab or a click inserts `@"handle"`, and Escape dismisses the list. Profile
+Enter/Tab or a click inserts `@"handle"`, and Escape dismisses the list. The
+editor allows the suggestion list to extend below its border; clipping is limited
+to the toolbar so options remain visible and clickable. Profile
 lookup failures retain a neutral profile link, while search failures leave the
 draft editable and show a retry hint. Each visible post shows shared
 reaction counts and the current member's selected state; clicking the selected
