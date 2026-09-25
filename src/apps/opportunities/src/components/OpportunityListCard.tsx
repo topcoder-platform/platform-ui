@@ -62,6 +62,7 @@ import {
     challengeCatalogKey,
     challengeCatalogName,
     challengeCurrentPhase,
+    challengeInactivePhaseLabel,
     challengePhaseTiming,
     challengePlacementPrizes,
     challengeRegistrationIsOpen,
@@ -721,7 +722,7 @@ function toViewModel(kind: OpportunityKind, item: OpportunityItem, memberApplied
  *
  * @param item Challenge API list item.
  * @returns linked competition card with catalog tags, a distinct completed-state icon,
- * placement prizes, phase progress, and metrics.
+ * placement prizes, phase progress, scheduled/stalled phase fallbacks, and metrics.
  * @throws Does not throw; absent API fields use explicit pending placeholders.
  */
 const CompetitionListCard: FC<CompetitionListCardProps> = props => {
@@ -747,7 +748,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const progress = Math.round(phaseTiming.progressPercent)
     const registrationOpen = challengeRegistrationIsOpen(item)
     const completed = challengeCatalogKey(item.status) === 'completed'
-    const stalled = challengeCatalogKey(item.status) === 'stalled'
+    const inactivePhaseLabel = challengeInactivePhaseLabel(item)
     const visibleWinners = completed
         ? (item.winners ?? [])
             .map((winner, index) => ({
@@ -882,7 +883,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                             ))}
                         </Link>
                     )}
-                    {!completed && !stalled && phase && (
+                    {!completed && !inactivePhaseLabel && phase && (
                         <div className={styles.phase}>
                             <div className={styles.phaseHeading}>
                                 <span className={styles.phaseLabel}>
@@ -908,10 +909,10 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                             </div>
                         </div>
                     )}
-                    {stalled && (
+                    {inactivePhaseLabel && (
                         <div className={styles.phase}>
                             <div className={styles.phaseHeading}>
-                                <span className={styles.phaseLabel}>Stalled</span>
+                                <span className={styles.phaseLabel}>{inactivePhaseLabel}</span>
                             </div>
                         </div>
                     )}
