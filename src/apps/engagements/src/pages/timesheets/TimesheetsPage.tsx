@@ -11,6 +11,7 @@ import { EngagementsTabs } from '../../components'
 import AdminTimesheetView from './AdminTimesheetView'
 import ManagerTimesheetView from './ManagerTimesheetView'
 import MemberTimesheetView from './MemberTimesheetView'
+import TmTimesheetView from './TmTimesheetView'
 import TimesheetHeader from './TimesheetHeader'
 import styles from './TimesheetsPage.module.scss'
 
@@ -142,6 +143,12 @@ const TimesheetsPage: FC = () => {
                     {timesheet.viewerRole === TimesheetViewerRole.MANAGER && (
                         <ManagerTimesheetView
                             onTimesheetChange={setTimesheet}
+                            timesheet={timesheet}
+                        />
+                    )}
+
+                    {timesheet.viewerRole === TimesheetViewerRole.TM && (
+                        <TmTimesheetView
                             timesheet={timesheet}
                         />
                     )}

@@ -17,6 +17,7 @@ export enum TimesheetViewerRole {
     ADMINISTRATOR = 'ADMINISTRATOR',
     MANAGER = 'MANAGER',
     MEMBER = 'MEMBER',
+    TM = 'TM',
 }
 
 export interface TimesheetEntry {

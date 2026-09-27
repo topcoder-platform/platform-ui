@@ -5,7 +5,7 @@ import { useProfileContext } from '~/libs/core'
 import { TabsNavbar, TabsNavItem } from '~/libs/ui'
 import {
     hasAdminRole,
-    hasManagerRole,
+    checkTalentManager,
     useFetchEngagementTimesheets,
     UseFetchEngagementTimesheetsResult,
 } from '~/apps/work/src/lib'
@@ -26,7 +26,7 @@ const EngagementsTabs: FC<EngagementsTabsProps> = (props: EngagementsTabsProps) 
     const isLoggedIn = profileContext.isLoggedIn
     const userRoles = profileContext.profile?.roles ?? []
     const { timesheets }: UseFetchEngagementTimesheetsResult = useFetchEngagementTimesheets()
-    const isAdminOrManager = hasAdminRole(userRoles) || hasManagerRole(userRoles) || timesheets.length
+    const isAdminOrManager = hasAdminRole(userRoles) || checkTalentManager(userRoles) || timesheets.length
 
     const tabsConfig = useMemo<TabsNavItem<EngagementsTab>[]>(() => {
         const tabs: TabsNavItem<EngagementsTab>[] = [

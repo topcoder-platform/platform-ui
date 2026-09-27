@@ -9,8 +9,6 @@ import type { TimesheetEngagementListResponse, TimesheetEngagementRow } from '..
 import { TimesheetViewerRole } from '../../lib/models'
 import { getTimesheetEngagements } from '../../lib/services'
 
-import TimesheetEngagementsPage from './TimesheetEngagementsPage'
-
 const mockNavigate = jest.fn()
 
 jest.mock('react-router-dom', () => ({
@@ -33,8 +31,71 @@ jest.mock('~/libs/ui', () => ({
             {props.children}
         </div>
     ),
+    InputSelect: (props: {
+        label: string
+        onChange?: React.ChangeEventHandler<HTMLSelectElement>
+        options?: Array<{ label: string, value: string }>
+        value?: string
+    }) => (
+        <label>
+            <span>{props.label}</span>
+            <select aria-label={props.label} value={props.value} onChange={props.onChange}>
+                {props.options?.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+            </select>
+        </label>
+    ),
+    InputText: (props: {
+        label: string
+        onChange?: React.ChangeEventHandler<HTMLInputElement>
+        value?: string
+    }) => (
+        <label>
+            <span>{props.label}</span>
+            <input aria-label={props.label} value={props.value} onChange={props.onChange} />
+        </label>
+    ),
     LoadingSpinner: () => <div>loading-spinner</div>,
+    }), { virtual: true })
+
+jest.mock('../../components', () => ({
+    EngagementsTabs: (props: { activeTab: string }) => <div data-testid='engagements-tabs' data-active-tab={props.activeTab} />,
 }), { virtual: true })
+
+jest.mock('react-markdown', () => ({
+    __esModule: true,
+    default: (props: { children?: React.ReactNode }) => <div>{props.children}</div>,
+}), { virtual: true })
+
+jest.mock('../../components/engagement-card', () => ({
+    __esModule: true,
+    default: () => <div />,
+    EngagementCard: () => <div />,
+}), { virtual: true })
+
+jest.mock('../../components/engagement-filters', () => ({
+    __esModule: true,
+    default: () => <div />,
+    EngagementFilters: () => <div />,
+}), { virtual: true })
+
+jest.mock('rehype-raw', () => ({
+    __esModule: true,
+    default: () => undefined,
+}), { virtual: true })
+
+jest.mock('remark-frontmatter', () => ({
+    __esModule: true,
+    default: () => undefined,
+}), { virtual: true })
+
+jest.mock('remark-gfm', () => ({
+    __esModule: true,
+    default: () => undefined,
+}), { virtual: true })
+
+const TimesheetEngagementsPage = require('./TimesheetEngagementsPage').default
 
 jest.mock('../../lib/services', () => ({
     getTimesheetEngagements: jest.fn(),
@@ -110,9 +171,20 @@ describe('TimesheetEngagementsPage', () => {
 
         await screen.findByText('John Smith (johnsmith)')
 
-        expect(screen.queryByLabelText('Engagement title')).not.toBeInTheDocument()
+        expect(screen.getByLabelText('Engagement title')).toBeInTheDocument()
+        expect(screen.getByLabelText('Asignee')).toBeInTheDocument()
+        expect(screen.queryByLabelText('Manager')).not.toBeInTheDocument()
         expect(screen.queryByRole('columnheader', { name: 'Timesheet Status' }))
             .not
+            .toBeInTheDocument()
+    })
+
+    it('uses the TM empty state copy for the submitted-review list', async () => {
+        mockGetEngagements.mockResolvedValue(response([], TimesheetViewerRole.TM))
+
+        render(<TimesheetEngagementsPage />)
+
+        expect(await screen.findByText('No submitted timesheets match these filters.'))
             .toBeInTheDocument()
     })
 
@@ -126,11 +198,11 @@ describe('TimesheetEngagementsPage', () => {
 
         expect(await screen.findByLabelText('Engagement title'))
             .toBeInTheDocument()
-        expect(screen.getByLabelText('Assignee'))
+        expect(screen.getByLabelText('Asignee'))
             .toBeInTheDocument()
-        expect(screen.getByLabelText('Manager'))
+        expect(await screen.findByLabelText('Manager'))
             .toBeInTheDocument()
-        expect(screen.getByLabelText('Timesheet status'))
+        expect(screen.getByLabelText('Status'))
             .toBeInTheDocument()
         expect(screen.getByRole('columnheader', { name: 'Timesheet Status' }))
             .toBeInTheDocument()
@@ -149,10 +221,9 @@ describe('TimesheetEngagementsPage', () => {
         render(<TimesheetEngagementsPage />)
 
         await user.type(await screen.findByLabelText('Engagement title'), 'Frontend')
-        await user.type(screen.getByLabelText('Assignee'), 'johnsmith')
-        await user.type(screen.getByLabelText('Manager'), 'maryj')
-        await user.selectOptions(screen.getByLabelText('Timesheet status'), 'Pending Approval')
-        await user.click(screen.getByRole('button', { name: 'Apply' }))
+        await user.type(screen.getByLabelText('Asignee'), 'johnsmith')
+        await user.type(await screen.findByLabelText('Manager'), 'maryj')
+        await user.selectOptions(screen.getByLabelText('Status'), 'Pending Approval')
 
         await waitFor(() => {
             expect(mockGetEngagements)

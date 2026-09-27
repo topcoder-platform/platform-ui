@@ -59,6 +59,12 @@ const TimesheetEngagementsPage: FC = () => {
     const [error, setError] = useState<string | undefined>()
 
     const isAdministrator = viewerRole === TimesheetViewerRole.ADMINISTRATOR
+    const isTm = viewerRole === TimesheetViewerRole.TM
+    const emptyStateMessage = isAdministrator
+        ? 'No timesheets match these filters.'
+        : isTm
+            ? 'No submitted timesheets match these filters.'
+            : 'You have no engagements with timesheet approval authority.'
 
     useEffect(() => {
         let mounted = true
@@ -244,7 +250,7 @@ const TimesheetEngagementsPage: FC = () => {
 
                 {!isLoading && !error && rows.length === 0 && (
                     <p className={styles.pending}>
-                        No timesheets match these filters.
+                        {emptyStateMessage}
                     </p>
                 )}
 
