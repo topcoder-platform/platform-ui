@@ -17,6 +17,7 @@ import {
     buildReportsPath,
     bulkMemberLookupRouteId,
     dashboardsPageRouteId,
+    formsPageRouteId,
     reportsPageRouteId,
     talentPageRouteId,
 } from '../../../config/routes.config'
@@ -57,6 +58,11 @@ const NavTabs: FC = () => {
             },
         ]
 
+        if (loginUserInfo?.roles?.some(role => role.trim()
+            .toLowerCase() === 'administrator')) {
+            baseTabs.push({ id: formsPageRouteId, title: 'Forms' })
+        }
+
         return canAccessTalent
             ? [
                 ...baseTabs,
@@ -66,7 +72,7 @@ const NavTabs: FC = () => {
                 },
             ]
             : baseTabs
-    }, [canAccessTalent])
+    }, [canAccessTalent, loginUserInfo])
 
     const activeTabPathName: string = useMemo<string>(() => {
         const matchingTabs = tabs
