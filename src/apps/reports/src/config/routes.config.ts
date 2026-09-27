@@ -24,6 +24,7 @@ export const dashboardDetailRoute = `${dashboardsPageRouteId}/:dashboardSlug`
 export const bulkMemberLookupRouteId = 'bulk-member-lookup'
 export const billingAccountsPageRouteId = 'sfdc-payments'
 export const talentPageRouteId = 'talent'
+export const formsPageRouteId = 'forms'
 
 export const dashboardRouteSlugs = {
     challengeParticipation: 'challenge-participation',

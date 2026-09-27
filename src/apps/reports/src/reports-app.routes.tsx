@@ -15,6 +15,7 @@ import {
     bulkMemberLookupRouteId,
     dashboardDetailRoute,
     dashboardsPageRouteId,
+    formsPageRouteId,
     reportsPageRouteId,
     rootRoute,
     talentPageRouteId,
@@ -45,6 +46,8 @@ const TalentPage: LazyLoadedComponent = lazyLoad(
     'TalentPage',
 )
 
+const FormsPage: LazyLoadedComponent = lazyLoad(() => import('./pages/forms/FormsPage'))
+
 export const toolTitle: string = ToolTitle.reports
 
 export const reportsRoutes: ReadonlyArray<PlatformRoute> = [
@@ -52,6 +55,12 @@ export const reportsRoutes: ReadonlyArray<PlatformRoute> = [
     {
         authRequired: true,
         children: [
+            {
+                authRequired: true,
+                element: <FormsPage />,
+                rolesRequired: [UserRole.administrator],
+                route: formsPageRouteId,
+            },
             {
                 authRequired: true,
                 element: <Rewrite to={reportsPageRouteId} />,
