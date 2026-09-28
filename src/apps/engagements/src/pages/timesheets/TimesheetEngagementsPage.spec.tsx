@@ -175,7 +175,7 @@ describe('TimesheetEngagementsPage', () => {
 
         expect(screen.getByLabelText('Engagement title'))
             .toBeInTheDocument()
-        expect(screen.getByLabelText('Asignee'))
+        expect(screen.getByLabelText('Assignee'))
             .toBeInTheDocument()
         expect(screen.queryByLabelText('Manager'))
             .not
@@ -204,7 +204,7 @@ describe('TimesheetEngagementsPage', () => {
 
         expect(await screen.findByLabelText('Engagement title'))
             .toBeInTheDocument()
-        expect(screen.getByLabelText('Asignee'))
+        expect(screen.getByLabelText('Assignee'))
             .toBeInTheDocument()
         expect(await screen.findByLabelText('Manager'))
             .toBeInTheDocument()
@@ -227,7 +227,7 @@ describe('TimesheetEngagementsPage', () => {
         render(<TimesheetEngagementsPage />)
 
         await user.type(await screen.findByLabelText('Engagement title'), 'Frontend')
-        await user.type(screen.getByLabelText('Asignee'), 'johnsmith')
+        await user.type(screen.getByLabelText('Assignee'), 'johnsmith')
         await user.type(await screen.findByLabelText('Manager'), 'maryj')
         await user.selectOptions(screen.getByLabelText('Status'), 'Pending Approval')
 

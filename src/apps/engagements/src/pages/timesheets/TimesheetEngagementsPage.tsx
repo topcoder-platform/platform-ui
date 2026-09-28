@@ -172,9 +172,9 @@ const TimesheetEngagementsPage: FC = () => {
                                 type='text'
                                 dirty
                                 forceUpdateValue
-                                name='asignee'
-                                label='Asignee'
-                                placeholder='Enter asignee'
+                                name='assignee'
+                                label='Assignee'
+                                placeholder='Enter assignee'
                                 value={filters.assignee}
                                 onBlur={handleFilterBlur}
                                 onChange={handleFilterChange('assignee')}

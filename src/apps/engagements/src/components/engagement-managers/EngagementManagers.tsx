@@ -6,7 +6,7 @@ import {
     useWatch,
 } from 'react-hook-form'
 
-import { Button, IconOutline, LoadingSpinner } from '~/libs/ui'
+import { Button, IconOutline, LoadingSpinner, useConfirmationModal } from '~/libs/ui'
 import { FormUserAutocomplete } from '~/apps/work/src/lib/components/form'
 import type { User } from '~/apps/work/src/lib/models'
 
@@ -121,6 +121,7 @@ const EngagementManagers: FC<EngagementManagersProps> = (props: EngagementManage
     const [error, setError] = useState<string | undefined>()
     const [isAssigning, setIsAssigning] = useState<boolean>(false)
     const [removingUserId, setRemovingUserId] = useState<string | undefined>()
+    const confirmation = useConfirmationModal()
 
     const canEdit = props.canEdit ?? false
     const formMethods = useForm<ManagerFieldFormData>({
@@ -147,11 +148,12 @@ const EngagementManagers: FC<EngagementManagersProps> = (props: EngagementManage
     }, [formMethods, props])
 
     const handleRemove = useCallback(async (manager: EngagementManager) => {
-        /* eslint-disable-next-line no-restricted-globals, no-alert */
-        const confirmed = window.confirm(
-            `Remove ${manager.handle} as a manager? They will no longer be able to approve timesheets `
-            + 'for this engagement. Approvals they already made are kept.',
-        )
+        const confirmed = await confirmation.confirm({
+            action: 'Remove',
+            content: `Remove ${manager.handle} as a manager? They will no longer be able to approve timesheets `
+                + 'for this engagement. Approvals they already made are kept.',
+            title: 'Remove Manager',
+        })
 
         if (!confirmed) {
             return
@@ -168,7 +170,7 @@ const EngagementManagers: FC<EngagementManagersProps> = (props: EngagementManage
         } finally {
             setRemovingUserId(undefined)
         }
-    }, [props])
+    }, [confirmation, props])
 
     return (
         <div className={styles.managers}>
@@ -232,6 +234,7 @@ const EngagementManagers: FC<EngagementManagersProps> = (props: EngagementManage
                     )}
                 </>
             )}
+            {confirmation.modal}
         </div>
     )
 }
