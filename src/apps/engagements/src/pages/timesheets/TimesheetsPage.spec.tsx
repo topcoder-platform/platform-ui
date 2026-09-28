@@ -3,6 +3,7 @@ import '@testing-library/jest-dom'
 
 import React from 'react'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 import type { TimesheetView } from '../../lib/models'
 import { TimesheetViewerRole } from '../../lib/models'
@@ -20,6 +21,23 @@ jest.mock('react-router-dom', () => ({
 }))
 
 jest.mock('~/libs/ui', () => ({
+    BaseModal: (props: {
+        children: React.ReactNode
+        open: boolean
+        title?: string
+    }) => (props.open
+        ? (
+            <div role='dialog'>
+                <h2>{props.title}</h2>
+                {props.children}
+            </div>
+        )
+        : <></>),
+    Button: (props: { label: string, onClick?: () => void }) => (
+        <button onClick={props.onClick} type='button'>
+            {props.label}
+        </button>
+    ),
     ContentLayout: (props: { children: React.ReactNode, title: string }) => (
         <div>
             <h1>{props.title}</h1>
@@ -33,6 +51,10 @@ jest.mock('../../components', () => ({
     EngagementsTabs: (props: { activeTab: string }) => (
         <div data-testid='engagements-tabs' data-active-tab={props.activeTab} />
     ),
+}))
+
+jest.mock('../../components/engagement-managers', () => ({
+    EngagementManagers: () => <div>engagement-managers</div>,
 }))
 
 jest.mock('./AdminTimesheetView', () => ({
@@ -53,7 +75,16 @@ jest.mock('./TmTimesheetView', () => ({
 }))
 jest.mock('./TimesheetHeader', () => ({
     __esModule: true,
-    default: () => <div>header</div>,
+    default: (props: { onEditManagers?: () => void }) => (
+        <div>
+            <span>header</span>
+            {props.onEditManagers && (
+                <button onClick={props.onEditManagers} type='button'>
+                    edit-managers
+                </button>
+            )}
+        </div>
+    ),
 }))
 jest.mock('../../lib/services', () => ({
     getTimesheet: jest.fn(),
@@ -93,5 +124,19 @@ describe('TimesheetsPage', () => {
             .toBeInTheDocument()
         expect(screen.getByTestId('engagements-tabs'))
             .toHaveAttribute('data-active-tab', 'timesheets')
+    })
+
+    it('opens managers modal from the header action for administrators', async () => {
+        const user = userEvent.setup()
+        mockGetTimesheet.mockResolvedValue(timesheet(TimesheetViewerRole.ADMINISTRATOR))
+
+        render(<TimesheetsPage />)
+
+        expect(await screen.findByText('admin-view'))
+            .toBeInTheDocument()
+        await user.click(screen.getByRole('button', { name: 'edit-managers' }))
+
+        expect(screen.getByRole('dialog'))
+            .toHaveTextContent('engagement-managers')
     })
 })

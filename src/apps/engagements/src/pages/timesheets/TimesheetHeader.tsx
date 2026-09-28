@@ -1,5 +1,7 @@
 import { FC } from 'react'
 
+import { Button } from '~/libs/ui'
+
 import type { EngagementManager, TimesheetAssignment } from '../../lib/models'
 
 import styles from './TimesheetsPage.module.scss'
@@ -8,6 +10,7 @@ interface TimesheetHeaderProps {
     engagementTitle: string
     assignment: TimesheetAssignment
     managers: EngagementManager[]
+    onEditManagers?: () => void
 }
 
 const withHandle = (name: string | null | undefined, handle: string): string => (
@@ -19,7 +22,17 @@ const withHandle = (name: string | null | undefined, handle: string): string => 
  */
 const TimesheetHeader: FC<TimesheetHeaderProps> = (props: TimesheetHeaderProps) => (
     <section className={styles.header}>
-        <h2 className={styles.title}>{props.engagementTitle}</h2>
+        <div className={styles.headerTitleRow}>
+            <h2 className={styles.title}>{props.engagementTitle}</h2>
+            {props.onEditManagers && (
+                <Button
+                    label='Edit managers'
+                    onClick={props.onEditManagers}
+                    secondary
+                    size='sm'
+                />
+            )}
+        </div>
         <dl className={styles.headerFacts}>
             <div className={styles.fact}>
                 <dt>Standard Hours per Day</dt>

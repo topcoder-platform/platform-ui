@@ -175,7 +175,6 @@ const EngagementManagers: FC<EngagementManagersProps> = (props: EngagementManage
     return (
         <div className={styles.managers}>
             <div className={styles.header}>
-                <h3 className={styles.title}>Managers</h3>
                 <span className={styles.hint}>
                     Managers assigned here can approve timesheets for this engagement.
                 </span>

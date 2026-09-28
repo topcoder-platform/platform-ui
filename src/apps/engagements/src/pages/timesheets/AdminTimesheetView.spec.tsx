@@ -86,10 +86,6 @@ jest.mock('~/libs/ui', () => ({
     LoadingSpinner: () => <div>loading</div>,
 }), { virtual: true })
 
-jest.mock('../../components/engagement-managers', () => ({
-    EngagementManagers: () => <div>engagement-managers</div>,
-}))
-
 jest.mock('../../lib/services', () => ({
     approveTimesheetEntries: jest.fn(),
     getTimesheet: jest.fn(),
@@ -160,13 +156,6 @@ describe('AdminTimesheetView', () => {
         jest.clearAllMocks()
         mockGetTimesheet.mockResolvedValue(timesheet([entry()]))
         mockGetAudit.mockResolvedValue([])
-    })
-
-    it('mounts the manager assignment control in the engagement details', () => {
-        renderView([entry()])
-
-        expect(screen.getByText('engagement-managers'))
-            .toBeInTheDocument()
     })
 
     it('lets an administrator edit any row, including a submitted one', () => {
