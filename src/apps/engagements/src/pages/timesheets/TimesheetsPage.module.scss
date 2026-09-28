@@ -16,6 +16,14 @@
     background: $tc-white;
 }
 
+.headerTitleRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
 .title {
     margin: 0;
 }

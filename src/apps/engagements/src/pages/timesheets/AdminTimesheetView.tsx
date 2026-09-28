@@ -25,7 +25,6 @@ import {
     validateDateRange,
     validateHours,
 } from '../../lib/utils'
-import { EngagementManagers } from '../../components/engagement-managers'
 import { TimesheetApproveModal } from '../../components/timesheet-approve-modal'
 import { TimesheetAuditModal } from '../../components/timesheet-audit-modal'
 import { TimesheetGrid } from '../../components/timesheet-grid'
@@ -452,16 +451,6 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
 
     return (
         <div className={styles.view}>
-            <EngagementManagers
-                canEdit
-                engagementId={props.timesheet.engagementId}
-                managers={props.timesheet.managers}
-                onChange={function onManagersChange() {
-                    reload()
-                        .catch(() => undefined)
-                }}
-            />
-
             <TimesheetGrid
                 canEditApproved
                 emptyMessage='This assignee has no timesheet entries yet.'

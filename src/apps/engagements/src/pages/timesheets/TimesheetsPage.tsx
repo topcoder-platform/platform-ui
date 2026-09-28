@@ -1,12 +1,13 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
-import { ContentLayout, LoadingSpinner } from '~/libs/ui'
+import { BaseModal, Button, ContentLayout, LoadingSpinner } from '~/libs/ui'
 
 import type { TimesheetView } from '../../lib/models'
 import { TimesheetViewerRole } from '../../lib/models'
 import { getTimesheet } from '../../lib/services'
 import { EngagementsTabs } from '../../components'
+import { EngagementManagers } from '../../components/engagement-managers'
 
 import AdminTimesheetView from './AdminTimesheetView'
 import ManagerTimesheetView from './ManagerTimesheetView'
@@ -47,6 +48,18 @@ const TimesheetsPage: FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | undefined>()
     const [isDirty, setIsDirty] = useState<boolean>(false)
+    const [isManagersModalOpen, setIsManagersModalOpen] = useState<boolean>(false)
+
+    const reloadTimesheet = useCallback(async (): Promise<void> => {
+        if (!assignmentId || !engagementId) {
+            setError(ACCESS_DENIED_MESSAGE)
+            return
+        }
+
+        const loaded = await getTimesheet(engagementId, assignmentId)
+        setTimesheet(loaded)
+        setError(undefined)
+    }, [assignmentId, engagementId])
 
     useEffect(() => {
         let mounted = true
@@ -87,6 +100,12 @@ const TimesheetsPage: FC = () => {
         }
     }, [assignmentId, engagementId])
 
+    useEffect(() => {
+        if (timesheet?.viewerRole !== TimesheetViewerRole.ADMINISTRATOR) {
+            setIsManagersModalOpen(false)
+        }
+    }, [timesheet?.viewerRole])
+
     // Unsaved rows live only in the browser, so leaving the page loses them. Warn before that happens.
     useEffect(() => {
         if (!isDirty) {
@@ -106,6 +125,7 @@ const TimesheetsPage: FC = () => {
         }
     }, [isDirty])
 
+    const canEditManagers = timesheet && [TimesheetViewerRole.ADMINISTRATOR, TimesheetViewerRole.TM].includes(timesheet.viewerRole)
     const canRenderContent = !isLoading && !error && timesheet
 
     return (
@@ -130,6 +150,11 @@ const TimesheetsPage: FC = () => {
                         assignment={timesheet.assignment}
                         engagementTitle={timesheet.engagementTitle}
                         managers={timesheet.managers}
+                        onEditManagers={canEditManagers
+                            ? function onEditManagers() {
+                                setIsManagersModalOpen(true)
+                            }
+                            : undefined}
                     />
 
                     {timesheet.viewerRole === TimesheetViewerRole.MEMBER && (
@@ -159,6 +184,34 @@ const TimesheetsPage: FC = () => {
                             timesheet={timesheet}
                         />
                     )}
+
+                    <BaseModal
+                        buttons={(
+                            <Button
+                                label='Close'
+                                onClick={function onCloseManagersModal() {
+                                    setIsManagersModalOpen(false)
+                                }}
+                                secondary
+                            />
+                        )}
+                        onClose={function onCloseManagersModal() {
+                            setIsManagersModalOpen(false)
+                        }}
+                        open={isManagersModalOpen}
+                        size='lg'
+                        title='Engagement managers'
+                    >
+                        <EngagementManagers
+                            canEdit
+                            engagementId={timesheet.engagementId}
+                            managers={timesheet.managers}
+                            onChange={function onManagersChange() {
+                                reloadTimesheet()
+                                    .catch(() => undefined)
+                            }}
+                        />
+                    </BaseModal>
                 </div>
             )}
         </ContentLayout>
