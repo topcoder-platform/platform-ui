@@ -42,6 +42,10 @@ const extractErrorMessage = (error: unknown, fallback: string): string => {
     return typedError?.response?.data?.message || typedError?.message || fallback
 }
 
+const normalizeRemarks = (remarks: string | null | undefined): string => (
+    remarks?.trim() || ''
+)
+
 /** Default range: the current working week, Monday through Friday, as the common thing to fill in. */
 const getDefaultRange = (): { fromDate: string, toDate: string } => {
     const today = new Date()
@@ -112,6 +116,26 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
     const selectedRows = useMemo(
         () => rows.filter(row => selectedDates.includes(row.workDate)),
         [rows, selectedDates],
+    )
+    const savedByDate = useMemo(
+        () => new Map(props.timesheet.entries.map(entry => [entry.workDate, entry])),
+        [props.timesheet.entries],
+    )
+    const hasOnlyUnchangedSubmittedSelected = useMemo(
+        () => selectedRows.length > 0 && selectedRows.every(row => {
+            if (row.status !== TimesheetEntryStatus.SUBMITTED) {
+                return false
+            }
+
+            const saved = savedByDate.get(row.workDate)
+            if (!saved) {
+                return false
+            }
+
+            return row.hoursWorked.trim() === saved.hoursWorked
+                && normalizeRemarks(row.remarks) === normalizeRemarks(saved.remarks)
+        }),
+        [savedByDate, selectedRows],
     )
     const totals = useMemo(() => sumSelectedTotals(selectedRows), [selectedRows])
 
@@ -231,6 +255,11 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
             return
         }
 
+        if (hasOnlyUnchangedSubmittedSelected) {
+            setActionError('The selected rows have nothing to submit.')
+            return
+        }
+
         const submittable = selectedRows.filter(hasEnteredHours)
         if (submittable.length !== selectedRows.length) {
             setActionError(
@@ -241,12 +270,14 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
 
         setActionError(undefined)
         setIsConfirmOpen(true)
-    }, [invalidRows.length, selectedRows])
+    }, [hasOnlyUnchangedSubmittedSelected, invalidRows.length, selectedRows])
 
     return (
         <div className={styles.view}>
             <section className={styles.rangeSection}>
                 <InputDatePicker
+                    className={styles.dateFilter}
+                    classNameWrapper={styles.dateFilterWrapper}
                     date={toPickerDate(fromDate)}
                     disabled={false}
                     label='From Date'
@@ -255,6 +286,8 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                     }}
                 />
                 <InputDatePicker
+                    className={styles.dateFilter}
+                    classNameWrapper={styles.dateFilterWrapper}
                     date={toPickerDate(toDate)}
                     disabled={false}
                     label='To Date'
@@ -299,12 +332,14 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                                     {' '}
                                     <strong>{formatHoursLabel(totals.hours)}</strong>
                                 </span>
-                                <Button
-                                    disabled={isSubmitting}
-                                    label={`Submit (${selectedRows.length})`}
-                                    onClick={handleOpenConfirm}
-                                    primary
-                                />
+                                {!hasOnlyUnchangedSubmittedSelected && (
+                                    <Button
+                                        disabled={isSubmitting}
+                                        label={`Submit (${selectedRows.length})`}
+                                        onClick={handleOpenConfirm}
+                                        primary
+                                    />
+                                )}
                             </section>
                         )}
                     </>

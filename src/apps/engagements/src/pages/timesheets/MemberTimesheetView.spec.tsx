@@ -234,6 +234,31 @@ describe('MemberTimesheetView', () => {
             .toBeInTheDocument()
     })
 
+    it('hides submit when the selection is already submitted and unchanged', async () => {
+        const user = userEvent.setup()
+        renderView([
+            entry({
+                hoursWorked: '8.50',
+                id: 'e1',
+                remarks: 'Sprint planning',
+                status: TimesheetEntryStatus.SUBMITTED,
+                submittedAt: '2026-09-08T09:00:00.000Z',
+                workDate: '2026-09-07',
+            }),
+        ])
+
+        await pickRange('2026-09-07', '2026-09-07')
+        await waitFor(() => {
+            expect(screen.getByLabelText('Select 07-09-2026'))
+                .toBeInTheDocument()
+        })
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+
+        expect(screen.queryByRole('button', { name: 'Submit (1)' }))
+            .not.toBeInTheDocument()
+    })
+
     it('states the count and total in the confirmation, and submits nothing on cancel', async () => {
         const user = userEvent.setup()
         renderView([entry({ hoursWorked: '8.50', workDate: '2026-09-07' })])

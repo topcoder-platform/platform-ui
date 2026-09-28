@@ -83,6 +83,30 @@ jest.mock('~/libs/ui', () => ({
             </label>
         )
     },
+    InputSelect: (props: {
+        label: string
+        onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+        options: Array<{ label?: React.ReactNode, value: string }>
+        value?: string
+    }) => (
+        <label>
+            {props.label}
+            <select
+                onChange={function onChange(event: React.ChangeEvent<HTMLSelectElement>) {
+                    props.onChange({
+                        target: { value: event.target.value },
+                    } as React.ChangeEvent<HTMLInputElement>)
+                }}
+                value={props.value}
+            >
+                {props.options.map(option => (
+                    <option key={option.value} value={option.value}>
+                        {option.label ?? option.value}
+                    </option>
+                ))}
+            </select>
+        </label>
+    ),
     LoadingSpinner: () => <div>loading</div>,
 }), { virtual: true })
 
@@ -151,6 +175,10 @@ const renderView = (entries: TimesheetEntry[]): {
     return { onTimesheetChange, ...utils }
 }
 
+const switchToApprovedStatus = async (user: ReturnType<typeof userEvent.setup>): Promise<void> => {
+    await user.selectOptions(screen.getByLabelText('Status'), TimesheetEntryStatus.APPROVED)
+}
+
 describe('AdminTimesheetView', () => {
     beforeEach(() => {
         jest.clearAllMocks()
@@ -175,6 +203,7 @@ describe('AdminTimesheetView', () => {
         const hoursInput = screen.getByLabelText('Hours worked on 07-09-2026')
         await user.clear(hoursInput)
         await user.type(hoursInput, '9')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
         await user.click(screen.getByRole('button', { name: 'Save' }))
 
         await waitFor(() => {
@@ -204,11 +233,12 @@ describe('AdminTimesheetView', () => {
         ]))
         renderView([])
 
+        await user.click(screen.getByRole('button', { name: 'Add entries' }))
         await user.clear(screen.getByLabelText('From Date'))
         await user.type(screen.getByLabelText('From Date'), '2026-09-08')
         await user.clear(screen.getByLabelText('To Date'))
         await user.type(screen.getByLabelText('To Date'), '2026-09-09')
-        await user.click(screen.getByRole('button', { name: 'Add Range' }))
+        await user.click(screen.getByRole('button', { name: 'Confirm' }))
 
         const mondayHours = await screen.findByLabelText('Hours worked on 08-09-2026')
         const tuesdayHours = await screen.findByLabelText('Hours worked on 09-09-2026')
@@ -228,8 +258,11 @@ describe('AdminTimesheetView', () => {
         })
     })
 
-    it('keeps an approved row editable so a correction can be typed', () => {
+    it('keeps an approved row editable so a correction can be typed', async () => {
+        const user = userEvent.setup()
         renderView([entry({ status: TimesheetEntryStatus.APPROVED })])
+
+        await switchToApprovedStatus(user)
 
         expect(screen.getByLabelText('Hours worked on 07-09-2026'))
             .toBeEnabled()
@@ -241,6 +274,10 @@ describe('AdminTimesheetView', () => {
         const user = userEvent.setup()
         mockSave.mockResolvedValue(timesheet([entry({ status: TimesheetEntryStatus.APPROVED })]))
         renderView([entry({ status: TimesheetEntryStatus.APPROVED })])
+        await switchToApprovedStatus(user)
+
+        await user.type(screen.getByLabelText('Remarks for 07-09-2026'), ' correction')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
 
         await user.click(screen.getByRole('button', { name: 'Save' }))
 
@@ -298,6 +335,7 @@ describe('AdminTimesheetView', () => {
         const user = userEvent.setup()
         mockReopen.mockResolvedValue(timesheet([entry({ status: TimesheetEntryStatus.DRAFT })]))
         renderView([entry({ id: 'e1', status: TimesheetEntryStatus.APPROVED })])
+        await switchToApprovedStatus(user)
 
         await user.click(screen.getByLabelText('Select 07-09-2026'))
         await user.click(screen.getByRole('button', { name: 'Reopen (1)' }))
@@ -447,10 +485,10 @@ describe('AdminTimesheetView', () => {
 
         await user.click(screen.getByLabelText('Select 07-09-2026'))
 
-        expect(screen.getByRole('button', { name: 'Reopen (0)' }))
-            .toBeDisabled()
-        expect(screen.getByRole('button', { name: 'Submit on behalf (0)' }))
-            .toBeDisabled()
+        expect(screen.queryByRole('button', { name: /^Reopen/ }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: /^Submit on behalf/ }))
+            .not.toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
             .toBeEnabled()
     })
@@ -483,6 +521,7 @@ describe('AdminTimesheetView', () => {
             response: { data: { message: 'Only approved timesheet entries can be reopened.' } },
         })
         renderView([entry({ id: 'e1', status: TimesheetEntryStatus.APPROVED })])
+        await switchToApprovedStatus(user)
 
         await user.click(screen.getByLabelText('Select 07-09-2026'))
         await user.click(screen.getByRole('button', { name: 'Reopen (1)' }))
