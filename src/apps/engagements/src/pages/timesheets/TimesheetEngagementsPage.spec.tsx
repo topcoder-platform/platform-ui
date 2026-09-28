@@ -173,8 +173,10 @@ describe('TimesheetEngagementsPage', () => {
 
         await screen.findByText('John Smith (johnsmith)')
 
-        expect(screen.getByLabelText('Engagement title')).toBeInTheDocument()
-        expect(screen.getByLabelText('Asignee')).toBeInTheDocument()
+        expect(screen.getByLabelText('Engagement title'))
+            .toBeInTheDocument()
+        expect(screen.getByLabelText('Asignee'))
+            .toBeInTheDocument()
         expect(screen.queryByLabelText('Manager'))
             .not
             .toBeInTheDocument()
