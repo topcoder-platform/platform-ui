@@ -12,6 +12,7 @@ import AdminTimesheetView from './AdminTimesheetView'
 import ManagerTimesheetView from './ManagerTimesheetView'
 import MemberTimesheetView from './MemberTimesheetView'
 import TimesheetHeader from './TimesheetHeader'
+import TmTimesheetView from './TmTimesheetView'
 import styles from './TimesheetsPage.module.scss'
 
 const ACCESS_DENIED_MESSAGE = 'This timesheet is not available to you.'
@@ -142,6 +143,12 @@ const TimesheetsPage: FC = () => {
                     {timesheet.viewerRole === TimesheetViewerRole.MANAGER && (
                         <ManagerTimesheetView
                             onTimesheetChange={setTimesheet}
+                            timesheet={timesheet}
+                        />
+                    )}
+
+                    {timesheet.viewerRole === TimesheetViewerRole.TM && (
+                        <TmTimesheetView
                             timesheet={timesheet}
                         />
                     )}

@@ -7,6 +7,7 @@ import type {
 
 import {
     canCreateEngagement,
+    canManageEngagementManagers,
     canModifyChallenge,
     canViewAllEngagements,
     checkCanEditProjectDetails,
@@ -128,6 +129,17 @@ describe('permissions.utils project management helpers', () => {
             .toBe(true)
         expect(canViewAllEngagements(['topcoder talent manager']))
             .toBe(true)
+    })
+
+    it('allows admins, task managers, and talent managers to manage engagement managers', () => {
+        expect(canManageEngagementManagers(['administrator']))
+            .toBe(true)
+        expect(canManageEngagementManagers(['task manager']))
+            .toBe(true)
+        expect(canManageEngagementManagers(['topcoder talent manager']))
+            .toBe(true)
+        expect(canManageEngagementManagers(['project manager']))
+            .toBe(false)
     })
 
     it('normalizes project membership checks and role lookups by user id', () => {
