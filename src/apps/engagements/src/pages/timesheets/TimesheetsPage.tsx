@@ -125,7 +125,9 @@ const TimesheetsPage: FC = () => {
         }
     }, [isDirty])
 
-    const canEditManagers = timesheet && [TimesheetViewerRole.ADMINISTRATOR, TimesheetViewerRole.TM].includes(timesheet.viewerRole)
+    const canEditManagers = timesheet
+        && [TimesheetViewerRole.ADMINISTRATOR, TimesheetViewerRole.TM]
+            .includes(timesheet.viewerRole)
     const canRenderContent = !isLoading && !error && timesheet
 
     return (
@@ -174,6 +176,7 @@ const TimesheetsPage: FC = () => {
 
                     {timesheet.viewerRole === TimesheetViewerRole.TM && (
                         <TmTimesheetView
+                            onTimesheetChange={setTimesheet}
                             timesheet={timesheet}
                         />
                     )}

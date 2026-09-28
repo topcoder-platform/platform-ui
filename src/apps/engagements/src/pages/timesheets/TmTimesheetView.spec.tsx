@@ -2,18 +2,107 @@
 import '@testing-library/jest-dom'
 
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 import type { TimesheetEntry, TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus, TimesheetViewerRole } from '../../lib/models'
+import { approveTimesheetEntries, getTimesheet } from '../../lib/services'
 
 import TmTimesheetView from './TmTimesheetView'
 
+jest.mock('react-toastify', () => ({
+    toast: { error: jest.fn(), success: jest.fn() },
+}))
+
+jest.mock('~/libs/ui', () => ({
+    BaseModal: (props: {
+        buttons?: React.ReactNode
+        children: React.ReactNode
+        open: boolean
+        title?: string
+    }) => (props.open
+        ? (
+            <div role='dialog'>
+                <h2>{props.title}</h2>
+                {props.children}
+                {props.buttons}
+            </div>
+        )
+        : <></>),
+    Button: (props: {
+        disabled?: boolean
+        label: string
+        onClick?: () => void
+    }) => (
+        <button disabled={props.disabled} onClick={props.onClick} type='button'>
+            {props.label}
+        </button>
+    ),
+    InputDatePicker: (props: {
+        date?: Date
+        disabled?: boolean
+        label: string
+        onChange: (date: Date | null) => void
+    }) => {
+        const handleChange = function handleChange(
+            event: React.ChangeEvent<HTMLInputElement>,
+        ): void {
+            const value = event.target.value
+            if (!value) {
+                props.onChange(null)
+                return
+            }
+
+            const [year, month, day] = value.split('-')
+                .map(Number)
+            props.onChange(new Date(year, month - 1, day))
+        }
+
+        return (
+            <label>
+                {props.label}
+                <input
+                    disabled={props.disabled}
+                    onChange={handleChange}
+                    type='date'
+                    value={props.date
+                        ? `${props.date.getFullYear()}-${String(props.date.getMonth() + 1)
+                            .padStart(2, '0')}-${String(props.date.getDate())
+                            .padStart(2, '0')}`
+                        : ''}
+                />
+            </label>
+        )
+    },
+}), { virtual: true })
+
 jest.mock('../../components/timesheet-grid', () => ({
-    TimesheetGrid: (props: { rows: Array<{ id?: string }> }) => (
-        <div data-testid='timesheet-grid' data-rows={props.rows.length} />
+    TimesheetGrid: (props: {
+        onSelectionChange: (dates: string[]) => void
+        rows: Array<{ id?: string, workDate: string }>
+    }) => (
+        <div data-testid='timesheet-grid' data-rows={props.rows.length}>
+            <button
+                onClick={function onSelectFirst() {
+                    const first = props.rows[0]
+                    props.onSelectionChange(first ? [first.workDate] : [])
+                }}
+                type='button'
+            >
+                select-first
+            </button>
+        </div>
     ),
 }))
+
+jest.mock('../../lib/services', () => ({
+    approveTimesheetEntries: jest.fn(),
+    getTimesheet: jest.fn(),
+}))
+
+const mockApprove = approveTimesheetEntries as jest.MockedFunction<typeof approveTimesheetEntries>
+const mockGetTimesheet = getTimesheet as jest.MockedFunction<typeof getTimesheet>
 
 const entry = (overrides: Partial<TimesheetEntry> = {}): TimesheetEntry => ({
     approvalComment: null,
@@ -50,9 +139,18 @@ const timesheet = (entries: TimesheetEntry[]): TimesheetView => ({
 })
 
 describe('TmTimesheetView', () => {
-    it('shows only submitted entries in read-only mode', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+        mockApprove.mockResolvedValue({ approved: ['submitted'], skipped: [] })
+        mockGetTimesheet.mockResolvedValue(timesheet([
+            entry({ id: 'submitted', status: TimesheetEntryStatus.SUBMITTED }),
+        ]))
+    })
+
+    it('shows only submitted entries', () => {
         render(
             <TmTimesheetView
+                onTimesheetChange={jest.fn()}
                 timesheet={timesheet([
                     entry({ id: 'submitted', status: TimesheetEntryStatus.SUBMITTED }),
                     entry({ id: 'approved', status: TimesheetEntryStatus.APPROVED }),
@@ -62,6 +160,43 @@ describe('TmTimesheetView', () => {
 
         expect(screen.getByTestId('timesheet-grid'))
             .toHaveAttribute('data-rows', '1')
-        expect(screen.queryByRole('button', { name: /approve/i })).not.toBeInTheDocument()
+    })
+
+    it('lets a TM approve selected submitted entries', async () => {
+        const user = userEvent.setup()
+        const onTimesheetChange = jest.fn()
+        render(
+            <TmTimesheetView
+                onTimesheetChange={onTimesheetChange}
+                timesheet={timesheet([
+                    entry({ id: 'submitted', status: TimesheetEntryStatus.SUBMITTED }),
+                ])}
+            />,
+        )
+
+        await user.click(screen.getByRole('button', { name: 'select-first' }))
+        await user.click(screen.getByRole('button', { name: 'Approve (1)' }))
+
+        const dialog = screen.getByRole('dialog')
+        await user.type(within(dialog)
+            .getByLabelText('Approval comment'), 'Approved for week 37')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Approve' }))
+
+        await waitFor(() => {
+            expect(mockApprove)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    approvalComment: 'Approved for week 37',
+                    entryIds: ['submitted'],
+                })
+            expect(mockGetTimesheet)
+                .toHaveBeenCalledWith(
+                    'eng-1',
+                    'asg-1',
+                    expect.objectContaining({ status: TimesheetEntryStatus.SUBMITTED }),
+                )
+            expect(onTimesheetChange)
+                .toHaveBeenCalled()
+        })
     })
 })
