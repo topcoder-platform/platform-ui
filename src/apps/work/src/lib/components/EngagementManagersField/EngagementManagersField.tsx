@@ -10,7 +10,7 @@ import {
     useWatch,
 } from 'react-hook-form'
 
-import { Button } from '~/libs/ui'
+import { Button, useConfirmationModal } from '~/libs/ui'
 
 import { AssignEngagementManagerPayload, EngagementManager, User } from '../../models'
 import {
@@ -130,6 +130,7 @@ export const EngagementManagersField: FC<EngagementManagersFieldProps> = (
     const [error, setError] = useState<string | undefined>()
     const [isAssigning, setIsAssigning] = useState<boolean>(false)
     const [removingUserId, setRemovingUserId] = useState<string | undefined>()
+    const confirmation = useConfirmationModal()
 
     const canEdit = props.canEdit ?? false
     const formMethods = useForm<ManagerFieldFormData>({
@@ -156,6 +157,17 @@ export const EngagementManagersField: FC<EngagementManagersFieldProps> = (
     }, [formMethods, props])
 
     const handleRemove = useCallback(async (manager: EngagementManager) => {
+        const confirmed = await confirmation.confirm({
+            action: 'Remove',
+            content: `Remove ${manager.handle} as a manager? They will no longer be able to approve timesheets `
+                + 'for this engagement. Approvals they already made are kept.',
+            title: 'Remove Manager',
+        })
+
+        if (!confirmed) {
+            return
+        }
+
         setError(undefined)
         setRemovingUserId(manager.userId)
 
@@ -167,7 +179,7 @@ export const EngagementManagersField: FC<EngagementManagersFieldProps> = (
         } finally {
             setRemovingUserId(undefined)
         }
-    }, [props])
+    }, [confirmation, props])
 
     return (
         <section className={styles.managers}>
@@ -218,6 +230,7 @@ export const EngagementManagersField: FC<EngagementManagersFieldProps> = (
             )}
 
             {error && <span className={styles.error} role='alert'>{error}</span>}
+            {confirmation.modal}
         </section>
     )
 }
