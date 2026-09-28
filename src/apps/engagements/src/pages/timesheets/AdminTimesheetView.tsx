@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 
-import { Button } from '~/libs/ui'
+import { Button, InputDatePicker } from '~/libs/ui'
 
 import type { TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus } from '../../lib/models'
@@ -15,9 +15,14 @@ import {
 import type { TimesheetRow } from '../../lib/utils'
 import {
     buildRowsFromEntries,
+    formatDisplayDate,
     formatHoursLabel,
+    generateWorkDates,
+    getDayLabel,
     hasEnteredHours,
     sumSelectedTotals,
+    toWorkDateString,
+    validateDateRange,
     validateHours,
 } from '../../lib/utils'
 import { EngagementManagers } from '../../components/engagement-managers'
@@ -75,6 +80,39 @@ const extractErrorMessage = (error: unknown, fallback: string): string => {
     return typedError?.response?.data?.message || typedError?.message || fallback
 }
 
+const sortRowsByWorkDate = (rows: TimesheetRow[]): TimesheetRow[] => (
+    [...rows].sort((left, right) => left.workDate.localeCompare(right.workDate))
+)
+
+const normalizeRemarks = (remarks: string | null | undefined): string => (
+    remarks?.trim() || ''
+)
+
+const getDefaultRange = (): { fromDate: string, toDate: string } => {
+    const today = new Date()
+    const monday = new Date(today)
+    const offsetToMonday = (today.getDay() + 6) % 7
+    monday.setDate(today.getDate() - offsetToMonday)
+    const friday = new Date(monday)
+    friday.setDate(monday.getDate() + 4)
+
+    return {
+        fromDate: toWorkDateString(monday),
+        toDate: toWorkDateString(friday),
+    }
+}
+
+const toPickerDate = (value: string): Date | undefined => {
+    if (!value) {
+        return undefined
+    }
+
+    const [year, month, day] = value.split('-')
+        .map(Number)
+
+    return new Date(year, month - 1, day)
+}
+
 /**
  * The administrator's view: everything a member or manager can do, on anyone's timesheet, plus reopen
  * and correct.
@@ -84,8 +122,11 @@ const extractErrorMessage = (error: unknown, fallback: string): string => {
  * prevent. Actions taken for someone else are labelled as such.
  */
 const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetViewProps) => {
+    const defaultRange = useMemo(getDefaultRange, [])
     const [rows, setRows] = useState<TimesheetRow[]>([])
     const [selectedDates, setSelectedDates] = useState<string[]>([])
+    const [fromDate, setFromDate] = useState<string>(defaultRange.fromDate)
+    const [toDate, setToDate] = useState<string>(defaultRange.toDate)
     const [pendingOverride, setPendingOverride] = useState<PendingOverride | undefined>()
     const [isApproveOpen, setIsApproveOpen] = useState<boolean>(false)
     const [auditEntry, setAuditEntry] = useState<TimesheetRow | undefined>()
@@ -109,6 +150,10 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         )),
         [props.timesheet.assignment.standardHoursPerDay, rows],
     )
+    const addRangeError = useMemo(
+        () => validateDateRange(fromDate, toDate),
+        [fromDate, toDate],
+    )
 
     const selectedIds = useMemo(
         () => selectedRows
@@ -120,6 +165,21 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         () => new Set(selectedRows.map(row => row.status)),
         [selectedRows],
     )
+    const hasPendingRowChanges = useMemo(() => {
+        const savedByDate = new Map(
+            props.timesheet.entries.map(entry => [entry.workDate, entry]),
+        )
+
+        return rows.some(row => {
+            const saved = savedByDate.get(row.workDate)
+            if (!saved) {
+                return hasEnteredHours(row)
+            }
+
+            return row.hoursWorked.trim() !== saved.hoursWorked
+                || normalizeRemarks(row.remarks) !== normalizeRemarks(saved.remarks)
+        })
+    }, [props.timesheet.entries, rows])
 
     const reload = useCallback(async (): Promise<void> => {
         const loaded = await getTimesheet(
@@ -135,6 +195,48 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         )))
         setActionError(undefined)
     }, [])
+
+    const handleAddRange = useCallback(() => {
+        if (addRangeError) {
+            setActionError(addRangeError)
+            return
+        }
+
+        const rangeWorkDates = generateWorkDates(fromDate, toDate)
+        const existingDates = new Set(rows.map(row => row.workDate))
+        const missingDates = rangeWorkDates.filter(workDate => !existingDates.has(workDate))
+
+        if (!missingDates.length) {
+            setActionError('All dates in this range already exist in this timesheet.')
+            return
+        }
+
+        setRows(current => sortRowsByWorkDate([
+            ...current,
+            ...missingDates.map(workDate => ({
+                dayLabel: getDayLabel(workDate),
+                displayDate: formatDisplayDate(workDate),
+                hoursWorked: '',
+                isPaid: false,
+                outsideAssignmentWindow: Boolean(
+                    (props.timesheet.assignment.startDate && workDate < props.timesheet.assignment.startDate)
+                    || (props.timesheet.assignment.endDate && workDate > props.timesheet.assignment.endDate),
+                ),
+                remarks: '',
+                status: TimesheetEntryStatus.DRAFT,
+                workDate,
+            })),
+        ]))
+        setSelectedDates(current => Array.from(new Set([...current, ...missingDates])))
+        setActionError(undefined)
+    }, [
+        addRangeError,
+        fromDate,
+        props.timesheet.assignment.endDate,
+        props.timesheet.assignment.startDate,
+        rows,
+        toDate,
+    ])
 
     /**
      * Saves the edited rows. An approved row being changed is an override, so the API needs a reason -
@@ -167,6 +269,33 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         props.onTimesheetChange(updated)
     }, [props, rows])
 
+    const savePendingRowsIfNeeded = useCallback(async (): Promise<TimesheetView> => {
+        if (!hasPendingRowChanges) {
+            return props.timesheet
+        }
+
+        const entries = rows
+            .filter(hasEnteredHours)
+            .filter(row => !validateHours(
+                row.hoursWorked,
+                props.timesheet.assignment.standardHoursPerDay,
+            ).error)
+            .map(row => ({
+                hoursWorked: row.hoursWorked.trim(),
+                remarks: row.remarks.trim() || undefined,
+                workDate: row.workDate,
+            }))
+
+        const updated = await saveTimesheetEntries(
+            props.timesheet.engagementId,
+            props.timesheet.assignment.id,
+            { entries },
+        )
+
+        props.onTimesheetChange(updated)
+        return updated
+    }, [hasPendingRowChanges, props, rows])
+
     const runOverride = useCallback(async (overrideReason: string) => {
         setActionError(undefined)
         setIsWorking(true)
@@ -181,10 +310,27 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                 props.onTimesheetChange(updated)
                 toast.success('Entries reopened.')
             } else if (pendingOverride === 'submit') {
+                if (invalidRows.length) {
+                    setActionError('Fix the highlighted hours before submitting.')
+                    setPendingOverride(undefined)
+                    return
+                }
+
+                const currentTimesheet = await savePendingRowsIfNeeded()
+                const entryIds = currentTimesheet.entries
+                    .filter(entry => selectedDates.includes(entry.workDate))
+                    .filter(entry => entry.status === TimesheetEntryStatus.DRAFT)
+                    .map(entry => entry.id)
+
+                if (!entryIds.length) {
+                    setActionError('The selected rows have nothing to submit.')
+                    return
+                }
+
                 const updated = await submitTimesheetEntries(
                     props.timesheet.engagementId,
                     props.timesheet.assignment.id,
-                    { entryIds: selectedIds, overrideReason },
+                    { entryIds, overrideReason },
                 )
                 props.onTimesheetChange(updated)
                 toast.success('Entries submitted on the member’s behalf.')
@@ -201,7 +347,15 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         } finally {
             setIsWorking(false)
         }
-    }, [pendingOverride, props, saveRows, selectedIds])
+    }, [
+        invalidRows.length,
+        pendingOverride,
+        props,
+        savePendingRowsIfNeeded,
+        saveRows,
+        selectedDates,
+        selectedIds,
+    ])
 
     const handleApprove = useCallback(async (
         approvalComment: string,
@@ -209,13 +363,32 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
     ) => {
         setActionError(undefined)
         setPartialResult(undefined)
+
+        if (invalidRows.length) {
+            setActionError('Fix the highlighted hours before approving.')
+            setIsApproveOpen(false)
+            return
+        }
+
         setIsWorking(true)
 
         try {
+            const currentTimesheet = await savePendingRowsIfNeeded()
+            const entryIds = currentTimesheet.entries
+                .filter(entry => selectedDates.includes(entry.workDate))
+                .filter(entry => entry.status === TimesheetEntryStatus.SUBMITTED)
+                .map(entry => entry.id)
+
+            if (!entryIds.length) {
+                setActionError('The selected rows have nothing to approve.')
+                setIsApproveOpen(false)
+                return
+            }
+
             const result = await approveTimesheetEntries(
                 props.timesheet.engagementId,
                 props.timesheet.assignment.id,
-                { approvalComment, entryIds: selectedIds, overrideReason },
+                { approvalComment, entryIds, overrideReason },
             )
 
             setIsApproveOpen(false)
@@ -223,7 +396,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
 
             if (result.skipped.length) {
                 setPartialResult(
-                    `${result.approved.length} of ${selectedIds.length} approved. `
+                    `${result.approved.length} of ${entryIds.length} approved. `
                     + `${result.skipped.length} `
                     + `${result.skipped.length === 1 ? 'entry was' : 'entries were'} `
                     + 'no longer awaiting approval.',
@@ -242,7 +415,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         } finally {
             setIsWorking(false)
         }
-    }, [props, reload, selectedIds])
+    }, [invalidRows.length, props, reload, savePendingRowsIfNeeded, selectedDates])
 
     const handleSaveDrafts = useCallback(async () => {
         if (invalidRows.length) {
@@ -299,6 +472,37 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                 selectedDates={selectedDates}
                 standardHoursPerDay={props.timesheet.assignment.standardHoursPerDay}
             />
+
+            <section className={styles.rangeSection}>
+                <InputDatePicker
+                    className={styles.dateFilter}
+                    classNameWrapper={styles.dateFilterWrapper}
+                    date={toPickerDate(fromDate)}
+                    disabled={isWorking}
+                    isClearable
+                    label='From Date'
+                    onChange={function onFromDateChange(date: Date | null) {
+                        setFromDate(date ? toWorkDateString(date) : '')
+                    }}
+                />
+                <InputDatePicker
+                    className={styles.dateFilter}
+                    classNameWrapper={styles.dateFilterWrapper}
+                    date={toPickerDate(toDate)}
+                    disabled={isWorking}
+                    isClearable
+                    label='To Date'
+                    onChange={function onToDateChange(date: Date | null) {
+                        setToDate(date ? toWorkDateString(date) : '')
+                    }}
+                />
+                <Button
+                    disabled={isWorking || !fromDate || !toDate || Boolean(addRangeError)}
+                    label='Add Range'
+                    onClick={handleAddRange}
+                    secondary
+                />
+            </section>
 
             {actionError && <p className={styles.error} role='alert'>{actionError}</p>}
             {partialResult && (

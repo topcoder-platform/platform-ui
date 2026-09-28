@@ -236,6 +236,10 @@ export const validateHours = (
 
     const hours = Number(trimmed)
 
+    if (hours <= 0) {
+        return { error: 'Hours must be greater than zero.' }
+    }
+
     if (hours > TIMESHEET_MAX_HOURS_PER_DAY) {
         return { error: `Hours cannot exceed ${TIMESHEET_MAX_HOURS_PER_DAY} for a single day.` }
     }

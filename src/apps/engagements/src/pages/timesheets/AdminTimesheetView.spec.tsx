@@ -47,6 +47,42 @@ jest.mock('~/libs/ui', () => ({
             {props.label}
         </button>
     ),
+    InputDatePicker: (props: {
+        date?: Date
+        disabled?: boolean
+        label: string
+        onChange: (date: Date | null) => void
+    }) => {
+        const handleChange = function handleChange(
+            event: React.ChangeEvent<HTMLInputElement>,
+        ): void {
+            const value = event.target.value
+            if (!value) {
+                props.onChange(null)
+                return
+            }
+
+            const [year, month, day] = value.split('-')
+                .map(Number)
+            props.onChange(new Date(year, month - 1, day))
+        }
+
+        return (
+            <label>
+                {props.label}
+                <input
+                    disabled={props.disabled}
+                    onChange={handleChange}
+                    type='date'
+                    value={props.date
+                        ? `${props.date.getFullYear()}-${String(props.date.getMonth() + 1)
+                            .padStart(2, '0')}-${String(props.date.getDate())
+                            .padStart(2, '0')}`
+                        : ''}
+                />
+            </label>
+        )
+    },
     LoadingSpinner: () => <div>loading</div>,
 }), { virtual: true })
 
@@ -156,6 +192,48 @@ describe('AdminTimesheetView', () => {
             expect(mockSave)
                 .toHaveBeenCalledWith('eng-1', 'asg-1', {
                     entries: [{ hoursWorked: '9', remarks: 'Sprint planning', workDate: '2026-09-07' }],
+                    overrideReason: undefined,
+                })
+        })
+    })
+
+    it('lets an administrator add a date range and save those entries on behalf of the member', async () => {
+        const user = userEvent.setup()
+        mockSave.mockResolvedValue(timesheet([
+            entry({
+                hoursWorked: '8.00',
+                id: 'new-entry-1',
+                remarks: null,
+                workDate: '2026-09-08',
+            }),
+            entry({
+                hoursWorked: '8.00',
+                id: 'new-entry-2',
+                remarks: null,
+                workDate: '2026-09-09',
+            }),
+        ]))
+        renderView([])
+
+        await user.clear(screen.getByLabelText('From Date'))
+        await user.type(screen.getByLabelText('From Date'), '2026-09-08')
+        await user.clear(screen.getByLabelText('To Date'))
+        await user.type(screen.getByLabelText('To Date'), '2026-09-09')
+        await user.click(screen.getByRole('button', { name: 'Add Range' }))
+
+        const mondayHours = await screen.findByLabelText('Hours worked on 08-09-2026')
+        const tuesdayHours = await screen.findByLabelText('Hours worked on 09-09-2026')
+        await user.type(mondayHours, '8')
+        await user.type(tuesdayHours, '8')
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+
+        await waitFor(() => {
+            expect(mockSave)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    entries: [
+                        { hoursWorked: '8', remarks: undefined, workDate: '2026-09-08' },
+                        { hoursWorked: '8', remarks: undefined, workDate: '2026-09-09' },
+                    ],
                     overrideReason: undefined,
                 })
         })
@@ -280,6 +358,91 @@ describe('AdminTimesheetView', () => {
             .getByRole('button', { name: 'Approve' }))
 
         await waitFor(() => {
+            expect(mockApprove)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    approvalComment: 'Approved for week 37',
+                    entryIds: ['e1'],
+                    overrideReason: 'Manager on leave',
+                })
+        })
+    })
+
+    it('saves pending edits before submitting on behalf', async () => {
+        const user = userEvent.setup()
+        mockSave.mockResolvedValue(timesheet([
+            entry({
+                hoursWorked: '8.00',
+                id: 'new-entry',
+                remarks: null,
+                status: TimesheetEntryStatus.DRAFT,
+                workDate: '2026-09-08',
+            }),
+        ]))
+        mockSubmit.mockResolvedValue(timesheet([
+            entry({
+                id: 'new-entry',
+                status: TimesheetEntryStatus.SUBMITTED,
+                workDate: '2026-09-08',
+            }),
+        ]))
+        renderView([
+            entry({
+                id: 'draft-entry',
+                status: TimesheetEntryStatus.DRAFT,
+                workDate: '2026-09-08',
+            }),
+        ])
+
+        const hoursInput = await screen.findByLabelText('Hours worked on 08-09-2026')
+        await user.clear(hoursInput)
+        await user.type(hoursInput, '8')
+        await user.click(screen.getByLabelText('Select 08-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Submit on behalf (1)' }))
+
+        const dialog = screen.getByRole('dialog')
+        await user.type(within(dialog)
+            .getByLabelText('Override reason'), 'Portal outage')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Submit on behalf' }))
+
+        await waitFor(() => {
+            expect(mockSave)
+                .toHaveBeenCalledTimes(1)
+            expect(mockSubmit)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    entryIds: ['new-entry'],
+                    overrideReason: 'Portal outage',
+                })
+        })
+    })
+
+    it('saves pending edits before approving on behalf', async () => {
+        const user = userEvent.setup()
+        mockSave.mockResolvedValue(timesheet([
+            entry({
+                id: 'e1',
+                remarks: 'Clarified work notes',
+                status: TimesheetEntryStatus.SUBMITTED,
+            }),
+        ]))
+        mockApprove.mockResolvedValue({ approved: ['e1'], skipped: [] })
+        renderView([entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED })])
+
+        await user.type(screen.getByLabelText('Remarks for 07-09-2026'), ' updated')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
+
+        const dialog = screen.getByRole('dialog')
+        await user.type(within(dialog)
+            .getByLabelText('Approval comment'), 'Approved for week 37')
+        await user.type(within(dialog)
+            .getByLabelText(/Override reason/), 'Manager on leave')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Approve' }))
+
+        await waitFor(() => {
+            expect(mockSave)
+                .toHaveBeenCalledTimes(1)
             expect(mockApprove)
                 .toHaveBeenCalledWith('eng-1', 'asg-1', {
                     approvalComment: 'Approved for week 37',
