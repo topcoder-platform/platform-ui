@@ -46,6 +46,30 @@ jest.mock('~/libs/ui', () => ({
             <input type='text' />
         </label>
     ),
+    InputSelect: (props: {
+        label: string
+        onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+        options: Array<{ label?: React.ReactNode, value: string }>
+        value?: string
+    }) => (
+        <label>
+            {props.label}
+            <select
+                onChange={function onChange(event: React.ChangeEvent<HTMLSelectElement>) {
+                    props.onChange({
+                        target: { value: event.target.value },
+                    } as React.ChangeEvent<HTMLInputElement>)
+                }}
+                value={props.value}
+            >
+                {props.options.map(option => (
+                    <option key={option.value} value={option.value}>
+                        {option.label ?? option.value}
+                    </option>
+                ))}
+            </select>
+        </label>
+    ),
 }), { virtual: true })
 
 jest.mock('../../lib/services', () => ({

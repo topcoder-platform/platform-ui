@@ -181,9 +181,14 @@
 }
 
 .selectFilter {
+    min-width: 190px;
     label :last-child {
         margin-top: 0;
     }
+}
+
+.leftAuto {
+    margin-left: auto;
 }
 
 .dateFilter {
@@ -191,6 +196,13 @@
 
     &Wrapper {
         justify-content: flex-end;
+        > * {
+            margin-bottom: 0;
+
+            button {
+                margin-top: 0;
+            }
+        }
     }
 }
 

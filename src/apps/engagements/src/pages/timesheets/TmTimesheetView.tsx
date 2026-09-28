@@ -1,7 +1,7 @@
-import { FC, FocusEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 
-import { Button, InputDatePicker } from '~/libs/ui'
+import { Button, InputDatePicker, InputSelect } from '~/libs/ui'
 
 import { TimesheetApproveModal } from '../../components/timesheet-approve-modal'
 import { TimesheetGrid } from '../../components/timesheet-grid'
@@ -24,6 +24,17 @@ interface TmTimesheetViewProps {
 }
 
 type StatusFilter = TimesheetEntryStatus.APPROVED | TimesheetEntryStatus.SUBMITTED
+
+const STATUS_FILTER_OPTIONS = [
+    {
+        label: 'Pending Approval',
+        value: TimesheetEntryStatus.SUBMITTED,
+    },
+    {
+        label: 'Approved',
+        value: TimesheetEntryStatus.APPROVED,
+    },
+]
 
 const extractErrorMessage = (error: unknown, fallback: string): string => {
     const typedError = error as {
@@ -160,20 +171,19 @@ const TmTimesheetView: FC<TmTimesheetViewProps> = (props: TmTimesheetViewProps) 
     return (
         <div className={styles.view}>
             <section className={styles.rangeSection}>
-                <label className={styles.statusField} htmlFor='timesheet-tm-status-filter'>
-                    Status
-                    <select
-                        id='timesheet-tm-status-filter'
-                        onChange={function onStatusChange(event: FocusEvent<HTMLSelectElement>) {
-                            setStatusFilter(event.target.value as StatusFilter)
-                            setPartialResult(undefined)
-                        }}
-                        value={statusFilter}
-                    >
-                        <option value={TimesheetEntryStatus.SUBMITTED}>Pending Approval</option>
-                        <option value={TimesheetEntryStatus.APPROVED}>Approved</option>
-                    </select>
-                </label>
+                <InputSelect
+                    classNameWrapper={styles.dateFilterWrapper}
+                    dirty
+                    label='Status'
+                    name='timesheet-tm-status-filter'
+                    onChange={function onStatusChange(event: ChangeEvent<HTMLInputElement>) {
+                        setStatusFilter(event.target.value as StatusFilter)
+                        setPartialResult(undefined)
+                    }}
+                    options={STATUS_FILTER_OPTIONS}
+                    placeholder='Select status'
+                    value={statusFilter}
+                />
 
                 {isApprovedView && (
                     <>
