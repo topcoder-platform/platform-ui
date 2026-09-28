@@ -2,7 +2,7 @@
 import '@testing-library/jest-dom'
 
 import React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 
 import type { TimesheetView } from '../../lib/models'
 import { TimesheetViewerRole } from '../../lib/models'
@@ -30,7 +30,9 @@ jest.mock('~/libs/ui', () => ({
 }), { virtual: true })
 
 jest.mock('../../components', () => ({
-    EngagementsTabs: (props: { activeTab: string }) => <div data-testid='engagements-tabs' data-active-tab={props.activeTab} />,
+    EngagementsTabs: (props: { activeTab: string }) => (
+        <div data-testid='engagements-tabs' data-active-tab={props.activeTab} />
+    ),
 }))
 
 jest.mock('./AdminTimesheetView', () => ({

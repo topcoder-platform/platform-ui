@@ -9,6 +9,8 @@ import type { TimesheetEngagementListResponse, TimesheetEngagementRow } from '..
 import { TimesheetViewerRole } from '../../lib/models'
 import { getTimesheetEngagements } from '../../lib/services'
 
+import TimesheetEngagementsPage from './TimesheetEngagementsPage'
+
 const mockNavigate = jest.fn()
 
 jest.mock('react-router-dom', () => ({
@@ -57,10 +59,12 @@ jest.mock('~/libs/ui', () => ({
         </label>
     ),
     LoadingSpinner: () => <div>loading-spinner</div>,
-    }), { virtual: true })
+}), { virtual: true })
 
 jest.mock('../../components', () => ({
-    EngagementsTabs: (props: { activeTab: string }) => <div data-testid='engagements-tabs' data-active-tab={props.activeTab} />,
+    EngagementsTabs: (props: { activeTab: string }) => (
+        <div data-testid='engagements-tabs' data-active-tab={props.activeTab} />
+    ),
 }), { virtual: true })
 
 jest.mock('react-markdown', () => ({
@@ -94,8 +98,6 @@ jest.mock('remark-gfm', () => ({
     __esModule: true,
     default: () => undefined,
 }), { virtual: true })
-
-const TimesheetEngagementsPage = require('./TimesheetEngagementsPage').default
 
 jest.mock('../../lib/services', () => ({
     getTimesheetEngagements: jest.fn(),
@@ -173,7 +175,9 @@ describe('TimesheetEngagementsPage', () => {
 
         expect(screen.getByLabelText('Engagement title')).toBeInTheDocument()
         expect(screen.getByLabelText('Asignee')).toBeInTheDocument()
-        expect(screen.queryByLabelText('Manager')).not.toBeInTheDocument()
+        expect(screen.queryByLabelText('Manager'))
+            .not
+            .toBeInTheDocument()
         expect(screen.queryByRole('columnheader', { name: 'Timesheet Status' }))
             .not
             .toBeInTheDocument()
