@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, react/jsx-no-bind */
 import { PropsWithChildren } from 'react'
 import { readFileSync } from 'fs'
 import '@testing-library/jest-dom'
@@ -196,7 +196,18 @@ jest.mock('../components', () => ({
     extractTableOfContents: (): [] => [],
     isHtmlDescriptionFormat: (): boolean => false,
     MarathonDashboard: (): JSX.Element => <div>Challenge Activity</div>,
-    OpportunityPagination: (): JSX.Element => <div>Pagination</div>,
+    OpportunityPagination: (props: {
+        onPageChange: (page: number) => void
+        page: number
+        totalPages: number
+    }): JSX.Element => (
+        <div>
+            Pagination
+            {props.page < props.totalPages && (
+                <button onClick={() => props.onPageChange(props.page + 1)} type='button'>Next page</button>
+            )}
+        </div>
+    ),
     ReportIssueModal: (): JSX.Element => <></>,
     SubmissionArtifactsModal: (props: {
         open: boolean
@@ -231,6 +242,7 @@ jest.mock('../components/challenge-card.utils', () => ({
 
 jest.mock('../services', () => ({
     deleteChallengeSubmission: (...args: unknown[]) => mockDeleteSubmission(...args),
+    getAllChallengeSubmissions: jest.fn(),
     getChallengeAiReviewConfig: jest.fn(),
     getChallengeOpportunity: jest.fn(),
     getChallengeProjectResults: jest.fn(),
@@ -2037,6 +2049,85 @@ describe('ChallengeDetailsPage member flows', () => {
         } else {
             expect(action).not.toBeInTheDocument()
         }
+    })
+
+    it.each([
+        ['Handle', ['Beta', 'unknown', 'Zulu']],
+        ['Rating', ['Zulu', 'Beta', 'unknown']],
+        ['Provisional Score', ['Zulu', 'Beta', 'unknown']],
+        ['Final Score', ['Beta', 'Zulu', 'unknown']],
+    ])('sorts %s in both directions using displayed values', (label, ascending) => {
+        mockChallenge = { ...mockChallenge, phases: [], status: 'COMPLETED', type: 'Marathon Match' }
+        mockSubmissions = [
+            { finalScore: 20, id: 'a', memberId: '1', provisionalScore: 2, rating: 999, submitterHandle: 'A' },
+            { finalScore: 3, id: 'b', memberId: '2', provisionalScore: 10, rating: 888, submitterHandle: 'B' },
+            { id: 'c', submitterHandle: 'unknown' },
+        ]
+        mockMemberProfiles = [
+            { handle: 'Zulu', maxRating: 2, userId: '1' },
+            { handle: 'Beta', maxRating: 10, userId: '2' },
+        ]
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        fireEvent.click(screen.getByRole('button', { name: label }))
+        const rowHandles = (): string[] => screen.getAllByRole('row')
+            .slice(1)
+            .map(row => within(row)
+                .getByRole('link').textContent ?? '')
+        expect(rowHandles())
+            .toEqual(ascending)
+        expect(screen.getByRole('columnheader', { name: label }))
+            .toHaveAttribute('aria-sort', 'ascending')
+        fireEvent.click(screen.getByRole('button', { name: label }))
+        expect(rowHandles())
+            .toEqual(label === 'Handle' ? [...ascending].reverse() : [ascending[1], ascending[0], 'unknown'])
+        expect(screen.getByRole('columnheader', { name: label }))
+            .toHaveAttribute('aria-sort', 'descending')
+        expect(screen.getByRole('columnheader', { name: 'Submission Date' }))
+            .toHaveAttribute('aria-sort', 'none')
+    })
+
+    it('keeps My Submissions on date ordering after sorting the public table by handle', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = { ...mockChallenge, type: 'Marathon Match' }
+        mockSubmissions = [{ id: 'submission-1', memberId: '123', submitterHandle: 'coder' }]
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        fireEvent.click(screen.getByRole('button', { name: 'Handle' }))
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+        expect(screen.getByRole('button', { name: 'Sort by Submission Date' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Sort by Handle' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('sorts across the whole collection before pagination and resets the page for a different field', () => {
+        mockChallenge = { ...mockChallenge, type: 'Marathon Match' }
+        mockSubmissions = Array.from({ length: 12 }, (_value, index) => ({
+            id: `submission-${index}`,
+            rating: index,
+            submitterHandle: `coder${String(11 - index)
+                .padStart(2, '0')}`,
+        }))
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        fireEvent.click(screen.getByRole('button', { name: 'Handle' }))
+        expect(screen.getAllByRole('row'))
+            .toHaveLength(11)
+        expect(screen.getByRole('link', { name: 'coder00' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'coder11' })).not.toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+        expect(screen.getAllByRole('row'))
+            .toHaveLength(3)
+        expect(screen.getByRole('link', { name: 'coder11' }))
+            .toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'Rating' }))
+        expect(screen.getAllByRole('row'))
+            .toHaveLength(11)
+        expect(screen.getByRole('link', { name: 'coder11' }))
+            .toBeInTheDocument()
     })
 
     it('renders Marathon Match testing progress and both score phases without rounding', () => {
