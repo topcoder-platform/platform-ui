@@ -3,9 +3,9 @@ import { useParams } from 'react-router-dom'
 
 import { BaseModal, Button, ContentLayout, LoadingSpinner } from '~/libs/ui'
 
-import type { TimesheetView } from '../../lib/models'
+import type { TimesheetAuditRecord, TimesheetView } from '../../lib/models'
 import { TimesheetViewerRole } from '../../lib/models'
-import { getTimesheet } from '../../lib/services'
+import { getEngagementManagersAudit, getTimesheet } from '../../lib/services'
 import { EngagementsTabs } from '../../components'
 import { EngagementManagers } from '../../components/engagement-managers'
 import { AuthCtx, useAuth } from '../../lib/utils/auth'
@@ -19,6 +19,25 @@ import styles from './TimesheetsPage.module.scss'
 
 const ACCESS_DENIED_MESSAGE = 'This timesheet is not available to you.'
 const UNSAVED_CHANGES_MESSAGE = 'You have unsaved timesheet entries.'
+const MANAGER_AUDIT_ACTION_LABELS: Record<string, string> = {
+    MANAGER_ASSIGNED: 'Manager assigned',
+    MANAGER_REMOVED: 'Manager removed',
+}
+
+const formatAuditValues = (values: unknown): string => {
+    if (!values || typeof values !== 'object') {
+        return '—'
+    }
+
+    return Object.entries(values as Record<string, unknown>)
+        .map(([key, value]) => `${key}: ${value === null ? 'none' : String(value)}`)
+        .join(', ')
+}
+
+const formatAuditTimestamp = (value: string): string => {
+    const parsed = new Date(value)
+    return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString()
+}
 
 const isNotFound = (error: unknown): boolean => {
     const typedError = error as { response?: { status?: number }, status?: number }
@@ -51,6 +70,10 @@ const TimesheetsPage: FC = () => {
     const [error, setError] = useState<string | undefined>()
     const [isDirty, setIsDirty] = useState<boolean>(false)
     const [isManagersModalOpen, setIsManagersModalOpen] = useState<boolean>(false)
+    const [isManagersAuditOpen, setIsManagersAuditOpen] = useState<boolean>(false)
+    const [managerAudit, setManagerAudit] = useState<TimesheetAuditRecord[]>([])
+    const [managerAuditError, setManagerAuditError] = useState<string | undefined>()
+    const [isManagersAuditLoading, setIsManagersAuditLoading] = useState<boolean>(false)
 
     const reloadTimesheet = useCallback(async (): Promise<void> => {
         if (!assignmentId || !engagementId) {
@@ -108,6 +131,37 @@ const TimesheetsPage: FC = () => {
         }
     }, [timesheet?.viewerRole])
 
+    useEffect(() => {
+        if (!isManagersAuditOpen || !timesheet?.engagementId) {
+            return undefined
+        }
+
+        let mounted = true
+        setIsManagersAuditLoading(true)
+        setManagerAuditError(undefined)
+
+        getEngagementManagersAudit(timesheet.engagementId)
+            .then(loaded => {
+                if (mounted) {
+                    setManagerAudit(loaded)
+                }
+            })
+            .catch(() => {
+                if (mounted) {
+                    setManagerAuditError('Failed to load the manager audit history.')
+                }
+            })
+            .finally(() => {
+                if (mounted) {
+                    setIsManagersAuditLoading(false)
+                }
+            })
+
+        return () => {
+            mounted = false
+        }
+    }, [isManagersAuditOpen, timesheet?.engagementId])
+
     // Unsaved rows live only in the browser, so leaving the page loses them. Warn before that happens.
     useEffect(() => {
         if (!isDirty) {
@@ -159,6 +213,9 @@ const TimesheetsPage: FC = () => {
                                 setIsManagersModalOpen(true)
                             }
                             : undefined}
+                        onViewManagersAudit={function onViewManagersAudit() {
+                            setIsManagersAuditOpen(true)
+                        }}
                     />
 
                     {timesheet.viewerRole === TimesheetViewerRole.MEMBER && (
@@ -216,6 +273,71 @@ const TimesheetsPage: FC = () => {
                                     .catch(() => undefined)
                             }}
                         />
+                    </BaseModal>
+
+                    <BaseModal
+                        buttons={(
+                            <Button
+                                label='Close'
+                                onClick={function onCloseManagersAuditModal() {
+                                    setIsManagersAuditOpen(false)
+                                }}
+                                secondary
+                            />
+                        )}
+                        onClose={function onCloseManagersAuditModal() {
+                            setIsManagersAuditOpen(false)
+                        }}
+                        open={isManagersAuditOpen}
+                        size='lg'
+                        title='Manager assignment audit'
+                    >
+                        {isManagersAuditLoading && <LoadingSpinner />}
+
+                        {!isManagersAuditLoading && managerAuditError && (
+                            <p className={styles.error} role='alert'>{managerAuditError}</p>
+                        )}
+
+                        {!isManagersAuditLoading && !managerAuditError && managerAudit.length === 0 && (
+                            <p className={styles.pending}>No manager assignment changes recorded.</p>
+                        )}
+
+                        {!isManagersAuditLoading && !managerAuditError && managerAudit.length > 0 && (
+                            <ol className={styles.auditList}>
+                                {managerAudit.map(record => (
+                                    <li className={styles.auditRecord} key={record.id}>
+                                        <div className={styles.auditHeader}>
+                                            <strong>
+                                                {MANAGER_AUDIT_ACTION_LABELS[record.action] ?? record.action}
+                                            </strong>
+                                            <span className={styles.auditMeta}>
+                                                {record.actorHandle ?? record.actorUserId}
+                                                {` (${record.actorRole})`}
+                                            </span>
+                                            <span className={styles.auditMeta}>
+                                                {formatAuditTimestamp(record.createdAt)}
+                                            </span>
+                                        </div>
+                                        <dl className={styles.auditSummary}>
+                                            <div>
+                                                <dt>Before</dt>
+                                                <dd>{formatAuditValues(record.previousValues)}</dd>
+                                            </div>
+                                            <div>
+                                                <dt>After</dt>
+                                                <dd>{formatAuditValues(record.updatedValues)}</dd>
+                                            </div>
+                                            {record.comment && (
+                                                <div>
+                                                    <dt>Comment</dt>
+                                                    <dd>{record.comment}</dd>
+                                                </div>
+                                            )}
+                                        </dl>
+                                    </li>
+                                ))}
+                            </ol>
+                        )}
                     </BaseModal>
                 </div>
             )}
