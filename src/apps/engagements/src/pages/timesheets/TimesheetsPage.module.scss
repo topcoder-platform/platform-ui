@@ -136,6 +136,27 @@
     }
 }
 
+.nestedAuditList {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+
+    > div {
+        display: grid;
+        gap: 4px;
+    }
+
+    dt {
+        @include font-weight-bold;
+    }
+
+    dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+    }
+}
+
 .statusField {
     display: grid;
     gap: 6px;
