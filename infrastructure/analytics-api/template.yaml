@@ -150,7 +150,7 @@ Resources:
   AnalyticsPrewarmRule:
     Type: AWS::Events::Rule
     Properties:
-      Description: Prepares default analytics results once per four-hour Data API token window.
+      Description: Prepares default analytics results every four hours; interactive requests refresh independently.
       ScheduleExpression: cron(0 0/4 * * ? *)
       State: ENABLED
       Targets:

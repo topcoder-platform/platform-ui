@@ -23,11 +23,12 @@ MAX_DATE_RANGE_DAYS = 366
 MAX_RESULT_ROWS = 2_000
 MAX_QUERY_ATTEMPTS = 2
 REPORT_CACHE_SECONDS = 60
-FILTER_CACHE_SECONDS = 300
-# Redshift Data API retains idempotency tokens for eight hours. Four-hour
-# windows leave a complete prior window available for safe boundary-crossing
-# polls while allowing scheduled requests to prepare the default reports.
-QUERY_TOKEN_WINDOW_SECONDS = 14_400
+FILTER_CACHE_SECONDS = 60
+# Reuse completed statements for at most one minute. Pending queries keep
+# their original token across fifteen previous windows, so slow warehouse
+# startup does not restart work when the freshness window advances.
+QUERY_TOKEN_WINDOW_SECONDS = 60
+QUERY_TOKEN_RESUME_WINDOWS = 15
 QUERY_POLL_DELAY_MILLISECONDS = 1_000
 SAFE_FILTER_PATTERN = re.compile(r"^[A-Za-z0-9._~-]{1,100}$")
 QUERY_TOKEN_PATTERN = re.compile(r"^[0-9a-f]{64}$")
@@ -1509,10 +1510,10 @@ def _query_client_token(
         sql: Server-owned SQL template.
         parameters: Validated named parameters.
         attempt: Provider retry index; failed statements receive a new token.
-        token_window: Optional explicit four-hour bucket used to validate a resume token.
+        token_window: Optional explicit one-minute bucket used to validate a resume token.
 
     Returns:
-        Sixty-four-character SHA-256 token stable within a four-hour window.
+        Sixty-four-character SHA-256 token stable within a one-minute window.
 
     Raises:
         Does not raise for validated handler inputs and configured environment values.
@@ -1543,14 +1544,14 @@ def _query_token_attempt(
         query_token: SHA-256 token returned by a pending response.
 
     Returns:
-        Provider attempt encoded into the valid current or prior-window token.
+        Provider attempt encoded into a current or recent one-minute token.
 
     Raises:
         ValueError when the token belongs to another query, filter set, or expired window.
     """
 
     current_window = int(time.time() // QUERY_TOKEN_WINDOW_SECONDS)
-    for token_window in (current_window, current_window - 1):
+    for token_window in range(current_window, current_window - QUERY_TOKEN_RESUME_WINDOWS - 1, -1):
         for attempt in range(MAX_QUERY_ATTEMPTS):
             expected = _query_client_token(sql, parameters, attempt, token_window)
             if query_token == expected:
