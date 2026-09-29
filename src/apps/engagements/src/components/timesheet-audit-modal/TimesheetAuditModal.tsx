@@ -1,5 +1,6 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, ReactNode, useEffect, useState } from 'react'
 
+import { EnvironmentConfig } from '~/config'
 import { BaseModal, Button, LoadingSpinner } from '~/libs/ui'
 
 import type { TimesheetAuditRecord } from '../../lib/models'
@@ -28,14 +29,93 @@ const ACTION_LABELS: Record<string, string> = {
     UPDATED: 'Updated',
 }
 
-const formatValues = (values: unknown): string => {
-    if (!values || typeof values !== 'object') {
-        return '-'
+const formatAuditDateTime = (value: unknown): string => {
+    if (value === null || value === undefined || value === '') {
+        return '—'
     }
 
-    return Object.entries(values as Record<string, unknown>)
-        .map(([key, value]) => `${key}: ${value === null ? 'none' : String(value)}`)
-        .join(', ')
+    const parsed = new Date(String(value))
+    return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toLocaleString()
+}
+
+const formatAuditValue = (key: string, value: unknown): ReactNode => {
+    if (value === null || value === undefined || value === '') {
+        return '—'
+    }
+
+    if ((key === 'removedAt' || key === 'paidAt') && typeof value === 'string') {
+        return formatAuditDateTime(value)
+    }
+
+    if (key === 'managerHandle' && typeof value === 'string') {
+        return (
+            <a
+                href={`${EnvironmentConfig.URLS.USER_PROFILE}/${encodeURIComponent(value)}`}
+                rel='noreferrer'
+                target='_blank'
+            >
+                {value}
+            </a>
+        )
+    }
+
+    if (key === 'managerUserId') {
+        return String(value)
+    }
+
+    return String(value)
+}
+
+const formatAuditEntries = (values: unknown): Array<{ key: string, value: ReactNode }> => {
+    if (!values || typeof values !== 'object') {
+        return [{ key: 'values', value: '—' }]
+    }
+
+    const entries = Object.entries(values as Record<string, unknown>)
+        .filter(([key]) => key !== 'managerName')
+
+    const managerHandle = entries.find(([key]) => key === 'managerHandle')?.[1]
+    const managerUserId = entries.find(([key]) => key === 'managerUserId')?.[1]
+
+    const formattedEntries = entries
+        .filter(([key]) => key !== 'managerHandle' && key !== 'managerUserId')
+        .map(([key, value]) => ({
+            key: {
+                approvedByHandle: 'approved by',
+                hoursWorked: 'hours worked',
+                managerHandle: 'manager',
+                managerName: 'manager name',
+                managerUserId: 'user ID',
+                paidAt: 'paid at',
+                paidPaymentReference: 'payment ID',
+                removedAt: 'removed at',
+                workDate: 'work date',
+            }[key]
+                ?? key.replace(/([A-Z])/g, ' $1')
+                    .trim()
+                    .toLowerCase(),
+            value: formatAuditValue(key, value),
+        }))
+
+    if (managerHandle && typeof managerHandle === 'string') {
+        return [{
+            key: 'manager',
+            value: (
+                <>
+                    <a
+                        href={`${EnvironmentConfig.URLS.USER_PROFILE}/${encodeURIComponent(managerHandle)}`}
+                        rel='noreferrer'
+                        target='_blank'
+                    >
+                        {managerHandle}
+                    </a>
+                    {managerUserId !== undefined && managerUserId !== null && ` (${String(managerUserId)})`}
+                </>
+            ),
+        }, ...formattedEntries]
+    }
+
+    return formattedEntries
 }
 
 const formatTimestamp = (value: string): string => {
@@ -120,12 +200,18 @@ const TimesheetAuditModal: FC<TimesheetAuditModalProps> = (props: TimesheetAudit
                             </div>
                             <dl className={styles.values}>
                                 <div>
-                                    <dt>Before</dt>
-                                    <dd>{formatValues(record.previousValues)}</dd>
-                                </div>
-                                <div>
-                                    <dt>After</dt>
-                                    <dd>{formatValues(record.updatedValues)}</dd>
+                                    {/* <dt>After</dt> */}
+                                    <dd>
+                                        <dl className={styles.subValues}>
+                                            {formatAuditEntries(record.updatedValues)
+                                                .map(entry => (
+                                                    <div key={`${record.id}-after-${entry.key}`}>
+                                                        <dt>{entry.key}</dt>
+                                                        <dd>{entry.value}</dd>
+                                                    </div>
+                                                ))}
+                                        </dl>
+                                    </dd>
                                 </div>
                                 {record.comment && (
                                     <div>

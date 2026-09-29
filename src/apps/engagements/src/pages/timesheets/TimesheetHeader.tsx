@@ -11,6 +11,7 @@ interface TimesheetHeaderProps {
     assignment: TimesheetAssignment
     managers: EngagementManager[]
     onEditManagers?: () => void
+    onViewManagersAudit?: () => void
 }
 
 const withHandle = (name: string | null | undefined, handle: string): string => (
@@ -24,14 +25,24 @@ const TimesheetHeader: FC<TimesheetHeaderProps> = (props: TimesheetHeaderProps) 
     <section className={styles.header}>
         <div className={styles.headerTitleRow}>
             <h2 className={styles.title}>{props.engagementTitle}</h2>
-            {props.onEditManagers && (
-                <Button
-                    label='Edit managers'
-                    onClick={props.onEditManagers}
-                    secondary
-                    size='sm'
-                />
-            )}
+            <div className={styles.headerActions}>
+                {props.onViewManagersAudit && (
+                    <Button
+                        label='View managers audit'
+                        onClick={props.onViewManagersAudit}
+                        secondary
+                        size='sm'
+                    />
+                )}
+                {props.onEditManagers && (
+                    <Button
+                        label='Edit managers'
+                        onClick={props.onEditManagers}
+                        secondary
+                        size='sm'
+                    />
+                )}
+            </div>
         </div>
         <dl className={styles.headerFacts}>
             <div className={styles.fact}>

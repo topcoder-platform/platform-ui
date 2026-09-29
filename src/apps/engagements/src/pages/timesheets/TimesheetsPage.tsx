@@ -8,9 +8,11 @@ import { TimesheetViewerRole } from '../../lib/models'
 import { getTimesheet } from '../../lib/services'
 import { EngagementsTabs } from '../../components'
 import { EngagementManagers } from '../../components/engagement-managers'
+import { AuthCtx, useAuth } from '../../lib/utils/auth'
 
 import AdminTimesheetView from './AdminTimesheetView'
 import ManagerTimesheetView from './ManagerTimesheetView'
+import ManagersAuditModal from './ManagersAuditModal'
 import MemberTimesheetView from './MemberTimesheetView'
 import TimesheetHeader from './TimesheetHeader'
 import TmTimesheetView from './TmTimesheetView'
@@ -36,6 +38,7 @@ const isNotFound = (error: unknown): boolean => {
  * API's own 404 rather than hitting a guard they could bypass.
  */
 const TimesheetsPage: FC = () => {
+    const authCtx: AuthCtx = useAuth()
     const {
         assignmentId,
         engagementId,
@@ -49,6 +52,7 @@ const TimesheetsPage: FC = () => {
     const [error, setError] = useState<string | undefined>()
     const [isDirty, setIsDirty] = useState<boolean>(false)
     const [isManagersModalOpen, setIsManagersModalOpen] = useState<boolean>(false)
+    const [isManagersAuditOpen, setIsManagersAuditOpen] = useState<boolean>(false)
 
     const reloadTimesheet = useCallback(async (): Promise<void> => {
         if (!assignmentId || !engagementId) {
@@ -126,8 +130,8 @@ const TimesheetsPage: FC = () => {
     }, [isDirty])
 
     const canEditManagers = timesheet
-        && [TimesheetViewerRole.ADMINISTRATOR, TimesheetViewerRole.TM]
-            .includes(timesheet.viewerRole)
+        && ([TimesheetViewerRole.ADMINISTRATOR, TimesheetViewerRole.TM]
+            .includes(timesheet.viewerRole) || authCtx.isTm)
     const canRenderContent = !isLoading && !error && timesheet
 
     return (
@@ -157,6 +161,9 @@ const TimesheetsPage: FC = () => {
                                 setIsManagersModalOpen(true)
                             }
                             : undefined}
+                        onViewManagersAudit={function onViewManagersAudit() {
+                            setIsManagersAuditOpen(true)
+                        }}
                     />
 
                     {timesheet.viewerRole === TimesheetViewerRole.MEMBER && (
@@ -215,6 +222,14 @@ const TimesheetsPage: FC = () => {
                             }}
                         />
                     </BaseModal>
+
+                    <ManagersAuditModal
+                        engagementId={timesheet.engagementId}
+                        onClose={function onCloseManagersAuditModal() {
+                            setIsManagersAuditOpen(false)
+                        }}
+                        open={isManagersAuditOpen}
+                    />
                 </div>
             )}
         </ContentLayout>

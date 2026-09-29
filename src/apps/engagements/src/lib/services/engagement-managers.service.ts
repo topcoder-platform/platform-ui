@@ -1,7 +1,11 @@
 import { EnvironmentConfig } from '~/config'
 import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync } from '~/libs/core'
 
-import type { AssignEngagementManagerRequest, EngagementManager } from '../models'
+import type {
+    AssignEngagementManagerRequest,
+    EngagementManager,
+    TimesheetAuditRecord,
+} from '../models'
 
 const ENGAGEMENTS_URL = `${EnvironmentConfig.API.V6}/engagements`
 
@@ -51,3 +55,12 @@ export const removeEngagementManager = async (
 ): Promise<void> => {
     await xhrDeleteAsync(`${managersUrl(engagementId)}/${managerUserId}`)
 }
+
+/**
+ * Reads the engagement-level manager assignment and removal history, newest first.
+ */
+export const getEngagementManagersAudit = async (
+    engagementId: string,
+): Promise<TimesheetAuditRecord[]> => (
+    xhrGetAsync<TimesheetAuditRecord[]>(`${managersUrl(engagementId)}/audit`)
+)

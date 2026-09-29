@@ -82,6 +82,81 @@
     color: $black-60;
 }
 
+.headerActions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.auditList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 16px;
+}
+
+.auditRecord {
+    padding: 16px;
+    border: 1px solid $black-10;
+    border-radius: 12px;
+    background: $black-5;
+}
+
+.auditHeader {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.auditMeta {
+    color: $black-60;
+    font-size: 13px;
+}
+
+.auditSummary {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+
+    > div {
+        display: grid;
+        gap: 4px;
+    }
+
+    dt {
+        @include font-weight-bold;
+    }
+
+    dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+    }
+}
+
+.nestedAuditList {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+
+    > div {
+        display: grid;
+        gap: 4px;
+    }
+
+    dt {
+        @include font-weight-bold;
+    }
+
+    dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+    }
+}
+
 .statusField {
     display: grid;
     gap: 6px;
