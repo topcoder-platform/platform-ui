@@ -259,6 +259,9 @@ export const FormUserAutocomplete: FC<FormUserAutocompleteProps> = (props: FormU
                 cacheOptions
                 className={styles.select}
                 classNamePrefix='challenge-select'
+                classNames={{
+                    menuPortal: () => styles.menuPortal,
+                }}
                 defaultOptions={false}
                 id={props.name}
                 isClearable

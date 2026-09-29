@@ -8,6 +8,7 @@ import { TimesheetViewerRole } from '../../lib/models'
 import { getTimesheet } from '../../lib/services'
 import { EngagementsTabs } from '../../components'
 import { EngagementManagers } from '../../components/engagement-managers'
+import { AuthCtx, useAuth } from '../../lib/utils/auth'
 
 import AdminTimesheetView from './AdminTimesheetView'
 import ManagerTimesheetView from './ManagerTimesheetView'
@@ -36,6 +37,7 @@ const isNotFound = (error: unknown): boolean => {
  * API's own 404 rather than hitting a guard they could bypass.
  */
 const TimesheetsPage: FC = () => {
+    const authCtx: AuthCtx = useAuth()
     const {
         assignmentId,
         engagementId,
@@ -126,8 +128,8 @@ const TimesheetsPage: FC = () => {
     }, [isDirty])
 
     const canEditManagers = timesheet
-        && [TimesheetViewerRole.ADMINISTRATOR, TimesheetViewerRole.TM]
-            .includes(timesheet.viewerRole)
+        && ([TimesheetViewerRole.ADMINISTRATOR, TimesheetViewerRole.TM]
+            .includes(timesheet.viewerRole) || authCtx.isTm)
     const canRenderContent = !isLoading && !error && timesheet
 
     return (

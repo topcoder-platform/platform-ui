@@ -1,11 +1,8 @@
 import { FC, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { useProfileContext } from '~/libs/core'
 import { TabsNavbar, TabsNavItem } from '~/libs/ui'
 import {
-    checkTalentManager,
-    hasAdminRole,
     useFetchEngagementTimesheets,
     UseFetchEngagementTimesheetsResult,
 } from '~/apps/work/src/lib'
@@ -13,6 +10,7 @@ import {
 import { rootRoute } from '../../engagements.routes'
 
 import styles from './EngagementsTabs.module.scss'
+import { AuthCtx, useAuth } from '../../lib/utils/auth'
 
 export type EngagementsTab = 'opportunities' | 'applications' | 'assignments' | 'timesheets'
 
@@ -22,18 +20,16 @@ interface EngagementsTabsProps {
 
 const EngagementsTabs: FC<EngagementsTabsProps> = (props: EngagementsTabsProps) => {
     const navigate = useNavigate()
-    const profileContext = useProfileContext()
-    const isLoggedIn = profileContext.isLoggedIn
-    const userRoles = profileContext.profile?.roles ?? []
+    const authCtx: AuthCtx = useAuth()
     const { timesheets }: UseFetchEngagementTimesheetsResult = useFetchEngagementTimesheets()
-    const isAdminOrManager = hasAdminRole(userRoles) || checkTalentManager(userRoles) || timesheets.length
+    const isAdminOrManager = authCtx.isAdmin || authCtx.isTm || timesheets.length
 
     const tabsConfig = useMemo<TabsNavItem<EngagementsTab>[]>(() => {
         const tabs: TabsNavItem<EngagementsTab>[] = [
             { id: 'opportunities', title: 'Engagement Opportunities' },
         ]
 
-        if (isLoggedIn) {
+        if (authCtx.isLoggedIn) {
             tabs.push(
                 { id: 'applications', title: 'My Applications' },
                 { id: 'assignments', title: 'My Assignments' },
@@ -48,7 +44,7 @@ const EngagementsTabs: FC<EngagementsTabsProps> = (props: EngagementsTabsProps) 
         }
 
         return tabs
-    }, [isLoggedIn, isAdminOrManager])
+    }, [authCtx.isLoggedIn, isAdminOrManager])
 
     const activeTab = useMemo(
         () => (tabsConfig.some(tab => tab.id === props.activeTab) ? props.activeTab : 'opportunities'),
