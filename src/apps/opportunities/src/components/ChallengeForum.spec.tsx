@@ -581,6 +581,40 @@ describe('ChallengeForum', () => {
             .toBeUndefined()
     })
 
+    it('shows an edit timestamp for changed starter posts and replies only', async () => {
+        const editedAt = '2026-06-08T12:30:00.000Z'
+        topicDetail = {
+            posts: [{
+                ...starterPost,
+                replies: [{ ...starterPost.replies[0], updatedAt: editedAt }],
+                updatedAt: editedAt,
+            }],
+            topic: announcement,
+        }
+        const { container }: RenderResult = render(
+            <ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />,
+        )
+        await act(async () => fireEvent.click(container.querySelector('.topicOverlay') as HTMLButtonElement))
+        expect(screen.getAllByText(/^Edited:/))
+            .toHaveLength(2)
+        screen.getAllByText(/^Edited:/)
+            .forEach(timestamp => {
+                expect(timestamp)
+                    .toHaveAttribute('datetime', editedAt)
+                expect(timestamp)
+                    .toHaveTextContent(formatForumDate(editedAt))
+            })
+    })
+
+    it('does not mark unchanged posts as edited', async () => {
+        const { container }: RenderResult = render(
+            <ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />,
+        )
+        await act(async () => fireEvent.click(container.querySelector('.topicOverlay') as HTMLButtonElement))
+        expect(screen.queryByText(/^Edited:/))
+            .not.toBeInTheDocument()
+    })
+
     it('opens the topic when the upper card is clicked, keeping the footer for actions', async () => {
         const { container }: RenderResult = render(
             <ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />,
