@@ -225,6 +225,35 @@ describe('Marathon Match challenge detail utilities', () => {
             .toEqual({ finalScore: 80, provisionalScore: undefined })
     })
 
+    it.each([
+        { testStatus: 'IN_PROGRESS' },
+        { testStatus: 'PENDING' },
+        { testStatus: 'RUNNING' },
+        { testProgress: 0.5 },
+        { testProgress: 50 },
+        { testProgressDetails: { progress: 0.2, status: 'PROCESSING' } },
+    ])('withholds provisional placeholders and stale fallbacks for %j', metadata => {
+        expect(marathonSubmissionScores({
+            id: 'pending',
+            initialScore: 88,
+            provisionalScore: 99,
+            reviewSummation: [{ aggregateScore: 0, isProvisional: true, metadata }],
+        }).provisionalScore)
+            .toBeUndefined()
+    })
+
+    it.each([0, 42.5, -1])('preserves completed provisional score %s', score => {
+        expect(marathonSubmissionScores({
+            id: 'finished',
+            reviewSummation: [{
+                aggregateScore: score,
+                isProvisional: true,
+                metadata: { testProgress: score < 0 ? 0 : 1, testStatus: score < 0 ? 'FAILED' : 'COMPLETED' },
+            }],
+        }).provisionalScore)
+            .toBe(score)
+    })
+
     it('matches community-app final-score release timing and completed non-MM gating', () => {
         const finalSubmission = { finalScore: 98.98, id: 'final' }
         expect(shouldShowFinalSubmissionScores({

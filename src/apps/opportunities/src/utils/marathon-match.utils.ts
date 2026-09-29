@@ -286,6 +286,26 @@ function systemSummationIsComplete(summation: ChallengeReviewSummation): boolean
 }
 
 /**
+ * Withholds provisional placeholders while the latest scorer run is unfinished.
+ * Failed scores remain visible; completed legacy rows may omit progress metadata.
+ * @param summation Latest provisional review summation, if available.
+ * @returns Whether the aggregate and legacy score fallbacks must be hidden.
+ * @throws Does not throw.
+ */
+function provisionalScoreIsPending(summation?: ChallengeReviewSummation): boolean {
+    const metadata = summation?.metadata ?? {}
+    const details = metadata.testProgressDetails
+    const detailRecord = details && typeof details === 'object' && !Array.isArray(details)
+        ? details as Record<string, unknown>
+        : {}
+    const status = testStatusValue(metadata.testStatus ?? detailRecord.status)
+    const progress = testProgressValue(metadata.testProgress ?? detailRecord.progress)
+
+    return status === 'Cancelled' || status === 'In progress'
+        || (status !== 'Failed' && progress !== undefined && progress < 100)
+}
+
+/**
  * Identifies Marathon Match challenges across v6 names, catalog IDs, and tags.
  *
  * @param challenge Challenge API detail record.
@@ -342,7 +362,7 @@ export function marathonDashboardIsEnabled(challenge: ChallengeOpportunity): boo
 /**
  * Resolves provisional and final Marathon Match scores, preferring the latest
  * phase-specific review summation over legacy submission-level fields.
- * Cancelled phase scores, including placeholder aggregates, are not displayed.
+ * Unfinished provisional and cancelled phase scores, including legacy fallbacks, are not displayed.
  *
  * @param submission Review API submission with modern or legacy score fields.
  * @returns resolved provisional and final scores.
@@ -353,7 +373,7 @@ export function marathonSubmissionScores(
 ): MarathonSubmissionScores {
     const provisional = latestPhaseSummation(submission, 'provisional')
     const final = latestPhaseSummation(submission, 'final')
-    const provisionalScore = testStatusValue(provisional?.metadata?.testStatus) === 'Cancelled'
+    const provisionalScore = provisionalScoreIsPending(provisional)
         ? undefined
         : finiteScore(provisional?.aggregateScore)
             ?? finiteScore(submission.provisionalScore)
