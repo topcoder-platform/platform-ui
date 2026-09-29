@@ -261,7 +261,7 @@ const TimesheetEngagementsPage: FC = () => {
                                 <tr>
                                     <th scope='col'>Engagement Title</th>
                                     <th scope='col'>Assignee</th>
-                                    {isAdministrator && <th scope='col'>Timesheet Status</th>}
+                                    {(isAdministrator || isTm) && <th scope='col'>Timesheet Status</th>}
                                     <th scope='col'>Action</th>
                                 </tr>
                             </thead>
@@ -270,7 +270,7 @@ const TimesheetEngagementsPage: FC = () => {
                                     <tr key={row.assignmentId}>
                                         <td data-label='Engagement Title'>{row.engagementTitle}</td>
                                         <td data-label='Assignee'>{assigneeLabel(row)}</td>
-                                        {isAdministrator && (
+                                        {(isAdministrator || isTm) && (
                                             <td data-label='Timesheet Status'>{row.timesheetStatus}</td>
                                         )}
                                         <td data-label='Action'>
