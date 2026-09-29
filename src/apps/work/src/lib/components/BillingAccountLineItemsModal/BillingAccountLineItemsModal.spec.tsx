@@ -13,6 +13,12 @@ import { fetchAssignmentPaymentSplits } from '../../services/payments.service'
 
 import BillingAccountLineItemsModal from './BillingAccountLineItemsModal'
 
+jest.mock('./billing-detail-requests', () => ({
+    loadBillingDetails: (values: string[], lookup: (value: string) => Promise<unknown>) => (
+        Promise.all(values.map(lookup))
+    ),
+}))
+
 jest.mock('../../../config/routes.config', () => ({
     rootRoute: '/work',
 }))

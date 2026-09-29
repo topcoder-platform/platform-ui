@@ -37,6 +37,7 @@ import {
     getCopilotMemberPaymentsBudgetInfo,
 } from '../../utils/project-billing-account.utils'
 
+import { loadBillingDetails } from './billing-detail-requests'
 import styles from './BillingAccountLineItemsModal.module.scss'
 
 type SortField = 'amount' | 'status' | 'date'
@@ -566,7 +567,7 @@ function getEngagementPaymentAssignmentIds(items: BillingAccountLineItem[]): str
 async function fetchChallengeDetailsById(
     challengeIds: string[],
 ): Promise<ChallengeDetailsById> {
-    const entries = await Promise.all(challengeIds.map(async challengeId => {
+    const entries = await loadBillingDetails(challengeIds, async challengeId => {
         try {
             const challenge = await fetchChallenge(challengeId)
 
@@ -574,7 +575,7 @@ async function fetchChallengeDetailsById(
         } catch {
             return undefined
         }
-    }))
+    })
 
     return new Map(
         entries.filter((entry): entry is readonly [string, Challenge] => !!entry),
@@ -586,13 +587,14 @@ async function fetchChallengeDetailsById(
  *
  * @param assignmentIds Engagement assignment ids referenced by consumed line items.
  * @returns Map keyed by assignment id with finance payment rows.
- * @remarks Individual assignment failures are ignored so billing-account
+ * @remarks Requests share a paced queue with challenge hydration.
+ * Individual assignment failures are ignored so billing-account
  * details still render with existing fallback values.
  */
 async function fetchAssignmentPaymentsById(
     assignmentIds: string[],
 ): Promise<AssignmentPaymentsById> {
-    const entries = await Promise.all(assignmentIds.map(async assignmentId => {
+    const entries = await loadBillingDetails(assignmentIds, async assignmentId => {
         try {
             const payments = await fetchAssignmentPaymentSplits(assignmentId)
 
@@ -600,7 +602,7 @@ async function fetchAssignmentPaymentsById(
         } catch {
             return [assignmentId, [] as AssignmentPayment[]] as const
         }
-    }))
+    })
 
     return new Map(entries)
 }
@@ -1014,8 +1016,9 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
             : undefined,
         () => fetchChallengeDetailsById(challengeLineItemIds),
         {
-            errorRetryCount: 2,
-            shouldRetryOnError: true,
+            revalidateOnFocus: false,
+            revalidateOnReconnect: false,
+            shouldRetryOnError: false,
         },
     )
     const challengeDetailsById = challengeLineItemIds.length > 0
@@ -1031,8 +1034,9 @@ export const BillingAccountLineItemsModal: FC<BillingAccountLineItemsModalProps>
             : undefined,
         () => fetchAssignmentPaymentsById(engagementPaymentAssignmentIds),
         {
-            errorRetryCount: 2,
-            shouldRetryOnError: true,
+            revalidateOnFocus: false,
+            revalidateOnReconnect: false,
+            shouldRetryOnError: false,
         },
     )
     const assignmentPaymentsById = engagementPaymentAssignmentIds.length > 0
