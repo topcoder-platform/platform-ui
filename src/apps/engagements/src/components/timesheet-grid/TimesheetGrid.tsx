@@ -132,7 +132,7 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                                 type='checkbox'
                             />
                         </th>
-                        <th scope='col'>Date</th>
+                        <th scope='col' className={styles.dateCol}>Date</th>
                         <th scope='col'>Day</th>
                         <th scope='col'>Hours Worked</th>
                         <th scope='col'>Remarks</th>
@@ -237,9 +237,10 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                                         )}
                                 </td>
                                 <td data-label='Status'>
-                                    <span className={styles.status}>{STATUS_LABELS[row.status]}</span>
-                                    {isRowReopened(row) && (
+                                    {isRowReopened(row) ? (
                                         <span className={styles.reopenedBadge}>Reopened</span>
+                                    ) : (
+                                        <span className={styles.status}>{STATUS_LABELS[row.status]}</span>
                                     )}
                                     {row.status === TimesheetEntryStatus.APPROVED && (
                                         <span className={styles.approvalDetail}>
