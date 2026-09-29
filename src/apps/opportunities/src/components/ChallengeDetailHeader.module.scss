@@ -501,7 +501,6 @@
 
 .timelineRail {
     display: grid;
-    gap: 4px;
     width: 100%;
 }
 
@@ -509,12 +508,25 @@
     display: flex;
     justify-content: center;
     position: relative;
+
+    &:first-child {
+        justify-content: flex-start;
+
+        > .timelineConnector {
+            left: 40px;
+            right: calc(-100% + 40px);
+        }
+    }
+
+    &:last-child {
+        justify-content: flex-end;
+    }
 }
 
 .timelineMilestone > .timelineConnector {
     left: calc(50% + 22px);
     position: absolute;
-    right: calc(-50% + 18px);
+    right: calc(-50% + 22px);
     top: 14px;
 }
 
@@ -577,17 +589,18 @@
 
 .timelineItems {
     display: grid;
-    gap: 4px;
     list-style: none;
     margin: 0;
     padding: 0;
     width: 100%;
 
     li {
+        box-sizing: border-box;
         color: #fff;
         font-size: 14px;
         line-height: 20px;
         min-width: 0;
+        padding: 0 2px;
         text-align: center;
         word-break: break-word;
 
@@ -596,9 +609,33 @@
         }
 
         strong {
+            align-content: center;
             display: block;
             font-weight: 400;
-            margin-bottom: 4px;
+            margin: 0 auto 4px;
+            max-width: 100%;
+            min-height: 40px;
+            overflow-wrap: break-word;
+            width: min-content;
+            word-break: normal;
+        }
+
+        &:first-child {
+            padding-left: 0;
+            text-align: left;
+
+            strong {
+                margin-left: 0;
+            }
+        }
+
+        &:last-child {
+            padding-right: 0;
+            text-align: right;
+
+            strong {
+                margin-right: 0;
+            }
         }
     }
 }
@@ -668,10 +705,6 @@
     .expandedTimeline {
         overflow-x: auto;
         padding-bottom: 8px;
-    }
-
-    .timelineGraphic {
-        min-width: 800px;
     }
 }
 
@@ -757,6 +790,9 @@
         li > strong {
             grid-column: 2;
             grid-row: 1;
+            margin-inline: 0;
+            min-height: 0;
+            width: auto;
         }
 
         li > .timelineDates {

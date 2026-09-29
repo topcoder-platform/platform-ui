@@ -245,9 +245,15 @@ marker and connector, so wrapped dates and enlarged text grow the rail instead
 of overlapping the following milestone. The mobile prize/action card follows
 the expanded timeline instead of interrupting it. Wider layouts retain the
 horizontal timeline and its overflow fallback for tablet-sized screens. The
-desktop rail and labels share equal columns; dates can wrap when space is tight,
-and the timeline grid may shrink within the masthead without creating a stray scrollbar;
-timelines with many phases scroll horizontally as one unit.
+desktop rail and labels share compact columns with evenly spaced icons. Launch
+and its date align to the left edge of the challenge title and Launch icon;
+Winners and its date align to the right edge of the Winners icon. The narrower
+endpoint columns remove the inset before and after the rail. Two-word phase
+names stack one word per line, with at least two lines reserved for the labels
+so dates remain aligned. Dates wrap when space is tight, and two-round design
+timelines fit within the desktop masthead. Longer timelines scroll horizontally
+as one unit when the available width cannot accommodate readable phase columns.
+Phone layouts keep phase names on one line when space allows.
 
 On phone viewports, Registrants preserves its semantic table while presenting
 each API row as the Figma key/value card. Registration Date remains a
