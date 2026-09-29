@@ -85,6 +85,7 @@ const AddManagerForm: FC<AddManagerFormProps> = (props: AddManagerFormProps) => 
         }
 
         props.onAssign(selectedManager)
+        setSelectedManager(undefined)
     })
 
     return (

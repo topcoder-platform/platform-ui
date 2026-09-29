@@ -140,15 +140,15 @@ const TimesheetsPage: FC = () => {
                 <LoadingSpinner />
             )}
 
-            {(!!error || !timesheet) && (
-                <p className={styles.error} role='alert'>{error ?? ACCESS_DENIED_MESSAGE}</p>
-            )}
-
             <EngagementsTabs
                 activeTab={
                     timesheet?.viewerRole === TimesheetViewerRole.MEMBER ? 'assignments' : 'timesheets'
                 }
             />
+
+            {(!!error || !timesheet) && (
+                <p className={styles.error} role='alert'>{error ?? ACCESS_DENIED_MESSAGE}</p>
+            )}
 
             {canRenderContent && (
                 <div className={styles.page}>
