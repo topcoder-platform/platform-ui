@@ -447,6 +447,7 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                 showSuccessToast('Project saved successfully')
                 reset(getDefaultFormValues(true, updatedProject))
                 props.onSuccess?.(updatedProject)
+                navigate(`/projects/${updatedProject.id}/challenges`)
             } catch (error) {
                 const errorMessage = error instanceof Error
                     ? error.message
