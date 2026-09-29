@@ -468,7 +468,8 @@ function timelineTimezone(): string {
  * blank and duplicate labels omitted. Assignment-only Task challenges omit actions.
  * Featured placement prizes shrink to a compact size for long or point-based
  * labels and to a dense size once lower placement prizes are also shown, and the
- * row wraps so wide amounts stay inside the prize frame.
+ * row wraps so wide amounts stay inside the prize frame. The expanded timeline
+ * uses compact phase columns, stacked desktop names, and aligned endpoints.
  *
  * @param props challenge and registration state.
  * @returns dark challenge detail masthead with Task-aware action visibility.
@@ -527,11 +528,16 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     const denseFeaturedPrizes = challengePrizes.length > 3
     const labels = challengeLabels(props.challenge)
     const expandedTimeline = challengeTimelineItems(props.challenge, phase)
+    // Half-width endpoint columns put Launch and Winners at the header edges
+    // while keeping the 36px nodes evenly spaced and centered over phase labels.
+    const timelineEndColumn = `calc((100% - 36px) / ${(expandedTimeline.length - 1) * 2} + 18px)`
     const timelineGridStyle: CSSProperties = {
-        gridTemplateColumns: `repeat(${expandedTimeline.length}, minmax(160px, 1fr))`,
+        gridTemplateColumns: expandedTimeline.length > 2
+            ? `${timelineEndColumn} repeat(${expandedTimeline.length - 2}, minmax(0, 1fr)) ${timelineEndColumn}`
+            : 'repeat(2, minmax(0, 1fr))',
     }
     const timelineWidthStyle = {
-        '--timeline-min-width': `${expandedTimeline.length * 160 + (expandedTimeline.length - 1) * 4}px`,
+        '--timeline-min-width': `${(expandedTimeline.length - 1) * 112 + 36}px`,
     } as CSSProperties
 
     return (

@@ -887,14 +887,16 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toHaveLength(4)
         expect(container.querySelector('.timelineItems'))
             .toHaveStyle({
-                gridTemplateColumns: 'repeat(4, minmax(160px, 1fr))',
+                gridTemplateColumns: 'calc((100% - 36px) / 6 + 18px) repeat(2, minmax(0, 1fr)) '
+                    + 'calc((100% - 36px) / 6 + 18px)',
             })
         expect(container.querySelector('.timelineRail'))
             .toHaveStyle({
-                gridTemplateColumns: 'repeat(4, minmax(160px, 1fr))',
+                gridTemplateColumns: 'calc((100% - 36px) / 6 + 18px) repeat(2, minmax(0, 1fr)) '
+                    + 'calc((100% - 36px) / 6 + 18px)',
             })
         expect(container.querySelector('.timelineGraphic'))
-            .toHaveStyle({ '--timeline-min-width': '652px' })
+            .toHaveStyle({ '--timeline-min-width': '372px' })
     })
 
     it.each([
@@ -983,7 +985,8 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .not.toBeInTheDocument()
         expect(container.querySelector('.timelineItems'))
             .toHaveStyle({
-                gridTemplateColumns: 'repeat(4, minmax(160px, 1fr))',
+                gridTemplateColumns: 'calc((100% - 36px) / 6 + 18px) repeat(2, minmax(0, 1fr)) '
+                    + 'calc((100% - 36px) / 6 + 18px)',
             })
     })
 
