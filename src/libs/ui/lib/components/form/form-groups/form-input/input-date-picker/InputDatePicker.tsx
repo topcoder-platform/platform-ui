@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-no-bind */
-import { FC, forwardRef, KeyboardEvent, useMemo, useRef, useState } from 'react'
+import { FC, forwardRef, KeyboardEvent, useRef, useState } from 'react'
 import { getMonth, getYear } from 'date-fns'
 import { range } from 'lodash'
 import DatePicker, { ReactDatePicker } from 'react-datepicker'
@@ -81,15 +81,16 @@ const CustomInput = forwardRef((props: any, ref) => {
 
 const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) => {
     const datePickerRef = useRef<ReactDatePicker<never, undefined>>(null)
-    const years = useMemo(() => {
-        const maxYear = getYear(props.maxDate ? props.maxDate : new Date()) + 1
-        const minYear = getYear(props.minYear ? props.minYear : 1979)
-        return range(minYear, maxYear, 1)
-    }, [props.maxDate, props.minYear])
 
     const [stateHasFocus, setStateHasFocus] = useState(false)
     const effectiveDateFormat = props.dateFormat ?? (props.showTimeSelect ? 'MMM d, yyyy h:mm aa' : undefined)
 
+    /**
+     * Renders calendar navigation for the displayed date. Unbounded calendars offer
+     * ten future years and extend that range as the user navigates forward.
+     * @param header Date and navigation callbacks supplied by react-datepicker.
+     * @returns The month/year controls, respecting an explicit maximum date.
+     */
     function renderCustomHeader({
         date,
         changeYear,
@@ -99,6 +100,12 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
         prevMonthButtonDisabled,
         nextMonthButtonDisabled,
     }: any): JSX.Element {
+        const maxYear = props.maxDate
+            ? getYear(props.maxDate)
+            : Math.max(getYear(new Date()), getYear(date)) + 10
+        const minYear = getYear(props.minYear ? props.minYear : 1979)
+        const years = range(minYear, maxYear + 1, 1)
+
         return (
             <div className={styles.headerWrap}>
                 {
