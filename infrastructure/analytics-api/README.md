@@ -30,13 +30,18 @@ once within the same deadline. Clients can opt into resumable requests with
 returns `202`, `Retry-After`, and a server-generated query token. The browser
 polls with that token until the original statement completes instead of
 starting another warehouse query. Tokens are accepted only for the exact SQL,
-validated parameters, retry attempt, and current or previous four-hour window.
-The four-hour window remains below the Data API's eight-hour idempotency
-retention and permits one complete boundary-crossing window without making
-tokens reusable for other reports. An EventBridge schedule invokes the default
-Campaigns report, filter-option query, and `/opportunities` route report at each
-new window, allowing their statements to finish before an interactive request
-while preserving Redshift Serverless idle cost controls. Browser polling is
+validated parameters, retry attempt, and the current or preceding fifteen
+one-minute windows. New requests reuse a completed Data API statement for at
+most one minute; a pending request keeps its original token while polling, so
+slow warehouse startup does not restart work at each minute boundary. The
+in-process report and filter caches also expire after 60 seconds. Consequently,
+loaded data appears in a newly requested report within approximately two minutes,
+plus query execution time. Processing runs hourly in both dev and production;
+collection continues between batches.
+
+The existing four-hour EventBridge schedule still prepares the default Campaigns
+report, filter-option query, and `/opportunities` route report. Interactive requests
+refresh independently of that schedule. Browser polling is
 bounded. Concurrency and API throttles cap warehouse pressure, and successful
 responses use `Cache-Control: private, no-store`. Logs contain request IDs and
 service-owned error categories only.
