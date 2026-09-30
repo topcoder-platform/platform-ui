@@ -684,6 +684,9 @@ export async function getMyWorkCounts(
  * Public active competitions require any current phase, while member
  * competitions retain every active challenge where the caller has a resource
  * role, including active challenges that have moved beyond submission.
+ * Newest-first past competitions use their end date so updates or reimports
+ * cannot promote older challenges. Other competition views use creation time.
+ * Both sorts apply to the complete matching result set before pagination.
  *
  * @param kind active opportunity type.
  * @param filters search, facets, sorting, and pagination values.
@@ -707,9 +710,12 @@ export function buildOpportunityPageUrl(
         const startingSoon = filters.sort === 'startingSoon'
         const prizeSort = filters.sort === 'prizeHighToLow' || filters.sort === 'prizeLowToHigh'
         const titleSort = filters.sort === 'titleAZ'
+        const newestDateField = filters.statuses?.length === 1 && filters.statuses[0] === 'COMPLETED'
+            ? 'endDate'
+            : 'createdAt'
         url.searchParams.set('sortBy', prizeSort
             ? 'overview.totalPrizes'
-            : titleSort ? 'name' : startingSoon ? 'startDate' : 'updatedAt')
+            : titleSort ? 'name' : startingSoon ? 'startDate' : newestDateField)
         url.searchParams.set('sortOrder', filters.sort === 'prizeLowToHigh' || titleSort || startingSoon
             ? 'asc'
             : 'desc')
