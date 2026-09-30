@@ -1197,6 +1197,13 @@ const ForumPostCard: FC<{
                         {' '}
                         {formatForumDate(post.createdAt)}
                     </time>
+                    {!post.deleted && Date.parse(post.updatedAt) > Date.parse(post.createdAt) && (
+                        <time dateTime={post.updatedAt}>
+                            Edited:
+                            {' '}
+                            {formatForumDate(post.updatedAt)}
+                        </time>
+                    )}
                     {props.parent && (
                         <span>
                             Replying to
