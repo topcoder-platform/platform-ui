@@ -1659,6 +1659,26 @@ export async function getChallengeSubmissions(
 }
 
 /**
+ * Loads the complete latest-submission collection for sorting derived table values.
+ * Handle, profile rating, and review scores are not sortable submission API fields.
+ * @param challengeId Challenge whose public/authorized submissions are requested.
+ * @returns All latest submissions with collection metadata for client pagination.
+ * @throws Propagates page failures rather than presenting an incomplete ranking.
+ */
+export async function getAllChallengeSubmissions(
+    challengeId: string,
+): Promise<OpportunityPage<ChallengeSubmission>> {
+    const first = await getChallengeSubmissions(challengeId, 1, SUBMISSION_HISTORY_PAGE_SIZE)
+    const pages = await loadPagesInBatches(
+        Array.from({ length: Math.max(0, first.totalPages - 1) }, (_value, index) => index + 2),
+        async page => (await getChallengeSubmissions(challengeId, page, SUBMISSION_HISTORY_PAGE_SIZE)).items,
+    )
+    const items = Array.from(new Map([...first.items, ...pages.flat()].map(item => [item.id, item]))
+        .values())
+    return { items, page: 1, perPage: items.length, total: items.length, totalPages: 1 }
+}
+
+/**
  * Loads each winner's latest submission for final scores absent from project results.
  * Requests are batched and member-scoped so large challenge lists cannot hide winners.
  *

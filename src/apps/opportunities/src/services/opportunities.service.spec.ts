@@ -24,6 +24,7 @@ import {
     getChallengeSubmissionArtifacts,
     getChallengeSubmissionPreviews,
     getChallengeSubmissionDownloadUrl,
+    getAllChallengeSubmissions,
     getChallengeSubmissions,
     getChallengeRegistration,
     getChallengeSubmitterTermsDetails,
@@ -1451,6 +1452,30 @@ describe('opportunities service normalization', () => {
                 'https://api.example/v6/submissions?challengeId=challenge&page=1&perPage=10&isLatest=true'
                 + '&sortBy=submittedDate&orderBy=desc',
             )
+    })
+
+    it('loads every latest-submission page before sorting derived columns', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockResolvedValueOnce({
+            data: [{ id: 'first' }],
+            meta: { page: 1, perPage: 1, totalCount: 3, totalPages: 3 },
+        })
+            .mockResolvedValueOnce({ data: [{ id: 'second' }] })
+            .mockResolvedValueOnce({ data: [{ id: 'third' }] })
+        await expect(getAllChallengeSubmissions('challenge'))
+            .resolves.toMatchObject({ items: [{ id: 'first' }, { id: 'second' }, { id: 'third' }], total: 3 })
+        expect(get.mock.calls.map(([url]) => new URL(String(url)).searchParams.get('page')))
+            .toEqual(['1', '2', '3'])
+        expect(get.mock.calls.every(([url]) => new URL(String(url)).searchParams.get('isLatest') === 'true'))
+            .toBe(true)
+    })
+
+    it('does not return a partial sortable collection when a later page fails', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockResolvedValueOnce({ data: [{ id: 'first' }], meta: { totalPages: 2 } })
+            .mockRejectedValueOnce(new Error('Page unavailable'))
+        await expect(getAllChallengeSubmissions('challenge'))
+            .rejects.toThrow('Page unavailable')
     })
 
     it('keeps all member attempts for My Submissions when latest-only is disabled', async () => {
