@@ -232,16 +232,48 @@ describe('opportunities service normalization', () => {
             .toBeGreaterThan(0)
     })
 
-    it('maps the clarified competition prize and title sorts to Challenge API fields', () => {
+    it.each([
+        { field: 'endDate', sort: undefined, statuses: ['COMPLETED'] },
+        { field: 'endDate', sort: 'newest', statuses: ['COMPLETED'] },
+        { field: 'createdAt', sort: 'newest', statuses: ['ACTIVE'] },
+        { field: 'createdAt', sort: 'newest', statuses: ['REGISTRATION'] },
+        { field: 'createdAt', sort: 'newest', statuses: ['ACTIVE', 'COMPLETED'] },
+        { field: 'createdAt', sort: 'newest', statuses: undefined },
+    ])('requests $field order before pagination for $statuses competitions with sort $sort', testCase => {
+        const url = new URL(buildOpportunityPageUrl('competitions', {
+            page: 2,
+            perPage: 10,
+            sort: testCase.sort,
+            statuses: testCase.statuses,
+        }))
+
+        expect(url.searchParams.get('sortBy'))
+            .toBe(testCase.field)
+        expect(url.searchParams.get('sortOrder'))
+            .toBe('desc')
+        expect(url.searchParams.get('page'))
+            .toBe('2')
+        expect(url.searchParams.get('perPage'))
+            .toBe('10')
+        expect(url.searchParams.getAll('status'))
+            .toEqual(testCase.statuses?.includes('REGISTRATION') ? ['ACTIVE'] : testCase.statuses ?? [])
+    })
+
+    it.each([
+        { statuses: undefined },
+        { statuses: ['COMPLETED'] },
+    ])('maps competition prize and title sorts to Challenge API fields for $statuses', testCase => {
         const prize = new URL(buildOpportunityPageUrl('competitions', {
             page: 1,
             perPage: 10,
             sort: 'prizeLowToHigh',
+            statuses: testCase.statuses,
         }))
         const title = new URL(buildOpportunityPageUrl('competitions', {
             page: 1,
             perPage: 10,
             sort: 'titleAZ',
+            statuses: testCase.statuses,
         }))
 
         expect(prize.searchParams.get('sortBy'))
@@ -1896,7 +1928,7 @@ describe('opportunities service normalization', () => {
         expect(requestUrl.searchParams.get('perPage'))
             .toBe('10')
         expect(requestUrl.searchParams.get('sortBy'))
-            .toBe('updatedAt')
+            .toBe('createdAt')
         expect(requestUrl.searchParams.get('sortOrder'))
             .toBe('desc')
         expect(globalGet)

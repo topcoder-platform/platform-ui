@@ -134,12 +134,17 @@ Opportunity cards preserve same-tab navigation. External role-learning links
 open in a separate tab and include `rel="noreferrer"`.
 
 Every domain exposes the same four product-authored options: `Newest first`,
-`Prize high to low`, `Prize low to high`, and `Title A-Z`. Challenge API owns
-global competition prize/title ordering, Engagements owns title ordering, and
-Review API owns payment ordering. For Engagement and Copilot prize sorts, the
-client combines bounded owner pages before sorting and then restores the
-requested page, so ordering remains correct across page boundaries. Missing
-numeric compensation remains after priced opportunities in both directions.
+`Prize high to low`, `Prize low to high`, and `Title A-Z`. Competition `Newest first`
+requests `endDate desc` from Challenge API for past competitions, placing the
+most recently completed challenges first even when older records were recently
+updated or reimported. Other competition views request `createdAt desc`.
+Both sorts apply before pagination.
+Challenge API also owns global competition prize/title ordering, Engagements
+owns title ordering, and Review API owns payment ordering. For Engagement and
+Copilot prize sorts, the client combines bounded owner pages before sorting,
+then restores the requested page so ordering remains correct across page
+boundaries. Missing numeric compensation remains after priced opportunities in
+both directions.
 Copilot aggregation requests at most 200 rows per Projects API page, matching
 that endpoint's validated page-size contract while retaining global ordering.
 Copilot rows marked with the Standard payment type remain unpriced for sorting;
