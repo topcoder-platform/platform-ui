@@ -467,7 +467,9 @@ function testStatusPriority(status: MarathonTestProgress['status']): number {
  * Candidates are ranked by scorer phase first and by status second, so a
  * cancelled Example run cannot displace the submission's provisional or system
  * result, and the newest result per phase is used so stale progress cannot hide
- * a cancellation within that phase.
+ * a cancellation within that phase. Settled negative scores and non-passing
+ * results override a successful runner status, which only signals completion;
+ * explicitly pending or cancelled runs retain their lifecycle state.
  *
  * @param submission Review API submission with attached summations.
  * @param challenge optional Challenge API context used to identify the active scoring phase.
@@ -495,7 +497,14 @@ export function marathonSubmissionTestProgress(
                 },
             })
             const progress = testProgressValue(metadata.testProgress ?? detailRecord.progress)
-            const status = testStatusValue(metadata.testStatus ?? detailRecord.status)
+            const lifecycleStatus = testStatusValue(metadata.testStatus ?? detailRecord.status)
+            const score = finiteScore(summation.aggregateScore)
+            const failedResult = summation.isPassing === false || (score !== undefined && score < 0)
+            const pendingProgress = !lifecycleStatus && progress !== undefined && progress < 100
+            const status = failedResult && !pendingProgress
+                && lifecycleStatus !== 'Cancelled' && lifecycleStatus !== 'In progress'
+                ? 'Failed'
+                : lifecycleStatus
             return {
                 index,
                 process,
@@ -539,11 +548,11 @@ export function marathonSubmissionTestProgress(
     const scores = marathonSubmissionScores(submission)
 
     if (scores.finalScore !== undefined) {
-        return { process: 'System', progress: 100, status: 'Passed' }
+        return { process: 'System', progress: 100, status: scores.finalScore < 0 ? 'Failed' : 'Passed' }
     }
 
     if (scores.provisionalScore !== undefined) {
-        return { process: 'Provisional', progress: 100, status: 'Passed' }
+        return { process: 'Provisional', progress: 100, status: scores.provisionalScore < 0 ? 'Failed' : 'Passed' }
     }
 
     const challengeProcess = challengePhaseTestProcess(challenge)

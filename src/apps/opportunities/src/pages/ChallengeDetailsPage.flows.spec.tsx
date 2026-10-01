@@ -2232,6 +2232,40 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveAttribute('data-mobile-label', 'Final Score')
     })
 
+    it.each(['Provisional', 'System'])('shows a timed-out %s attempt as Failed in My Submissions', process => {
+        const utils = jest.requireMock('../utils')
+        const actual = jest.requireActual('../utils/marathon-match.utils')
+        jest.spyOn(utils, 'marathonSubmissionScores')
+            .mockImplementation(actual.marathonSubmissionScores)
+        jest.spyOn(utils, 'marathonSubmissionTestProgress')
+            .mockImplementation(actual.marathonSubmissionTestProgress)
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = { ...mockChallenge, type: 'Marathon Match' }
+        mockSubmissions = [{ id: 'timeout-attempt', memberId: '123', status: 'ACTIVE' }]
+        mockReviewSummations = [{
+            aggregateScore: -1,
+            id: 'timeout-result',
+            isFinal: process === 'System',
+            isPassing: false,
+            isProvisional: process === 'Provisional',
+            metadata: { testProgress: 1, testStatus: 'PASSED' },
+            submissionId: 'timeout-attempt',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+
+        expect(screen.getByRole('cell', { name: process }))
+            .toHaveAttribute('data-mobile-label', 'Current Test Process')
+        expect(screen.getByText('Failed'))
+            .toHaveClass('testStatusFailed')
+        expect(screen.queryByText('Passed'))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('cell', { name: process === 'System' ? '0' : '-1' }))
+            .toHaveAttribute('data-mobile-label', process === 'System' ? 'Final Score' : 'Provisional Score')
+    })
+
     it('shows cancelled Marathon attempts without scorer placeholder scores', () => {
         const utils = jest.requireMock('../utils')
         const actual = jest.requireActual('../utils/marathon-match.utils')
