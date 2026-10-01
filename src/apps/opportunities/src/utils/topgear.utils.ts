@@ -1,7 +1,7 @@
 import { AppSubdomain, EnvironmentConfig } from '~/config'
 
-/** Canonical Opportunities listing route on every Platform UI host. */
-export const OPPORTUNITIES_ROOT_ROUTE: string = '/opportunities'
+/** Canonical challenge listing route on the Topgear community hosts. */
+export const TOPGEAR_CHALLENGES_ROUTE: string = '/opportunities/challenge'
 
 /**
  * Checks whether Platform UI is served on the TopGear community host

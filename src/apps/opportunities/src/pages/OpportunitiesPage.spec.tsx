@@ -79,7 +79,6 @@ jest.mock('../components', () => ({
     ),
     OpportunitySortSelect: () => <span>Sort choices</span>,
     OpportunityViewToggle: () => <span>View choices</span>,
-    TopgearHero: () => <output data-testid='topgear-hero'>TopGear banner</output>,
 }))
 
 jest.mock('../services', () => ({
@@ -169,7 +168,7 @@ describe('OpportunitiesPage', () => {
             .not.toBeInTheDocument()
     })
 
-    it('shows the TopGear banner and lists only the community group on the TopGear host', async () => {
+    it('lists only the community group without a hero on the TopGear challenge route', async () => {
         mockSubdomain = 'topgear'
         mockedGetOpportunityPage.mockResolvedValue({
             items: [{ id: 'topgear-challenge', name: 'TopGear challenge' }],
@@ -181,16 +180,16 @@ describe('OpportunitiesPage', () => {
 
         render(
             <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
-                <MemoryRouter initialEntries={['/opportunities']}>
+                <MemoryRouter initialEntries={['/opportunities/challenge']}>
                     <Routes>
-                        <Route element={<OpportunitiesPage />} path='/opportunities' />
+                        <Route element={<OpportunitiesPage />} path='/opportunities/:kind' />
                     </Routes>
                 </MemoryRouter>
             </SWRConfig>,
         )
 
-        expect(screen.getByTestId('topgear-hero'))
-            .toBeInTheDocument()
+        expect(screen.queryByRole('img', { name: /amazing platform/i }))
+            .not.toBeInTheDocument()
         expect(screen.queryByTestId('competition-count'))
             .not.toBeInTheDocument()
         expect(screen.getByRole('heading', { name: 'Browse Competitions' }))
@@ -229,7 +228,7 @@ describe('OpportunitiesPage', () => {
         )
 
         await waitFor(() => expect(screen.getByTestId('location'))
-            .toHaveTextContent('/opportunities'))
+            .toHaveTextContent('/opportunities/challenge'))
         await waitFor(() => expect(mockedGetOpportunityPage)
             .toHaveBeenCalledWith('competitions', expect.anything()))
         expect(mockedGetOpportunityPage)

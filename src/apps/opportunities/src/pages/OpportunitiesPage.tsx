@@ -7,7 +7,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { Navigate, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import useSWR, { SWRResponse } from 'swr'
 
 import {
@@ -24,7 +24,6 @@ import {
     OpportunityPagination,
     OpportunitySortSelect,
     OpportunityViewToggle,
-    TopgearHero,
 } from '../components'
 import {
     OpportunityFilters,
@@ -51,7 +50,7 @@ import {
 } from '../utils/opportunity-listing.utils'
 import {
     isTopgearCommunity,
-    OPPORTUNITIES_ROOT_ROUTE,
+    TOPGEAR_CHALLENGES_ROUTE,
     topgearGroupIds,
 } from '../utils/topgear.utils'
 import { opportunityViewContext, OpportunityViewContextData } from '../opportunities.context'
@@ -459,6 +458,7 @@ const OpportunityListing: FC<OpportunityListingProps> = (props: OpportunityListi
  */
 export const OpportunitiesPage: FC = () => {
     const params = useParams<{ kind?: string }>()
+    const location = useLocation()
     const topgear = isTopgearCommunity()
     const kind = topgear ? 'competitions' : resolveOpportunityKind(params.kind)
     const viewContext: OpportunityViewContextData = useContext(opportunityViewContext)
@@ -478,15 +478,13 @@ export const OpportunitiesPage: FC = () => {
             .catch(() => undefined)
     }
 
-    if (topgear && params.kind && params.kind !== 'competitions') {
-        return <Navigate replace to={OPPORTUNITIES_ROOT_ROUTE} />
+    if (topgear && params.kind !== 'challenge') {
+        return <Navigate replace to={`${TOPGEAR_CHALLENGES_ROUTE}${location.search}${location.hash}`} />
     }
 
     return (
         <main className={styles.page}>
-            {topgear ? (
-                <TopgearHero />
-            ) : (
+            {!topgear && (
                 <OpportunityHero
                     active={kind}
                     error={!!summaryResponse.error}
