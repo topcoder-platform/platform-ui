@@ -275,7 +275,7 @@ export const UPDATE_SKILLS_V5_API_URL = process.env.REACT_APP_UPDATE_SKILLS_V5_A
 
 export const FILE_PICKER_SUBMISSION_CONTAINER_NAME = process.env.REACT_APP_FILE_PICKER_SUBMISSION_CONTAINER_NAME
     || process.env.FILE_PICKER_SUBMISSION_CONTAINER_NAME
-    || 'submission-staging-dev'
+    || (EnvironmentConfig.ENV === 'prod' ? 'submission-staging-prod' : 'submission-staging-dev')
 
 export const PROJECT_ATTACHMENTS_FOLDER = process.env.REACT_APP_PROJECT_ATTACHMENTS_FOLDER
     || process.env.PROJECT_ATTACHMENTS_FOLDER
