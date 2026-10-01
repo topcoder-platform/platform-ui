@@ -2208,6 +2208,30 @@ describe('ChallengeDetailsPage member flows', () => {
             .toMatchObject({ shouldRetryOnError: false })
     })
 
+    it.each(['Submissions', 'My Submissions'])('shows a failed system result as zero in %s', tab => {
+        const utils = jest.requireMock('../utils')
+        const actual = jest.requireActual('../utils/marathon-match.utils')
+        jest.spyOn(utils, 'marathonSubmissionScores')
+            .mockImplementation(actual.marathonSubmissionScores)
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = { ...mockChallenge, phases: [], status: 'COMPLETED', type: 'Marathon Match' }
+        mockSubmissions = [{ id: 'failed-attempt', memberId: '123', status: 'ACTIVE' }]
+        mockReviewSummations = [{
+            aggregateScore: -1,
+            id: 'failed-system-result',
+            isFinal: true,
+            isPassing: false,
+            submissionId: 'failed-attempt',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: new RegExp(`^${tab}`) }))
+
+        expect(screen.getByRole('cell', { name: '0' }))
+            .toHaveAttribute('data-mobile-label', 'Final Score')
+    })
+
     it('shows cancelled Marathon attempts without scorer placeholder scores', () => {
         const utils = jest.requireMock('../utils')
         const actual = jest.requireActual('../utils/marathon-match.utils')

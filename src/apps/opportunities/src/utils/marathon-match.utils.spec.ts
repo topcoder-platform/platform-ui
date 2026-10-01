@@ -350,6 +350,58 @@ describe('Marathon Match challenge detail utilities', () => {
             .toBeUndefined()
     })
 
+    it.each([
+        { isPassing: false },
+        { metadata: { testProgress: 0, testStatus: 'FAILED' } },
+        { metadata: { testProgressDetails: { progress: 25, status: 'ERROR' } } },
+    ])('preserves failed system results for zero-score display: %j', failure => {
+        const scores = marathonSubmissionScores({
+            id: 'failed-system',
+            reviewSummation: [{ aggregateScore: -1, isFinal: true, ...failure }],
+        })
+
+        expect(scores.finalScore)
+            .toBe(-1)
+        expect(formatMarathonFinalScore(scores.finalScore, '-'))
+            .toBe('0')
+    })
+
+    it.each(['IN_PROGRESS', 'CANCELLED'])('withholds %s system placeholders marked non-passing', testStatus => {
+        expect(marathonSubmissionScores({
+            finalScore: 99,
+            id: 'unfinished-system',
+            reviewSummation: [{
+                aggregateScore: -1,
+                isFinal: true,
+                isPassing: false,
+                metadata: { testStatus },
+            }],
+        }).finalScore)
+            .toBeUndefined()
+    })
+
+    it('keeps a partial system score hidden when lifecycle status is absent', () => {
+        expect(marathonSubmissionScores({
+            id: 'partial-system',
+            reviewSummation: [{
+                aggregateScore: -1,
+                isFinal: true,
+                isPassing: false,
+                metadata: { testProgress: 0.5 },
+            }],
+        }).finalScore)
+            .toBeUndefined()
+    })
+
+    it('does not invent a system score when a failed run has no aggregate', () => {
+        expect(marathonSubmissionScores({
+            finalScore: 99,
+            id: 'missing-system-score',
+            reviewSummation: [{ isFinal: true, isPassing: false }],
+        }).finalScore)
+            .toBeUndefined()
+    })
+
     it('attaches challenge-level summations only to their matching attempts', () => {
         expect(attachMarathonReviewSummations(
             [{ id: 'one' }, { id: 'two' }],

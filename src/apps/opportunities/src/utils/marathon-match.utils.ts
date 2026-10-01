@@ -262,14 +262,14 @@ function averageReviewScore(values: unknown[]): number | undefined {
 
 /**
  * A system-test summation can already contain an aggregate while its tests
- * are still running. Keep that aggregate provisional until the run finishes.
+ * are still running. Release settled passing and failed results while keeping
+ * in-progress and cancelled aggregates hidden.
  *
  * @param summation latest system-test summation.
- * @returns whether the scorer has completed successfully.
+ * @returns whether the scorer has finished with a passing or failed result.
+ * @throws Does not throw.
  */
 function systemSummationIsComplete(summation: ChallengeReviewSummation): boolean {
-    if (summation.isPassing === false) return false
-
     const metadata = summation.metadata ?? {}
     const details = metadata.testProgressDetails
     const detailRecord = details && typeof details === 'object' && !Array.isArray(details)
@@ -278,7 +278,8 @@ function systemSummationIsComplete(summation: ChallengeReviewSummation): boolean
     const status = testStatusValue(metadata.testStatus ?? detailRecord.status)
     const progress = testProgressValue(metadata.testProgress ?? detailRecord.progress)
 
-    if (status && status !== 'Passed') return false
+    if (status === 'Cancelled' || status === 'In progress') return false
+    if (status === 'Failed') return true
     if (progress !== undefined && progress < 100) return false
 
     // Older completed summations have no scorer lifecycle metadata.
@@ -363,6 +364,7 @@ export function marathonDashboardIsEnabled(challenge: ChallengeOpportunity): boo
  * Resolves provisional and final Marathon Match scores, preferring the latest
  * phase-specific review summation over legacy submission-level fields.
  * Unfinished provisional and cancelled phase scores, including legacy fallbacks, are not displayed.
+ * Settled failed system results retain their aggregate for zero-score display.
  *
  * @param submission Review API submission with modern or legacy score fields.
  * @returns resolved provisional and final scores.

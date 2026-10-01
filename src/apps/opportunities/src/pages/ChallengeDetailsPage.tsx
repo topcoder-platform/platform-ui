@@ -1808,7 +1808,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                         className={styles.scoreColumn}
                                                         data-mobile-label='Final Score'
                                                     >
-                                                        {formatMarathonScore(scores.finalScore, '-')}
+                                                        {formatMarathonFinalScore(scores.finalScore, '-')}
                                                     </td>
                                                     <td
                                                         className={styles.scoreColumn}
