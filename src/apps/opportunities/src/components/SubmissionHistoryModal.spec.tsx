@@ -183,13 +183,19 @@ describe('SubmissionHistoryModal', () => {
             .not.toBeInTheDocument()
     })
 
-    it('renders only the latest row when Review API restricts another submitter history', async () => {
+    it('renders another member full Marathon history without artifact access', async () => {
         mockedGetHistory.mockResolvedValueOnce([{
             finalScore: 84.1576,
             id: 'latest-visible-attempt',
             initialScore: 82.72,
             memberId: '456',
             submittedDate: '2026-06-02T15:05:00.000Z',
+            type: 'CONTEST_SUBMISSION',
+        }, {
+            id: 'older-visible-attempt',
+            initialScore: 72.5,
+            memberId: '456',
+            submittedDate: '2026-06-01T15:05:00.000Z',
             type: 'CONTEST_SUBMISSION',
         }])
 
@@ -218,8 +224,10 @@ describe('SubmissionHistoryModal', () => {
         expect(await screen.findAllByText('latest-visible-attempt'))
             .toHaveLength(2)
         expect(screen.getAllByRole('row'))
-            .toHaveLength(2)
-        expect(screen.queryByText('submission-one'))
+            .toHaveLength(3)
+        expect(screen.getByRole('cell', { name: 'older-visible-attempt' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('columnheader', { name: 'Artifacts' }))
             .not.toBeInTheDocument()
     })
 })

@@ -616,6 +616,26 @@ describe('ChallengeDetailsPage member flows', () => {
             .not.toBeInTheDocument()
     })
 
+    it.each([false, true])('shows the full history count for a Marathon viewer signed in: %s', signedIn => {
+        mockProfile = signedIn ? { handle: 'viewer', userId: 456 } : undefined
+        mockChallenge = { ...mockChallenge, type: 'Marathon Match' }
+        mockSubmissions = [{
+            id: 'latest-attempt',
+            memberId: '123',
+            submissionCount: 8,
+            submitterHandle: 'coder',
+        }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        fireEvent.click(screen.getByRole('button', { name: 'History (8)' }))
+
+        expect(screen.getByText('History modal latest-attempt'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: /Download submission artifacts/ }))
+            .not.toBeInTheDocument()
+    })
+
     it('publishes the gated Marathon Match dashboard to signed out visitors', () => {
         mockChallenge = {
             ...mockChallenge,

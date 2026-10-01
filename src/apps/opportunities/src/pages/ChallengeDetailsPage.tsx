@@ -2044,6 +2044,8 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                             >
                                                 <img alt='' aria-hidden='true' src={resetIcon} />
                                                 History
+                                                {submission.submissionCount !== undefined
+                                                    && ` (${submission.submissionCount})`}
                                             </button>
                                         </td>
                                     </tr>

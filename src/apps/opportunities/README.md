@@ -614,11 +614,12 @@ phone widths, each attempt becomes a compact stacked label/value card in the
 legacy Submission, Final Score, Provisional Score, and Time order, avoiding
 horizontal clipping. The dialog also exposes the latest-submission summary and
 compact close action only at that breakpoint. History requests include the
-selected member ID;
-Review API returns every attempt to that member and authorized challenge staff,
-while ordinary viewers receive only the selected entrant's latest attempt.
-Registered contestants of a completed Marathon Match can also inspect every
-historical attempt to download its released scorer artifacts.
+selected member ID and submission type and fetch every page without a latest-only
+filter. Visible Marathon Matches expose full history to all viewers, including
+anonymous and unregistered visitors, through Review API. The History action shows
+the API's complete submission count in parentheses when available. Artifact
+controls retain the ownership, staff, and completed-contestant access described
+above; viewing history does not grant permission to download artifacts.
 Design submissions can be deleted only while Submission or Checkpoint
 Submission is open. Successful deletion updates both the challenge and member
 submission counts as well as the current list. Replacing a Design submission

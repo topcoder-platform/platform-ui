@@ -96,8 +96,8 @@ function columnWidths(isMarathonMatch: boolean, showArtifacts: boolean): string[
 
 /**
  * Shows the selected member's server-authorized submission history without
- * navigating away from Opportunities to Review App. Review API may limit an
- * ordinary viewer to the latest attempt. Each row's Artifacts control is styled
+ * navigating away from Opportunities to Review App. Visible Marathon Matches
+ * expose every attempt to all viewers. Each row's authorized Artifacts control is styled
  * as a link, matching the All Submissions table on the challenge detail page.
  *
  * @param props selected submission, challenge context, visibility, and authorized artifact/close callbacks.
