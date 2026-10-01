@@ -1,7 +1,7 @@
 import {
     isTopgearCommunity,
-    OPPORTUNITIES_ROOT_ROUTE,
     topgearGroupIds,
+    TOPGEAR_CHALLENGES_ROUTE,
 } from './topgear.utils'
 
 let mockSubdomain = 'platform-ui'
@@ -44,7 +44,7 @@ describe('topgear utils', () => {
     })
 
     it('keeps the canonical Opportunities listing route', () => {
-        expect(OPPORTUNITIES_ROOT_ROUTE)
-            .toBe('/opportunities')
+        expect(TOPGEAR_CHALLENGES_ROUTE)
+            .toBe('/opportunities/challenge')
     })
 })

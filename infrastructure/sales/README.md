@@ -17,6 +17,11 @@ renders the Sales page at `/`, so no Sales-specific build or upload is needed.
 `dev-viewer-request.js` mirrors the live viewer-request function. It has no Sales
 branch: Sales requests pass through unchanged and deep links fall back to the root
 `/index.html` through the distribution's 403/404 custom error responses. The
+function also redirects `/challenges` (with an optional trailing slash) only on
+`topgear.topcoder-dev.com` to `/opportunities/challenge`, preserving repeated and
+encoded query parameters. This is a temporary, uncached HTTP 302; production is
+unchanged. Topgear uses the shared root Platform UI build, its existing CloudFront
+alias and Route 53 A record. See [Topgear routing](../topgear/README.md). The
 function still routes the Contact and Accounts hosts to their isolated
 `contact-app/` and `accounts-preferences-app/` shells. Re-read the live function
 before publishing later changes to avoid overwriting newer routing, test with

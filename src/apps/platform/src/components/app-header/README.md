@@ -26,3 +26,8 @@ The Header uses the `tcUniNav` method to initialize the nav with:
 - action handler callbacks (e.g. navigation, log in, log out, sign up)
 
 Because the Platform UI hosts multiple tools, each time the user navigates to a new tool, the Header updates the uni-nav w/the active tool info.
+
+On `topgear.topcoder.com` and `topgear.topcoder-dev.com`, Universal Navigation
+automatically selects its Topgear header for the existing `type: 'tool'`
+integration. No other host changes its header. Deploy the navigation Topgear
+change before enabling the Platform UI community routes in production.

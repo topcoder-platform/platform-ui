@@ -12,14 +12,15 @@ Community-app's Wipro community (`topgear.<domain>`, formerly also served at
 `wipro.<domain>`) is replaced by this app on the `topgear` host. When the
 first hostname label is `topgear`:
 
-- the host root redirects to `/opportunities`, and the legacy `/challenges`
-  aliases continue to redirect to the Opportunities routes;
-- the listing renders community-app's TopGear challenge-listing banner
-  (`assets/topgear-challenges-banner.png`) instead of the masthead, the four
-  category cells, and the public summary request;
+- the host root and legacy `/challenges` listing redirect to
+  `/opportunities/challenge`; detail aliases still redirect to challenge details;
+- Universal Navigation automatically renders the Wipro, Topcoder, and Topgear
+  logos with Home (`https://topgear-app.wipro.com`) and Challenges
+  (`/opportunities/challenge`). Deploy the Topgear navigation bundle first;
+- the listing has no hero banner, category cells, or public summary request;
 - only competitions are offered. `/opportunities/:kind` for any other category
-  redirects to `/opportunities`, and Browse Competitions with its filters,
-  sorting, and pagination is unchanged;
+  redirects to `/opportunities/challenge`, preserving queries and fragments.
+  Browse Competitions keeps its filters, sorting, and pagination;
 - competitions are limited to the TopGear Topcoder group through the Challenge
   API `groups[]` parameter. The group defaults to community-app's
   `b7f7c0f8-8ee8-409e-9e5c-33404983b635` and is configurable with
