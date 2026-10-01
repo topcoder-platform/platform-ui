@@ -1813,8 +1813,8 @@ export async function deleteChallengeSubmission(submissionId: string): Promise<v
 
 /**
  * Loads the server-authorized submission history for one challenge member.
- * Review API returns full history to the owner and authorized challenge staff,
- * and restricts ordinary viewers to the selected member's latest submission.
+ * Visible Marathon Matches expose every attempt to all viewers, including
+ * anonymous visitors; Review API enforces challenge and other track restrictions.
  *
  * @param challengeId challenge UUID.
  * @param memberId submitter member ID from the selected latest submission.
