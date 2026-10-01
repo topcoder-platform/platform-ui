@@ -585,7 +585,11 @@ submission are disabled. The explicit cancel control remains available, aborts
 its request, clears the selected file or URL, and then unlocks normal navigation.
 Marathon Match attempts fall back to Review submission, virus-scan, and scoring
 lifecycle fields when test metadata is absent, preserving truthful Failed, In
-progress, and completed states. A superseded scorer's `CANCELLED` status is shown
+progress, and completed states. A settled negative score or `isPassing: false`
+marks its scorer phase as Failed even when the runner reports successful completion,
+so timed-out attempts cannot show Passed. Explicitly pending and cancelled runs
+retain their lifecycle status, while successful zero scores remain Passed.
+A superseded scorer's `CANCELLED` status is shown
 as a neutral `Cancelled` label. The newest phase result takes precedence over
 older progress, and cancelled phase scores do not fall back to placeholder or
 legacy aggregate values. Settled failed system-test aggregates remain available

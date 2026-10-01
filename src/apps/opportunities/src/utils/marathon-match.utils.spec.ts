@@ -441,6 +441,88 @@ describe('Marathon Match challenge detail utilities', () => {
             })
     })
 
+    it.each([
+        { aggregateScore: -1, isPassing: false, metadata: { testProgress: 1, testStatus: 'PASSED' } },
+        { aggregateScore: '-1', isPassing: true, metadata: { testStatus: 'COMPLETED' } },
+        { aggregateScore: 0, isPassing: false, metadata: { testStatus: 'SUCCESS' } },
+        { aggregateScore: -1, metadata: { testProgressDetails: { progress: 100, status: 'PASSED' } } },
+        { aggregateScore: -1, isPassing: false },
+    ])('marks failed results as Failed even when the runner completed: %j', result => {
+        expect(marathonSubmissionTestProgress({
+            id: 'timeout-provisional',
+            reviewSummation: [{ ...result, isProvisional: true }],
+        }))
+            .toMatchObject({ process: 'Provisional', status: 'Failed' })
+        expect(marathonSubmissionTestProgress({
+            id: 'timeout-system',
+            reviewSummation: [{ ...result, isFinal: true }],
+        }))
+            .toMatchObject({ process: 'System', status: 'Failed' })
+    })
+
+    it.each([
+        ['RUNNING', 'In progress'],
+        ['PENDING', 'In progress'],
+        ['CANCELLED', 'Cancelled'],
+        ['CANCELED', 'Cancelled'],
+    ])('preserves %s despite non-passing placeholder scores', (testStatus, status) => {
+        expect(marathonSubmissionTestProgress({
+            id: 'unfinished',
+            reviewSummation: [{
+                aggregateScore: -1,
+                isFinal: true,
+                isPassing: false,
+                metadata: { testProgress: 0.5, testStatus },
+            }],
+        }))
+            .toEqual({ process: 'System', progress: 50, status })
+    })
+
+    it('keeps partial progress without a lifecycle status from becoming a failure', () => {
+        expect(marathonSubmissionTestProgress({
+            id: 'partial',
+            reviewSummation: [{
+                aggregateScore: -1,
+                isPassing: false,
+                isProvisional: true,
+                metadata: { testProgress: 0.5 },
+            }],
+        }))
+            .toEqual({ process: 'Provisional', progress: 50, status: undefined })
+    })
+
+    it.each([0, 42.5])('keeps a successful score of %s passed after an earlier failed run', aggregateScore => {
+        expect(marathonSubmissionTestProgress({
+            id: 'retried',
+            reviewSummation: [{
+                aggregateScore: -1,
+                createdAt: '2026-09-30T08:00:00Z',
+                isFinal: true,
+                isPassing: false,
+                metadata: { testStatus: 'FAILED' },
+            }, {
+                aggregateScore,
+                createdAt: '2026-09-30T09:00:00Z',
+                isFinal: true,
+                isPassing: true,
+                metadata: { testProgress: 1, testStatus: 'PASSED' },
+            }],
+        }))
+            .toEqual({ process: 'System', progress: 100, status: 'Passed' })
+    })
+
+    it.each([
+        [{ finalScore: -1 }, 'System', 'Failed'],
+        [{ provisionalScore: -1 }, 'Provisional', 'Failed'],
+        [{ initialScore: '-1' }, 'Provisional', 'Failed'],
+        [{ review: [{ score: -1 }] }, 'System', 'Failed'],
+        [{ finalScore: 0 }, 'System', 'Passed'],
+        [{ provisionalScore: 0 }, 'Provisional', 'Passed'],
+    ])('resolves legacy score results %j as %s %s', (scores, process, status) => {
+        expect(marathonSubmissionTestProgress({ id: 'legacy-result', ...scores }))
+            .toEqual({ process, progress: 100, status })
+    })
+
     it('falls back to truthful submission lifecycle states when test metadata is absent', () => {
         expect(marathonSubmissionTestProgress({
             id: 'failed-screening',
