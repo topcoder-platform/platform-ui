@@ -34,6 +34,15 @@ default and white on a teal hover background.
 - `WorkAppContextProvider`: authentication token and derived role/access flags
 - `SWRConfigProvider`: shared SWR fetch configuration for the app
 
+## Project asset uploads
+
+The project asset file picker uploads to `submission-staging-prod` when
+`REACT_APP_HOST_ENV=prod` and `submission-staging-dev` in other environments.
+`REACT_APP_FILE_PICKER_SUBMISSION_CONTAINER_NAME` (or the legacy
+`FILE_PICKER_SUBMISSION_CONTAINER_NAME`) overrides this default. The same bucket
+is sent as `s3Bucket` to the Projects API when saving the attachment, so it can
+transfer the uploaded file into project attachment storage.
+
 ## Extending The App
 
 1. Add feature routes under `work-app.routes.tsx` children.
