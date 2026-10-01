@@ -12,6 +12,17 @@ Community-app's Wipro community (`topgear.<domain>`, formerly also served at
 `wipro.<domain>`) is replaced by this app on the `topgear` host. When the
 first hostname label is `topgear`:
 
+- all Topgear routes require login and verified membership in **Wipro - All**.
+  `TopgearAccessGate` withholds the entire route tree until the authenticated
+  Groups API (`/v6/groups/memberGroups/:memberId?uuid=true`) confirms the active
+  membership. Anonymous users go to login with their full return URL; non-members
+  see an access-restricted page. Errors, missing configuration, and pending checks
+  never render the listing or request challenge data. Direct detail routes are
+  gated too, and checks repeat when the member or route path changes;
+- the required group defaults to `b7f7c0f8-8ee8-409e-9e5c-33404983b635` and can be
+  configured separately with `REACT_APP_TOPGEAR_ACCESS_GROUP_ID`. Changing the
+  listing's `REACT_APP_TOPGEAR_GROUP_ID` does not change who may enter Topgear.
+  Challenge APIs continue to enforce their own data-access permissions;
 - the host root and legacy `/challenges` listing redirect to
   `/opportunities/challenge`; detail aliases still redirect to challenge details;
 - Universal Navigation automatically renders the Wipro, Topcoder, and Topgear
