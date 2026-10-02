@@ -149,7 +149,7 @@ describe('permissions.utils project management helpers', () => {
             .toBe('manager')
     })
 
-    it('allows project workspace access for admins and project members only', () => {
+    it('allows project workspace access for admins and members while restricting other non-members', () => {
         expect(checkProjectAccess(['administrator'], '999', managedProject))
             .toBe(true)
         expect(checkProjectAccess(['Project Manager'], '123', managedProject))
@@ -158,6 +158,44 @@ describe('permissions.utils project management helpers', () => {
             .toBe(false)
         expect(checkProjectAccess(['Project Manager'], '123', undefined))
             .toBe(false)
+    })
+
+    it.each([
+        'Talent Manager',
+        'Topcoder Talent Manager',
+        ' TALENT MANAGER ',
+        ' topcoder talent manager ',
+    ])('allows %s to view an API-authorized project without membership', role => {
+        expect(checkProjectAccess([role], '999', managedProject))
+            .toBe(true)
+        expect(checkProjectAccess([role], '999', { ...managedProject, members: [] }))
+            .toBe(true)
+        expect(checkProjectAccess([role], '999', undefined))
+            .toBe(false)
+        expect(checkCanManageProject([role], '999', managedProject))
+            .toBe(false)
+        expect(checkCanEditProjectDetails([role], '999', managedProject))
+            .toBe(false)
+        expect(canModifyChallenge({
+            challenge,
+            hasChallengeResourceWriteAccess: false,
+            loginUserInfo: { userId: 999 },
+            project: managedProject,
+            userRoles: [role],
+        }))
+            .toBe(false)
+    })
+
+    it.each([
+        'copilot',
+        'Topcoder User',
+        'Project Manager',
+        'Task Manager',
+    ])('requires membership for %s project workspace access', role => {
+        expect(checkProjectAccess([role], '999', managedProject))
+            .toBe(false)
+        expect(checkProjectAccess([role], '123', managedProject))
+            .toBe(true)
     })
 
     it('allows challenge modification for admins and the normalized challenge creator', () => {

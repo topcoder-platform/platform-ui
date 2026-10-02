@@ -25,7 +25,8 @@ interface ProjectRouteAccessGuardProps extends PropsWithChildren {
  * Blocks project-scoped Work routes until the current user has project access.
  *
  * @param props child route content and fallback page title used while access is loading or denied.
- * @returns child route content when the project exists and the caller is an admin or project member.
+ * @returns child route content when the API returns a project and the caller is an admin, Talent Manager,
+ * or project member. Internal-project restrictions for Talent Managers are enforced by the API.
  * @remarks Used by project workspace routes so unauthorized users do not mount pages that fetch project child data.
  * Access decisions use cached project data when available, so SWR revalidation errors do not block authorized users.
  * @throws Does not throw; missing project access renders the standard project access denial message.

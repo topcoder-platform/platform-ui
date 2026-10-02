@@ -362,14 +362,16 @@ export function checkProjectMembership(
 /**
  * Returns whether the caller can open project-scoped workspace pages.
  *
- * Admins can access every project. Other work-app users must be listed in the
- * project's membership payload before project details or child records can be
- * displayed.
+ * Admins and Talent Managers can open projects returned by the projects API
+ * without membership. The API enforces Talent Manager membership for internal
+ * projects. Other work-app users must be listed in the project's membership
+ * payload before project details or child records can be displayed.
  *
  * @param userRoles caller roles from the decoded auth token or app context.
  * @param userId logged-in user identifier used for project membership checks.
  * @param project project whose access should be evaluated.
  * @returns `true` when the caller may view the project workspace; otherwise `false`.
+ * @throws Does not throw; an unavailable project returns `false`.
  */
 export function checkProjectAccess(
     userRoles: string[],
@@ -380,7 +382,9 @@ export function checkProjectAccess(
         return false
     }
 
-    return hasAdminRole(userRoles) || checkProjectMembership(project, userId)
+    return hasAdminRole(userRoles)
+        || checkTalentManager(userRoles)
+        || checkProjectMembership(project, userId)
 }
 
 /**
