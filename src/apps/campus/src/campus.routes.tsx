@@ -1,9 +1,11 @@
-import { Navigate } from 'react-router-dom'
-
 import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
 
 const CampusApp: LazyLoadedComponent = lazyLoad(() => import('./CampusApp'))
+const CampusHomePage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/home'),
+    'CampusHomePage',
+)
 const CampusLeaderboardPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/leaderboard'),
     'CampusLeaderboardPage',
@@ -20,7 +22,9 @@ export const campusRoutes: ReadonlyArray<PlatformRoute> = [
         authRequired: true,
         children: [
             {
-                element: <Navigate replace to={`${rootRoute}/mecw`} />,
+                // Campus program homepage listing the participating universities
+                element: <CampusHomePage />,
+                id: 'Campus Home',
                 route: '',
             },
             {

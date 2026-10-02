@@ -1,0 +1,44 @@
+@import '@libs/ui/styles/includes';
+
+$section-gap: 40px;
+$card-gap: 35px;
+
+.header {
+    margin-top: $section-gap;
+    margin-bottom: $section-gap;
+}
+
+.title {
+    color: var(--FontColor);
+    font-family: 'Figtree', sans-serif;
+    font-size: 33px;
+    font-weight: 700;
+    letter-spacing: normal;
+    line-height: 38px;
+    margin-bottom: $sp-2;
+    text-transform: none;
+}
+
+.subtitle {
+    color: var(--SubtitleColor);
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 25px;
+}
+
+.cards {
+    display: grid;
+    gap: $card-gap;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: $section-gap;
+
+    @include ltelg {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include ltemd {
+        gap: $sp-4;
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
