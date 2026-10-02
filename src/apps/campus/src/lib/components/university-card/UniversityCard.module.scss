@@ -1,0 +1,71 @@
+@import '@libs/ui/styles/includes';
+
+.universityCard {
+    border: 1px solid var(--TableBorderColor);
+    border-radius: 8px;
+    color: var(--FontColor);
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    min-width: 0;
+    padding: $sp-6;
+    transition: box-shadow 0.15s ease-in-out;
+
+    &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    @include ltemd {
+        padding: $sp-4;
+    }
+}
+
+.logo {
+    align-items: center;
+    display: flex;
+    height: 60px;
+
+    img {
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+    }
+}
+
+.logoFallback {
+    align-items: center;
+    background-color: var(--TableRowBorderColor);
+    border-radius: 8px;
+    display: flex;
+    font-family: 'Figtree', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    height: 60px;
+    justify-content: center;
+    width: 60px;
+}
+
+.name {
+    flex: 1 0 auto;
+    font-family: 'Figtree', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 26px;
+}
+
+.cta {
+    align-items: center;
+    color: var(--Link);
+    display: flex;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    gap: $sp-1;
+    line-height: 22px;
+
+    svg {
+        flex: 0 0 auto;
+        height: 20px;
+        width: 20px;
+    }
+}
