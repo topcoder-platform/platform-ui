@@ -1,0 +1,10 @@
+.restricted {
+    margin: 0 auto;
+    max-width: 900px;
+    min-height: 60vh;
+    padding: 72px 24px;
+
+    p { margin: 24px 0; }
+    a { display: inline-block; text-decoration: underline; }
+    button { cursor: pointer; margin-right: 24px; padding: 8px 16px; }
+}

@@ -28,3 +28,9 @@ production rollout is explicitly scheduled.
 Rollback the function to its saved prior code and republish. Roll back the
 navigation and Platform UI build using the normal deployment process. There is
 no database change and no new DNS change needed for this dev rollout.
+
+The edge redirect only canonicalizes the URL. Authentication and Wipro - All
+membership are checked by Platform UI before any Topgear route is mounted,
+including direct visits that bypass `/challenges`. Do not infer membership from
+cookie presence or an email suffix at CloudFront. Verify anonymous login handoff,
+non-member denial, membership service failures, and authorized member access.
