@@ -19,6 +19,7 @@ import {
 
 import {
     BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED,
+    PAYMENT_HOURS_LOCKED_TO_TIMESHEETS,
 } from '../../constants'
 import {
     Assignment,
@@ -204,13 +205,18 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
     const [isLinkingEntries, setIsLinkingEntries] = useState<boolean>(false)
     const [linkEntriesMessage, setLinkEntriesMessage] = useState<string | undefined>(undefined)
     const [summaryReloadToken, setSummaryReloadToken] = useState<number>(0)
+    const [editedHoursWorked, setEditedHoursWorked] = useState<string | undefined>(undefined)
 
     /**
-     * Hours come from approved timesheet entries, never from the keyboard. That is what enforces
-     * "payment only against approved hours" and "payment hours cannot exceed approved hours": an
-     * operator has no field to type a larger number into, so no ceiling check is needed downstream.
+     * Hours are prefilled from approved timesheet entries. Once PAYMENT_HOURS_LOCKED_TO_TIMESHEETS is
+     * enabled the field becomes read-only, which is what enforces "payment only against approved hours":
+     * an operator has no field to type a larger number into, so no ceiling check is needed downstream.
+     * Until then, an operator edit overrides the prefilled value.
      */
-    const hoursWorked = summary?.totalHours ?? ''
+    const approvedHoursWorked = summary?.totalHours ?? ''
+    const hoursWorked = PAYMENT_HOURS_LOCKED_TO_TIMESHEETS
+        ? approvedHoursWorked
+        : editedHoursWorked ?? approvedHoursWorked
 
     const ratePerHour = useMemo(
         () => getAssignmentRatePerHour(props.member || {}),
@@ -268,6 +274,7 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         setSummaryReloadToken(0)
         setSummary(undefined)
         setSummaryError(undefined)
+        setEditedHoursWorked(undefined)
     }, [])
 
     const refreshSummary = useCallback((): void => {
@@ -281,6 +288,11 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
 
         resetState()
     }, [props.member?.id, props.member?.memberId, props.open, resetState])
+
+    // A new approved total (period change or refresh) replaces any earlier manual edit.
+    useEffect(() => {
+        setEditedHoursWorked(undefined)
+    }, [summary])
 
     // Approved hours for the picked period. Refetched on every range change, because the totals are
     // period-specific and an already-paid day must drop out of them.
@@ -513,9 +525,13 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         }
 
         if (!Number.isFinite(parsedHoursWorked) || parsedHoursWorked <= 0) {
-            nextErrors.hoursWorked = summary && summary.alreadyPaidEntryIds.length > 0
-                ? 'Every approved entry in this period has already been paid.'
-                : 'There are no approved timesheet entries in this period.'
+            if (editedHoursWorked !== undefined) {
+                nextErrors.hoursWorked = 'Hours worked must be greater than 0.'
+            } else {
+                nextErrors.hoursWorked = summary && summary.alreadyPaidEntryIds.length > 0
+                    ? 'Every approved entry in this period has already been paid.'
+                    : 'There are no approved timesheet entries in this period.'
+            }
         }
 
         if (ratePerHour === undefined || ratePerHour <= 0) {
@@ -562,6 +578,7 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         resetState()
     }, [
         amount,
+        editedHoursWorked,
         fromDate,
         hoursWorked,
         paymentTitle,
@@ -695,18 +712,41 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                             )
                             : undefined}
                     </label>
-                    <input
-                        id='payment-hours-worked'
-                        className={styles.input}
-                        readOnly
-                        type='text'
-                        value={isLoadingSummary ? 'Loading...' : hoursWorked}
-                    />
+                    {PAYMENT_HOURS_LOCKED_TO_TIMESHEETS || isLoadingSummary
+                        ? (
+                            <input
+                                id='payment-hours-worked'
+                                className={styles.input}
+                                readOnly
+                                type='text'
+                                value={isLoadingSummary ? 'Loading...' : hoursWorked}
+                            />
+                        )
+                        : (
+                            <input
+                                id='payment-hours-worked'
+                                className={styles.input}
+                                disabled={isSubmitting}
+                                inputMode='decimal'
+                                onChange={event => {
+                                    setEditedHoursWorked(event.target.value)
+                                    setErrors(previous => ({
+                                        ...previous,
+                                        hoursWorked: undefined,
+                                    }))
+                                }}
+                                pattern='[0-9.]*'
+                                type='number'
+                                value={hoursWorked}
+                            />
+                        )}
                     <p className={styles.helperText}>
                         {summary
                             ? `${summary.totalDays} approved `
                                 + `${summary.totalDays === 1 ? 'day' : 'days'} in this period`
-                            : 'Hours come from approved timesheet entries for the selected period.'}
+                            : PAYMENT_HOURS_LOCKED_TO_TIMESHEETS
+                                ? 'Hours come from approved timesheet entries for the selected period.'
+                                : 'Hours are prefilled from approved timesheet entries for the selected period.'}
                     </p>
                     {summary && summary.alreadyPaidEntryIds.length > 0
                         ? (
