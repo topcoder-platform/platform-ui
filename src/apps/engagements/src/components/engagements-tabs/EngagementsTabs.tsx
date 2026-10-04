@@ -36,12 +36,12 @@ const EngagementsTabs: FC<EngagementsTabsProps> = (props: EngagementsTabsProps) 
             )
         }
 
-        if (isAdminOrManager) {
-            tabs.push({
-                id: 'timesheets',
-                title: 'Timesheets',
-            })
-        }
+        // if (isAdminOrManager) {
+        //     tabs.push({
+        //         id: 'timesheets',
+        //         title: 'Timesheets',
+        //     })
+        // }
 
         return tabs
     }, [authCtx.isLoggedIn, isAdminOrManager])
