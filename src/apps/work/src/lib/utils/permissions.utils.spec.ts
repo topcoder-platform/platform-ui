@@ -10,6 +10,7 @@ import {
     canManageEngagementManagers,
     canModifyChallenge,
     canViewAllEngagements,
+    checkCanAddProjectAssets,
     checkCanEditProjectDetails,
     checkCanManageProject,
     checkIsUserInvitedToProject,
@@ -196,6 +197,21 @@ describe('permissions.utils project management helpers', () => {
             .toBe(false)
         expect(checkProjectAccess([role], '123', managedProject))
             .toBe(true)
+    })
+
+    it('shows project asset add actions only to admins and project members', () => {
+        expect(checkCanAddProjectAssets(['administrator'], '999', managedProject))
+            .toBe(true)
+        expect(checkCanAddProjectAssets(['Talent Manager'], '456', managedProject))
+            .toBe(true)
+        expect(checkCanAddProjectAssets(['Topcoder User'], 789, managedProject))
+            .toBe(true)
+        expect(checkCanAddProjectAssets(['Talent Manager'], '999', managedProject))
+            .toBe(false)
+        expect(checkCanAddProjectAssets(['Topcoder Talent Manager'], '999', managedProject))
+            .toBe(false)
+        expect(checkCanAddProjectAssets(['administrator'], '999', undefined))
+            .toBe(false)
     })
 
     it('allows challenge modification for admins and the normalized challenge creator', () => {

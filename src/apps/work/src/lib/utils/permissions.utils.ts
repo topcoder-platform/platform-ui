@@ -452,6 +452,31 @@ export function checkCanEditProjectDetails(
     return normalizedRole === PROJECT_ROLES.MANAGER
 }
 
+/**
+ * Returns whether the caller can add files or links to a project's Assets Library.
+ *
+ * Admins and project members keep the add actions. Non-member viewers, such as
+ * Talent Managers opening a non-internal project, get a read-only library
+ * because the projects API rejects their attachment create requests.
+ *
+ * @param userRoles caller roles from the decoded auth token or app context.
+ * @param userId logged-in user identifier used for project membership checks.
+ * @param project project whose Assets Library is displayed.
+ * @returns `true` when the add file and add link actions should be shown; otherwise `false`.
+ * @throws Does not throw; an unavailable project returns `false`.
+ */
+export function checkCanAddProjectAssets(
+    userRoles: string[],
+    userId: number | string | undefined,
+    project: Project | undefined,
+): boolean {
+    if (!project) {
+        return false
+    }
+
+    return hasAdminRole(userRoles) || checkProjectMembership(project, userId)
+}
+
 export function checkAdminOrPmOrTaskManager(
     token: string,
     project?: Project,
