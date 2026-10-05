@@ -22,6 +22,7 @@ import {
     rootRoute,
     termsRouteId,
     userManagementRouteId,
+    websitePublicationRouteId,
 } from './config/routes.config'
 import { administratorOnlyRoles, adminReportsAccessRoles } from './lib/utils'
 import { platformSkillRouteId } from './platform/routes.config'
@@ -190,6 +191,11 @@ const AiReviewTemplatesPage: LazyLoadedComponent = lazyLoad(
 const TopScoutRagPage: LazyLoadedComponent = lazyLoad(
     () => import('./ai/topscout-rag/TopScoutRagPage'),
     'TopScoutRagPage',
+)
+
+const WebsitePublicationPage: LazyLoadedComponent = lazyLoad(
+    () => import('./website/WebsitePublicationPage'),
+    'WebsitePublicationPage',
 )
 
 export const toolTitle: string = ToolTitle.admin
@@ -429,6 +435,12 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 id: platformRouteId,
                 rolesRequired: administratorOnlyRoles,
                 route: platformRouteId,
+            },
+            {
+                element: <WebsitePublicationPage />,
+                id: websitePublicationRouteId,
+                rolesRequired: administratorOnlyRoles,
+                route: websitePublicationRouteId,
             },
             // Payments Module
             {
