@@ -1,0 +1,72 @@
+/* Default 32px member avatar. Hosts pass a class for size or photo borders. */
+.avatar {
+    align-items: center;
+    border-radius: 50%;
+    box-sizing: border-box;
+    display: inline-flex;
+    flex: 0 0 32px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    height: 32px;
+    justify-content: center;
+    line-height: 1;
+    overflow: hidden;
+    text-decoration: none;
+    width: 32px;
+
+    img {
+        display: block;
+        height: 100%;
+        object-fit: cover;
+        width: 100%;
+    }
+}
+
+/*
+ * Figma "Placeholder based on initials" color pairs. The compound selectors
+ * outrank single-class host overrides so the borderless palette always wins.
+ */
+.avatar.placeholder {
+    border: 0;
+}
+
+.avatar.green {
+    background: #a7f0ba;
+    color: #044317;
+}
+
+.avatar.teal {
+    background: #9ef0f0;
+    color: #004144;
+}
+
+.avatar.blue {
+    background: #d0e2ff;
+    color: #002d9c;
+}
+
+.avatar.purple {
+    background: #e8daff;
+    color: #491d8b;
+}
+
+.avatar.magenta {
+    background: #ffd6e8;
+    color: #740937;
+}
+
+.avatar.orange {
+    background: #ffd9be;
+    color: #5e2900;
+}
+
+.avatar.yellow {
+    background: #fddc69;
+    color: #483700;
+}
+
+.avatar.gray {
+    background: #e9ecef;
+    color: #293033;
+}

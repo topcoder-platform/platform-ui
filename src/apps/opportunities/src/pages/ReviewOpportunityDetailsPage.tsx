@@ -15,7 +15,7 @@ import {
     ProfileContextData,
     useProfileContext,
 } from '~/libs/core'
-import { DefaultMemberIcon, IconOutline, LoadingSpinner } from '~/libs/ui'
+import { IconOutline, LoadingSpinner } from '~/libs/ui'
 
 import { ReactComponent as SortIcon } from '../assets/sort.svg'
 import challengeTypeIcon from '../assets/challenge-type.svg'
@@ -24,6 +24,7 @@ import reviewPeriodIcon from '../assets/review-period.svg'
 import reviewPostedIcon from '../assets/review-posted.svg'
 import sidebarBookIcon from '../assets/sidebar-book.svg'
 import { ChallengeMarkdown, ReportIssueModal } from '../components'
+import { MemberAvatar } from '../components/MemberAvatar'
 import {
     MemberProfileSummary,
     ReviewApplicationSummary,
@@ -658,11 +659,7 @@ const Applications: FC<{ applications: ReviewApplicationSummary[] }> = props => 
                                     >
                                         <td data-mobile-label='Handle'>
                                             <span className={styles.member}>
-                                                <i>
-                                                    {photoURL
-                                                        ? <img alt='' aria-hidden='true' src={photoURL} />
-                                                        : <DefaultMemberIcon />}
-                                                </i>
+                                                <MemberAvatar handle={profileHandle} photoURL={photoURL} />
                                                 {profileHandle ? (
                                                     <a href={memberProfileUrl(profileHandle)}>
                                                         <strong style={{ color: getRatingColor(maxRating) }}>

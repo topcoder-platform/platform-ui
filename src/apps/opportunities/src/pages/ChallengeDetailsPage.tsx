@@ -46,6 +46,7 @@ import {
     SubmissionArtifactsModal,
     SubmissionHistoryModal,
 } from '../components'
+import { MemberAvatar } from '../components/MemberAvatar'
 import { SubmissionAiReviewDetails } from '../components/SubmissionAiReviewDetails'
 import {
     challengeCatalogKey,
@@ -1099,30 +1100,17 @@ function ratingClass(rating?: number): string | undefined {
  * Renders the compact avatar and linked handle shared by detail tables/cards.
  *
  * @param props resolved member handle.
- * @returns member identity cell without synthesizing unavailable profile photos.
+ * @returns member identity cell; members without a usable photo get the
+ * handle-initial color placeholder from `MemberAvatar`.
  * @throws Does not throw.
  */
 const MemberHandle: FC<MemberHandleProps> = props => {
-    const [failedPhotoURL, setFailedPhotoURL] = useState<string>()
     const handle = props.profile?.handle ?? props.handle
     const rating = props.profile?.maxRating ?? props.rating
-    const photoURL = props.profile?.photoURL
-    const showPhoto = !!photoURL && photoURL !== failedPhotoURL
     const handleClass = ratingClass(rating)
     return (
         <span className={styles.member}>
-            <span aria-hidden='true' className={styles.avatar}>
-                {showPhoto
-                    ? (
-                        <img
-                            alt=''
-                            onError={() => setFailedPhotoURL(photoURL)}
-                            src={photoURL}
-                        />
-                    )
-                    : handle.charAt(0)
-                        .toUpperCase()}
-            </span>
+            <MemberAvatar className={styles.avatar} handle={handle} photoURL={props.profile?.photoURL} />
             {props.link === false && !props.profile?.handle
                 ? <span className={`${styles.memberHandle} ${handleClass ?? ''}`}>{handle}</span>
                 : <a className={handleClass} href={memberProfileUrl(handle)}>{handle}</a>}

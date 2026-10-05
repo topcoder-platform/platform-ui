@@ -444,6 +444,8 @@ describe('OpportunityListCard competition presentation', () => {
             .toHaveLength(3)
         expect(winners.querySelector('img'))
             .toHaveAttribute('src', 'https://images.example/first.png')
+        expect(Array.from(winners.querySelectorAll('.placeholder'), avatar => avatar.textContent))
+            .toEqual(['S', 'T'])
         expect(winners.querySelectorAll('svg'))
             .toHaveLength(3)
         expect(within(winners)

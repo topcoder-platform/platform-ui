@@ -58,7 +58,6 @@ jest.mock('~/libs/cms', () => ({
 jest.mock('~/libs/ui', () => {
     const Icon = (): JSX.Element => <svg />
     return {
-        DefaultMemberIcon: Icon,
         IconOutline: new Proxy({}, { get: () => Icon }),
         LoadingSpinner: (): JSX.Element => <span>Loading</span>,
     }
@@ -229,6 +228,10 @@ describe('ReviewOpportunityDetailsPage', () => {
             .toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'DaraK' }))
             .toHaveAttribute('href', expect.stringMatching(/\/DaraK$/))
+        expect(screen.getByRole('link', { name: 'DaraK' })
+            .closest('td')
+            ?.querySelector('.placeholder'))
+            .toHaveTextContent(/^D$/)
         expect(screen.queryByText('cancelled-member'))
             .not.toBeInTheDocument()
         expect(screen.getByText('1 - 2 of 2 items'))
