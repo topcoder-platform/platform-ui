@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import type { FC, ReactNode } from 'react'
 import { useCallback, useMemo } from 'react'
 import ReactMarkdown, { type Components, type Options as ReactMarkdownOptions } from 'react-markdown'
