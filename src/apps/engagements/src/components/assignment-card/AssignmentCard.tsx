@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unused-prop-types */
 import type { FC, ReactNode } from 'react'
 import { useCallback, useMemo } from 'react'
 import ReactMarkdown, { type Components, type Options as ReactMarkdownOptions } from 'react-markdown'
@@ -304,7 +305,7 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                             textWrap
                             className={styles.actionButton}
                         />
-                        {props.onOpenTimesheet && (
+                        {/* {props.onOpenTimesheet && (
                             <Button
                                 label='Timesheet'
                                 onClick={props.onOpenTimesheet}
@@ -312,7 +313,7 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                                 textWrap
                                 className={styles.actionButton}
                             />
-                        )}
+                        )} */}
                     </>
                 )}
                 {renderOfferActions(
