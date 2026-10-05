@@ -2,6 +2,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import type { Context, PropsWithChildren, ReactNode } from 'react'
 import {
+    fireEvent,
     render,
     screen,
     within,
@@ -15,6 +16,7 @@ import {
     useFetchProjectMembers,
 } from '../../../lib/hooks'
 import {
+    checkCanAddProjectAssets,
     checkCanEditProjectDetails,
     checkCanManageProject,
 } from '../../../lib/utils'
@@ -121,6 +123,7 @@ jest.mock('../../../lib/services', () => ({
     updateProjectAttachment: jest.fn(),
 }))
 jest.mock('../../../lib/utils', () => ({
+    checkCanAddProjectAssets: jest.fn(() => true),
     checkCanEditProjectDetails: jest.fn(() => false),
     checkCanManageProject: jest.fn(() => false),
 }))
@@ -128,6 +131,7 @@ jest.mock('../../../lib/utils', () => ({
 const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedUseFetchProjectAttachments = useFetchProjectAttachments as jest.Mock
 const mockedUseFetchProjectMembers = useFetchProjectMembers as jest.Mock
+const mockedCheckCanAddProjectAssets = checkCanAddProjectAssets as jest.Mock
 const mockedCheckCanEditProjectDetails = checkCanEditProjectDetails as jest.Mock
 const mockedCheckCanManageProject = checkCanManageProject as jest.Mock
 
@@ -168,6 +172,7 @@ function renderPage(
 describe('ProjectAssetsPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        mockedCheckCanAddProjectAssets.mockReturnValue(true)
         mockedCheckCanEditProjectDetails.mockReturnValue(false)
         mockedCheckCanManageProject.mockReturnValue(false)
 
@@ -211,6 +216,82 @@ describe('ProjectAssetsPage', () => {
         expect(screen.getByText('Assets Library'))
             .toBeTruthy()
     })
+
+    it('shows add actions to users who can add project assets', () => {
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+            project: {
+                id: 200,
+                name: 'Payment Testing',
+            },
+        })
+
+        renderPage('/projects/200/assets')
+
+        expect(screen.getByRole('button', { name: 'Add New File' }))
+            .toBeTruthy()
+        fireEvent.click(screen.getByRole('button', { name: /^Links/ }))
+        expect(screen.getByRole('button', { name: 'Add New Link' }))
+            .toBeTruthy()
+    })
+
+    it.each(['Talent Manager', 'Topcoder Talent Manager'])(
+        'shows a read-only assets library to non-member %s users',
+        role => {
+            mockedCheckCanAddProjectAssets.mockReturnValue(false)
+            mockedUseFetchProject.mockReturnValue({
+                error: undefined,
+                isLoading: false,
+                mutate: jest.fn(),
+                project: {
+                    id: 200,
+                    members: [{ role: 'manager', userId: 99999 }],
+                    name: 'Non-internal Project',
+                },
+            })
+            mockedUseFetchProjectAttachments.mockReturnValue({
+                attachments: [{
+                    allowedUsers: [],
+                    createdBy: '99999',
+                    id: 1,
+                    path: 'https://example.com/spec',
+                    title: 'Project Spec',
+                    type: 'link',
+                }],
+                error: undefined,
+                isLoading: false,
+                mutate: jest.fn(),
+            })
+            const loginUserInfo = {
+                email: 'tm@example.com',
+                exp: 0,
+                handle: 'tm-user',
+                iat: 0,
+                roles: [role],
+                userId: 12345,
+            } as WorkAppContextModel['loginUserInfo']
+
+            renderPage('/projects/200/assets', {
+                ...defaultContextValue,
+                isAdmin: false,
+                isManager: true,
+                loginUserInfo,
+                userRoles: [role],
+            })
+
+            expect(mockedCheckCanAddProjectAssets)
+                .toHaveBeenCalledWith([role], 12345, expect.objectContaining({ id: 200 }))
+            expect(screen.queryByRole('button', { name: 'Add New File' }))
+                .toBeNull()
+            fireEvent.click(screen.getByRole('button', { name: /^Links/ }))
+            expect(screen.getByText('Project Spec'))
+                .toBeTruthy()
+            expect(screen.queryByRole('button', { name: 'Add New Link' }))
+                .toBeNull()
+        },
+    )
 
     it('hides project edit action when a copilot can manage but cannot edit project details', () => {
         mockedCheckCanManageProject.mockReturnValue(true)
