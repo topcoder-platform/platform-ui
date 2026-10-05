@@ -684,6 +684,9 @@ export async function getMyWorkCounts(
  * Public active competitions require any current phase, while member
  * competitions retain every active challenge where the caller has a resource
  * role, including active challenges that have moved beyond submission.
+ * Newest-first past competitions use their end date so updates or reimports
+ * cannot promote older challenges. Other competition views use creation time.
+ * Both sorts apply to the complete matching result set before pagination.
  *
  * @param kind active opportunity type.
  * @param filters search, facets, sorting, and pagination values.
@@ -707,9 +710,12 @@ export function buildOpportunityPageUrl(
         const startingSoon = filters.sort === 'startingSoon'
         const prizeSort = filters.sort === 'prizeHighToLow' || filters.sort === 'prizeLowToHigh'
         const titleSort = filters.sort === 'titleAZ'
+        const newestDateField = filters.statuses?.length === 1 && filters.statuses[0] === 'COMPLETED'
+            ? 'endDate'
+            : 'createdAt'
         url.searchParams.set('sortBy', prizeSort
             ? 'overview.totalPrizes'
-            : titleSort ? 'name' : startingSoon ? 'startDate' : 'updatedAt')
+            : titleSort ? 'name' : startingSoon ? 'startDate' : newestDateField)
         url.searchParams.set('sortOrder', filters.sort === 'prizeLowToHigh' || titleSort || startingSoon
             ? 'asc'
             : 'desc')
@@ -1659,6 +1665,46 @@ export async function getChallengeSubmissions(
 }
 
 /**
+ * Loads the complete latest-submission collection for sorting derived table values.
+ * Handle, profile rating, and review scores are not sortable submission API fields.
+ * @param challengeId Challenge whose public/authorized submissions are requested.
+ * @returns All latest submissions with collection metadata for client pagination.
+ * @throws Propagates page failures rather than presenting an incomplete ranking.
+ */
+export async function getAllChallengeSubmissions(
+    challengeId: string,
+): Promise<OpportunityPage<ChallengeSubmission>> {
+    const first = await getChallengeSubmissions(challengeId, 1, SUBMISSION_HISTORY_PAGE_SIZE)
+    const pages = await loadPagesInBatches(
+        Array.from({ length: Math.max(0, first.totalPages - 1) }, (_value, index) => index + 2),
+        async page => (await getChallengeSubmissions(challengeId, page, SUBMISSION_HISTORY_PAGE_SIZE)).items,
+    )
+    const items = Array.from(new Map([...first.items, ...pages.flat()].map(item => [item.id, item]))
+        .values())
+    return { items, page: 1, perPage: items.length, total: items.length, totalPages: 1 }
+}
+
+/**
+ * Loads each winner's latest submission for final scores absent from project results.
+ * Requests are batched and member-scoped so large challenge lists cannot hide winners.
+ *
+ * @param challengeId challenge UUID.
+ * @param memberIds winner member IDs from Challenge API.
+ * @returns latest submissions visible to the caller.
+ * @throws Propagates Review API authorization and network errors.
+ */
+export async function getChallengeWinnerSubmissions(
+    challengeId: string,
+    memberIds: string[],
+): Promise<ChallengeSubmission[]> {
+    const pages = await loadPagesInBatches(
+        memberIds.map((_id, index) => index),
+        async index => (await getChallengeSubmissions(challengeId, 1, 1, memberIds[index])).items,
+    )
+    return pages.flat()
+}
+
+/**
  * Loads the AI workflow runs associated with one member submission.
  *
  * Opportunities uses these records for the expandable My Submissions review table.
@@ -1767,8 +1813,8 @@ export async function deleteChallengeSubmission(submissionId: string): Promise<v
 
 /**
  * Loads the server-authorized submission history for one challenge member.
- * Review API returns full history to the owner and authorized challenge staff,
- * and restricts ordinary viewers to the selected member's latest submission.
+ * Visible Marathon Matches expose every attempt to all viewers, including
+ * anonymous visitors; Review API enforces challenge and other track restrictions.
  *
  * @param challengeId challenge UUID.
  * @param memberId submitter member ID from the selected latest submission.

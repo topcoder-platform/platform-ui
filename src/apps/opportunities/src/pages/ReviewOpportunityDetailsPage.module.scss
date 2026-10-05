@@ -762,22 +762,6 @@
         text-decoration: none;
     }
 
-    > i {
-        border-radius: 999px;
-        display: block;
-        flex: 0 0 32px;
-        height: 32px;
-        overflow: hidden;
-
-        img,
-        svg {
-            display: block;
-            height: 32px;
-            object-fit: cover;
-            width: 32px;
-        }
-    }
-
     strong {
         color: #007d79;
         display: block;

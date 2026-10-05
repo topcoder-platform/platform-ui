@@ -98,6 +98,7 @@ jest.mock('../../components', () => ({
         assignment?: { status?: string }
         engagement: { id: string; title: string }
         onAcceptOffer?: () => void
+        onOpenTimesheet?: () => void
         profileGateError?: string
     }) => (
         <article data-testid={`assignment-card-${props.engagement.id}`}>
@@ -106,6 +107,11 @@ jest.mock('../../components', () => ({
             {props.assignment?.status?.toLowerCase() === 'selected' && (
                 <button type='button' onClick={props.onAcceptOffer}>
                     Accept Offer
+                </button>
+            )}
+            {props.assignment?.status?.toLowerCase() === 'assigned' && props.onOpenTimesheet && (
+                <button type='button' onClick={props.onOpenTimesheet}>
+                    Timesheet
                 </button>
             )}
             {props.profileGateError && <div>{props.profileGateError}</div>}
@@ -121,6 +127,7 @@ const buildEngagement = (
     id: string,
     title: string,
     assignmentStatus: string,
+    engagementStatus: EngagementStatus = EngagementStatus.OPEN,
 ): Engagement => ({
     id,
     nanoId: `${id}-nano`,
@@ -131,7 +138,7 @@ const buildEngagement = (
     timeZones: [],
     countries: [],
     requiredSkills: [],
-    status: EngagementStatus.OPEN,
+    status: engagementStatus,
     createdAt: '2026-03-25T00:00:00.000Z',
     updatedAt: '2026-03-25T00:00:00.000Z',
     createdBy: 'talent-manager',
@@ -245,5 +252,61 @@ describe('MyAssignmentsPage', () => {
         expect(within(pastSection)
             .getByText('Terminated Engagement'))
             .toBeInTheDocument()
+    })
+
+    describe('timesheet entry point', () => {
+        it('shows a Timesheet button for an assigned engagement and opens the nested route', async () => {
+            const user = userEvent.setup()
+            mockGetMyAssignedEngagements.mockResolvedValue({
+                data: [
+                    buildEngagement(
+                        'eng-assigned',
+                        'Assigned Engagement',
+                        'assigned',
+                        EngagementStatus.ACTIVE,
+                    ),
+                ],
+                page: 1,
+                perPage: 20,
+                total: 1,
+                totalPages: 1,
+            })
+
+            render(<MyAssignmentsPage />)
+
+            const timesheetButton = await screen.findByRole('button', { name: 'Timesheet' })
+            await user.click(timesheetButton)
+
+            // Both ids live in the path, so the page loads the timesheet without resolving anything.
+            expect(mockNavigate)
+                .toHaveBeenCalledWith(
+                    '/engagements/eng-assigned/timesheets/eng-assigned-assignment',
+                )
+        })
+
+        it('shows no Timesheet button while the assignment is only an unaccepted offer', async () => {
+            mockGetMyAssignedEngagements.mockResolvedValue({
+                data: [
+                    buildEngagement(
+                        'eng-selected',
+                        'Selected Engagement',
+                        'selected',
+                        EngagementStatus.ACTIVE,
+                    ),
+                ],
+                page: 1,
+                perPage: 20,
+                total: 1,
+                totalPages: 1,
+            })
+
+            render(<MyAssignmentsPage />)
+
+            await screen.findByText('Selected Engagement')
+
+            expect(screen.queryByRole('button', { name: 'Timesheet' }))
+                .not
+                .toBeInTheDocument()
+        })
     })
 })

@@ -1,0 +1,539 @@
+/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports,
+   unicorn/no-null -- the entry fixture mirrors the API payload, which uses null for absent values */
+import '@testing-library/jest-dom'
+
+import React from 'react'
+import { render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+
+import type { TimesheetEntry, TimesheetView } from '../../lib/models'
+import { TimesheetEntryStatus, TimesheetViewerRole } from '../../lib/models'
+import {
+    approveTimesheetEntries,
+    getTimesheet,
+    getTimesheetEntryAudit,
+    reopenTimesheetEntries,
+    saveTimesheetEntries,
+    submitTimesheetEntries,
+} from '../../lib/services'
+
+import AdminTimesheetView from './AdminTimesheetView'
+
+jest.mock('react-toastify', () => ({
+    toast: { error: jest.fn(), success: jest.fn() },
+}))
+
+jest.mock('~/libs/ui', () => ({
+    BaseModal: (props: {
+        buttons?: React.ReactNode
+        children: React.ReactNode
+        open: boolean
+        title?: string
+    }) => (props.open
+        ? (
+            <div role='dialog'>
+                <h2>{props.title}</h2>
+                {props.children}
+                {props.buttons}
+            </div>
+        )
+        : <></>),
+    Button: (props: {
+        disabled?: boolean
+        label: string
+        onClick?: () => void
+    }) => (
+        <button disabled={props.disabled} onClick={props.onClick} type='button'>
+            {props.label}
+        </button>
+    ),
+    InputDatePicker: (props: {
+        date?: Date
+        disabled?: boolean
+        label: string
+        onChange: (date: Date | null) => void
+    }) => {
+        const handleChange = function handleChange(
+            event: React.ChangeEvent<HTMLInputElement>,
+        ): void {
+            const value = event.target.value
+            if (!value) {
+                props.onChange(null)
+                return
+            }
+
+            const [year, month, day] = value.split('-')
+                .map(Number)
+            props.onChange(new Date(year, month - 1, day))
+        }
+
+        return (
+            <label>
+                {props.label}
+                <input
+                    disabled={props.disabled}
+                    onChange={handleChange}
+                    type='date'
+                    value={props.date
+                        ? `${props.date.getFullYear()}-${String(props.date.getMonth() + 1)
+                            .padStart(2, '0')}-${String(props.date.getDate())
+                            .padStart(2, '0')}`
+                        : ''}
+                />
+            </label>
+        )
+    },
+    InputSelect: (props: {
+        label: string
+        onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+        options: Array<{ label?: React.ReactNode, value: string }>
+        value?: string
+    }) => (
+        <label>
+            {props.label}
+            <select
+                onChange={function onChange(event: React.ChangeEvent<HTMLSelectElement>) {
+                    props.onChange({
+                        target: { value: event.target.value },
+                    } as React.ChangeEvent<HTMLInputElement>)
+                }}
+                value={props.value}
+            >
+                {props.options.map(option => (
+                    <option key={option.value} value={option.value}>
+                        {option.label ?? option.value}
+                    </option>
+                ))}
+            </select>
+        </label>
+    ),
+    LoadingSpinner: () => <div>loading</div>,
+}), { virtual: true })
+
+jest.mock('../../lib/services', () => ({
+    approveTimesheetEntries: jest.fn(),
+    getTimesheet: jest.fn(),
+    getTimesheetEntryAudit: jest.fn()
+        .mockResolvedValue([]),
+    reopenTimesheetEntries: jest.fn(),
+    saveTimesheetEntries: jest.fn(),
+    submitTimesheetEntries: jest.fn(),
+}))
+
+const mockApprove = approveTimesheetEntries as jest.MockedFunction<typeof approveTimesheetEntries>
+const mockGetTimesheet = getTimesheet as jest.MockedFunction<typeof getTimesheet>
+const mockReopen = reopenTimesheetEntries as jest.MockedFunction<typeof reopenTimesheetEntries>
+const mockSave = saveTimesheetEntries as jest.MockedFunction<typeof saveTimesheetEntries>
+const mockSubmit = submitTimesheetEntries as jest.MockedFunction<typeof submitTimesheetEntries>
+const mockGetAudit = getTimesheetEntryAudit as jest.MockedFunction<typeof getTimesheetEntryAudit>
+
+const entry = (overrides: Partial<TimesheetEntry> = {}): TimesheetEntry => ({
+    approvalComment: null,
+    approvedAt: null,
+    approvedByHandle: null,
+    hoursWorked: '8.50',
+    id: 'entry-1',
+    isPaid: false,
+    outsideAssignmentWindow: false,
+    remarks: 'Sprint planning',
+    reopenedAt: null,
+    status: TimesheetEntryStatus.DRAFT,
+    submittedAt: null,
+    workDate: '2026-09-07',
+    ...overrides,
+} as TimesheetEntry)
+
+const timesheet = (entries: TimesheetEntry[]): TimesheetView => ({
+    assignment: {
+        endDate: '2026-09-30',
+        id: 'asg-1',
+        memberHandle: 'johnsmith',
+        memberId: '1001',
+        memberName: 'John Smith',
+        standardHoursPerDay: 8,
+        startDate: '2026-09-01',
+        status: 'ASSIGNED',
+    },
+    engagementId: 'eng-1',
+    engagementTitle: 'Senior Frontend Engineer',
+    entries,
+    managers: [{ handle: 'maryj', name: 'Mary Jones', userId: '2002' }],
+    viewerRole: TimesheetViewerRole.ADMINISTRATOR,
+})
+
+const renderView = (entries: TimesheetEntry[]): {
+    onTimesheetChange: jest.Mock
+} & ReturnType<typeof render> => {
+    const onTimesheetChange = jest.fn()
+    const utils = render(
+        <AdminTimesheetView
+            onTimesheetChange={onTimesheetChange}
+            timesheet={timesheet(entries)}
+        />,
+    )
+
+    return { onTimesheetChange, ...utils }
+}
+
+const switchToApprovedStatus = async (user: ReturnType<typeof userEvent.setup>): Promise<void> => {
+    await user.selectOptions(screen.getByLabelText('Status'), TimesheetEntryStatus.APPROVED)
+}
+
+describe('AdminTimesheetView', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+        mockGetTimesheet.mockResolvedValue(timesheet([entry()]))
+        mockGetAudit.mockResolvedValue([])
+    })
+
+    it('lets an administrator edit any row, including a submitted one', () => {
+        renderView([entry({ status: TimesheetEntryStatus.SUBMITTED })])
+
+        expect(screen.getByLabelText('Hours worked on 07-09-2026'))
+            .toBeEnabled()
+        expect(screen.getByLabelText('Remarks for 07-09-2026'))
+            .toBeEnabled()
+    })
+
+    it('saves a draft edit without a reason, because nobody is being overridden', async () => {
+        const user = userEvent.setup()
+        mockSave.mockResolvedValue(timesheet([entry({ hoursWorked: '9.00' })]))
+        renderView([entry()])
+
+        const hoursInput = screen.getByLabelText('Hours worked on 07-09-2026')
+        await user.clear(hoursInput)
+        await user.type(hoursInput, '9')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+
+        await waitFor(() => {
+            expect(mockSave)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    entries: [{ hoursWorked: '9', remarks: 'Sprint planning', workDate: '2026-09-07' }],
+                    overrideReason: undefined,
+                })
+        })
+    })
+
+    it('lets an administrator add a date range and save those entries on behalf of the member', async () => {
+        const user = userEvent.setup()
+        mockSave.mockResolvedValue(timesheet([
+            entry({
+                hoursWorked: '8.00',
+                id: 'new-entry-1',
+                remarks: null,
+                workDate: '2026-09-08',
+            }),
+            entry({
+                hoursWorked: '8.00',
+                id: 'new-entry-2',
+                remarks: null,
+                workDate: '2026-09-09',
+            }),
+        ]))
+        renderView([])
+
+        await user.click(screen.getByRole('button', { name: 'Add entries' }))
+        await user.clear(screen.getByLabelText('From Date'))
+        await user.type(screen.getByLabelText('From Date'), '2026-09-08')
+        await user.clear(screen.getByLabelText('To Date'))
+        await user.type(screen.getByLabelText('To Date'), '2026-09-09')
+        await user.click(screen.getByRole('button', { name: 'Confirm' }))
+
+        const mondayHours = await screen.findByLabelText('Hours worked on 08-09-2026')
+        const tuesdayHours = await screen.findByLabelText('Hours worked on 09-09-2026')
+        await user.type(mondayHours, '8')
+        await user.type(tuesdayHours, '8')
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+
+        await waitFor(() => {
+            expect(mockSave)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    entries: [
+                        { hoursWorked: '8', remarks: undefined, workDate: '2026-09-08' },
+                        { hoursWorked: '8', remarks: undefined, workDate: '2026-09-09' },
+                    ],
+                    overrideReason: undefined,
+                })
+        })
+    })
+
+    it('keeps an approved row editable so a correction can be typed', async () => {
+        const user = userEvent.setup()
+        renderView([entry({ status: TimesheetEntryStatus.APPROVED })])
+
+        await switchToApprovedStatus(user)
+
+        expect(screen.getByLabelText('Hours worked on 07-09-2026'))
+            .toBeEnabled()
+        expect(screen.getByLabelText('Select 07-09-2026'))
+            .toBeEnabled()
+    })
+
+    it('requires a reason before correcting an approved entry', async () => {
+        const user = userEvent.setup()
+        mockSave.mockResolvedValue(timesheet([entry({ status: TimesheetEntryStatus.APPROVED })]))
+        renderView([entry({ status: TimesheetEntryStatus.APPROVED })])
+        await switchToApprovedStatus(user)
+
+        await user.type(screen.getByLabelText('Remarks for 07-09-2026'), ' correction')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+
+        const dialog = screen.getByRole('dialog')
+        expect(within(dialog)
+            .getByText('Correct timesheet entries'))
+            .toBeInTheDocument()
+        expect(within(dialog)
+            .getByRole('button', { name: 'Save correction' }))
+            .toBeDisabled()
+        expect(mockSave).not.toHaveBeenCalled()
+
+        await user.type(within(dialog)
+            .getByLabelText('Override reason'), 'Payroll correction')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Save correction' }))
+
+        await waitFor(() => {
+            expect(mockSave)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', expect.objectContaining({
+                    overrideReason: 'Payroll correction',
+                }))
+        })
+    })
+
+    it('requires a reason before submitting on the member’s behalf', async () => {
+        const user = userEvent.setup()
+        mockSubmit.mockResolvedValue(timesheet([entry({ status: TimesheetEntryStatus.SUBMITTED })]))
+        renderView([entry({ id: 'e1' })])
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Submit on behalf (1)' }))
+
+        const dialog = screen.getByRole('dialog')
+        expect(within(dialog)
+            .getByText('Submit on the member’s behalf'))
+            .toBeInTheDocument()
+        expect(mockSubmit).not.toHaveBeenCalled()
+
+        await user.type(within(dialog)
+            .getByLabelText('Override reason'), 'Portal outage')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Submit on behalf' }))
+
+        await waitFor(() => {
+            expect(mockSubmit)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    entryIds: ['e1'],
+                    overrideReason: 'Portal outage',
+                })
+        })
+    })
+
+    it('requires a reason before reopening an approved entry', async () => {
+        const user = userEvent.setup()
+        mockReopen.mockResolvedValue(timesheet([entry({ status: TimesheetEntryStatus.DRAFT })]))
+        renderView([entry({ id: 'e1', status: TimesheetEntryStatus.APPROVED })])
+        await switchToApprovedStatus(user)
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Reopen (1)' }))
+
+        const dialog = screen.getByRole('dialog')
+        expect(within(dialog)
+            .getByText('Reopen approved entries'))
+            .toBeInTheDocument()
+        expect(mockReopen).not.toHaveBeenCalled()
+
+        await user.type(within(dialog)
+            .getByLabelText('Override reason'), 'Wrong hours reported')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Reopen' }))
+
+        await waitFor(() => {
+            expect(mockReopen)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    entryIds: ['e1'],
+                    overrideReason: 'Wrong hours reported',
+                })
+        })
+    })
+
+    it('requires both a comment and a reason to approve on a manager’s behalf', async () => {
+        const user = userEvent.setup()
+        mockApprove.mockResolvedValue({ approved: ['e1'], skipped: [] })
+        renderView([entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED })])
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
+
+        const dialog = screen.getByRole('dialog')
+        await user.type(within(dialog)
+            .getByLabelText('Approval comment'), 'Approved for week 37')
+        // The comment alone is not enough: acting for a manager needs a recorded reason too.
+        expect(within(dialog)
+            .getByRole('button', { name: 'Approve' }))
+            .toBeDisabled()
+
+        await user.type(
+            within(dialog)
+                .getByLabelText(/Override reason/),
+            'Manager on leave',
+        )
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Approve' }))
+
+        await waitFor(() => {
+            expect(mockApprove)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    approvalComment: 'Approved for week 37',
+                    entryIds: ['e1'],
+                    overrideReason: 'Manager on leave',
+                })
+        })
+    })
+
+    it('saves pending edits before submitting on behalf', async () => {
+        const user = userEvent.setup()
+        mockSave.mockResolvedValue(timesheet([
+            entry({
+                hoursWorked: '8.00',
+                id: 'new-entry',
+                remarks: null,
+                status: TimesheetEntryStatus.DRAFT,
+                workDate: '2026-09-08',
+            }),
+        ]))
+        mockSubmit.mockResolvedValue(timesheet([
+            entry({
+                id: 'new-entry',
+                status: TimesheetEntryStatus.SUBMITTED,
+                workDate: '2026-09-08',
+            }),
+        ]))
+        renderView([
+            entry({
+                id: 'draft-entry',
+                status: TimesheetEntryStatus.DRAFT,
+                workDate: '2026-09-08',
+            }),
+        ])
+
+        const hoursInput = await screen.findByLabelText('Hours worked on 08-09-2026')
+        await user.clear(hoursInput)
+        await user.type(hoursInput, '8')
+        await user.click(screen.getByLabelText('Select 08-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Submit on behalf (1)' }))
+
+        const dialog = screen.getByRole('dialog')
+        await user.type(within(dialog)
+            .getByLabelText('Override reason'), 'Portal outage')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Submit on behalf' }))
+
+        await waitFor(() => {
+            expect(mockSave)
+                .toHaveBeenCalledTimes(1)
+            expect(mockSubmit)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    entryIds: ['new-entry'],
+                    overrideReason: 'Portal outage',
+                })
+        })
+    })
+
+    it('saves pending edits before approving on behalf', async () => {
+        const user = userEvent.setup()
+        mockSave.mockResolvedValue(timesheet([
+            entry({
+                id: 'e1',
+                remarks: 'Clarified work notes',
+                status: TimesheetEntryStatus.SUBMITTED,
+            }),
+        ]))
+        mockApprove.mockResolvedValue({ approved: ['e1'], skipped: [] })
+        renderView([entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED })])
+
+        await user.type(screen.getByLabelText('Remarks for 07-09-2026'), ' updated')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
+
+        const dialog = screen.getByRole('dialog')
+        await user.type(within(dialog)
+            .getByLabelText('Approval comment'), 'Approved for week 37')
+        await user.type(within(dialog)
+            .getByLabelText(/Override reason/), 'Manager on leave')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Approve' }))
+
+        await waitFor(() => {
+            expect(mockSave)
+                .toHaveBeenCalledTimes(1)
+            expect(mockApprove)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    approvalComment: 'Approved for week 37',
+                    entryIds: ['e1'],
+                    overrideReason: 'Manager on leave',
+                })
+        })
+    })
+
+    it('offers reopen only for approved rows and submit only for drafts', async () => {
+        const user = userEvent.setup()
+        renderView([entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED })])
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+
+        expect(screen.queryByRole('button', { name: /^Reopen/ }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: /^Submit on behalf/ }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
+            .toBeEnabled()
+    })
+
+    it('opens the audit history for a single selected row', async () => {
+        const user = userEvent.setup()
+        renderView([entry({ id: 'e1' })])
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Audit history' }))
+        await waitFor(() => {
+            expect(screen.getByRole('dialog'))
+                .toBeInTheDocument()
+        })
+
+        expect(screen.getByRole('dialog'))
+            .toHaveTextContent('Audit history - 07-09-2026')
+    })
+
+    it('badges a reopened row', () => {
+        renderView([entry({ reopenedAt: '2026-09-14T00:00:00.000Z' })])
+
+        expect(screen.getByText('Reopened'))
+            .toBeInTheDocument()
+    })
+
+    it('surfaces the API message when an override fails', async () => {
+        const user = userEvent.setup()
+        mockReopen.mockRejectedValue({
+            response: { data: { message: 'Only approved timesheet entries can be reopened.' } },
+        })
+        renderView([entry({ id: 'e1', status: TimesheetEntryStatus.APPROVED })])
+        await switchToApprovedStatus(user)
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Reopen (1)' }))
+        await user.type(
+            within(screen.getByRole('dialog'))
+                .getByLabelText('Override reason'),
+            'Wrong hours',
+        )
+        await user.click(within(screen.getByRole('dialog'))
+            .getByRole('button', { name: 'Reopen' }))
+
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent('Only approved timesheet entries can be reopened.')
+    })
+})

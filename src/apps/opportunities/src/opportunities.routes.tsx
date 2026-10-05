@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
 
-import { isTopgearCommunity, OPPORTUNITIES_ROOT_ROUTE } from './utils/topgear.utils'
+import { isTopgearCommunity, TOPGEAR_CHALLENGES_ROUTE } from './utils/topgear.utils'
 
 const OpportunitiesApp: LazyLoadedComponent = lazyLoad(() => import('./OpportunitiesApp'))
 const OpportunitiesPage: LazyLoadedComponent = lazyLoad(() => import('./pages/OpportunitiesPage'))
@@ -29,7 +29,7 @@ export const toolTitle: string = ToolTitle.opportunities
 export const topgearRoutes: ReadonlyArray<PlatformRoute> = (
     isTopgearCommunity() ? [
         {
-            element: <Navigate replace to={OPPORTUNITIES_ROOT_ROUTE} />,
+            element: <Navigate replace to={TOPGEAR_CHALLENGES_ROUTE} />,
             id: 'TopGear root redirect',
             route: '',
             title: toolTitle,

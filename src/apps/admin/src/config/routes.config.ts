@@ -22,3 +22,5 @@ export const aiRouteId = 'ai'
 export const aiReviewWorkflowsRouteId = 'review-workflows'
 export const aiReviewTemplatesRouteId = 'review-templates'
 export const aiTopScoutRagRouteId = 'topscout-rag'
+
+export const websitePublicationRouteId = 'website-publishing'

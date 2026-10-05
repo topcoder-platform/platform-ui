@@ -7,8 +7,10 @@ import type {
 
 import {
     canCreateEngagement,
+    canManageEngagementManagers,
     canModifyChallenge,
     canViewAllEngagements,
+    checkCanAddProjectAssets,
     checkCanEditProjectDetails,
     checkCanManageProject,
     checkIsUserInvitedToProject,
@@ -130,6 +132,17 @@ describe('permissions.utils project management helpers', () => {
             .toBe(true)
     })
 
+    it('allows admins, task managers, and talent managers to manage engagement managers', () => {
+        expect(canManageEngagementManagers(['administrator']))
+            .toBe(true)
+        expect(canManageEngagementManagers(['task manager']))
+            .toBe(true)
+        expect(canManageEngagementManagers(['topcoder talent manager']))
+            .toBe(true)
+        expect(canManageEngagementManagers(['project manager']))
+            .toBe(false)
+    })
+
     it('normalizes project membership checks and role lookups by user id', () => {
         expect(checkProjectMembership(managedProject, '123'))
             .toBe(true)
@@ -137,7 +150,7 @@ describe('permissions.utils project management helpers', () => {
             .toBe('manager')
     })
 
-    it('allows project workspace access for admins and project members only', () => {
+    it('allows project workspace access for admins and members while restricting other non-members', () => {
         expect(checkProjectAccess(['administrator'], '999', managedProject))
             .toBe(true)
         expect(checkProjectAccess(['Project Manager'], '123', managedProject))
@@ -145,6 +158,59 @@ describe('permissions.utils project management helpers', () => {
         expect(checkProjectAccess(['Project Manager'], '999', managedProject))
             .toBe(false)
         expect(checkProjectAccess(['Project Manager'], '123', undefined))
+            .toBe(false)
+    })
+
+    it.each([
+        'Talent Manager',
+        'Topcoder Talent Manager',
+        ' TALENT MANAGER ',
+        ' topcoder talent manager ',
+    ])('allows %s to view an API-authorized project without membership', role => {
+        expect(checkProjectAccess([role], '999', managedProject))
+            .toBe(true)
+        expect(checkProjectAccess([role], '999', { ...managedProject, members: [] }))
+            .toBe(true)
+        expect(checkProjectAccess([role], '999', undefined))
+            .toBe(false)
+        expect(checkCanManageProject([role], '999', managedProject))
+            .toBe(false)
+        expect(checkCanEditProjectDetails([role], '999', managedProject))
+            .toBe(false)
+        expect(canModifyChallenge({
+            challenge,
+            hasChallengeResourceWriteAccess: false,
+            loginUserInfo: { userId: 999 },
+            project: managedProject,
+            userRoles: [role],
+        }))
+            .toBe(false)
+    })
+
+    it.each([
+        'copilot',
+        'Topcoder User',
+        'Project Manager',
+        'Task Manager',
+    ])('requires membership for %s project workspace access', role => {
+        expect(checkProjectAccess([role], '999', managedProject))
+            .toBe(false)
+        expect(checkProjectAccess([role], '123', managedProject))
+            .toBe(true)
+    })
+
+    it('shows project asset add actions only to admins and project members', () => {
+        expect(checkCanAddProjectAssets(['administrator'], '999', managedProject))
+            .toBe(true)
+        expect(checkCanAddProjectAssets(['Talent Manager'], '456', managedProject))
+            .toBe(true)
+        expect(checkCanAddProjectAssets(['Topcoder User'], 789, managedProject))
+            .toBe(true)
+        expect(checkCanAddProjectAssets(['Talent Manager'], '999', managedProject))
+            .toBe(false)
+        expect(checkCanAddProjectAssets(['Topcoder Talent Manager'], '999', managedProject))
+            .toBe(false)
+        expect(checkCanAddProjectAssets(['administrator'], '999', undefined))
             .toBe(false)
     })
 

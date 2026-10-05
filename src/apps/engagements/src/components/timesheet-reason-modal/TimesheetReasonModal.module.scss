@@ -1,0 +1,22 @@
+@import '@libs/ui/styles/includes';
+
+.body {
+    display: grid;
+    gap: 16px;
+}
+
+.description {
+    margin: 0;
+}
+
+.field {
+    display: grid;
+    gap: 6px;
+
+    textarea {
+        padding: 8px;
+        border: 1px solid $black-40;
+        border-radius: 6px;
+        resize: vertical;
+    }
+}

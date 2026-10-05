@@ -306,6 +306,33 @@ export function challengeCurrentPhase(challenge: ChallengeOpportunity): Challeng
 }
 
 /**
+ * Resolves the lifecycle label for competition cards without an active phase.
+ * Active challenges are scheduled until registration starts and stalled afterwards.
+ *
+ * @param challenge Challenge API item, including lifecycle and phase dates.
+ * @param now current epoch milliseconds used by the listing.
+ * @returns Scheduled or Stalled when applicable, otherwise undefined.
+ * @throws Does not throw.
+ */
+export function challengeInactivePhaseLabel(
+    challenge: ChallengeOpportunity,
+    now: number = Date.now(),
+): string | undefined {
+    const status = challengeCatalogKey(challenge.status)
+    if (status === 'stalled') return 'Stalled'
+    if (status === 'scheduled') return 'Scheduled'
+    if (status !== 'active' || challengeCurrentPhase(challenge)) return undefined
+
+    const registration = (challenge.phases ?? []).find(phase => (
+        ['registration', 'open'].includes(challengeCatalogKey(phase.name))
+    ))
+    const start = safeTimestamp(registration?.actualStartDate)
+        ?? safeTimestamp(registration?.scheduledStartDate)
+        ?? safeTimestamp(challenge.startDate)
+    return start !== undefined && start > now ? 'Scheduled' : 'Stalled'
+}
+
+/**
  * Returns the first valid date string and timestamp in priority order.
  *
  * @param values ISO date strings ordered from most to least authoritative.

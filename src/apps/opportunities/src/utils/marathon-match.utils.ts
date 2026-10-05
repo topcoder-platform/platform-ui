@@ -262,14 +262,14 @@ function averageReviewScore(values: unknown[]): number | undefined {
 
 /**
  * A system-test summation can already contain an aggregate while its tests
- * are still running. Keep that aggregate provisional until the run finishes.
+ * are still running. Release settled passing and failed results while keeping
+ * in-progress and cancelled aggregates hidden.
  *
  * @param summation latest system-test summation.
- * @returns whether the scorer has completed successfully.
+ * @returns whether the scorer has finished with a passing or failed result.
+ * @throws Does not throw.
  */
 function systemSummationIsComplete(summation: ChallengeReviewSummation): boolean {
-    if (summation.isPassing === false) return false
-
     const metadata = summation.metadata ?? {}
     const details = metadata.testProgressDetails
     const detailRecord = details && typeof details === 'object' && !Array.isArray(details)
@@ -278,11 +278,32 @@ function systemSummationIsComplete(summation: ChallengeReviewSummation): boolean
     const status = testStatusValue(metadata.testStatus ?? detailRecord.status)
     const progress = testProgressValue(metadata.testProgress ?? detailRecord.progress)
 
-    if (status && status !== 'Passed') return false
+    if (status === 'Cancelled' || status === 'In progress') return false
+    if (status === 'Failed') return true
     if (progress !== undefined && progress < 100) return false
 
     // Older completed summations have no scorer lifecycle metadata.
     return true
+}
+
+/**
+ * Withholds provisional placeholders while the latest scorer run is unfinished.
+ * Failed scores remain visible; completed legacy rows may omit progress metadata.
+ * @param summation Latest provisional review summation, if available.
+ * @returns Whether the aggregate and legacy score fallbacks must be hidden.
+ * @throws Does not throw.
+ */
+function provisionalScoreIsPending(summation?: ChallengeReviewSummation): boolean {
+    const metadata = summation?.metadata ?? {}
+    const details = metadata.testProgressDetails
+    const detailRecord = details && typeof details === 'object' && !Array.isArray(details)
+        ? details as Record<string, unknown>
+        : {}
+    const status = testStatusValue(metadata.testStatus ?? detailRecord.status)
+    const progress = testProgressValue(metadata.testProgress ?? detailRecord.progress)
+
+    return status === 'Cancelled' || status === 'In progress'
+        || (status !== 'Failed' && progress !== undefined && progress < 100)
 }
 
 /**
@@ -342,7 +363,8 @@ export function marathonDashboardIsEnabled(challenge: ChallengeOpportunity): boo
 /**
  * Resolves provisional and final Marathon Match scores, preferring the latest
  * phase-specific review summation over legacy submission-level fields.
- * Cancelled phase scores, including placeholder aggregates, are not displayed.
+ * Unfinished provisional and cancelled phase scores, including legacy fallbacks, are not displayed.
+ * Settled failed system results retain their aggregate for zero-score display.
  *
  * @param submission Review API submission with modern or legacy score fields.
  * @returns resolved provisional and final scores.
@@ -353,7 +375,7 @@ export function marathonSubmissionScores(
 ): MarathonSubmissionScores {
     const provisional = latestPhaseSummation(submission, 'provisional')
     const final = latestPhaseSummation(submission, 'final')
-    const provisionalScore = testStatusValue(provisional?.metadata?.testStatus) === 'Cancelled'
+    const provisionalScore = provisionalScoreIsPending(provisional)
         ? undefined
         : finiteScore(provisional?.aggregateScore)
             ?? finiteScore(submission.provisionalScore)
@@ -445,7 +467,9 @@ function testStatusPriority(status: MarathonTestProgress['status']): number {
  * Candidates are ranked by scorer phase first and by status second, so a
  * cancelled Example run cannot displace the submission's provisional or system
  * result, and the newest result per phase is used so stale progress cannot hide
- * a cancellation within that phase.
+ * a cancellation within that phase. Settled negative scores and non-passing
+ * results override a successful runner status, which only signals completion;
+ * explicitly pending or cancelled runs retain their lifecycle state.
  *
  * @param submission Review API submission with attached summations.
  * @param challenge optional Challenge API context used to identify the active scoring phase.
@@ -473,7 +497,14 @@ export function marathonSubmissionTestProgress(
                 },
             })
             const progress = testProgressValue(metadata.testProgress ?? detailRecord.progress)
-            const status = testStatusValue(metadata.testStatus ?? detailRecord.status)
+            const lifecycleStatus = testStatusValue(metadata.testStatus ?? detailRecord.status)
+            const score = finiteScore(summation.aggregateScore)
+            const failedResult = summation.isPassing === false || (score !== undefined && score < 0)
+            const pendingProgress = !lifecycleStatus && progress !== undefined && progress < 100
+            const status = failedResult && !pendingProgress
+                && lifecycleStatus !== 'Cancelled' && lifecycleStatus !== 'In progress'
+                ? 'Failed'
+                : lifecycleStatus
             return {
                 index,
                 process,
@@ -517,11 +548,11 @@ export function marathonSubmissionTestProgress(
     const scores = marathonSubmissionScores(submission)
 
     if (scores.finalScore !== undefined) {
-        return { process: 'System', progress: 100, status: 'Passed' }
+        return { process: 'System', progress: 100, status: scores.finalScore < 0 ? 'Failed' : 'Passed' }
     }
 
     if (scores.provisionalScore !== undefined) {
-        return { process: 'Provisional', progress: 100, status: 'Passed' }
+        return { process: 'Provisional', progress: 100, status: scores.provisionalScore < 0 ? 'Failed' : 'Passed' }
     }
 
     const challengeProcess = challengePhaseTestProcess(challenge)

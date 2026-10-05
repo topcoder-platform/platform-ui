@@ -9,7 +9,8 @@ export interface OpportunitySortOption {
 /**
  * Returns the semantic default shared by all opportunity lists.
  *
- * @returns `newest`, which each owning API adapter maps to creation-order descending.
+ * @returns `newest`, mapped to end-date descending for past competitions and
+ * creation-order descending for other lists by their owning API adapters.
  * @throws Does not throw.
  */
 export function defaultSort(): string {

@@ -14,11 +14,15 @@
         }
 
         .challenge-select__menu {
-            z-index: 20;
+            z-index: 50;
         }
 
         .challenge-select__menu-portal {
-            z-index: 30;
+            z-index: 9999;
         }
     }
+}
+
+.menuPortal {
+    z-index: 9999 !important;
 }

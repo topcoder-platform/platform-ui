@@ -59,6 +59,7 @@ import {
     updateProjectAttachment,
 } from '../../../lib/services'
 import {
+    checkCanAddProjectAssets,
     checkCanEditProjectDetails,
     checkCanManageProject,
 } from '../../../lib/utils'
@@ -333,6 +334,11 @@ export const ProjectAssetsPage: FC = () => {
             workAppContext.loginUserInfo?.userId,
             projectResult.project,
         )
+    const canAddAssets = checkCanAddProjectAssets(
+        workAppContext.userRoles,
+        workAppContext.loginUserInfo?.userId,
+        projectResult.project,
+    )
 
     const [activeTab, setActiveTab] = useState<AssetsTab>('files')
     const [isOpeningPicker, setIsOpeningPicker] = useState<boolean>(false)
@@ -836,17 +842,21 @@ export const ProjectAssetsPage: FC = () => {
                     <h4 className={styles.sectionTitle}>Assets Library</h4>
 
                     <div className={styles.headerActions}>
-                        <Button
-                            label={activeTab === 'files'
-                                ? 'Add New File'
-                                : 'Add New Link'}
-                            onClick={activeTab === 'files'
-                                ? handleOpenFilePicker
-                                : handleOpenAddLinkModal}
-                            primary
-                            size='md'
-                            disabled={isOpeningPicker}
-                        />
+                        {canAddAssets
+                            ? (
+                                <Button
+                                    label={activeTab === 'files'
+                                        ? 'Add New File'
+                                        : 'Add New Link'}
+                                    onClick={activeTab === 'files'
+                                        ? handleOpenFilePicker
+                                        : handleOpenAddLinkModal}
+                                    primary
+                                    size='md'
+                                    disabled={isOpeningPicker}
+                                />
+                            )
+                            : undefined}
                         <Link className={styles.backLink} to={`/projects/${projectId}/challenges`}>
                             <Button
                                 label='Back'

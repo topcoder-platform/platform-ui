@@ -17,6 +17,7 @@ import {
     platformRouteId,
     termsRouteId,
     userManagementRouteId,
+    websitePublicationRouteId,
 } from '~/apps/admin/src/config/routes.config'
 import { platformSkillRouteId } from '~/apps/admin/src/platform/routes.config'
 
@@ -104,6 +105,10 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
         ],
         id: aiRouteId,
         title: 'AI',
+    },
+    {
+        id: websitePublicationRouteId,
+        title: 'Website Publishing',
     },
 ]
 

@@ -6,6 +6,7 @@ import { NotificationsContainer, useViewportUnitsFix } from '~/libs/shared'
 
 import { AppFooter } from './components/app-footer'
 import { AppHeader } from './components/app-header'
+import { TopgearAccessGate } from './components/topgear-access-gate/TopgearAccessGate'
 import { Providers } from './providers'
 import { PlatformRouter } from './platform-router'
 
@@ -18,7 +19,9 @@ const PlatformApp: FC<{}> = () => {
             <AppHeader />
             <NotificationsContainer />
             <div className='root-container'>
-                <PlatformRouter />
+                <TopgearAccessGate>
+                    <PlatformRouter />
+                </TopgearAccessGate>
             </div>
             <ToastContainer
                 position={toast.POSITION.TOP_RIGHT}

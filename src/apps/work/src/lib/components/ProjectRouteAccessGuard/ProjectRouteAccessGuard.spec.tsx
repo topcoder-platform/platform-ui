@@ -25,6 +25,18 @@ import {
 
 var mockWorkAppContext: Context<WorkAppContextModel>
 
+jest.mock('~/config', () => ({
+    EnvironmentConfig: new Proxy({}, {
+        get: (): string => 'https://www.topcoder-dev.com',
+    }),
+}), { virtual: true })
+jest.mock('@topcoder-platform/tc-auth-lib', () => ({
+    decodeToken: jest.fn(),
+}))
+jest.mock('../../services/resources.service', () => ({
+    fetchResourceRoles: jest.fn(),
+    fetchResources: jest.fn(),
+}))
 jest.mock('~/apps/review/src/lib', () => ({
     PageWrapper: (
         props: PropsWithChildren<{
@@ -139,6 +151,40 @@ describe('ProjectRouteAccessGuard', () => {
             .toHaveBeenCalledWith(defaultContextValue.userRoles, 12345, expect.objectContaining({ id: 200 }))
         expect(screen.getByText('Protected Project Users'))
             .toBeTruthy()
+    })
+
+    it.each(['Talent Manager', 'Topcoder Talent Manager'])('opens the workspace for non-member %s users', role => {
+        mockedCheckProjectAccess.mockImplementation(jest.requireActual('../../utils/permissions.utils')
+            .checkProjectAccess)
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: { id: 200, members: [{ userId: 99999 }] },
+        })
+
+        renderGuard('/projects/200/users', { ...defaultContextValue, userRoles: [role] })
+
+        expect(screen.getByText('Protected Project Users'))
+            .toBeTruthy()
+        expect(screen.queryByText(PROJECT_ACCESS_DENIED_MESSAGE))
+            .toBeNull()
+    })
+
+    it.each(['Talent Manager', 'Topcoder Talent Manager'])('blocks %s when the API rejects the project', role => {
+        mockedCheckProjectAccess.mockImplementation(jest.requireActual('../../utils/permissions.utils')
+            .checkProjectAccess)
+        mockedUseFetchProject.mockReturnValue({
+            error: new Error('Talent Managers must be active members to access internal projects'),
+            isLoading: false,
+            project: undefined,
+        })
+
+        renderGuard('/projects/200/users', { ...defaultContextValue, userRoles: [role] })
+
+        expect(screen.getByRole('link', { name: 'support@topcoder.com' }))
+            .toBeTruthy()
+        expect(screen.queryByText('Protected Project Users'))
+            .toBeNull()
     })
 
     it('renders the protected route when cached project access survives a revalidation error', () => {

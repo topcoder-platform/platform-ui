@@ -38,6 +38,7 @@ import {
 import {
     checkCanEditProjectDetails,
     checkCanManageProject,
+    checkTalentManager,
 } from '../../../lib/utils'
 import styles from '../../../lib/components/ProjectsListPage/ProjectsListPage.module.scss'
 
@@ -115,6 +116,11 @@ function renderProjectsContent(params: RenderProjectsContentParams): JSX.Element
     )
 }
 
+/**
+ * Lists visible Work projects with paging and a membership filter for managers and TMs.
+ * @returns Project list; My Projects sends memberOnly and resets pagination.
+ * @throws Does not throw; request errors are displayed with a retry action.
+ */
 export const ProjectsListPage: FC = () => {
     const {
         isManager,
@@ -209,7 +215,7 @@ export const ProjectsListPage: FC = () => {
             <ProjectsFilter
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
-                isManager={isManager}
+                isManager={isManager || checkTalentManager(userRoles)}
                 projects={projectsResult.projects}
             />
 

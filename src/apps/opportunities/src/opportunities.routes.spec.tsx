@@ -51,7 +51,7 @@ describe('Opportunities application routes', () => {
         expect((routes.topgearRoutes[0].element.type as { name?: string }).name)
             .toBe('Navigate')
         expect(routes.topgearRoutes[0].element.props)
-            .toEqual({ replace: true, to: '/opportunities' })
+            .toEqual({ replace: true, to: '/opportunities/challenge' })
         expect(routes.legacyOpportunityRoutes.map(route => route.route))
             .toEqual(expect.arrayContaining(['/challenges', '/challenges/:challengeId']))
     })

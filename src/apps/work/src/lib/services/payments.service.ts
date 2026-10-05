@@ -33,6 +33,11 @@ interface MemberPaymentPayload {
         assignmentId: number | string
         memberHandle: string
         remarks: string
+        /**
+         * Approved timesheet entries this payment covers. Traceability runs both ways: from the payment
+         * to the entries here, and from each entry back to the payment via its stored reference.
+         */
+        timesheetEntryIds?: string[]
     }
     category: string
     description: string
@@ -49,6 +54,16 @@ interface MemberPaymentPayload {
 interface PaymentsByAssignmentResponse {
     data?: AssignmentPayment[]
     result?: AssignmentPayment[]
+}
+
+export interface TimesheetPaymentConflict {
+    entryIds: string[]
+    paymentReference: string
+}
+
+interface TimesheetPaymentConflictSummary {
+    conflicts: TimesheetPaymentConflict[]
+    overlappingEntryIds: string[]
 }
 
 function normalizeError(error: unknown, fallbackMessage: string): Error {
@@ -242,6 +257,7 @@ export async function createMemberPayment(
     amount: number | string,
     hoursWorked: number | string,
     billingAccountId: number | string,
+    timesheetEntryIds: string[] = [],
 ): Promise<AssignmentPayment> {
     const numericAmount = Number(amount)
     const numericHoursWorked = Number(hoursWorked)
@@ -252,6 +268,7 @@ export async function createMemberPayment(
             assignmentId,
             memberHandle,
             remarks: remarks.trim(),
+            timesheetEntryIds: timesheetEntryIds.length ? timesheetEntryIds : undefined,
         },
         category: 'ENGAGEMENT_PAYMENT',
         description: title.trim(),
@@ -264,6 +281,8 @@ export async function createMemberPayment(
                 totalAmount: numericAmount,
             },
         ],
+        // Stays the assignment id: payment history is fetched by external id, and the entries a
+        // payment consumed are carried in attributes instead.
         externalId: String(assignmentId),
         hoursWorked: Number.isFinite(numericHoursWorked) && numericHoursWorked > 0
             ? numericHoursWorked
@@ -349,4 +368,117 @@ export async function getPaymentsByAssignmentId(
     assignmentId: number | string,
 ): Promise<AssignmentPayment[]> {
     return fetchAssignmentPayments(assignmentId)
+}
+
+function normalizeTimesheetEntryIds(payment: AssignmentPayment): string[] {
+    const rawEntryIds = payment.attributes?.timesheetEntryIds
+
+    if (!Array.isArray(rawEntryIds)) {
+        return []
+    }
+
+    const uniqueIds = new Set<string>()
+
+    rawEntryIds.forEach(rawEntryId => {
+        const entryId = String(rawEntryId || '')
+            .trim()
+
+        if (entryId) {
+            uniqueIds.add(entryId)
+        }
+    })
+
+    return [...uniqueIds]
+}
+
+/**
+ * Detects when selected timesheet entries already appear on another payment for this assignment.
+ *
+ * This closes the crash gap between payment creation and timesheet-link persistence: if a previous
+ * payment exists in finance but linking failed, the same entries are still protected from a second
+ * payout attempt.
+ */
+export async function findTimesheetPaymentConflicts(
+    assignmentId: number | string,
+    entryIds: string[],
+): Promise<TimesheetPaymentConflictSummary> {
+    const normalizedEntryIds = Array.from(new Set(
+        entryIds
+            .map(entryId => String(entryId || '')
+                .trim())
+            .filter(Boolean),
+    ))
+
+    if (!normalizedEntryIds.length) {
+        return {
+            conflicts: [],
+            overlappingEntryIds: [],
+        }
+    }
+
+    const selectedEntryIds = new Set(normalizedEntryIds)
+    const payments = await fetchAssignmentPaymentSplits(assignmentId)
+    const conflicts: TimesheetPaymentConflict[] = []
+    const overlappingEntryIds = new Set<string>()
+
+    payments.forEach(payment => {
+        const paymentEntryIds = normalizeTimesheetEntryIds(payment)
+
+        if (!paymentEntryIds.length) {
+            return
+        }
+
+        const matchedEntryIds = paymentEntryIds.filter(entryId => selectedEntryIds.has(entryId))
+
+        if (!matchedEntryIds.length) {
+            return
+        }
+
+        matchedEntryIds.forEach(entryId => overlappingEntryIds.add(entryId))
+
+        conflicts.push({
+            entryIds: matchedEntryIds,
+            paymentReference: getPaymentReference(payment) || 'unknown',
+        })
+    })
+
+    return {
+        conflicts,
+        overlappingEntryIds: [...overlappingEntryIds],
+    }
+}
+
+/**
+ * Durable identifier to record against the timesheet entries a payment consumed.
+ *
+ * Prefers the winning id the finance API returns, falling back to the payment id. Confirm with the
+ * finance team which of the two survives before relying on it for reconciliation.
+ */
+export function getPaymentReference(payment: AssignmentPayment | undefined): string | undefined {
+    const candidate = payment as (AssignmentPayment & {
+        data?: {
+            id?: number | string
+            paymentId?: number | string
+            payment_id?: number | string
+            winningId?: number | string
+            winning_id?: number | string
+        }
+        payment_id?: number | string
+        winningId?: number | string
+        winning_id?: number | string
+    }) | undefined
+    const reference = candidate?.id
+        ?? candidate?.paymentId
+        ?? candidate?.winningId
+        ?? candidate?.winning_id
+        ?? candidate?.payment_id
+        ?? candidate?.data?.id
+        ?? candidate?.data?.paymentId
+        ?? candidate?.data?.winningId
+        ?? candidate?.data?.winning_id
+        ?? candidate?.data?.payment_id
+
+    return reference === undefined || reference === null || reference === ''
+        ? undefined
+        : String(reference)
 }

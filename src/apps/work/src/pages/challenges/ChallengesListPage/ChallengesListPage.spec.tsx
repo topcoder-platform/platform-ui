@@ -29,6 +29,18 @@ import { ChallengesListPage } from './ChallengesListPage'
 
 var mockWorkAppContext: Context<WorkAppContextModel>
 
+jest.mock('~/config', () => ({
+    EnvironmentConfig: new Proxy({}, {
+        get: (): string => 'https://www.topcoder-dev.com',
+    }),
+}), { virtual: true })
+jest.mock('@topcoder-platform/tc-auth-lib', () => ({
+    decodeToken: jest.fn(),
+}))
+jest.mock('../../../lib/services/resources.service', () => ({
+    fetchResourceRoles: jest.fn(),
+    fetchResources: jest.fn(),
+}))
 jest.mock('~/apps/admin/src/lib', () => ({
     TableLoading: () => <div>Loading</div>,
 }), {
@@ -356,6 +368,39 @@ describe('ChallengesListPage', () => {
             .getByRole('link', { name: 'Edit project' })
             .getAttribute('href'))
             .toBe('/projects/200/edit')
+    })
+
+    it.each(['Talent Manager', 'Topcoder Talent Manager'])('loads project challenges for non-member %s users', role => {
+        mockedCheckProjectAccess.mockImplementation(jest.requireActual('../../../lib/utils/permissions.utils')
+            .checkProjectAccess)
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: 200,
+                members: [{ userId: 99999 }],
+                name: 'Non-internal Project',
+                status: 'active',
+            },
+        })
+
+        renderPage('/projects/200/challenges', '/projects/:projectId/challenges', {
+            ...defaultContextValue,
+            isCopilot: false,
+            isManager: true,
+            userRoles: [role],
+        })
+
+        expect(mockedUseFetchChallenges)
+            .toHaveBeenCalledWith(expect.objectContaining({
+                enabled: true,
+                memberId: undefined,
+                projectId: '200',
+            }))
+        expect(screen.getByText('Challenges Table'))
+            .toBeTruthy()
+        expect(screen.queryByText('You don’t have access to this project. Please contact support@topcoder.com.'))
+            .toBeNull()
     })
 
     it('waits for project access before fetching project challenges', () => {

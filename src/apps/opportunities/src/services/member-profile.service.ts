@@ -156,3 +156,32 @@ export async function getMemberProfilesByUserIds(userIds: string[]): Promise<Mem
         members.findIndex(candidate => candidate.userId === member.userId) === index
     ))
 }
+
+/**
+ * Looks up a mentioned handle's public profile and rating for forum rendering.
+ * @param handle authored Topcoder handle.
+ * @returns normalized public member, or undefined if unavailable.
+ * @throws Does not throw; failed lookups retain the profile-link fallback.
+ */
+export async function getMemberProfileByHandle(handle: string): Promise<MemberProfileSummary | undefined> {
+    try {
+        const response = await xhrGetAsync<unknown>(
+            `${EnvironmentConfig.API.V6}/members/${encodeURIComponent(handle)}?fields=${MEMBER_FIELDS}`,
+        )
+        return normalizeMember(response)
+    } catch (error) {
+        return undefined
+    }
+}
+
+/**
+ * Searches public handles using the member-accessible autocomplete endpoint.
+ * @param term handle prefix typed after @ in a forum editor.
+ * @returns up to ten matching member identities.
+ * @throws Propagates network/API errors for the editor's retry hint.
+ */
+export async function searchForumMentionMembers(term: string): Promise<MemberProfileSummary[]> {
+    if (!term.trim()) return []
+    const query = new URLSearchParams({ fields: 'userId,handle', page: '1', perPage: '10', term: term.trim() })
+    return extractMembers(await xhrGetAsync<unknown>(`${EnvironmentConfig.API.V6}/members/autocomplete?${query}`))
+}

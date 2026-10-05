@@ -46,6 +46,7 @@ import {
     SubmissionArtifactsModal,
     SubmissionHistoryModal,
 } from '../components'
+import { MemberAvatar } from '../components/MemberAvatar'
 import { SubmissionAiReviewDetails } from '../components/SubmissionAiReviewDetails'
 import {
     challengeCatalogKey,
@@ -67,6 +68,7 @@ import {
 } from '../models'
 import {
     deleteChallengeSubmission,
+    getAllChallengeSubmissions,
     getChallengeAiReviewConfig,
     getChallengeForumTopics,
     getChallengeMemberResource,
@@ -78,6 +80,7 @@ import {
     getChallengeSubmissionPreviews,
     getChallengeSubmissions,
     getChallengeSubmitters,
+    getChallengeWinnerSubmissions,
     getMemberProfilesByUserIds,
     registerForChallenge,
     unregisterFromChallenge,
@@ -152,17 +155,23 @@ export function challengeAllowsDesignSubmissionDeletion(
     return !!requiredPhaseKey && openPhaseKeys.includes(requiredPhaseKey)
 }
 
+type SubmissionSortField = 'handle' | 'rating' | 'submittedDate' | 'provisionalScore' | 'finalScore'
+
 interface SortableColumnHeaderProps {
     label: string
     onToggle: () => void
     order: 'asc' | 'desc'
 }
 
+interface ActiveSortableColumnHeaderProps extends SortableColumnHeaderProps {
+    active?: boolean
+}
+
 /** Renders an accessible table column that toggles its owning ordering. */
-const SortableColumnHeader: FC<SortableColumnHeaderProps> = props => (
+const SortableColumnHeader: FC<ActiveSortableColumnHeaderProps> = props => (
     <th
         aria-label={props.label}
-        aria-sort={props.order === 'asc' ? 'ascending' : 'descending'}
+        aria-sort={props.active === false ? 'none' : props.order === 'asc' ? 'ascending' : 'descending'}
     >
         <button
             aria-label={props.label}
@@ -1091,30 +1100,17 @@ function ratingClass(rating?: number): string | undefined {
  * Renders the compact avatar and linked handle shared by detail tables/cards.
  *
  * @param props resolved member handle.
- * @returns member identity cell without synthesizing unavailable profile photos.
+ * @returns member identity cell; members without a usable photo get the
+ * handle-initial color placeholder from `MemberAvatar`.
  * @throws Does not throw.
  */
 const MemberHandle: FC<MemberHandleProps> = props => {
-    const [failedPhotoURL, setFailedPhotoURL] = useState<string>()
     const handle = props.profile?.handle ?? props.handle
     const rating = props.profile?.maxRating ?? props.rating
-    const photoURL = props.profile?.photoURL
-    const showPhoto = !!photoURL && photoURL !== failedPhotoURL
     const handleClass = ratingClass(rating)
     return (
         <span className={styles.member}>
-            <span aria-hidden='true' className={styles.avatar}>
-                {showPhoto
-                    ? (
-                        <img
-                            alt=''
-                            onError={() => setFailedPhotoURL(photoURL)}
-                            src={photoURL}
-                        />
-                    )
-                    : handle.charAt(0)
-                        .toUpperCase()}
-            </span>
+            <MemberAvatar className={styles.avatar} handle={handle} photoURL={props.profile?.photoURL} />
             {props.link === false && !props.profile?.handle
                 ? <span className={`${styles.memberHandle} ${handleClass ?? ''}`}>{handle}</span>
                 : <a className={handleClass} href={memberProfileUrl(handle)}>{handle}</a>}
@@ -1297,6 +1293,8 @@ interface SubmissionsTabProps {
 
 /**
  * Loads and paginates submissions only after a submission tab is selected.
+ * Derived-column sorts use the full latest-submission collection before pagination;
+ * submission-date sorting remains server-paginated.
  *
  * @param props challenge, registration/management rights, viewer identity, My Submissions flag, and callbacks.
  * @returns submission table/gallery, lifecycle-aware empty state, or request state.
@@ -1306,6 +1304,8 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     const [page, setPage] = useState(1)
     const [perPage, setPerPage] = useState(10)
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+    const [allSubmissionsSortBy, setSortBy] = useState<SubmissionSortField>('submittedDate')
+    const sortBy = props.mine ? 'submittedDate' : allSubmissionsSortBy
     const [artifactsSubmissionId, setArtifactsSubmissionId] = useState<string>()
     const [historySubmission, setHistorySubmission] = useState<ChallengeSubmission | undefined>()
     const [aiSubmissionExpansionOverrides, setAiSubmissionExpansionOverrides]
@@ -1360,18 +1360,20 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         && !props.mine
         && challengeMetadataFlag(props.challenge, 'submissionsViewable')
     const usePublicPreviewPage = privatePreviewGallery && !props.viewerMemberId
+    const clientSort = !props.mine && !privatePreviewGallery && !privateDesignSubmissions
+        && sortBy !== 'submittedDate'
     const response: SWRResponse<OpportunityPage<ChallengeSubmission>, Error> = useSWR(
         privateDesignSubmissions ? undefined : [
             usePublicPreviewPage ? 'opportunities:submission-previews' : 'opportunities:submissions',
             props.challenge.id,
             props.memberId,
-            page,
-            perPage,
-            sortOrder,
+            clientSort ? 'all' : page,
+            clientSort ? 'all' : perPage,
+            clientSort ? 'desc' : sortOrder,
         ],
         () => (usePublicPreviewPage
             ? getChallengeSubmissionPreviews(props.challenge.id, page, perPage)
-            : getChallengeSubmissions(
+            : clientSort ? getAllChallengeSubmissions(props.challenge.id) : getChallengeSubmissions(
                 props.challenge.id,
                 page,
                 perPage,
@@ -1403,7 +1405,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         () => getChallengeReviewSummations(props.challenge.id),
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
-    const submissions = useMemo(() => {
+    const loadedSubmissions = useMemo(() => {
         const previewById = new Map((previewResponse.data?.items ?? [])
             .map(item => [item.id, item.previewUrl]))
         const items = (response.data?.items ?? []).map(item => ({
@@ -1417,10 +1419,10 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     const submissionMemberIds = useMemo(
         () => (props.mine
             ? []
-            : Array.from(new Set(submissions
+            : Array.from(new Set(loadedSubmissions
                 .map(challengeSubmissionMemberId)
                 .filter((memberId): memberId is string => !!memberId)))),
-        [props.mine, submissions],
+        [props.mine, loadedSubmissions],
     )
     const profileResponse: SWRResponse<MemberProfileSummary[], Error> = useSWR(
         submissionMemberIds.length
@@ -1435,8 +1437,74 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     )
     const showAllSubmissionFinalScores = shouldShowFinalSubmissionScores(
         props.challenge,
-        submissions,
+        loadedSubmissions,
     )
+    const submissions = useMemo(() => {
+        if (!clientSort) return loadedSubmissions
+
+        /**
+         * Resolves a displayed value for whole-collection sorting.
+         * @param submission Submission being compared, with any hydrated profile.
+         * @returns Visible handle, rating, or released score; undefined for missing values.
+         */
+        const valueFor = (submission: ChallengeSubmission): string | number | undefined => {
+            const profile = profilesById.get(challengeSubmissionMemberId(submission) ?? '')
+            if (sortBy === 'handle') return profile?.handle ?? submissionHandle(submission)
+            if (sortBy === 'rating') {
+                return profile?.maxRating ?? submission.submitterMaxRating
+                ?? submission.rating ?? undefined
+            }
+
+            const scores = marathonSubmissionScores(submission)
+            if (sortBy === 'provisionalScore') return scores.provisionalScore
+            if (!showAllSubmissionFinalScores) return undefined
+            return isMarathonMatch && scores.finalScore !== undefined
+                ? Math.max(0, scores.finalScore)
+                : scores.finalScore
+        }
+
+        return [...loadedSubmissions].sort((first, second) => {
+            const left = valueFor(first)
+            const right = valueFor(second)
+            // Missing or unreleased values stay last in either direction.
+            if (left === undefined) return right === undefined ? 0 : 1
+            if (right === undefined) return -1
+            const difference = typeof left === 'number' && typeof right === 'number'
+                ? left - right
+                : String(left)
+                    .localeCompare(String(right), undefined, { sensitivity: 'base' })
+            return sortOrder === 'asc' ? difference : -difference
+        })
+            .slice((page - 1) * perPage, page * perPage)
+    }, [clientSort, isMarathonMatch, loadedSubmissions, page, perPage, profilesById,
+        showAllSubmissionFinalScores, sortBy, sortOrder])
+
+    /**
+     * Selects a sortable data field or reverses its current direction.
+     * @param field Table data column; choosing a different field resets pagination.
+     * @returns void after updating the table's sort state.
+     */
+    const selectSort = (field: typeof sortBy): void => {
+        setSortOrder(field === sortBy && sortOrder === 'asc' ? 'desc' : 'asc')
+        setSortBy(field)
+        setPage(1)
+    }
+
+    /**
+     * Renders one data header with the table's active sorting state.
+     * @param field Data column to sort when activated.
+     * @param label Human-readable column title.
+     * @returns Accessible sortable column header.
+     */
+    const sortHeader = (field: typeof sortBy, label: string): JSX.Element => (
+        <SortableColumnHeader
+            active={sortBy === field}
+            label={label}
+            onToggle={() => selectSort(field)}
+            order={sortBy === field ? sortOrder : 'desc'}
+        />
+    )
+
     /**
      * Toggles one submission's AI details without changing other expanded rows.
      *
@@ -1544,10 +1612,10 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                 setPerPage(value)
                 setPage(1)
             }}
-            page={response.data.page}
-            perPage={response.data.perPage}
+            page={clientSort ? page : response.data.page}
+            perPage={clientSort ? perPage : response.data.perPage}
             total={response.data.total}
-            totalPages={response.data.totalPages}
+            totalPages={clientSort ? Math.ceil(response.data.total / perPage) : response.data.totalPages}
         />
     )
     return (
@@ -1569,13 +1637,37 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                     </a>
                 )}
             </div>
+            {!props.mine && !privatePreviewGallery && (
+                <label className={styles.mobileTableSort}>
+                    Sort submissions by
+                    <select
+                        onChange={event => selectSort(event.target.value as typeof sortBy)}
+                        value={sortBy}
+                    >
+                        <option value='handle'>Handle</option>
+                        {!isDesign && <option value='rating'>Rating</option>}
+                        <option value='submittedDate'>Submission Date</option>
+                        {(isMarathonMatch || isQa) && (
+                            <>
+                                <option value='provisionalScore'>
+                                    {isQa ? 'Initial Score' : 'Provisional Score'}
+                                </option>
+                                <option value='finalScore'>Final Score</option>
+                            </>
+                        )}
+                    </select>
+                </label>
+            )}
             {!privatePreviewGallery && (
                 <MobileTableSort
-                    label='Submission Date'
-                    onToggle={() => {
-                        setSortOrder(value => (value === 'asc' ? 'desc' : 'asc'))
-                        setPage(1)
-                    }}
+                    label={{
+                        finalScore: 'Final Score',
+                        handle: 'Handle',
+                        provisionalScore: isQa ? 'Initial Score' : 'Provisional Score',
+                        rating: 'Rating',
+                        submittedDate: 'Submission Date',
+                    }[sortBy]}
+                    onToggle={() => selectSort(sortBy)}
                     order={sortOrder}
                 />
             )}
@@ -1704,7 +1796,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                         className={styles.scoreColumn}
                                                         data-mobile-label='Final Score'
                                                     >
-                                                        {formatMarathonScore(scores.finalScore, '-')}
+                                                        {formatMarathonFinalScore(scores.finalScore, '-')}
                                                     </td>
                                                     <td
                                                         className={styles.scoreColumn}
@@ -1849,20 +1941,12 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                     >
                         <thead>
                             <tr>
-                                <th>Handle</th>
-                                {!isDesign && <th>Rating</th>}
-                                <SortableColumnHeader
-                                    label='Submission Date'
-                                    onToggle={() => {
-                                        setSortOrder(value => (value === 'asc' ? 'desc' : 'asc'))
-                                        setPage(1)
-                                    }}
-                                    order={sortOrder}
-                                />
-                                {isMarathonMatch && <th>Provisional Score</th>}
-                                {isMarathonMatch && <th>Final Score</th>}
-                                {isQa && <th>Initial Score</th>}
-                                {isQa && <th>Final Score</th>}
+                                {sortHeader('handle', 'Handle')}
+                                {!isDesign && sortHeader('rating', 'Rating')}
+                                {sortHeader('submittedDate', 'Submission Date')}
+                                {isMarathonMatch && sortHeader('provisionalScore', 'Provisional Score')}
+                                {isQa && sortHeader('provisionalScore', 'Initial Score')}
+                                {(isMarathonMatch || isQa) && sortHeader('finalScore', 'Final Score')}
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -1948,6 +2032,8 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                             >
                                                 <img alt='' aria-hidden='true' src={resetIcon} />
                                                 History
+                                                {submission.submissionCount !== undefined
+                                                    && ` (${submission.submissionCount})`}
                                             </button>
                                         </td>
                                     </tr>
@@ -2268,6 +2354,7 @@ function winnerEmptyState(challenge: ChallengeOpportunity): WinnerEmptyState {
  * Renders challenge winners once present in the Challenge API response.
  *
  * @param props challenge with winner and prize data, plus the optional viewer ID.
+ * Enriches scores from results, summations, and latest winner submissions (including AI-only).
  * @returns winner podium or ongoing-challenge empty state.
  * @throws Does not throw; optional enrichment failures preserve winner rows.
  */
@@ -2326,6 +2413,22 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
 
+    const winnerSubmissionsResponse: SWRResponse<ChallengeSubmission[], Error> = useSWR(
+        winnerMemberIds.length && props.memberId
+            ? ['opportunities:winner-submissions', props.challenge.id, props.memberId, ...winnerMemberIds]
+            : undefined,
+        () => getChallengeWinnerSubmissions(props.challenge.id, winnerMemberIds),
+        { revalidateOnFocus: false, shouldRetryOnError: false },
+    )
+
+    const aiReviewConfigResponse: SWRResponse<ChallengeAiReviewConfig | undefined, Error> = useSWR(
+        winners?.length && props.memberId
+            ? ['opportunities:challenge-review-style', props.challenge.id]
+            : undefined,
+        () => getChallengeAiReviewConfig(props.challenge.id),
+        { revalidateOnFocus: false, shouldRetryOnError: false },
+    )
+
     if (!winners?.length) {
         const emptyState = winnerEmptyState(props.challenge)
         return (
@@ -2354,7 +2457,7 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
     const trackLabel = trackHeading === 'QA' ? trackHeading : trackHeading.toLowerCase()
     const showWinnerFinalScores = !!props.memberId && shouldShowFinalSubmissionScores(
         props.challenge,
-        [],
+        winnerSubmissionsResponse.data ?? [],
         [
             ...(projectResultResponse.data ?? []).map(result => result.finalScore),
             ...(winnerReviewSummationResponse.data ?? []).map(result => result.aggregateScore),
@@ -2374,6 +2477,8 @@ const WinnersTab: FC<{ challenge: ChallengeOpportunity, memberId?: string }> = p
                     { ...entry.winner, placement: entry.placement },
                     projectResultResponse.data ?? [],
                     winnerReviewSummationResponse.data ?? [],
+                    winnerSubmissionsResponse.data ?? [],
+                    aiReviewConfigResponse.data?.mode === 'AI_ONLY',
                 )
                 : undefined,
             handle,

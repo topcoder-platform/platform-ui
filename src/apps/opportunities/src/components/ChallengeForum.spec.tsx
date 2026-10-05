@@ -43,6 +43,11 @@ let memberProfiles: MemberProfileSummary[] | undefined
 let topicCollection: ForumTopicCollection | undefined
 let topicDetail: ForumTopicDetail | undefined
 
+jest.mock('~/libs/core', () => ({
+    getRatingColor: jest.requireActual('../../../../libs/core/lib/profile/profile-functions/rating.functions')
+        .getRatingColor,
+}), { virtual: true })
+
 jest.mock('swr', () => ({
     __esModule: true,
     default: (...args: unknown[]) => mockUseSWR(...args),
@@ -574,6 +579,40 @@ describe('ChallengeForum', () => {
             .toBeInTheDocument()
         expect(mockUseSWR.mock.calls[0][0])
             .toBeUndefined()
+    })
+
+    it('shows an edit timestamp for changed starter posts and replies only', async () => {
+        const editedAt = '2026-06-08T12:30:00.000Z'
+        topicDetail = {
+            posts: [{
+                ...starterPost,
+                replies: [{ ...starterPost.replies[0], updatedAt: editedAt }],
+                updatedAt: editedAt,
+            }],
+            topic: announcement,
+        }
+        const { container }: RenderResult = render(
+            <ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />,
+        )
+        await act(async () => fireEvent.click(container.querySelector('.topicOverlay') as HTMLButtonElement))
+        expect(screen.getAllByText(/^Edited:/))
+            .toHaveLength(2)
+        screen.getAllByText(/^Edited:/)
+            .forEach(timestamp => {
+                expect(timestamp)
+                    .toHaveAttribute('datetime', editedAt)
+                expect(timestamp)
+                    .toHaveTextContent(formatForumDate(editedAt))
+            })
+    })
+
+    it('does not mark unchanged posts as edited', async () => {
+        const { container }: RenderResult = render(
+            <ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />,
+        )
+        await act(async () => fireEvent.click(container.querySelector('.topicOverlay') as HTMLButtonElement))
+        expect(screen.queryByText(/^Edited:/))
+            .not.toBeInTheDocument()
     })
 
     it('opens the topic when the upper card is clicked, keeping the footer for actions', async () => {

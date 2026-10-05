@@ -8,6 +8,12 @@ export const BILLING_ACCOUNT_DETAILS_MODAL_ENABLED = true
 
 export const BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED = true
 
+/**
+ * When true, payment hours are locked to the approved timesheet total. Kept off during the
+ * transition to timesheets so operators can still adjust the prefilled value.
+ */
+export const PAYMENT_HOURS_LOCKED_TO_TIMESHEETS = false
+
 const DEFAULT_CREATE_FORUM_TYPE_IDS = [
     '927abff4-7af9-4145-8ba1-577c16e64e2e',
     'dc876fa4-ef2d-4eee-b701-b555fcc6544c',

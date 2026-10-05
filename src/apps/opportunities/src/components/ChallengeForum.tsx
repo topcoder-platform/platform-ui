@@ -43,7 +43,9 @@ import {
     memberProfileUrl,
 } from '../utils'
 import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
-import { ChallengeMarkdown } from './ChallengeMarkdown'
+import { ForumMarkdown } from './ForumMarkdown'
+import { ForumMentionTextarea } from './ForumMentionTextarea'
+import { MemberAvatar } from './MemberAvatar'
 import { OpportunityPagination } from './OpportunityPagination'
 import styles from './ChallengeForum.module.scss'
 
@@ -270,37 +272,6 @@ function topicParticipants(topic: ForumTopicSummary): ForumParticipant[] {
 }
 
 /**
- * Renders a member photo with a resilient initials fallback.
- *
- * @param props member handle and optional public profile projection.
- * @returns avatar image or initial.
- * @throws Does not throw; image failures switch to the fallback.
- */
-const MemberAvatar: FC<{
-    handle: string
-    profile?: MemberProfileSummary
-}> = props => {
-    const [failedPhotoURL, setFailedPhotoURL] = useState<string>()
-    const photoURL = props.profile?.photoURL
-    const showPhoto = !!photoURL && failedPhotoURL !== photoURL
-
-    return (
-        <span aria-hidden='true' className={styles.avatar}>
-            {showPhoto
-                ? (
-                    <img
-                        alt=''
-                        onError={() => setFailedPhotoURL(photoURL)}
-                        src={photoURL}
-                    />
-                )
-                : props.handle.charAt(0)
-                    .toUpperCase()}
-        </span>
-    )
-}
-
-/**
  * Renders a compact linked member snapshot enriched by the public Members API.
  *
  * @param props fallback handle and optional profile projection.
@@ -316,7 +287,7 @@ const ForumMember: FC<{
 
     return (
         <span className={styles.member}>
-            <MemberAvatar handle={handle} profile={props.profile} />
+            <MemberAvatar className={styles.avatar} handle={handle} photoURL={props.profile?.photoURL} />
             <a className={styles[ratingClass]} href={memberProfileUrl(handle)}>{handle}</a>
         </span>
     )
@@ -347,7 +318,7 @@ const ParticipantGroup: FC<{
 
                 return (
                     <a href={memberProfileUrl(handle)} key={participant.memberId} title={handle}>
-                        <MemberAvatar handle={handle} profile={profile} />
+                        <MemberAvatar className={styles.avatar} handle={handle} photoURL={profile?.photoURL} />
                     </a>
                 )
             })}
@@ -621,7 +592,7 @@ const ForumTopicCard: FC<{
                 </div>
                 {excerpt && (
                     <div className={styles.topicExcerpt}>
-                        <ChallengeMarkdown markdown={excerpt} />
+                        <ForumMarkdown markdown={excerpt} />
                     </div>
                 )}
                 <div className={styles.topicFooter}>
@@ -689,7 +660,7 @@ interface MarkdownEditorProps {
 }
 
 /**
- * Renders the shared Markdown toolbar, textarea, preview, and character count.
+ * Renders the shared Markdown toolbar, mention autocomplete, preview, and character count.
  *
  * @param props controlled editor state and authored field metadata.
  * @returns accessible Markdown authoring control.
@@ -777,18 +748,18 @@ const MarkdownEditor: FC<MarkdownEditorProps> = props => {
                     ? (
                         <div aria-label={`${props.label} preview`} className={styles.editorPreview}>
                             {props.value.trim()
-                                ? <ChallengeMarkdown markdown={props.value} />
+                                ? <ForumMarkdown markdown={props.value} />
                                 : <p>Nothing to preview yet.</p>}
                         </div>
                     )
                     : (
-                        <textarea
+                        <ForumMentionTextarea
                             id={props.id}
                             maxLength={props.maxLength}
-                            onChange={event => props.onChange(event.target.value)}
+                            onChange={props.onChange}
                             onKeyDown={continueList}
                             placeholder={props.placeholder}
-                            ref={textareaRef}
+                            textareaRef={textareaRef}
                             value={props.value}
                         />
                     )}
@@ -1196,6 +1167,13 @@ const ForumPostCard: FC<{
                         {' '}
                         {formatForumDate(post.createdAt)}
                     </time>
+                    {!post.deleted && Date.parse(post.updatedAt) > Date.parse(post.createdAt) && (
+                        <time dateTime={post.updatedAt}>
+                            Edited:
+                            {' '}
+                            {formatForumDate(post.updatedAt)}
+                        </time>
+                    )}
                     {props.parent && (
                         <span>
                             Replying to
@@ -1210,7 +1188,7 @@ const ForumPostCard: FC<{
             <div className={styles.postContent}>
                 {post.deleted || !post.content
                     ? <p className={styles.deleted}>This post has been deleted.</p>
-                    : <ChallengeMarkdown markdown={post.content} />}
+                    : <ForumMarkdown markdown={post.content} />}
             </div>
             {!post.deleted && (
                 <footer className={styles.postActions}>

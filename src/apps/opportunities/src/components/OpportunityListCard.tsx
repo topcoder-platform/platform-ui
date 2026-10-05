@@ -62,6 +62,7 @@ import {
     challengeCatalogKey,
     challengeCatalogName,
     challengeCurrentPhase,
+    challengeInactivePhaseLabel,
     challengePhaseTiming,
     challengePlacementPrizes,
     challengeRegistrationIsOpen,
@@ -78,6 +79,7 @@ import {
     challengeDetailPath,
 } from '../utils/challenge-detail-route.utils'
 import { decodeHtmlEntities, htmlToPlainText } from '../utils/html-text.utils'
+import { MemberAvatar } from './MemberAvatar'
 import styles from './OpportunityListCard.module.scss'
 
 interface OpportunityListCardProps {
@@ -151,28 +153,24 @@ const medalIcons: Array<FC<SVGProps<SVGSVGElement>>> = [MedalFirstIcon, MedalSec
 
 /**
  * Renders one API-backed winner photo with its existing placement medal. A
- * failed or unavailable member photo falls back to the winner's real handle
- * initial without inventing identity artwork.
+ * failed or unavailable member photo falls back to the shared handle-initial
+ * color placeholder without inventing identity artwork.
  *
  * @param props Challenge API winner, enriched Members API photo, and placement.
  * @returns compact winner avatar used by completed competition cards.
- * @throws Does not throw; image failures switch to an initial fallback.
+ * @throws Does not throw; image failures switch to the initial placeholder.
  */
 const CompetitionWinnerAvatar: FC<CompetitionWinnerAvatarProps> = props => {
-    const [failedPhotoURL, setFailedPhotoURL] = useState<string>()
     const handle = props.winner.handle?.trim() || String(props.winner.userId ?? 'Winner')
-    const photoURL = props.winner.photoURL
-    const showPhoto = !!photoURL && photoURL !== failedPhotoURL
     const MedalIcon = medalIcons[props.placement - 1] ?? MedalThirdIcon
 
     return (
         <span className={styles.winnerAvatar} title={handle}>
-            <span aria-hidden='true' className={styles.winnerPhoto}>
-                {showPhoto
-                    ? <img alt='' onError={() => setFailedPhotoURL(photoURL)} src={photoURL} />
-                    : handle.charAt(0)
-                        .toUpperCase()}
-            </span>
+            <MemberAvatar
+                className={styles.winnerPhoto}
+                handle={props.winner.handle}
+                photoURL={props.winner.photoURL}
+            />
             <span aria-hidden='true' className={styles.winnerMedal}>
                 <MedalIcon />
             </span>
@@ -721,7 +719,7 @@ function toViewModel(kind: OpportunityKind, item: OpportunityItem, memberApplied
  *
  * @param item Challenge API list item.
  * @returns linked competition card with catalog tags, a distinct completed-state icon,
- * placement prizes, phase progress, and metrics.
+ * placement prizes, phase progress, scheduled/stalled phase fallbacks, and metrics.
  * @throws Does not throw; absent API fields use explicit pending placeholders.
  */
 const CompetitionListCard: FC<CompetitionListCardProps> = props => {
@@ -747,7 +745,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
     const progress = Math.round(phaseTiming.progressPercent)
     const registrationOpen = challengeRegistrationIsOpen(item)
     const completed = challengeCatalogKey(item.status) === 'completed'
-    const stalled = challengeCatalogKey(item.status) === 'stalled'
+    const inactivePhaseLabel = challengeInactivePhaseLabel(item)
     const visibleWinners = completed
         ? (item.winners ?? [])
             .map((winner, index) => ({
@@ -882,7 +880,7 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                             ))}
                         </Link>
                     )}
-                    {!completed && !stalled && phase && (
+                    {!completed && !inactivePhaseLabel && phase && (
                         <div className={styles.phase}>
                             <div className={styles.phaseHeading}>
                                 <span className={styles.phaseLabel}>
@@ -908,10 +906,10 @@ const CompetitionListCard: FC<CompetitionListCardProps> = props => {
                             </div>
                         </div>
                     )}
-                    {stalled && (
+                    {inactivePhaseLabel && (
                         <div className={styles.phase}>
                             <div className={styles.phaseHeading}>
-                                <span className={styles.phaseLabel}>Stalled</span>
+                                <span className={styles.phaseLabel}>{inactivePhaseLabel}</span>
                             </div>
                         </div>
                     )}

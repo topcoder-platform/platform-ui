@@ -12,14 +12,26 @@ Community-app's Wipro community (`topgear.<domain>`, formerly also served at
 `wipro.<domain>`) is replaced by this app on the `topgear` host. When the
 first hostname label is `topgear`:
 
-- the host root redirects to `/opportunities`, and the legacy `/challenges`
-  aliases continue to redirect to the Opportunities routes;
-- the listing renders community-app's TopGear challenge-listing banner
-  (`assets/topgear-challenges-banner.png`) instead of the masthead, the four
-  category cells, and the public summary request;
+- all Topgear routes require login and verified membership in **Wipro - All**.
+  `TopgearAccessGate` withholds the entire route tree until the authenticated
+  Groups API (`/v6/groups/memberGroups/:memberId?uuid=true`) confirms the active
+  membership. Anonymous users go to login with their full return URL; non-members
+  see an access-restricted page. Errors, missing configuration, and pending checks
+  never render the listing or request challenge data. Direct detail routes are
+  gated too, and checks repeat when the member or route path changes;
+- the required group defaults to `b7f7c0f8-8ee8-409e-9e5c-33404983b635` and can be
+  configured separately with `REACT_APP_TOPGEAR_ACCESS_GROUP_ID`. Changing the
+  listing's `REACT_APP_TOPGEAR_GROUP_ID` does not change who may enter Topgear.
+  Challenge APIs continue to enforce their own data-access permissions;
+- the host root and legacy `/challenges` listing redirect to
+  `/opportunities/challenge`; detail aliases still redirect to challenge details;
+- Universal Navigation automatically renders the Wipro, Topcoder, and Topgear
+  logos with Home (`https://topgear-app.wipro.com`) and Challenges
+  (`/opportunities/challenge`). Deploy the Topgear navigation bundle first;
+- the listing has no hero banner, category cells, or public summary request;
 - only competitions are offered. `/opportunities/:kind` for any other category
-  redirects to `/opportunities`, and Browse Competitions with its filters,
-  sorting, and pagination is unchanged;
+  redirects to `/opportunities/challenge`, preserving queries and fragments.
+  Browse Competitions keeps its filters, sorting, and pagination;
 - competitions are limited to the TopGear Topcoder group through the Challenge
   API `groups[]` parameter. The group defaults to community-app's
   `b7f7c0f8-8ee8-409e-9e5c-33404983b635` and is configurable with
@@ -134,12 +146,17 @@ Opportunity cards preserve same-tab navigation. External role-learning links
 open in a separate tab and include `rel="noreferrer"`.
 
 Every domain exposes the same four product-authored options: `Newest first`,
-`Prize high to low`, `Prize low to high`, and `Title A-Z`. Challenge API owns
-global competition prize/title ordering, Engagements owns title ordering, and
-Review API owns payment ordering. For Engagement and Copilot prize sorts, the
-client combines bounded owner pages before sorting and then restores the
-requested page, so ordering remains correct across page boundaries. Missing
-numeric compensation remains after priced opportunities in both directions.
+`Prize high to low`, `Prize low to high`, and `Title A-Z`. Competition `Newest first`
+requests `endDate desc` from Challenge API for past competitions, placing the
+most recently completed challenges first even when older records were recently
+updated or reimported. Other competition views request `createdAt desc`.
+Both sorts apply before pagination.
+Challenge API also owns global competition prize/title ordering, Engagements
+owns title ordering, and Review API owns payment ordering. For Engagement and
+Copilot prize sorts, the client combines bounded owner pages before sorting,
+then restores the requested page so ordering remains correct across page
+boundaries. Missing numeric compensation remains after priced opportunities in
+both directions.
 Copilot aggregation requests at most 200 rows per Projects API page, matching
 that endpoint's validated page-size contract while retaining global ordering.
 Copilot rows marked with the Standard payment type remain unpriced for sorting;
@@ -199,8 +216,9 @@ to their authored subtype icons and member-facing labels.
 - Completed cards replace registration and stale phase-progress states with the
   explicit Completed state and the design-system double-check icon. Up to three
   actual winner photos appear beside the placement prizes with the existing
-  podium medals; missing or failed photos retain a handle-initial fallback. The
-  complete avatar-and-medal affordance opens that challenge's Winners tab.
+  podium medals; missing or failed photos use the shared handle-initial
+  placeholder described in [Member avatars](#member-avatars). The complete
+  avatar-and-medal affordance opens that challenge's Winners tab.
 - `currentPhase` is preferred for the phase chip. Older responses fall back to
   the latest-started open phase. Progress uses actual then scheduled dates,
   clamps to 0–100%, and may derive the end from the phase duration in seconds.
@@ -208,7 +226,9 @@ to their authored subtype icons and member-facing labels.
   seal, matching the authored phase tag reference.
   Competition pages revalidate once a minute and when focus returns; cards
   with no open phase omit phase progress; stalled challenges show their lifecycle
-  status in its place, even if an old phase remains marked open. The
+  status in its place, even if an old phase remains marked open. Active challenges
+  without an open phase show Scheduled before registration starts and Stalled
+  afterwards, using the registration dates or challenge start date. The
   compact mobile card keeps the remaining-time value on the same heading row
   as the current phase, matching the authored design above its progress rail.
 - The right rail shows submissions and registrants from Challenge API. Design
@@ -243,9 +263,15 @@ marker and connector, so wrapped dates and enlarged text grow the rail instead
 of overlapping the following milestone. The mobile prize/action card follows
 the expanded timeline instead of interrupting it. Wider layouts retain the
 horizontal timeline and its overflow fallback for tablet-sized screens. The
-desktop rail and labels share equal columns; dates can wrap when space is tight,
-and the timeline grid may shrink within the masthead without creating a stray scrollbar;
-timelines with many phases scroll horizontally as one unit.
+desktop rail and labels share compact columns with evenly spaced icons. Launch
+and its date align to the left edge of the challenge title and Launch icon;
+Winners and its date align to the right edge of the Winners icon. The narrower
+endpoint columns remove the inset before and after the rail. Two-word phase
+names stack one word per line, with at least two lines reserved for the labels
+so dates remain aligned. Dates wrap when space is tight, and two-round design
+timelines fit within the desktop masthead. Longer timelines scroll horizontally
+as one unit when the available width cannot accommodate readable phase columns.
+Phone layouts keep phase names on one line when space allows.
 
 On phone viewports, Registrants preserves its semantic table while presenting
 each API row as the Figma key/value card. Registration Date remains a
@@ -273,6 +299,34 @@ Task challenges omit an Iterative Review phase once its deadline has elapsed,
 matching the legacy participant timeline, and keep Registration ahead of the
 remaining chronological milestones. Task detection accepts the canonical
 catalog type and the legacy `task.isTask` and `legacy.pureV5Task` flags.
+
+## Member avatars
+
+Every member avatar in this app renders through `MemberAvatar`: challenge
+registrant, submission, and winner rows; forum members and topic participants;
+completed competition cards; and review-opportunity applications. A member's
+public `photoURL` is shown when present. When it is missing or fails to load,
+the avatar shows the first character of the member's handle, uppercased, on
+one of the eight borderless color pairs from the Figma "Placeholder based on
+initials" reference (PM-6526):
+
+| Palette | Background | Initial |
+| --- | --- | --- |
+| green | `#A7F0BA` | `#044317` |
+| teal | `#9EF0F0` | `#004144` |
+| blue | `#D0E2FF` | `#002D9C` |
+| purple | `#E8DAFF` | `#491D8B` |
+| magenta | `#FFD6E8` | `#740937` |
+| orange | `#FFD9BE` | `#5E2900` |
+| yellow | `#FDDC69` | `#483700` |
+| gray | `#E9ECEF` | `#293033` |
+
+`getMemberAvatarPalette` hashes the trimmed, lowercased handle, so a member
+keeps the same color on every page. A missing handle renders an empty gray
+circle rather than a digit from the member ID. Hosts pass a class only for
+size, grid placement, or a photo outline; placeholders never take a border.
+The one exception is the forum's overlapping participant stack, which keeps a
+white separator so neighbors that share a palette stay distinct.
 
 ## Challenge Markdown table of contents
 
@@ -498,7 +552,11 @@ The Figma keeps separate Provisional Score and Final Score columns and uses
 score from Challenge API winners or a sibling submission; protected winner
 scores are requested only for authenticated members. Winner cards prefer an
 exact-member final Review Summation when project-result rows are absent or
-contain a zero placeholder, including completed Design challenges. Completed
+contain a zero placeholder, including completed Design challenges. Latest winner
+submissions provide a fallback when these sources have no score. For a confirmed
+`AI_ONLY` review configuration, the matching submission's final score takes
+priority over stored zero placeholders; a canonical submission ID, when present,
+must match before this override is used. Completed
 podium cards show a zero score when no canonical score is available to an
 authenticated member. The remaining-winners table still distinguishes an
 unavailable score from a real zero. Cards use the Figma medal assets, fills,
@@ -568,10 +626,17 @@ submission are disabled. The explicit cancel control remains available, aborts
 its request, clears the selected file or URL, and then unlocks normal navigation.
 Marathon Match attempts fall back to Review submission, virus-scan, and scoring
 lifecycle fields when test metadata is absent, preserving truthful Failed, In
-progress, and completed states. A superseded scorer's `CANCELLED` status is shown
+progress, and completed states. A settled negative score or `isPassing: false`
+marks its scorer phase as Failed even when the runner reports successful completion,
+so timed-out attempts cannot show Passed. Explicitly pending and cancelled runs
+retain their lifecycle status, while successful zero scores remain Passed.
+A superseded scorer's `CANCELLED` status is shown
 as a neutral `Cancelled` label. The newest phase result takes precedence over
 older progress, and cancelled phase scores do not fall back to placeholder or
-legacy aggregate values. Cancelled results are excluded from dashboard points.
+legacy aggregate values. Settled failed system-test aggregates remain available
+in Submissions, My Submissions, and history, where negative system scores display
+as zero; pending and cancelled runs still have no final score. Cancelled results
+are excluded from dashboard points.
 Virus-scan and quarantine failures are reported
 as Failed in the Provisional process with explicit 0% progress; later review
 failures remain System failures. A newly active attempt stays in the Provisional
@@ -597,11 +662,12 @@ phone widths, each attempt becomes a compact stacked label/value card in the
 legacy Submission, Final Score, Provisional Score, and Time order, avoiding
 horizontal clipping. The dialog also exposes the latest-submission summary and
 compact close action only at that breakpoint. History requests include the
-selected member ID;
-Review API returns every attempt to that member and authorized challenge staff,
-while ordinary viewers receive only the selected entrant's latest attempt.
-Registered contestants of a completed Marathon Match can also inspect every
-historical attempt to download its released scorer artifacts.
+selected member ID and submission type and fetch every page without a latest-only
+filter. Visible Marathon Matches expose full history to all viewers, including
+anonymous and unregistered visitors, through Review API. The History action shows
+the API's complete submission count in parentheses when available. Artifact
+controls retain the ownership, staff, and completed-contestant access described
+above; viewing history does not grant permission to download artifacts.
 Design submissions can be deleted only while Submission or Checkpoint
 Submission is open. Successful deletion updates both the challenge and member
 submission counts as well as the current list. Replacing a Design submission
@@ -617,7 +683,15 @@ rather than browser prompts; per-member
 thumbs-up/thumbs-down reactions, watch state, and read state remain inside the
 challenge detail page. The Markdown editor continues ordered and unordered
 lists on Enter; safe Markdown styling is retained in topic excerpts and full
-posts. Each visible post shows shared
+posts. Forum Markdown resolves `@handle`, `@{handle}`, and straight/curly quoted
+mentions to profile links colored by the member's public maximum rating; literal
+code and existing links are preserved. Typing `@` opens a debounced member search
+in topic, comment, reply, and edit composers. Arrow keys select suggestions,
+Enter/Tab or a click inserts `@"handle"`, and Escape dismisses the list. The
+editor allows the suggestion list to extend below its border; clipping is limited
+to the toolbar so options remain visible and clickable. Profile
+lookup failures retain a neutral profile link, while search failures leave the
+draft editable and show a retry hint. Each visible post shows shared
 reaction counts and the current member's selected state; clicking the selected
 thumb again removes it, while clicking the other thumb switches it. Topic
 summaries expose bounded starter excerpts, participant snapshots, unique

@@ -1,4 +1,8 @@
-import { getMemberProfilesByUserIds } from './member-profile.service'
+import {
+    getMemberProfileByHandle,
+    getMemberProfilesByUserIds,
+    searchForumMentionMembers,
+} from './member-profile.service'
 
 const mockXhrGetAsync = jest.fn()
 
@@ -12,6 +16,29 @@ jest.mock('~/libs/core', () => ({
 
 describe('member profile service', () => {
     beforeEach(() => jest.clearAllMocks())
+
+    it('searches the member-accessible autocomplete endpoint with bounded results', async () => {
+        mockXhrGetAsync.mockResolvedValue({ result: [{ handle: 'member.name', userId: 42 }] })
+        await expect(searchForumMentionMembers('mem')).resolves.toEqual([
+            { handle: 'member.name', maxRating: undefined, photoURL: undefined, userId: '42' },
+        ])
+        const url = new URL(mockXhrGetAsync.mock.calls[0][0])
+        expect(url.pathname)
+            .toBe('/v6/members/autocomplete')
+        expect(url.searchParams.get('term'))
+            .toBe('mem')
+        expect(url.searchParams.get('perPage'))
+            .toBe('10')
+    })
+
+    it('normalizes a mentioned profile rating and tolerates a missing member', async () => {
+        mockXhrGetAsync.mockResolvedValue({ handle: 'Member.Name', maxRating: { rating: 2300 }, userId: 42 })
+        await expect(getMemberProfileByHandle('member.name')).resolves.toMatchObject({
+            handle: 'Member.Name', maxRating: 2300, userId: '42',
+        })
+        mockXhrGetAsync.mockRejectedValue(new Error('Not found'))
+        await expect(getMemberProfileByHandle('missing')).resolves.toBeUndefined()
+    })
 
     it('de-duplicates ids and normalizes the public member projection', async () => {
         mockXhrGetAsync.mockResolvedValue({

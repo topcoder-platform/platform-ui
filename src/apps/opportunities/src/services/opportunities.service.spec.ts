@@ -24,6 +24,7 @@ import {
     getChallengeSubmissionArtifacts,
     getChallengeSubmissionPreviews,
     getChallengeSubmissionDownloadUrl,
+    getAllChallengeSubmissions,
     getChallengeSubmissions,
     getChallengeRegistration,
     getChallengeSubmitterTermsDetails,
@@ -231,16 +232,48 @@ describe('opportunities service normalization', () => {
             .toBeGreaterThan(0)
     })
 
-    it('maps the clarified competition prize and title sorts to Challenge API fields', () => {
+    it.each([
+        { field: 'endDate', sort: undefined, statuses: ['COMPLETED'] },
+        { field: 'endDate', sort: 'newest', statuses: ['COMPLETED'] },
+        { field: 'createdAt', sort: 'newest', statuses: ['ACTIVE'] },
+        { field: 'createdAt', sort: 'newest', statuses: ['REGISTRATION'] },
+        { field: 'createdAt', sort: 'newest', statuses: ['ACTIVE', 'COMPLETED'] },
+        { field: 'createdAt', sort: 'newest', statuses: undefined },
+    ])('requests $field order before pagination for $statuses competitions with sort $sort', testCase => {
+        const url = new URL(buildOpportunityPageUrl('competitions', {
+            page: 2,
+            perPage: 10,
+            sort: testCase.sort,
+            statuses: testCase.statuses,
+        }))
+
+        expect(url.searchParams.get('sortBy'))
+            .toBe(testCase.field)
+        expect(url.searchParams.get('sortOrder'))
+            .toBe('desc')
+        expect(url.searchParams.get('page'))
+            .toBe('2')
+        expect(url.searchParams.get('perPage'))
+            .toBe('10')
+        expect(url.searchParams.getAll('status'))
+            .toEqual(testCase.statuses?.includes('REGISTRATION') ? ['ACTIVE'] : testCase.statuses ?? [])
+    })
+
+    it.each([
+        { statuses: undefined },
+        { statuses: ['COMPLETED'] },
+    ])('maps competition prize and title sorts to Challenge API fields for $statuses', testCase => {
         const prize = new URL(buildOpportunityPageUrl('competitions', {
             page: 1,
             perPage: 10,
             sort: 'prizeLowToHigh',
+            statuses: testCase.statuses,
         }))
         const title = new URL(buildOpportunityPageUrl('competitions', {
             page: 1,
             perPage: 10,
             sort: 'titleAZ',
+            statuses: testCase.statuses,
         }))
 
         expect(prize.searchParams.get('sortBy'))
@@ -1453,6 +1486,30 @@ describe('opportunities service normalization', () => {
             )
     })
 
+    it('loads every latest-submission page before sorting derived columns', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockResolvedValueOnce({
+            data: [{ id: 'first' }],
+            meta: { page: 1, perPage: 1, totalCount: 3, totalPages: 3 },
+        })
+            .mockResolvedValueOnce({ data: [{ id: 'second' }] })
+            .mockResolvedValueOnce({ data: [{ id: 'third' }] })
+        await expect(getAllChallengeSubmissions('challenge'))
+            .resolves.toMatchObject({ items: [{ id: 'first' }, { id: 'second' }, { id: 'third' }], total: 3 })
+        expect(get.mock.calls.map(([url]) => new URL(String(url)).searchParams.get('page')))
+            .toEqual(['1', '2', '3'])
+        expect(get.mock.calls.every(([url]) => new URL(String(url)).searchParams.get('isLatest') === 'true'))
+            .toBe(true)
+    })
+
+    it('does not return a partial sortable collection when a later page fails', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockResolvedValueOnce({ data: [{ id: 'first' }], meta: { totalPages: 2 } })
+            .mockRejectedValueOnce(new Error('Page unavailable'))
+        await expect(getAllChallengeSubmissions('challenge'))
+            .rejects.toThrow('Page unavailable')
+    })
+
     it('keeps all member attempts for My Submissions when latest-only is disabled', async () => {
         const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
         get.mockResolvedValueOnce({ data: [], meta: { page: 1, totalCount: 0, totalPages: 0 } })
@@ -1871,7 +1928,7 @@ describe('opportunities service normalization', () => {
         expect(requestUrl.searchParams.get('perPage'))
             .toBe('10')
         expect(requestUrl.searchParams.get('sortBy'))
-            .toBe('updatedAt')
+            .toBe('createdAt')
         expect(requestUrl.searchParams.get('sortOrder'))
             .toBe('desc')
         expect(globalGet)

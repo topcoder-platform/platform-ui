@@ -269,6 +269,23 @@ export function canCreateEngagement(userRoles: string[]): boolean {
     return hasAdminRole(userRoles) || checkTalentManager(userRoles)
 }
 
+/**
+ * Returns whether the supplied user roles may assign or remove engagement managers.
+ *
+ * Mirrors the engagements API's administrator definition for timesheets, which is the platform's
+ * privileged role set: administrators plus Topcoder Task and Talent Managers. Keeping the two in
+ * step matters because the API is the gate - a UI that offers the control to anyone else just
+ * produces a 403.
+ *
+ * @param userRoles caller roles from the decoded auth token or app context.
+ * @returns `true` when the caller can change engagement manager assignments.
+ */
+export function canManageEngagementManagers(userRoles: string[]): boolean {
+    return hasAdminRole(userRoles)
+    || hasTaskManagerRole(userRoles)
+    || checkTalentManager(userRoles)
+}
+
 export function checkIsAdmin(token: string): boolean {
     const roles = getTokenRoles(token)
 
@@ -345,14 +362,16 @@ export function checkProjectMembership(
 /**
  * Returns whether the caller can open project-scoped workspace pages.
  *
- * Admins can access every project. Other work-app users must be listed in the
- * project's membership payload before project details or child records can be
- * displayed.
+ * Admins and Talent Managers can open projects returned by the projects API
+ * without membership. The API enforces Talent Manager membership for internal
+ * projects. Other work-app users must be listed in the project's membership
+ * payload before project details or child records can be displayed.
  *
  * @param userRoles caller roles from the decoded auth token or app context.
  * @param userId logged-in user identifier used for project membership checks.
  * @param project project whose access should be evaluated.
  * @returns `true` when the caller may view the project workspace; otherwise `false`.
+ * @throws Does not throw; an unavailable project returns `false`.
  */
 export function checkProjectAccess(
     userRoles: string[],
@@ -363,7 +382,9 @@ export function checkProjectAccess(
         return false
     }
 
-    return hasAdminRole(userRoles) || checkProjectMembership(project, userId)
+    return hasAdminRole(userRoles)
+        || checkTalentManager(userRoles)
+        || checkProjectMembership(project, userId)
 }
 
 /**
@@ -429,6 +450,31 @@ export function checkCanEditProjectDetails(
     const normalizedRole = normalizeValue(getProjectMemberByUserId(project, userId)?.role)
 
     return normalizedRole === PROJECT_ROLES.MANAGER
+}
+
+/**
+ * Returns whether the caller can add files or links to a project's Assets Library.
+ *
+ * Admins and project members keep the add actions. Non-member viewers, such as
+ * Talent Managers opening a non-internal project, get a read-only library
+ * because the projects API rejects their attachment create requests.
+ *
+ * @param userRoles caller roles from the decoded auth token or app context.
+ * @param userId logged-in user identifier used for project membership checks.
+ * @param project project whose Assets Library is displayed.
+ * @returns `true` when the add file and add link actions should be shown; otherwise `false`.
+ * @throws Does not throw; an unavailable project returns `false`.
+ */
+export function checkCanAddProjectAssets(
+    userRoles: string[],
+    userId: number | string | undefined,
+    project: Project | undefined,
+): boolean {
+    if (!project) {
+        return false
+    }
+
+    return hasAdminRole(userRoles) || checkProjectMembership(project, userId)
 }
 
 export function checkAdminOrPmOrTaskManager(

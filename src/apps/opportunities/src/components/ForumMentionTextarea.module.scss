@@ -1,0 +1,38 @@
+.container {
+    position: relative;
+}
+
+.suggestions {
+    background: #fff;
+    border: 1px solid #a5afb3;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px #0002;
+    left: 12px;
+    max-height: 220px;
+    min-width: 240px;
+    overflow-y: auto;
+    position: absolute;
+    top: 100%;
+    z-index: 5;
+
+    ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    li,
+    p {
+        margin: 0;
+        padding: 8px 12px;
+    }
+
+    li {
+        cursor: pointer;
+
+        &[aria-selected='true'],
+        &:hover {
+            background: #e0f5f5;
+        }
+    }
+}

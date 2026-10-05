@@ -413,27 +413,9 @@
     }
 }
 
+/* Photo ring only; MemberAvatar owns size, placeholder colors, and borderless placeholders. */
 .avatar {
-    align-items: center;
-    background: #e0e0e0;
     border: 1px solid #fff;
-    border-radius: 50%;
-    color: #161616;
-    display: inline-flex;
-    flex: 0 0 32px;
-    font-size: 12px;
-    font-weight: 700;
-    height: 32px;
-    justify-content: center;
-    overflow: hidden;
-    text-decoration: none;
-    width: 32px;
-
-    img {
-        height: 100%;
-        object-fit: cover;
-        width: 100%;
-    }
 }
 
 .topicList {
@@ -649,8 +631,12 @@
         margin-left: -8px;
     }
 
-    a:nth-child(2n) .avatar {
-        background: #d0e2ff;
+    /*
+     * Overlapping placeholders keep the white separator so neighbors sharing a
+     * palette stay distinct; it outranks MemberAvatar's borderless placeholder.
+     */
+    a .avatar {
+        border: 1px solid #fff;
     }
 }
 
@@ -1255,15 +1241,18 @@
 .editorShell {
     border: 1px solid #a8a8a8;
     border-radius: 4px;
-    overflow: hidden;
+    // Mention suggestions extend below the textarea and must escape the editor border.
+    overflow: visible;
 }
 
 .editorToolbar {
     align-items: stretch;
     border-bottom: 1px solid #e0e0e0;
+    border-radius: 3px 3px 0 0;
     display: flex;
     flex-wrap: wrap;
     min-height: 48px;
+    overflow: hidden;
 
     button {
         align-items: center;
@@ -1297,7 +1286,9 @@
 .editorPreview {
     background: #fff;
     border: 0;
+    border-radius: 0 0 3px 3px;
     box-sizing: border-box;
+    display: block;
     color: #161616;
     font: inherit;
     font-size: 14px;
@@ -1596,4 +1587,10 @@
         margin-left: 0;
         width: 100%;
     }
+}
+
+// Keep mention links above the topic card's click target.
+.topicExcerpt a {
+    position: relative;
+    z-index: 2;
 }

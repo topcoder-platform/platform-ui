@@ -231,6 +231,7 @@ export const TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS: string[] = getReactEnv<string>
 // Community-app's TopGear (Wipro) community listed the challenges of this
 // Topcoder group; the `topgear` host filters Opportunities the same way.
 export const TOPGEAR = {
+    ACCESS_GROUP_ID: getReactEnv<string>('TOPGEAR_ACCESS_GROUP_ID', 'b7f7c0f8-8ee8-409e-9e5c-33404983b635'),
     GROUP_ID: getReactEnv<string>('TOPGEAR_GROUP_ID', 'b7f7c0f8-8ee8-409e-9e5c-33404983b635'),
 }
 

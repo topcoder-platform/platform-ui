@@ -249,6 +249,17 @@ const MyAssignmentsPage: FC = () => {
         window.open(`https://${walletHost}`, '_blank')
     }, [])
 
+    /**
+     * Opens the timesheet for an assignment. Both ids are in the path, so the page has everything it
+     * needs to load the timesheet without resolving the engagement a second time.
+     */
+    const handleOpenTimesheet = useCallback((
+        engagementId: string,
+        assignmentId: string,
+    ) => {
+        navigate(`${rootRoute}/${engagementId}/timesheets/${assignmentId}`)
+    }, [navigate])
+
     const handleContactTalentManager = useCallback((contactEmail?: string) => {
         if (!contactEmail) {
             return
@@ -476,6 +487,8 @@ const MyAssignmentsPage: FC = () => {
                                             handleOpenOfferModal(engagement, 'reject')
                                         }
 
+                                        console.log('here', engagement.status?.toLowerCase(), assignment?.id)
+
                                         return (
                                             <AssignmentCard
                                                 key={engagement.id}
@@ -484,6 +497,16 @@ const MyAssignmentsPage: FC = () => {
                                                 contactEmail={contactEmail}
                                                 onViewPayments={handleViewPayments}
                                                 onDocumentExperience={handleDocumentExperienceClick}
+                                                onOpenTimesheet={
+                                                    assignment?.id
+                                                        ? function onOpenTimesheet() {
+                                                            handleOpenTimesheet(
+                                                                engagement.id,
+                                                                assignment.id,
+                                                            )
+                                                        }
+                                                        : undefined
+                                                }
                                                 onAcceptOffer={handleAcceptOfferClick}
                                                 onRejectOffer={handleRejectOfferClick}
                                                 onContactTalentManager={handleContactTalentManager}

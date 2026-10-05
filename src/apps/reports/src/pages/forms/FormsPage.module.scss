@@ -1,0 +1,34 @@
+.page {
+    padding: 24px;
+    max-width: 100%;
+
+    h2 { margin-bottom: 16px; }
+    p { margin: 12px 0; }
+    button, select, input {
+        border: 1px solid #767676;
+        border-radius: 4px;
+        background: #fff;
+        color: #2a2a2a;
+        padding: 10px 14px;
+        font: inherit;
+    }
+    button { cursor: pointer; }
+    button:disabled { cursor: default; opacity: .5; }
+    button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid #137d60; outline-offset: 2px; }
+}
+.filters, .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: end;
+    margin: 20px 0;
+}
+.filters label { display: flex; flex-direction: column; gap: 8px; max-width: 100%; }
+.filters select { max-width: 100%; }
+.tableScroll {
+    overflow-x: auto;
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: 12px; border-bottom: 1px solid #d4d4d4; text-align: left; min-width: 140px; max-width: 400px; overflow-wrap: anywhere; }
+    th { background: #f4f4f4; font-weight: 600; }
+    td { white-space: pre-wrap; }
+}

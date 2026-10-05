@@ -69,6 +69,7 @@ export interface GlobalConfig {
     }
     TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS: string[]
     TOPGEAR: {
+        ACCESS_GROUP_ID: string
         GROUP_ID: string
     }
     TERMS_URL?: string

@@ -5,6 +5,8 @@ import {
     useParams,
 } from 'react-router-dom'
 
+import { isTopgearCommunity, TOPGEAR_CHALLENGES_ROUTE } from '../utils/topgear.utils'
+
 interface LegacyOpportunityRedirectPageProps {
     list?: boolean
     review?: boolean
@@ -61,8 +63,9 @@ export const LegacyOpportunityRedirectPage: FC<LegacyOpportunityRedirectPageProp
         )
     }
 
+    const listingPath = isTopgearCommunity() ? TOPGEAR_CHALLENGES_ROUTE : '/opportunities/competitions'
     const pathname = props.list || !challengeId
-        ? '/opportunities/competitions'
+        ? listingPath
         : `/opportunities/challenge/${encodeURIComponent(challengeId)}`
     return (
         <Navigate

@@ -20,6 +20,23 @@ The Work app provides work management capabilities for:
 
 `config/routes.config.ts` contains route ids and the `rootRoute` resolver based on the active subdomain.
 
+## Project workspace access
+
+`checkProjectAccess` allows Administrators, Talent Managers, and Topcoder Talent
+Managers to open projects returned by the projects API without project membership.
+Other Work users require membership. This shared check governs project workspace
+routes and project challenge pages, so Talent Managers can view non-internal
+project details and challenges directly from the projects list.
+
+The projects API requires active membership for Talent Managers to read internal
+projects. A missing or rejected project still blocks the workspace. Viewing a
+project does not grant permission to edit its details, manage its billing or
+members, or modify its challenges; those actions retain their separate checks.
+
+Non-member Talent Managers see the Users tab and Assets Library read-only.
+`checkCanAddProjectAssets` limits the Assets Library's add file and add link
+actions to Administrators and project members.
+
 ## Navigation styles
 
 The Work subnavigation uses regular black text and a bold active item on desktop
