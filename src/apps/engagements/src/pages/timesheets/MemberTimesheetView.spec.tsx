@@ -102,7 +102,10 @@ const entry = (overrides: Partial<TimesheetEntry> = {}): TimesheetEntry => ({
     ...overrides,
 } as TimesheetEntry)
 
-const timesheet = (entries: TimesheetEntry[] = []): TimesheetView => ({
+const timesheet = (
+    entries: TimesheetEntry[] = [],
+    assignmentStatus: string = 'ASSIGNED',
+): TimesheetView => ({
     assignment: {
         endDate: '2026-09-30',
         id: 'asg-1',
@@ -111,7 +114,7 @@ const timesheet = (entries: TimesheetEntry[] = []): TimesheetView => ({
         memberName: 'John Smith',
         standardHoursPerDay: 8,
         startDate: '2026-09-01',
-        status: 'ASSIGNED',
+        status: assignmentStatus,
     },
     engagementId: 'eng-1',
     engagementTitle: 'Senior Frontend Engineer',
@@ -120,7 +123,7 @@ const timesheet = (entries: TimesheetEntry[] = []): TimesheetView => ({
     viewerRole: TimesheetViewerRole.MEMBER,
 })
 
-const renderView = (entries: TimesheetEntry[] = []): {
+const renderView = (entries?: TimesheetEntry[], assignmentStatus?: string): {
     onTimesheetChange: jest.Mock
 } & ReturnType<typeof render> => {
     const onTimesheetChange = jest.fn()
@@ -128,7 +131,7 @@ const renderView = (entries: TimesheetEntry[] = []): {
         <MemberTimesheetView
             onDirtyChange={jest.fn()}
             onTimesheetChange={onTimesheetChange}
-            timesheet={timesheet(entries)}
+            timesheet={timesheet(entries, assignmentStatus)}
         />,
     )
 
@@ -450,4 +453,21 @@ describe('MemberTimesheetView', () => {
         expect(screen.getByLabelText('Select 07-09-2026'))
             .toBeDisabled()
     })
+
+    it.each(['COMPLETED', 'TERMINATED'])(
+        'makes the timesheet read-only once the assignment is %s',
+        async (assignmentStatus: string) => {
+            renderView([entry({ workDate: '2026-09-07' })], assignmentStatus)
+
+            await pickRange('2026-09-07', '2026-09-07')
+
+            expect(await screen.findByRole('status'))
+                .toHaveTextContent('no longer active')
+            expect(screen.queryByLabelText('Hours worked on 07-09-2026')).not.toBeInTheDocument()
+            expect(screen.getByLabelText('Select 07-09-2026'))
+                .toBeDisabled()
+            expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
+            expect(screen.queryByRole('button', { name: /Submit/ })).not.toBeInTheDocument()
+        },
+    )
 })

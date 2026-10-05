@@ -61,6 +61,15 @@ const getDefaultRange = (): { fromDate: string, toDate: string } => {
     }
 }
 
+/**
+ * Only an active assignee may enter or submit hours. Once the assignment is completed or terminated the
+ * member can still review what they logged; the API refuses the write either way, so this only keeps
+ * the page from offering controls that would fail.
+ */
+const ACTIVE_ASSIGNMENT_STATUS = 'ASSIGNED'
+
+const isRowNeverSelectable = (): boolean => false
+
 const toPickerDate = (value: string): Date | undefined => {
     if (!value) {
         return undefined
@@ -96,6 +105,7 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
 
     const rangeError = validateDateRange(fromDate, toDate)
     const standardHoursPerDay = props.timesheet.assignment.standardHoursPerDay
+    const isAssignmentActive = props.timesheet.assignment.status === ACTIVE_ASSIGNMENT_STATUS
 
     // Regenerate the grid whenever the range or the saved entries change, merging saved values in so
     // the member sees their own hours rather than a blank duplicate.
@@ -295,13 +305,21 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                         setToDate(date ? toWorkDateString(date) : '')
                     }}
                 />
-                <Button
-                    disabled={isSaving || !isDirty}
-                    label={isSaving ? 'Saving...' : 'Save'}
-                    onClick={handleSave}
-                    secondary
-                />
+                {isAssignmentActive && (
+                    <Button
+                        disabled={isSaving || !isDirty}
+                        label={isSaving ? 'Saving...' : 'Save'}
+                        onClick={handleSave}
+                        secondary
+                    />
+                )}
             </section>
+
+            {!isAssignmentActive && (
+                <p className={styles.pending} role='status'>
+                    This assignment is no longer active, so its timesheet is read-only.
+                </p>
+            )}
 
             {rangeError
                 ? <p className={styles.error} role='alert'>{rangeError}</p>
@@ -309,8 +327,10 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                     <>
                         <TimesheetGrid
                             emptyMessage='Pick a date range to start entering hours.'
-                            onRowChange={handleRowChange}
+                            isRowSelectable={isAssignmentActive ? undefined : isRowNeverSelectable}
+                            onRowChange={isAssignmentActive ? handleRowChange : undefined}
                             onSelectionChange={setSelectedDates}
+                            readOnly={!isAssignmentActive}
                             rows={rows}
                             selectedDates={selectedDates}
                             standardHoursPerDay={standardHoursPerDay}
@@ -320,7 +340,7 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                             <p className={styles.error} role='alert'>{actionError}</p>
                         )}
 
-                        {selectedRows.length > 0 && (
+                        {isAssignmentActive && selectedRows.length > 0 && (
                             <section className={styles.summary}>
                                 <span>
                                     Total Days:
