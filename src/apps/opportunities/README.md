@@ -216,8 +216,9 @@ to their authored subtype icons and member-facing labels.
 - Completed cards replace registration and stale phase-progress states with the
   explicit Completed state and the design-system double-check icon. Up to three
   actual winner photos appear beside the placement prizes with the existing
-  podium medals; missing or failed photos retain a handle-initial fallback. The
-  complete avatar-and-medal affordance opens that challenge's Winners tab.
+  podium medals; missing or failed photos use the shared handle-initial
+  placeholder described in [Member avatars](#member-avatars). The complete
+  avatar-and-medal affordance opens that challenge's Winners tab.
 - `currentPhase` is preferred for the phase chip. Older responses fall back to
   the latest-started open phase. Progress uses actual then scheduled dates,
   clamps to 0–100%, and may derive the end from the phase duration in seconds.
@@ -298,6 +299,34 @@ Task challenges omit an Iterative Review phase once its deadline has elapsed,
 matching the legacy participant timeline, and keep Registration ahead of the
 remaining chronological milestones. Task detection accepts the canonical
 catalog type and the legacy `task.isTask` and `legacy.pureV5Task` flags.
+
+## Member avatars
+
+Every member avatar in this app renders through `MemberAvatar`: challenge
+registrant, submission, and winner rows; forum members and topic participants;
+completed competition cards; and review-opportunity applications. A member's
+public `photoURL` is shown when present. When it is missing or fails to load,
+the avatar shows the first character of the member's handle, uppercased, on
+one of the eight borderless color pairs from the Figma "Placeholder based on
+initials" reference (PM-6526):
+
+| Palette | Background | Initial |
+| --- | --- | --- |
+| green | `#A7F0BA` | `#044317` |
+| teal | `#9EF0F0` | `#004144` |
+| blue | `#D0E2FF` | `#002D9C` |
+| purple | `#E8DAFF` | `#491D8B` |
+| magenta | `#FFD6E8` | `#740937` |
+| orange | `#FFD9BE` | `#5E2900` |
+| yellow | `#FDDC69` | `#483700` |
+| gray | `#E9ECEF` | `#293033` |
+
+`getMemberAvatarPalette` hashes the trimmed, lowercased handle, so a member
+keeps the same color on every page. A missing handle renders an empty gray
+circle rather than a digit from the member ID. Hosts pass a class only for
+size, grid placement, or a photo outline; placeholders never take a border.
+The one exception is the forum's overlapping participant stack, which keeps a
+white separator so neighbors that share a palette stay distinct.
 
 ## Challenge Markdown table of contents
 

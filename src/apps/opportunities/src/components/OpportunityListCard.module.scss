@@ -497,29 +497,11 @@
     width: 32px;
 }
 
+/* Grid slot and photo outline; MemberAvatar owns size and placeholder colors. */
 .winnerPhoto {
-    align-items: center;
-    background: #e9ecef;
     border: 1px solid #a8a8a8;
-    border-radius: 50%;
-    box-sizing: border-box;
-    color: #161616;
-    display: flex;
-    font-family: 'Nunito Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
     grid-column: 1;
     grid-row: 1;
-    height: 32px;
-    justify-content: center;
-    overflow: hidden;
-    width: 32px;
-
-    img {
-        height: 100%;
-        object-fit: cover;
-        width: 100%;
-    }
 }
 
 .winnerMedal {

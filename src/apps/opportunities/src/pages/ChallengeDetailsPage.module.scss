@@ -317,27 +317,9 @@
 .ratingGreen { color: #2d7e2d !important; }
 .ratingGray { color: #555555 !important; }
 
+/* Photo outline only; MemberAvatar owns size, placeholder colors, and no-border placeholders. */
 .avatar {
-    align-items: center;
-    background: #d9fbfb;
     border: 1px solid #a8a8a8;
-    border-radius: 50%;
-    color: #007d79;
-    display: flex;
-    flex: 0 0 32px;
-    font-size: 14px;
-    font-weight: 700;
-    height: 32px;
-    justify-content: center;
-    overflow: hidden;
-    width: 32px;
-
-    img {
-        border-radius: 50%;
-        height: 100%;
-        object-fit: cover;
-        width: 100%;
-    }
 }
 
 .historyLink {
@@ -874,6 +856,7 @@
 
     .avatar {
         flex-basis: 48px;
+        font-size: 18px;
         height: 48px;
         width: 48px;
     }

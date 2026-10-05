@@ -45,6 +45,7 @@ import {
 import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 import { ForumMarkdown } from './ForumMarkdown'
 import { ForumMentionTextarea } from './ForumMentionTextarea'
+import { MemberAvatar } from './MemberAvatar'
 import { OpportunityPagination } from './OpportunityPagination'
 import styles from './ChallengeForum.module.scss'
 
@@ -271,37 +272,6 @@ function topicParticipants(topic: ForumTopicSummary): ForumParticipant[] {
 }
 
 /**
- * Renders a member photo with a resilient initials fallback.
- *
- * @param props member handle and optional public profile projection.
- * @returns avatar image or initial.
- * @throws Does not throw; image failures switch to the fallback.
- */
-const MemberAvatar: FC<{
-    handle: string
-    profile?: MemberProfileSummary
-}> = props => {
-    const [failedPhotoURL, setFailedPhotoURL] = useState<string>()
-    const photoURL = props.profile?.photoURL
-    const showPhoto = !!photoURL && failedPhotoURL !== photoURL
-
-    return (
-        <span aria-hidden='true' className={styles.avatar}>
-            {showPhoto
-                ? (
-                    <img
-                        alt=''
-                        onError={() => setFailedPhotoURL(photoURL)}
-                        src={photoURL}
-                    />
-                )
-                : props.handle.charAt(0)
-                    .toUpperCase()}
-        </span>
-    )
-}
-
-/**
  * Renders a compact linked member snapshot enriched by the public Members API.
  *
  * @param props fallback handle and optional profile projection.
@@ -317,7 +287,7 @@ const ForumMember: FC<{
 
     return (
         <span className={styles.member}>
-            <MemberAvatar handle={handle} profile={props.profile} />
+            <MemberAvatar className={styles.avatar} handle={handle} photoURL={props.profile?.photoURL} />
             <a className={styles[ratingClass]} href={memberProfileUrl(handle)}>{handle}</a>
         </span>
     )
@@ -348,7 +318,7 @@ const ParticipantGroup: FC<{
 
                 return (
                     <a href={memberProfileUrl(handle)} key={participant.memberId} title={handle}>
-                        <MemberAvatar handle={handle} profile={profile} />
+                        <MemberAvatar className={styles.avatar} handle={handle} photoURL={profile?.photoURL} />
                     </a>
                 )
             })}
