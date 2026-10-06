@@ -2,15 +2,17 @@ import { FC, FocusEvent, useCallback, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { TimesheetEntryStatus } from '../../lib/models'
-import type { TimesheetRow } from '../../lib/utils'
+import type { TimesheetFieldErrors, TimesheetRow } from '../../lib/utils'
 import {
     formatHoursLabel,
     isRowReadOnly,
     isRowReopened,
     sumSelectedTotals,
     validateHours,
+    validateRemarks,
 } from '../../lib/utils'
 
+import ExpandableText from './ExpandableText'
 import styles from './TimesheetGrid.module.scss'
 
 export interface TimesheetGridProps {
@@ -44,6 +46,8 @@ export interface TimesheetGridProps {
      */
     showTotals?: boolean
     emptyMessage?: string
+    /** Errors the API reported against specific rows, shown under the input they belong to. */
+    fieldErrors?: TimesheetFieldErrors
 }
 
 const STATUS_LABELS: Record<TimesheetEntryStatus, string> = {
@@ -146,6 +150,11 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                         const selectable = isSelectable(row)
                         const hoursCheck = validateHours(row.hoursWorked, props.standardHoursPerDay)
                         const isSelected = selected.has(row.workDate)
+                        const rowErrors = props.fieldErrors?.[row.workDate]
+                        // The local checks reflect what is in the inputs now, so they win over a server
+                        // message about a value that may since have changed.
+                        const hoursError = hoursCheck.error ?? rowErrors?.hoursWorked
+                        const remarksError = validateRemarks(row.remarks).error ?? rowErrors?.remarks
 
                         return (
                             <tr
@@ -176,6 +185,11 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                                             Outside assignment dates
                                         </span>
                                     )}
+                                    {rowErrors?.workDate && (
+                                        <span className={styles.error} role='alert'>
+                                            {rowErrors.workDate}
+                                        </span>
+                                    )}
                                 </td>
                                 <td data-label='Day'>{row.dayLabel}</td>
                                 <td data-label='Hours Worked'>
@@ -191,7 +205,7 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                                                     aria-label={`Hours worked on ${row.displayDate}`}
                                                     className={classNames(
                                                         styles.hoursInput,
-                                                        hoursCheck.error ? styles.inputError : undefined,
+                                                        hoursError ? styles.inputError : undefined,
                                                     )}
                                                     inputMode='decimal'
                                                     onChange={function onHoursChange(
@@ -205,12 +219,12 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                                                     type='text'
                                                     value={row.hoursWorked}
                                                 />
-                                                {hoursCheck.error && (
+                                                {hoursError && (
                                                     <span className={styles.error} role='alert'>
-                                                        {hoursCheck.error}
+                                                        {hoursError}
                                                     </span>
                                                 )}
-                                                {!hoursCheck.error && hoursCheck.warning && (
+                                                {!hoursError && hoursCheck.warning && (
                                                     <span className={styles.warning}>{hoursCheck.warning}</span>
                                                 )}
                                             </>
@@ -218,22 +232,36 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                                 </td>
                                 <td data-label='Remarks'>
                                     {rowReadOnly
-                                        ? <span className={styles.readOnlyValue}>{row.remarks || '-'}</span>
+                                        ? (
+                                            row.remarks
+                                                ? <ExpandableText text={row.remarks} />
+                                                : <span className={styles.readOnlyValue}>-</span>
+                                        )
                                         : (
-                                            <input
-                                                aria-label={`Remarks for ${row.displayDate}`}
-                                                className={styles.remarksInput}
-                                                onChange={function onRemarksChange(
-                                                    event: FocusEvent<HTMLInputElement>,
-                                                ) {
-                                                    props.onRowChange?.(row.workDate, {
-                                                        remarks: event.target.value,
-                                                    })
-                                                }}
-                                                placeholder='What did you work on?'
-                                                type='text'
-                                                value={row.remarks}
-                                            />
+                                            <>
+                                                <textarea
+                                                    aria-label={`Remarks for ${row.displayDate}`}
+                                                    className={classNames(
+                                                        styles.remarksInput,
+                                                        remarksError ? styles.inputError : undefined,
+                                                    )}
+                                                    onChange={function onRemarksChange(
+                                                        event: FocusEvent<HTMLTextAreaElement>,
+                                                    ) {
+                                                        props.onRowChange?.(row.workDate, {
+                                                            remarks: event.target.value,
+                                                        })
+                                                    }}
+                                                    placeholder='What did you work on?'
+                                                    rows={1}
+                                                    value={row.remarks}
+                                                />
+                                                {remarksError && (
+                                                    <span className={styles.error} role='alert'>
+                                                        {remarksError}
+                                                    </span>
+                                                )}
+                                            </>
                                         )}
                                 </td>
                                 <td data-label='Status'>
@@ -250,10 +278,13 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                                             {row.approvedAt
                                                 ? ` on ${formatApprovalDate(row.approvedAt)}`
                                                 : undefined}
-                                            {row.approvalComment
-                                                ? ` - "${row.approvalComment}"`
-                                                : undefined}
                                         </span>
+                                    )}
+                                    {row.status === TimesheetEntryStatus.APPROVED && row.approvalComment && (
+                                        <ExpandableText
+                                            className={styles.approvalComment}
+                                            text={row.approvalComment}
+                                        />
                                     )}
                                 </td>
                             </tr>

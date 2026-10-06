@@ -161,6 +161,43 @@ describe('TimesheetGrid', () => {
             .toBeInTheDocument()
     })
 
+    it('edits remarks in a textarea', async () => {
+        const user = userEvent.setup()
+        const onRowChange = jest.fn()
+        render(
+            <TimesheetGrid
+                onRowChange={onRowChange}
+                onSelectionChange={noop}
+                rows={[row({ remarks: '' })]}
+                selectedDates={[]}
+            />,
+        )
+
+        const remarks = screen.getByLabelText('Remarks for 07-09-2026')
+        expect(remarks.tagName)
+            .toBe('TEXTAREA')
+
+        await user.type(remarks, 'x')
+
+        expect(onRowChange)
+            .toHaveBeenCalledWith('2026-09-07', { remarks: 'x' })
+    })
+
+    it('shows read-only remarks as text rather than an input', () => {
+        render(
+            <TimesheetGrid
+                onSelectionChange={noop}
+                readOnly
+                rows={[row({ remarks: 'Sprint planning' })]}
+                selectedDates={[]}
+            />,
+        )
+
+        expect(screen.queryByLabelText('Remarks for 07-09-2026')).not.toBeInTheDocument()
+        expect(screen.getByText('Sprint planning'))
+            .toBeInTheDocument()
+    })
+
     it('badges a reopened row so it is distinguishable from one never submitted', () => {
         render(
             <TimesheetGrid

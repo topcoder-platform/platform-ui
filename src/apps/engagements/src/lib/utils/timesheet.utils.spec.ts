@@ -12,11 +12,13 @@ import {
     generateWorkDates,
     getDayLabel,
     hasEnteredHours,
+    hasRowValidationError,
     isRowReadOnly,
     isRowReopened,
     sumSelectedTotals,
     validateDateRange,
     validateHours,
+    validateRemarks,
 } from './timesheet.utils'
 import type { TimesheetRow } from './timesheet.utils'
 
@@ -355,6 +357,34 @@ describe('timesheet.utils', () => {
                 .toBe('42.5')
             expect(formatHoursLabel('8.00'))
                 .toBe('8')
+        })
+    })
+
+    describe('validateRemarks', () => {
+        it('accepts a remark at the 2000 character limit', () => {
+            expect(validateRemarks('a'.repeat(2000)))
+                .toEqual({})
+        })
+
+        it('measures the trimmed value, which is what gets sent', () => {
+            expect(validateRemarks(`  ${'a'.repeat(2000)}  `))
+                .toEqual({})
+        })
+
+        it('refuses a remark over the limit', () => {
+            expect(validateRemarks('a'.repeat(2001)).error)
+                .toBe('Remarks cannot be longer than 2000 characters.')
+        })
+    })
+
+    describe('hasRowValidationError', () => {
+        it('flags a row with invalid hours or an over-long remark', () => {
+            expect(hasRowValidationError({ hoursWorked: '25', remarks: '' }))
+                .toBe(true)
+            expect(hasRowValidationError({ hoursWorked: '8', remarks: 'a'.repeat(2001) }))
+                .toBe(true)
+            expect(hasRowValidationError({ hoursWorked: '8', remarks: 'Sprint planning' }))
+                .toBe(false)
         })
     })
 })
