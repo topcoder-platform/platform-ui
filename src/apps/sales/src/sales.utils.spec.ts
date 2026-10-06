@@ -1,3 +1,5 @@
+import { EnvironmentConfig } from '~/config'
+
 import { SalesReport, SalesSummary, SalesSummaryAmount } from './sales.models'
 import {
     amountTotal,
@@ -12,7 +14,12 @@ import {
     withDateRange,
     withDrilldown,
     wonSowSignedTotal,
+    workProjectUrl,
 } from './sales.utils'
+
+jest.mock('~/config', () => ({
+    EnvironmentConfig: { URLS: { WORK_APP: 'https://work.topcoder-dev.com' } },
+}), { virtual: true })
 
 /** @returns A synthetic report schema with both pipeline date fields. Does not throw. */
 function report(): SalesReport {
@@ -36,6 +43,27 @@ function report(): SalesReport {
         totalPages: 0,
     }
 }
+
+describe('Work project links', () => {
+    it('uses the configured Work host and only positive integer project IDs', () => {
+        expect(workProjectUrl(' 12345 '))
+            .toBe(`${EnvironmentConfig.URLS.WORK_APP}/projects/12345`)
+        expect(workProjectUrl(12345))
+            .toBe(`${EnvironmentConfig.URLS.WORK_APP}/projects/12345`)
+        const invalidIds = [
+            // Salesforce nulls and unsafe values must never produce a link.
+            // eslint-disable-next-line unicorn/no-null
+            null, undefined, '', '-', true, false, 0, -1, 1.5, '006000000000001AAA',
+            // eslint-disable-next-line no-script-url
+            'https://connect.topcoder.com/projects/12345', 'javascript:alert(1)', '../12345',
+            '9007199254740992',
+        ]
+        invalidIds.forEach(value => {
+            expect(workProjectUrl(value))
+                .toBeUndefined()
+        })
+    })
+})
 
 describe('Sales date range utilities', () => {
     it('offers only date fields and opens on Created Date for pipeline analysis', () => {

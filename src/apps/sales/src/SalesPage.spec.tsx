@@ -8,6 +8,10 @@ import { fetchOpportunity } from './opportunity.service'
 import { SalesReport } from './sales.models'
 import { fetchSalesReport } from './sales.service'
 
+jest.mock('~/config', () => ({
+    EnvironmentConfig: { URLS: { WORK_APP: 'https://work.topcoder-dev.com' } },
+}), { virtual: true })
+
 jest.mock('./sales.service', () => ({
     fetchSalesReport: jest.fn(),
     salesErrorMessage: () => 'Unable to refresh. Please try again.',

@@ -1,6 +1,13 @@
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
 
+/** Current or historical account identity returned by the opportunity endpoint. */
+export interface OpportunityBillingAccount {
+    id: string
+    name?: string
+}
+
+/** Salesforce details and optional project billing context for the Sales popup. */
 export interface SalesOpportunity {
     id: string
     name: string
@@ -11,13 +18,17 @@ export interface SalesOpportunity {
     closeDate?: string
     stageName?: string
     url: string
+    billingAccount?: OpportunityBillingAccount | null
+    projectId?: string | null
+    relatedBillingAccounts?: OpportunityBillingAccount[]
 }
 
 /**
  * Reads a Salesforce opportunity through the role-protected Projects API.
  * @param opportunityId Salesforce opportunity id taken from a report cell.
  * @param signal Cancels the request when the popup closes or another row is opened.
- * @returns The opportunity details shown in the popup.
+ * @returns Opportunity details, current billing account, project ID, and unique
+ * billing accounts referenced by the project's challenges, for the popup.
  * @throws Propagates network, authorization and sanitized Projects API errors.
  */
 export function fetchOpportunity(
