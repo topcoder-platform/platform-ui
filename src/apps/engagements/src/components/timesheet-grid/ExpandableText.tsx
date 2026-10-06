@@ -1,6 +1,8 @@
 import { FC, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 
+import { Button } from '~/libs/ui'
+
 import styles from './ExpandableText.module.scss'
 
 interface ExpandableTextProps {
@@ -62,14 +64,13 @@ const ExpandableText: FC<ExpandableTextProps> = (props: ExpandableTextProps) => 
                 {props.text}
             </div>
             {(isOverflowing || isExpanded) && (
-                <button
-                    aria-expanded={isExpanded}
+                <Button
                     className={styles.toggle}
+                    label={isExpanded ? 'Show less' : 'Show more'}
+                    link
                     onClick={toggle}
-                    type='button'
-                >
-                    {isExpanded ? 'Show less' : 'Show more'}
-                </button>
+                    size='sm'
+                />
             )}
         </div>
     )

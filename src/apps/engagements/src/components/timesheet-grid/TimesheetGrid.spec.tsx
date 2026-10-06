@@ -9,6 +9,12 @@ import type { TimesheetRow } from '../../lib/utils'
 
 import TimesheetGrid from './TimesheetGrid'
 
+jest.mock('~/libs/ui', () => ({
+    Button: (props: { label: string, onClick?: () => void }) => (
+        <button onClick={props.onClick} type='button'>{props.label}</button>
+    ),
+}), { virtual: true })
+
 const row = (overrides: Partial<TimesheetRow> = {}): TimesheetRow => ({
     dayLabel: 'Monday',
     displayDate: '07-09-2026',

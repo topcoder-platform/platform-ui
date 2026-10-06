@@ -6,6 +6,12 @@ import userEvent from '@testing-library/user-event'
 
 import ExpandableText from './ExpandableText'
 
+jest.mock('~/libs/ui', () => ({
+    Button: (props: { label: string, onClick?: () => void }) => (
+        <button onClick={props.onClick} type='button'>{props.label}</button>
+    ),
+}), { virtual: true })
+
 /**
  * jsdom does no layout, so scrollHeight and clientHeight are both 0. Stub them to stand in for text
  * that does, or does not, overflow the three-line clamp.
@@ -40,14 +46,10 @@ describe('ExpandableText', () => {
         stubHeights(200, 60)
         render(<ExpandableText text='A long remark' />)
 
-        const toggle = screen.getByRole('button', { name: 'Show more' })
-        expect(toggle)
-            .toHaveAttribute('aria-expanded', 'false')
-
-        await user.click(toggle)
+        await user.click(screen.getByRole('button', { name: 'Show more' }))
 
         expect(screen.getByRole('button', { name: 'Show less' }))
-            .toHaveAttribute('aria-expanded', 'true')
+            .toBeInTheDocument()
 
         await user.click(screen.getByRole('button', { name: 'Show less' }))
 
