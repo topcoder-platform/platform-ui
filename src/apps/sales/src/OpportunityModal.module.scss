@@ -51,6 +51,33 @@
     overflow-wrap: anywhere;
 }
 
+.billingDetails {
+    display: grid;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.accountId {
+    display: block;
+    font-size: 12px;
+    color: $tc-2026-muted;
+}
+
+.accountList {
+    list-style: disc;
+    padding-left: 20px;
+
+    li + li {
+        margin-top: 8px;
+    }
+}
+
+.projectLink {
+    font-weight: 700;
+    color: $tc-2026-teal;
+    text-decoration: underline;
+}
+
 .link {
     display: inline-block;
     margin-top: 24px;

@@ -17,6 +17,22 @@ opportunity description first, followed by the customer, SMU, close date and
 stage when Salesforce provides them, plus a link to the record. The popup closes
 with its Close button or the X icon; obsolete lookups are aborted.
 
+When the opportunity has a local billing account, the popup also shows its
+current ID/name, a **View project … in Work** link to
+`{WORK_APP}/projects/{projectId}/challenges`, and a **Past billing accounts** list
+with each account's ID/name. The Projects API resolves the account from
+`BillingAccount.opportunity`, the project from `Project.billingAccountId`, and
+`relatedBillingAccounts` from all unique billing account IDs referenced by that
+project's challenges (all statuses, including inactive accounts). The popup
+excludes the current account from the past-account list; the response retains it
+when a challenge references it. An empty past list displays “No past billing
+accounts found.” Missing names display “Name unavailable” alongside the ID.
+
+All new fields are hidden when `billingAccount` is null or absent. An account
+without a matching project still displays its details, with no Work link.
+Links use the active environment's Work host. Deploy the Billing Accounts API
+`opportunity` filter, then the Projects API response expansion, before the UI.
+
 ## Dashboard layout (PM-6392)
 
 The page reads as an executive dashboard rather than one long column:

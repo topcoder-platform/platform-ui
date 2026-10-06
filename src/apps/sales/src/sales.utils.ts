@@ -1,4 +1,18 @@
+import { EnvironmentConfig } from '~/config'
+
 import { SalesQuery, SalesReport, SalesSummary, SalesSummaryAmount, SalesSummaryGroup } from './sales.models'
+
+/**
+ * Builds the Work app destination for a project ID using the active environment.
+ * @param value Project ID from an opportunity or report cell; Salesforce URLs and record IDs are not project IDs.
+ * @returns A project URL for a positive integer ID, otherwise undefined so no invalid link is rendered.
+ * @throws Does not throw; missing and malformed IDs do not create links.
+ */
+export function workProjectUrl(value: string | number | boolean | null | undefined): string | undefined {
+    const projectId = typeof value === 'string' ? value.trim() : String(value)
+    if (!/^[1-9]\d*$/.test(projectId) || !Number.isSafeInteger(Number(projectId))) return undefined
+    return `${EnvironmentConfig.URLS.WORK_APP.replace(/\/$/, '')}/projects/${projectId}`
+}
 
 /** Report column types a date range can be applied to; mirrors the Reports API contract. */
 const dateTypes = ['date', 'datetime']
