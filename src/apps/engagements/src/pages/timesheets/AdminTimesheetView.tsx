@@ -13,9 +13,11 @@ import {
     saveTimesheetEntries,
     submitTimesheetEntries,
 } from '../../lib/services'
-import type { TimesheetRow } from '../../lib/utils'
+import type { TimesheetFieldErrors, TimesheetReviewStatus, TimesheetRow } from '../../lib/utils'
 import {
     buildRowsFromEntries,
+    clearTimesheetFieldErrors,
+    findMissingRemarksErrors,
     formatDisplayDate,
     formatHoursLabel,
     generateWorkDates,
@@ -25,6 +27,7 @@ import {
     sumSelectedTotals,
     toWorkDateString,
     validateDateRange,
+    validateEntryRange,
 } from '../../lib/utils'
 import { TimesheetApproveModal } from '../../components/timesheet-approve-modal'
 import { TimesheetAuditModal } from '../../components/timesheet-audit-modal'
@@ -36,11 +39,13 @@ import styles from './TimesheetsPage.module.scss'
 interface AdminTimesheetViewProps {
     timesheet: TimesheetView
     onTimesheetChange: (timesheet: TimesheetView) => void
+    /** Status filter to open on - the one the landing list was showing. Defaults to Pending Approval. */
+    initialStatus?: TimesheetReviewStatus
 }
 
 /** Which override the reason dialog is collecting a reason for. */
 type PendingOverride = 'correct' | 'reopen' | 'submit'
-type StatusFilter = TimesheetEntryStatus.APPROVED | TimesheetEntryStatus.SUBMITTED
+type StatusFilter = TimesheetReviewStatus
 
 const OVERRIDE_COPY: Record<PendingOverride, { confirmLabel: string, description: string, title: string }> = {
     correct: {
@@ -137,7 +142,9 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
     const defaultRange = useMemo(getDefaultRange, [])
     const [rows, setRows] = useState<TimesheetRow[]>([])
     const [selectedDates, setSelectedDates] = useState<string[]>([])
-    const [statusFilter, setStatusFilter] = useState<StatusFilter>(TimesheetEntryStatus.SUBMITTED)
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>(
+        props.initialStatus ?? TimesheetEntryStatus.SUBMITTED,
+    )
     const [filterFromDate, setFilterFromDate] = useState<string>('')
     const [filterToDate, setFilterToDate] = useState<string>('')
     const [fromDate, setFromDate] = useState<string>(defaultRange.fromDate)
@@ -148,6 +155,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
     const [auditEntry, setAuditEntry] = useState<TimesheetRow | undefined>()
     const [isWorking, setIsWorking] = useState<boolean>(false)
     const [actionError, setActionError] = useState<string | undefined>()
+    const [fieldErrors, setFieldErrors] = useState<TimesheetFieldErrors>({})
     const [partialResult, setPartialResult] = useState<string | undefined>()
 
     const isApprovedView = statusFilter === TimesheetEntryStatus.APPROVED
@@ -177,7 +185,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         [props.timesheet.assignment.standardHoursPerDay, rows],
     )
     const addRangeError = useMemo(
-        () => validateDateRange(fromDate, toDate),
+        () => validateEntryRange(fromDate, toDate),
         [fromDate, toDate],
     )
 
@@ -191,12 +199,12 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         () => new Set(selectedRows.map(row => row.status)),
         [selectedRows],
     )
-    const hasPendingRowChanges = useMemo(() => {
+    const isRowChanged = useMemo(() => {
         const savedByDate = new Map(
             props.timesheet.entries.map(entry => [entry.workDate, entry]),
         )
 
-        return rows.some(row => {
+        return (row: TimesheetRow): boolean => {
             const saved = savedByDate.get(row.workDate)
             if (!saved) {
                 return hasEnteredHours(row)
@@ -204,8 +212,15 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
 
             return row.hoursWorked.trim() !== saved.hoursWorked
                 || normalizeRemarks(row.remarks) !== normalizeRemarks(saved.remarks)
-        })
-    }, [props.timesheet.entries, rows])
+        }
+    }, [props.timesheet.entries])
+    // Any edit anywhere: approve and submit save these first, whatever is selected.
+    const hasPendingRowChanges = useMemo(() => rows.some(isRowChanged), [isRowChanged, rows])
+    // Save only sends the selected rows, so it is only offered when one of them has an edit.
+    const hasSelectedRowChanges = useMemo(
+        () => selectedRows.some(isRowChanged),
+        [isRowChanged, selectedRows],
+    )
 
     const reload = useCallback(async (): Promise<void> => {
         const loaded = await getTimesheet(
@@ -240,6 +255,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
             row.workDate === workDate ? { ...row, ...changes } : row
         )))
         setActionError(undefined)
+        setFieldErrors(current => clearTimesheetFieldErrors(current, workDate, Object.keys(changes)))
     }, [])
 
     const handleAddRange = useCallback((): boolean => {
@@ -288,11 +304,14 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
     /**
      * Saves the edited rows. An approved row being changed is an override, so the API needs a reason -
      * which is why the caller passes one through from the reason dialog.
+     *
+     * @returns Whether anything was sent. False means there was nothing to save and the reason is
+     * already on screen, so the caller must not report a save.
      */
-    const saveRows = useCallback(async (overrideReason?: string): Promise<void> => {
+    const saveRows = useCallback(async (overrideReason?: string): Promise<boolean> => {
         if (!selectedDates.length) {
             setActionError('Select at least one entry before saving.')
-            return
+            return false
         }
 
         const entries = rows
@@ -310,7 +329,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
 
         if (!entries.length) {
             setActionError('Enter hours on at least one day before saving.')
-            return
+            return false
         }
 
         const updated = await saveTimesheetEntries(
@@ -320,6 +339,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         )
 
         props.onTimesheetChange(updated)
+        return true
     }, [props, rows, selectedDates])
 
     /**
@@ -394,9 +414,12 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                 )
                 props.onTimesheetChange(updated)
                 toast.success('Entries submitted on the member’s behalf.')
-            } else {
-                await saveRows(overrideReason)
+            } else if (await saveRows(overrideReason)) {
                 toast.success('Correction saved.')
+            } else {
+                // Nothing was saved and the reason is showing; keep the selection so it can be fixed.
+                setPendingOverride(undefined)
+                return
             }
 
             setPendingOverride(undefined)
@@ -493,8 +516,9 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         setIsWorking(true)
 
         try {
-            await saveRows()
-            toast.success('Timesheet saved.')
+            if (await saveRows()) {
+                toast.success('Timesheet saved.')
+            }
         } catch (error) {
             setActionError(extractErrorMessage(error, 'Failed to save the timesheet.'))
         } finally {
@@ -569,6 +593,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
             {rangeError && <p className={styles.error} role='alert'>{rangeError}</p>}
 
             <TimesheetGrid
+                fieldErrors={fieldErrors}
                 canEditApproved
                 emptyMessage='This assignee has no timesheet entries yet.'
                 isRowSelectable={selectAnyRow}
@@ -585,7 +610,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
             )}
 
             <section className={styles.adminActions}>
-                {hasPendingRowChanges && (
+                {hasSelectedRowChanges && (
                     <Button
                         disabled={isWorking}
                         label='Save'
@@ -598,6 +623,17 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                         disabled={isWorking}
                         label={`Submit on behalf (${selectedIds.length})`}
                         onClick={function onSubmitOnBehalf() {
+                            // Check remarks before asking for a reason; the API refuses the submit
+                            // anyway, and this points at the rows to fix.
+                            const missingRemarks = findMissingRemarksErrors(selectedRows)
+                            if (Object.keys(missingRemarks).length) {
+                                setFieldErrors(missingRemarks)
+                                setActionError(
+                                    'Enter remarks for the highlighted days before submitting.',
+                                )
+                                return
+                            }
+
                             setPendingOverride('submit')
                         }}
                         secondary

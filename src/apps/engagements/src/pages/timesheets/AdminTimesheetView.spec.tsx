@@ -5,6 +5,7 @@ import '@testing-library/jest-dom'
 import React from 'react'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { toast } from 'react-toastify'
 
 import type { TimesheetEntry, TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus, TimesheetViewerRole } from '../../lib/models'
@@ -218,6 +219,31 @@ describe('AdminTimesheetView', () => {
                     overrideReason: undefined,
                 })
         })
+        expect(toast.success)
+            .toHaveBeenCalledWith('Timesheet saved.')
+    })
+
+    it('offers Save only once an edited row is selected', async () => {
+        const user = userEvent.setup()
+        renderView([
+            entry(),
+            entry({ id: 'entry-2', workDate: '2026-09-08' }),
+        ])
+
+        const hoursInput = screen.getByLabelText('Hours worked on 07-09-2026')
+        await user.clear(hoursInput)
+        await user.type(hoursInput, '9')
+
+        expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
+
+        // Selecting an unedited row still leaves nothing to save.
+        await user.click(screen.getByLabelText('Select 08-09-2026'))
+        expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        expect(screen.getByRole('button', { name: 'Save' }))
+            .toBeInTheDocument()
+        expect(toast.success).not.toHaveBeenCalled()
     })
 
     it('lets an administrator add a date range and save those entries on behalf of the member', async () => {
@@ -306,6 +332,19 @@ describe('AdminTimesheetView', () => {
                     overrideReason: 'Payroll correction',
                 }))
         })
+    })
+
+    it('requires remarks before submitting on the member’s behalf', async () => {
+        const user = userEvent.setup()
+        renderView([entry({ id: 'e1', remarks: null })])
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Submit on behalf (1)' }))
+
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+        expect(screen.getByText('Remarks are required before submitting.'))
+            .toBeInTheDocument()
+        expect(mockSubmit).not.toHaveBeenCalled()
     })
 
     it('requires a reason before submitting on the member’s behalf', async () => {

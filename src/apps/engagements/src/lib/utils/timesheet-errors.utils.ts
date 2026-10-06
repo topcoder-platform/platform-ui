@@ -104,3 +104,18 @@ export const clearTimesheetFieldErrors = (
 
     return next
 }
+
+/** Shown under the remarks of a row that is about to be submitted without any. */
+export const TIMESHEET_REMARKS_REQUIRED_MESSAGE = 'Remarks are required before submitting.'
+
+/**
+ * Marks the rows that cannot be submitted because their remarks are empty. Drafts may be saved
+ * without remarks; the API refuses to submit them, so this catches it before the round trip.
+ */
+export const findMissingRemarksErrors = (
+    rows: Array<{ remarks: string, workDate: string }>,
+): TimesheetFieldErrors => Object.fromEntries(
+    rows
+        .filter(row => !row.remarks.trim())
+        .map(row => [row.workDate, { remarks: TIMESHEET_REMARKS_REQUIRED_MESSAGE }]),
+)

@@ -13,6 +13,7 @@ import type { TimesheetFieldErrors, TimesheetRow } from '../../lib/utils'
 import {
     buildTimesheetRows,
     clearTimesheetFieldErrors,
+    findMissingRemarksErrors,
     formatHoursLabel,
     hasEnteredHours,
     hasRowValidationError,
@@ -20,7 +21,7 @@ import {
     parseTimesheetSaveError,
     sumSelectedTotals,
     toWorkDateString,
-    validateDateRange,
+    validateEntryRange,
 } from '../../lib/utils'
 import { TimesheetGrid } from '../../components/timesheet-grid'
 import { TimesheetSubmitModal } from '../../components/timesheet-submit-modal'
@@ -97,7 +98,7 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
     const [actionError, setActionError] = useState<string | undefined>()
     const [fieldErrors, setFieldErrors] = useState<TimesheetFieldErrors>({})
 
-    const rangeError = validateDateRange(fromDate, toDate)
+    const rangeError = validateEntryRange(fromDate, toDate)
     const standardHoursPerDay = props.timesheet.assignment.standardHoursPerDay
     const isAssignmentActive = props.timesheet.assignment.status === ACTIVE_ASSIGNMENT_STATUS
 
@@ -128,21 +129,23 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
         () => new Map(props.timesheet.entries.map(entry => [entry.workDate, entry])),
         [props.timesheet.entries],
     )
+    /** A submitted row nobody touched stays submitted, so submit skips it. */
+    const isUnchangedSubmitted = useCallback((row: TimesheetRow): boolean => {
+        if (row.status !== TimesheetEntryStatus.SUBMITTED) {
+            return false
+        }
+
+        const saved = savedByDate.get(row.workDate)
+        if (!saved) {
+            return false
+        }
+
+        return row.hoursWorked.trim() === saved.hoursWorked
+            && normalizeRemarks(row.remarks) === normalizeRemarks(saved.remarks)
+    }, [savedByDate])
     const hasOnlyUnchangedSubmittedSelected = useMemo(
-        () => selectedRows.length > 0 && selectedRows.every(row => {
-            if (row.status !== TimesheetEntryStatus.SUBMITTED) {
-                return false
-            }
-
-            const saved = savedByDate.get(row.workDate)
-            if (!saved) {
-                return false
-            }
-
-            return row.hoursWorked.trim() === saved.hoursWorked
-                && normalizeRemarks(row.remarks) === normalizeRemarks(saved.remarks)
-        }),
-        [savedByDate, selectedRows],
+        () => selectedRows.length > 0 && selectedRows.every(isUnchangedSubmitted),
+        [isUnchangedSubmitted, selectedRows],
     )
     const totals = useMemo(() => sumSelectedTotals(selectedRows), [selectedRows])
 
@@ -307,9 +310,18 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
             return
         }
 
+        const missingRemarks = findMissingRemarksErrors(
+            selectedRows.filter(row => !isUnchangedSubmitted(row)),
+        )
+        if (Object.keys(missingRemarks).length) {
+            setFieldErrors(missingRemarks)
+            setActionError('Enter remarks for the highlighted days before submitting.')
+            return
+        }
+
         setActionError(undefined)
         setIsConfirmOpen(true)
-    }, [hasOnlyUnchangedSubmittedSelected, invalidRows.length, selectedRows])
+    }, [hasOnlyUnchangedSubmittedSelected, invalidRows.length, isUnchangedSubmitted, selectedRows])
 
     return (
         <div className={styles.view}>

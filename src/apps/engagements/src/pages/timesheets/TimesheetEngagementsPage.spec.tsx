@@ -251,17 +251,68 @@ describe('TimesheetEngagementsPage', () => {
         await user.click(await screen.findByRole('button', { name: 'View' }))
 
         expect(mockNavigate)
-            .toHaveBeenCalledWith('/engagements/eng-1/timesheets/asg-1')
+            .toHaveBeenCalledWith('/engagements/eng-1/timesheets/asg-1?status=SUBMITTED')
     })
 
-    it('tells a manager with no approval authority that the list is empty', async () => {
+    it('opens the timesheet on Approved when the list was filtered to Approved', async () => {
+        const user = userEvent.setup()
+        mockGetEngagements.mockResolvedValue(response(
+            [row({ timesheetStatus: 'Approved' })],
+            TimesheetViewerRole.MANAGER,
+        ))
+
+        render(<TimesheetEngagementsPage />)
+
+        await user.selectOptions(await screen.findByLabelText('Status'), 'Approved')
+        await waitFor(() => {
+            expect(mockGetEngagements)
+                .toHaveBeenLastCalledWith(expect.objectContaining({ status: 'Approved' }))
+        })
+        await user.click(await screen.findByRole('button', { name: 'View' }))
+
+        expect(mockNavigate)
+            .toHaveBeenCalledWith('/engagements/eng-1/timesheets/asg-1?status=APPROVED')
+    })
+
+    it('follows the row status under All', async () => {
+        const user = userEvent.setup()
+        mockGetEngagements.mockResolvedValue(response(
+            [row({ timesheetStatus: 'Approved' })],
+            TimesheetViewerRole.MANAGER,
+        ))
+
+        render(<TimesheetEngagementsPage />)
+
+        await user.selectOptions(await screen.findByLabelText('Status'), '')
+        await waitFor(() => {
+            expect(mockGetEngagements)
+                .toHaveBeenLastCalledWith(expect.objectContaining({ status: undefined }))
+        })
+        await user.click(await screen.findByRole('button', { name: 'View' }))
+
+        expect(mockNavigate)
+            .toHaveBeenCalledWith('/engagements/eng-1/timesheets/asg-1?status=APPROVED')
+    })
+
+    it('tells a manager when nothing is pending approval', async () => {
         mockGetEngagements.mockResolvedValue(response([], TimesheetViewerRole.MANAGER))
 
         render(<TimesheetEngagementsPage />)
 
-        expect(await screen.findByText(
-            'You have no engagements with timesheet approval authority.',
-        ))
+        expect(await screen.findByText('You have no timesheets in pending approval status.'))
+            .toBeInTheDocument()
+    })
+
+    it('names the status a manager filtered by when nothing is approved', async () => {
+        const user = userEvent.setup()
+        mockGetEngagements.mockResolvedValue(response([], TimesheetViewerRole.MANAGER))
+
+        render(<TimesheetEngagementsPage />)
+
+        await screen.findByText('You have no timesheets in pending approval status.')
+        await user.selectOptions(screen.getByLabelText('Status'), 'Approved')
+
+        expect(await screen.findByText('You have no approved timesheets.'))
             .toBeInTheDocument()
     })
 

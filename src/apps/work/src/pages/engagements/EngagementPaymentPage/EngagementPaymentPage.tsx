@@ -199,6 +199,16 @@ function isAssignedStatus(status: string): boolean {
 }
 
 /**
+ * True for assignments that have, or had, a timesheet: the member is working now, or did work that
+ * may still need reviewing or paying. A selected or rejected offer never logged hours.
+ */
+function hasTimesheet(status: string): boolean {
+    return ['ASSIGNED', 'COMPLETED', 'TERMINATED'].includes(status
+        .trim()
+        .toUpperCase())
+}
+
+/**
  * Timesheet page for an engagement and assignee, in the Engagements Portal.
  *
  * A convenience only: the portal resolves the caller's role server-side and refuses anyone with no
@@ -1244,20 +1254,22 @@ export const EngagementPaymentPage: FC = () => {
                                                         size='sm'
                                                     />
                                                 </Link>
-                                                <a
-                                                    href={buildTimesheetUrl(
-                                                        engagementId,
-                                                        assignment.id,
-                                                    )}
-                                                    rel='noreferrer'
-                                                    target='_blank'
-                                                >
-                                                    <Button
-                                                        label='View Timesheet'
-                                                        secondary
-                                                        size='sm'
-                                                    />
-                                                </a>
+                                                {hasTimesheet(String(assignment.status || '')) && (
+                                                    <a
+                                                        href={buildTimesheetUrl(
+                                                            engagementId,
+                                                            assignment.id,
+                                                        )}
+                                                        rel='noreferrer'
+                                                        target='_blank'
+                                                    >
+                                                        <Button
+                                                            label='View Timesheet'
+                                                            secondary
+                                                            size='sm'
+                                                        />
+                                                    </a>
+                                                )}
                                                 <Button
                                                     label='Show Payment History'
                                                     onClick={() => setHistoryMember(assignment)}

@@ -119,14 +119,18 @@ const submittedPair = [
     entry({ hoursWorked: '8.00', id: 'e2', workDate: '2026-09-08' }),
 ]
 
-const renderView = (entries: TimesheetEntry[] = submittedPair): {
+const renderView = (
+    entries?: TimesheetEntry[],
+    initialStatus?: TimesheetEntryStatus.APPROVED | TimesheetEntryStatus.SUBMITTED,
+): {
     onTimesheetChange: jest.Mock
 } & ReturnType<typeof render> => {
     const onTimesheetChange = jest.fn()
     const utils = render(
         <ManagerTimesheetView
+            initialStatus={initialStatus}
             onTimesheetChange={onTimesheetChange}
-            timesheet={timesheet(entries)}
+            timesheet={timesheet(entries ?? submittedPair)}
         />,
     )
 
@@ -307,6 +311,23 @@ describe('ManagerTimesheetView', () => {
         expect(screen.getByLabelText('From Date'))
             .toBeInTheDocument()
         expect(screen.getByLabelText('To Date'))
+            .toBeInTheDocument()
+        await waitFor(() => {
+            expect(mockGetTimesheet)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', expect.objectContaining({
+                    status: TimesheetEntryStatus.APPROVED,
+                }))
+        })
+    })
+
+    it('opens on Approved when the landing list was filtered to Approved', async () => {
+        renderView(submittedPair, TimesheetEntryStatus.APPROVED)
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Status'))
+                .toHaveValue(TimesheetEntryStatus.APPROVED)
+        })
+        expect(screen.getByLabelText('From Date'))
             .toBeInTheDocument()
         await waitFor(() => {
             expect(mockGetTimesheet)

@@ -6,6 +6,7 @@ import { Button, InputDatePicker, InputSelect } from '~/libs/ui'
 import type { TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus } from '../../lib/models'
 import { approveTimesheetEntries, getTimesheet } from '../../lib/services'
+import type { TimesheetReviewStatus } from '../../lib/utils'
 import {
     buildRowsFromEntries,
     formatHoursLabel,
@@ -26,9 +27,11 @@ interface ManagerTimesheetViewProps {
      * an override reason for.
      */
     requiresOverrideReason?: boolean
+    /** Status filter to open on - the one the landing list was showing. Defaults to Pending Approval. */
+    initialStatus?: TimesheetReviewStatus
 }
 
-type StatusFilter = TimesheetEntryStatus.APPROVED | TimesheetEntryStatus.SUBMITTED
+type StatusFilter = TimesheetReviewStatus
 
 const STATUS_FILTER_OPTIONS = [
     {
@@ -69,7 +72,9 @@ const toPickerDate = (value: string): Date | undefined => {
  * looked up by period.
  */
 const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimesheetViewProps) => {
-    const [statusFilter, setStatusFilter] = useState<StatusFilter>(TimesheetEntryStatus.SUBMITTED)
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>(
+        props.initialStatus ?? TimesheetEntryStatus.SUBMITTED,
+    )
     const [fromDate, setFromDate] = useState<string>('')
     const [toDate, setToDate] = useState<string>('')
     const [selectedDates, setSelectedDates] = useState<string[]>([])
