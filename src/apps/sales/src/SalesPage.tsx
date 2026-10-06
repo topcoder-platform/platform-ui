@@ -5,10 +5,12 @@
 import { FC, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Button, IconOutline, LoadingSpinner, PageTitle } from '~/libs/ui'
+import { ProfileContextData, useProfileContext, UserRole } from '~/libs/core'
 
 import { OpportunityModal } from './OpportunityModal'
 import { SalesQuery, SalesReport, SalesSummaryAmount, toOpportunityId } from './sales.models'
 import { fetchSalesReport, salesErrorMessage } from './sales.service'
+import { salesforceSyncErrorMessage, syncSalesforceData } from './salesforce-sync.service'
 import {
     amountTotal,
     dateColumns,
@@ -86,13 +88,19 @@ const SummaryCard: FC<{ amount?: SalesSummaryAmount; label: string; value?: stri
 )
 
 /**
- * Read-only Sales workspace, used on the dedicated host and inside Work.
+ * Sales reporting workspace with administrator metadata sync, used on the dedicated host and inside Work.
  * @returns An executive dashboard: four snapshot-wide summary cards, a clickable stage
  * breakdown beside the Created/Close date range filter, and a compact report table with
- * server-side view controls and manual refresh.
+ * server-side view controls, manual refresh and a sync action that reloads the displayed data after commit.
  * @throws Does not throw request failures; shows inline recovery and stale-data status.
  */
 const SalesPage: FC = () => {
+    const { profile }: ProfileContextData = useProfileContext()
+    const isAdministrator = profile?.roles?.some(role => role.toLowerCase() === UserRole.administrator) ?? false
+    const [syncing, setSyncing] = useState(false)
+    const [syncError, setSyncError] = useState('')
+    const [syncMessage, setSyncMessage] = useState('')
+    const syncBusy = useRef(false)
     const [query, setQuery] = useState<SalesQuery>(initialQuery)
     const [search, setSearch] = useState('')
     const [filterColumn, setFilterColumn] = useState('')
@@ -119,6 +127,37 @@ const SalesPage: FC = () => {
         forceRefresh.current = true
         setRefreshVersion(value => value + 1)
     }, [])
+
+    /**
+     * Copies Salesforce metadata into the platform and refreshes the page's data after commit.
+     * @returns Nothing; reports counts or a recoverable error. Duplicate clicks are ignored.
+     * @throws Does not throw request failures; displays them beside the sync action.
+     */
+    const syncData = useCallback(async (): Promise<void> => {
+        if (syncBusy.current || !isAdministrator) return
+        syncBusy.current = true
+        setSyncing(true)
+        setSyncError('')
+        setSyncMessage('')
+        try {
+            const result = await syncSalesforceData()
+            const updated = result.clients.updated + result.billingAccounts.updated
+            const unmatched = result.clients.unmatched + result.billingAccounts.unmatched
+            const conflicted = result.clients.conflicted + result.billingAccounts.conflicted
+            setSyncMessage(
+                `Salesforce sync complete. ${updated} updated; ${unmatched} unmatched; ${conflicted} conflicts.`,
+            )
+            setOpenedOpportunity(undefined)
+            // Refresh even if a background report request is still pending; its effect will abort it.
+            forceRefresh.current = true
+            setRefreshVersion(value => value + 1)
+        } catch (failure) {
+            setSyncError(salesforceSyncErrorMessage(failure))
+        } finally {
+            syncBusy.current = false
+            setSyncing(false)
+        }
+    }, [isAdministrator])
 
     useEffect(() => {
         const controller = new AbortController()
@@ -273,6 +312,11 @@ const SalesPage: FC = () => {
                 </div>
                 <div className={styles.headerActions}>
                     <span className={styles.readOnly}>Read only</span>
+                    {isAdministrator && (
+                        <Button disabled={syncing} noCaps onClick={syncData} secondary>
+                            {syncing ? 'Syncing SF Data…' : 'Sync SF Data'}
+                        </Button>
+                    )}
                     <Button
                         className={styles.refresh}
                         disabled={loading}
@@ -286,6 +330,9 @@ const SalesPage: FC = () => {
                     </Button>
                 </div>
             </header>
+
+            {syncError && <div className={styles.error} role='alert'>{syncError}</div>}
+            {syncMessage && <div className={styles.status} role='status'>{syncMessage}</div>}
 
             <div className={styles.status} aria-live='polite' role='status'>
                 <span>

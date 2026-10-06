@@ -7,15 +7,43 @@ combined host). Route guards and the Reports API independently enforce access.
 
 The page calls `GET {REPORTS_API}/sales` with the signed-in user's token, and
 `GET {API.V6}/projects/salesforce/opportunities/{id}` for the opportunity popup.
-All Salesforce credentials stay in `reports-api-v6` and `projects-api-v6`. No
-create, update, delete, export, machine credentials or direct Salesforce API
-calls exist in the UI.
+All Salesforce credentials stay in the server APIs. No machine credentials or
+direct Salesforce API calls exist in the UI.
+
+Administrators also see **Sync SF Data** immediately to the right of **Read only**.
+It calls `POST {API.V6}/billing-accounts/salesforce-sync` with the signed-in user's
+JWT to copy the extra client and billing-account metadata (including opportunity
+IDs) into the platform. The report remains read-only; Salesforce is never modified.
+The action is disabled while running, shows completion counts or a recoverable
+error, and then refreshes page data with `refresh=true` while preserving filters.
+Any open opportunity popup closes so its next lookup reads the updated metadata.
+Talent Managers do not see the action. The API independently requires an
+administrator role; M2M scopes do not grant access. Deploy the billing API endpoint
+and configure its Salesforce client credentials before enabling this UI release.
+The request allows six minutes for the API's five-minute transaction; the API
+gateway/proxy must allow this duration as well.
 
 Report cells whose value is a Salesforce opportunity id (the `006` key prefix)
 render the opportunity name as a button. Opening it shows a popup with the
 opportunity description first, followed by the customer, SMU, close date and
 stage when Salesforce provides them, plus a link to the record. The popup closes
 with its Close button or the X icon; obsolete lookups are aborted.
+
+When the opportunity has a local billing account, the popup also shows its
+current ID/name, a **View project … in Work** link to
+`{WORK_APP}/projects/{projectId}/challenges`, and a **Past billing accounts** list
+with each account's ID/name. The Projects API resolves the account from
+`BillingAccount.opportunity`, the project from `Project.billingAccountId`, and
+`relatedBillingAccounts` from all unique billing account IDs referenced by that
+project's challenges (all statuses, including inactive accounts). The popup
+excludes the current account from the past-account list; the response retains it
+when a challenge references it. An empty past list displays “No past billing
+accounts found.” Missing names display “Name unavailable” alongside the ID.
+
+All new fields are hidden when `billingAccount` is null or absent. An account
+without a matching project still displays its details, with no Work link.
+Links use the active environment's Work host. Deploy the Billing Accounts API
+`opportunity` filter, then the Projects API response expansion, before the UI.
 
 ## Dashboard layout (PM-6392)
 
