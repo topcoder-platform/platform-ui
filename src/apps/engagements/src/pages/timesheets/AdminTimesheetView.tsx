@@ -25,6 +25,7 @@ import {
     sumSelectedTotals,
     toWorkDateString,
     validateDateRange,
+    validateEntryRange,
 } from '../../lib/utils'
 import { TimesheetApproveModal } from '../../components/timesheet-approve-modal'
 import { TimesheetAuditModal } from '../../components/timesheet-audit-modal'
@@ -177,7 +178,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         [props.timesheet.assignment.standardHoursPerDay, rows],
     )
     const addRangeError = useMemo(
-        () => validateDateRange(fromDate, toDate),
+        () => validateEntryRange(fromDate, toDate),
         [fromDate, toDate],
     )
 

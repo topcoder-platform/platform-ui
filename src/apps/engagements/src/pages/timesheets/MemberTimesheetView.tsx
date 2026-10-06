@@ -20,7 +20,7 @@ import {
     parseTimesheetSaveError,
     sumSelectedTotals,
     toWorkDateString,
-    validateDateRange,
+    validateEntryRange,
 } from '../../lib/utils'
 import { TimesheetGrid } from '../../components/timesheet-grid'
 import { TimesheetSubmitModal } from '../../components/timesheet-submit-modal'
@@ -97,7 +97,7 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
     const [actionError, setActionError] = useState<string | undefined>()
     const [fieldErrors, setFieldErrors] = useState<TimesheetFieldErrors>({})
 
-    const rangeError = validateDateRange(fromDate, toDate)
+    const rangeError = validateEntryRange(fromDate, toDate)
     const standardHoursPerDay = props.timesheet.assignment.standardHoursPerDay
     const isAssignmentActive = props.timesheet.assignment.status === ACTIVE_ASSIGNMENT_STATUS
 

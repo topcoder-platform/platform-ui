@@ -135,9 +135,10 @@ export const countRangeDays = (fromDate: string, toDate: string): number => {
 }
 
 /**
- * Validates a picked range.
+ * Validates a picked range: both dates readable and in order. No length cap, so manager, TM, and
+ * administrator filters can look back as far as they need.
  *
- * @returns An error message to show the member, or undefined when the range is usable.
+ * @returns An error message to show, or undefined when the range is usable.
  */
 export const validateDateRange = (fromDate?: string, toDate?: string): string | undefined => {
     if (!fromDate || !toDate) {
@@ -153,6 +154,21 @@ export const validateDateRange = (fromDate?: string, toDate?: string): string | 
 
     if (end.getTime() < start.getTime()) {
         return 'The to date cannot be earlier than the from date.'
+    }
+
+    return undefined
+}
+
+/**
+ * Validates a range hours will be entered for. Capped at {@link TIMESHEET_MAX_RANGE_DAYS} - a
+ * timesheet is filled in about a month at a time, and the API refuses a larger save. Filters that only
+ * read entries use {@link validateDateRange}, which has no cap.
+ */
+export const validateEntryRange = (fromDate?: string, toDate?: string): string | undefined => {
+    const rangeError = validateDateRange(fromDate, toDate)
+
+    if (rangeError || !fromDate || !toDate) {
+        return rangeError
     }
 
     if (countRangeDays(fromDate, toDate) > TIMESHEET_MAX_RANGE_DAYS) {
