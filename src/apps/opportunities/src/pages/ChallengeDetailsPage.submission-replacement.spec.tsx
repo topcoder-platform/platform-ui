@@ -33,7 +33,7 @@ jest.mock('~/libs/ui', () => {
     /** Renders a placeholder icon without loading the shared UI library; never throws. */
     const Icon = (): JSX.Element => <svg />
     return {
-        ConfirmModal: (): JSX.Element => <></>,
+        ConfirmModal: jest.requireActual('../../../../libs/ui/lib/components/modals/confirm/ConfirmModal').default,
         IconOutline: new Proxy({}, { get: () => Icon }),
         LoadingSpinner: (): JSX.Element => <span>Loading</span>,
     }
@@ -195,6 +195,7 @@ describe('PM-5987 Design submission replacement without reloading', () => {
     ])('replaces a %s (%s) at limit %i and keeps counts current', async (phase, type, limit) => {
         await renderSubmissions(phase, type, limit)
         fireEvent.click(screen.getByRole('button', { name: 'Delete submission submission-1' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
         await waitFor(() => expect(toast.success)
             .toHaveBeenCalledWith('Submission deleted.'))
         expect(screen.queryByText('submission-1')).not.toBeInTheDocument()
@@ -229,6 +230,7 @@ describe('PM-5987 Design submission replacement without reloading', () => {
         expect(screen.getByRole('button', { name: 'Unregister' }))
             .toBeDisabled()
         fireEvent.click(screen.getByRole('button', { name: 'Delete submission submission-1' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
 
         await screen.findByText('You have no submissions yet')
         await waitFor(() => expect(screen.getByRole('tab', { name: /^My Submissions/ }))
@@ -243,6 +245,7 @@ describe('PM-5987 Design submission replacement without reloading', () => {
         mockDeleteSubmission.mockRejectedValueOnce(new Error('Unable to delete this submission.'))
         await renderSubmissions()
         fireEvent.click(screen.getByRole('button', { name: 'Delete submission submission-1' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
 
         await waitFor(() => expect(toast.error)
             .toHaveBeenCalledWith('Unable to delete this submission.'))
@@ -253,13 +256,33 @@ describe('PM-5987 Design submission replacement without reloading', () => {
         expect(screen.getByRole('tab', { name: /^Submissions/ }))
             .toHaveTextContent('Submissions5')
         expect(toast.success).not.toHaveBeenCalled()
+        expect(screen.getByRole('dialog'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Delete' }))
+            .toBeEnabled()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+        await waitFor(() => expect(toast.success)
+            .toHaveBeenCalledWith('Submission deleted.'))
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     })
 
-    it('preserves the submission and counts when deletion is cancelled', async () => {
-        jest.spyOn(window, 'confirm')
-            .mockReturnValue(false)
+    it.each(['Cancel', 'Close', 'Escape'])('preserves the submission and counts on %s', async dismissal => {
         await renderSubmissions()
         fireEvent.click(screen.getByRole('button', { name: 'Delete submission submission-1' }))
+        expect(screen.getByRole('dialog'))
+            .toHaveTextContent('Delete submission submission-1? This action cannot be undone.')
+        expect(window.confirm).not.toHaveBeenCalled()
+        expect(mockDeleteSubmission).not.toHaveBeenCalled()
+        if (dismissal === 'Escape') {
+            fireEvent.keyDown(screen.getByRole('dialog'), { code: 'Escape', key: 'Escape', keyCode: 27 })
+        } else {
+            fireEvent.click(dismissal === 'Close'
+                ? screen.getByTestId('close-button')
+                : screen.getByRole('button', { name: 'Cancel' }))
+        }
+
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
         expect(mockDeleteSubmission).not.toHaveBeenCalled()
         expect(screen.getByRole('button', { name: 'Delete submission submission-1' }))
@@ -268,6 +291,34 @@ describe('PM-5987 Design submission replacement without reloading', () => {
             .toHaveTextContent('My Submissions3')
         expect(screen.getByRole('tab', { name: /^Submissions/ }))
             .toHaveTextContent('Submissions5')
+    })
+
+    it('blocks duplicate requests and dismissal while deletion is pending', async () => {
+        let resolveDeletion: () => void = () => undefined
+        mockDeleteSubmission.mockImplementationOnce(() => new Promise<void>(resolve => {
+            resolveDeletion = resolve
+        }))
+        await renderSubmissions()
+        fireEvent.click(screen.getByRole('button', { name: 'Delete submission submission-1' }))
+        const confirmButton = screen.getByRole('button', { name: 'Delete' })
+        fireEvent.click(confirmButton)
+
+        expect(confirmButton)
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Cancel' }))
+            .toBeDisabled()
+        fireEvent.click(confirmButton)
+        fireEvent.click(screen.getByTestId('close-button'))
+        fireEvent.keyDown(screen.getByRole('dialog'), { code: 'Escape', key: 'Escape', keyCode: 27 })
+        expect(screen.getByRole('dialog'))
+            .toBeInTheDocument()
+        expect(mockDeleteSubmission)
+            .toHaveBeenCalledTimes(1)
+        expect(mockDeleteSubmission)
+            .toHaveBeenCalledWith('submission-1')
+
+        await act(async () => resolveDeletion())
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     })
 
     it('still displays a limit error returned by Review API when no slot was freed', async () => {

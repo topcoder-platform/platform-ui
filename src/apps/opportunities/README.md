@@ -669,7 +669,11 @@ the API's complete submission count in parentheses when available. Artifact
 controls retain the ownership, staff, and completed-contestant access described
 above; viewing history does not grant permission to download artifacts.
 Design submissions can be deleted only while Submission or Checkpoint
-Submission is open. Successful deletion updates both the challenge and member
+Submission is open. The delete action opens the shared in-app confirmation modal
+with the selected submission ID and an irreversible-action warning. Cancel or
+dismissal leaves the submission untouched. While deletion is pending, confirmation
+and dismissal are disabled; a failure keeps the dialog available for retry.
+Successful deletion closes the dialog and updates both the challenge and member
 submission counts as well as the current list. Replacing a Design submission
 without reloading therefore preserves accurate totals, and deleting the
 member's last submission clears the submission-based Unregister restriction.
