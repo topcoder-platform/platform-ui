@@ -13,9 +13,11 @@ import {
     saveTimesheetEntries,
     submitTimesheetEntries,
 } from '../../lib/services'
-import type { TimesheetReviewStatus, TimesheetRow } from '../../lib/utils'
+import type { TimesheetFieldErrors, TimesheetReviewStatus, TimesheetRow } from '../../lib/utils'
 import {
     buildRowsFromEntries,
+    clearTimesheetFieldErrors,
+    findMissingRemarksErrors,
     formatDisplayDate,
     formatHoursLabel,
     generateWorkDates,
@@ -153,6 +155,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
     const [auditEntry, setAuditEntry] = useState<TimesheetRow | undefined>()
     const [isWorking, setIsWorking] = useState<boolean>(false)
     const [actionError, setActionError] = useState<string | undefined>()
+    const [fieldErrors, setFieldErrors] = useState<TimesheetFieldErrors>({})
     const [partialResult, setPartialResult] = useState<string | undefined>()
 
     const isApprovedView = statusFilter === TimesheetEntryStatus.APPROVED
@@ -252,6 +255,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
             row.workDate === workDate ? { ...row, ...changes } : row
         )))
         setActionError(undefined)
+        setFieldErrors(current => clearTimesheetFieldErrors(current, workDate, Object.keys(changes)))
     }, [])
 
     const handleAddRange = useCallback((): boolean => {
@@ -589,6 +593,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
             {rangeError && <p className={styles.error} role='alert'>{rangeError}</p>}
 
             <TimesheetGrid
+                fieldErrors={fieldErrors}
                 canEditApproved
                 emptyMessage='This assignee has no timesheet entries yet.'
                 isRowSelectable={selectAnyRow}
@@ -618,6 +623,17 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                         disabled={isWorking}
                         label={`Submit on behalf (${selectedIds.length})`}
                         onClick={function onSubmitOnBehalf() {
+                            // Check remarks before asking for a reason; the API refuses the submit
+                            // anyway, and this points at the rows to fix.
+                            const missingRemarks = findMissingRemarksErrors(selectedRows)
+                            if (Object.keys(missingRemarks).length) {
+                                setFieldErrors(missingRemarks)
+                                setActionError(
+                                    'Enter remarks for the highlighted days before submitting.',
+                                )
+                                return
+                            }
+
                             setPendingOverride('submit')
                         }}
                         secondary

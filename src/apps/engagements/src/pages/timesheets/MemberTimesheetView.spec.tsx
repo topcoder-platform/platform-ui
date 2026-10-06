@@ -344,6 +344,47 @@ describe('MemberTimesheetView', () => {
             .toHaveTextContent('Some selected rows have no hours entered.')
     })
 
+    it('requires remarks before submitting and flags the row', async () => {
+        const user = userEvent.setup()
+        renderView([entry({ hoursWorked: '8', remarks: null, workDate: '2026-09-07' })])
+
+        await pickRange('2026-09-07', '2026-09-07')
+        await user.click(await screen.findByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Submit (1)' }))
+
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+        expect(screen.getByText('Remarks are required before submitting.'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Enter remarks for the highlighted days before submitting.'))
+            .toBeInTheDocument()
+        expect(mockSave).not.toHaveBeenCalled()
+
+        // Typing a remark clears the row error, and submit goes on to the confirmation.
+        await user.type(screen.getByLabelText('Remarks for 07-09-2026'), 'Sprint planning')
+        expect(screen.queryByText('Remarks are required before submitting.')).not.toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'Submit (1)' }))
+        expect(await screen.findByRole('dialog'))
+            .toBeInTheDocument()
+    })
+
+    it('saves a draft without remarks', async () => {
+        const user = userEvent.setup()
+        mockSave.mockResolvedValue(timesheet([entry({ hoursWorked: '8.00', remarks: null })]))
+        renderView()
+
+        await pickRange('2026-09-07', '2026-09-07')
+        await user.type(await screen.findByLabelText('Hours worked on 07-09-2026'), '8')
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+
+        await waitFor(() => {
+            expect(mockSave)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    entries: [{ hoursWorked: '8', remarks: undefined, workDate: '2026-09-07' }],
+                })
+        })
+    })
+
     it('refuses to save while a row holds invalid hours', async () => {
         const user = userEvent.setup()
         renderView([entry({ hoursWorked: '8', workDate: '2026-09-07' })])

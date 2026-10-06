@@ -334,6 +334,19 @@ describe('AdminTimesheetView', () => {
         })
     })
 
+    it('requires remarks before submitting on the member’s behalf', async () => {
+        const user = userEvent.setup()
+        renderView([entry({ id: 'e1', remarks: null })])
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Submit on behalf (1)' }))
+
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+        expect(screen.getByText('Remarks are required before submitting.'))
+            .toBeInTheDocument()
+        expect(mockSubmit).not.toHaveBeenCalled()
+    })
+
     it('requires a reason before submitting on the member’s behalf', async () => {
         const user = userEvent.setup()
         mockSubmit.mockResolvedValue(timesheet([entry({ status: TimesheetEntryStatus.SUBMITTED })]))
