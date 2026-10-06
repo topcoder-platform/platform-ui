@@ -249,7 +249,10 @@ separate rows, and Winners uses the top-level challenge end. Only responses
 without a valid challenge end fall back to the latest valid phase end. When
 Registration and another phase share the same valid start, Registration is
 shown first so overlapping Checkpoint Submission schedules match the authored
-challenge flow rather than being ordered by their different end dates.
+challenge flow rather than being ordered by their different end dates. Submission
+also precedes other phases with the same valid start (after Registration), so an
+overlapping F2F Iterative Review never moves ahead of Submission just because its
+deadline is earlier.
 
 Open phase flags, `currentPhase`, and `currentPhaseNames` can mark overlapping
 phases current. Ended phases and boundaries render complete, future milestones
