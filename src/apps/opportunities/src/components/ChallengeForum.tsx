@@ -1237,13 +1237,13 @@ const ForumPostCard: FC<{
                     />
                     {post.authorIsCopilot && (
                         <span className={styles.copilotBadge}>
-                            <IconOutline.StarIcon aria-hidden='true' />
+                            <ForumIcon name='star' />
                             Copilot
                         </span>
                     )}
                     {post.authorMemberId === props.detail.topic.authorMemberId && (
                         <span className={styles.authorBadge}>
-                            <ForumIcon name='edit' />
+                            <ForumIcon name='author' />
                             Author
                         </span>
                     )}
@@ -1255,12 +1255,12 @@ const ForumPostCard: FC<{
                 </div>
                 <div className={styles.postMeta}>
                     <time dateTime={post.createdAt}>
-                        Posted:
+                        {'Posted: '}
                         {formatForumDate(post.createdAt)}
                     </time>
                     {!post.deleted && Date.parse(post.updatedAt) > Date.parse(post.createdAt) && (
                         <time dateTime={post.updatedAt}>
-                            Edited:
+                            {'Edited: '}
                             {formatForumDate(post.updatedAt)}
                         </time>
                     )}
@@ -1296,7 +1296,7 @@ const ForumPostCard: FC<{
                         onClick={() => props.onReact(post, 'THUMBS_UP')}
                         type='button'
                     >
-                        <ForumIcon name='up' />
+                        <ForumIcon name={post.viewerReaction === 'THUMBS_UP' ? 'activeUp' : 'up'} />
                         {post.thumbsUpCount ?? 0}
                     </button>
                     <button

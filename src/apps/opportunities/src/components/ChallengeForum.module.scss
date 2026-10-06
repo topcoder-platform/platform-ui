@@ -1620,3 +1620,20 @@
     .postActions { gap: 24px; }
     .postActions button { gap: 4px; }
 }
+
+// Public card geometry and typography from the Forums Figma frames.
+:global(.forums-app) {
+    .topicMetrics { gap: 16px; justify-content: center; padding: 0 24px; }
+    .topicMetrics p + p, .topicMetrics > strong { margin-top: 0; }
+    .tags:empty { display: none; }
+    .postContent { min-height: 0; }
+    .postIdentity > .authorBadge, .postIdentity > .copilotBadge {
+        background: #f5f7fa; color: #161616; font-size: 14px; font-weight: 400; line-height: 20px; padding: 0 4px;
+    }
+    .editorToolbar select { appearance: none; background: #fff url('../assets/forums/1e461.svg') no-repeat right 4px center;
+        padding: 0 32px 0 12px; width: 80px; }
+    @media (max-width: 767px) {
+        .topicCard, .post, .replyPost, .commentForm { padding: 16px; }
+        .topicMetrics { padding: 16px 0 0; }
+    }
+}

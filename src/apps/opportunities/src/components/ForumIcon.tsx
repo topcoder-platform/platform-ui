@@ -2,6 +2,7 @@ import { FC } from 'react'
 
 import activeUp from '../assets/forums/44ba2.svg'
 import attachment from '../assets/forums/e203d.svg'
+import author from '../assets/forums/1bd8b.svg'
 import bold from '../assets/forums/8f583.svg'
 import center from '../assets/forums/714f6.svg'
 import code from '../assets/forums/c7811.svg'
@@ -24,6 +25,7 @@ import quote from '../assets/forums/1a172.svg'
 import quoteAction from '../assets/forums/f163b.svg'
 import reply from '../assets/forums/3e0fd.svg'
 import right from '../assets/forums/baad6.svg'
+import star from '../assets/forums/076a6.svg'
 import strike from '../assets/forums/476e5.svg'
 import table from '../assets/forums/07c9e.svg'
 import underline from '../assets/forums/1eecc.svg'
@@ -35,6 +37,7 @@ import watch from '../assets/forums/74494.svg'
 const icons = {
     activeUp,
     attachment,
+    author,
     bold,
     center,
     code,
@@ -57,6 +60,7 @@ const icons = {
     quoteAction,
     reply,
     right,
+    star,
     strike,
     table,
     underline,
