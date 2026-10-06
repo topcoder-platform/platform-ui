@@ -553,7 +553,7 @@ const ForumsPage: FC = () => {
                             Be respectful, stay on topic, and search for an answer before starting a new
                             discussion.
                         </p>
-                        <a href='https://www.topcoder.com/community/how-it-works/code-of-conduct'>
+                        <a href='https://www.topcoder.com/community/topcoder-forums-code-of-conduct/'>
                             Read Code of Conduct
                             <img alt='' src={forwardIcon} />
                         </a>
