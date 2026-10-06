@@ -2,11 +2,23 @@
 import '@testing-library/jest-dom'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { ButtonHTMLAttributes, ReactNode } from 'react'
+import { useProfileContext } from '~/libs/core'
 
 import SalesPage from './SalesPage'
 import { fetchOpportunity } from './opportunity.service'
 import { SalesReport } from './sales.models'
 import { fetchSalesReport } from './sales.service'
+import { syncSalesforceData } from './salesforce-sync.service'
+
+jest.mock('~/libs/core', () => ({
+    useProfileContext: jest.fn(),
+    UserRole: { administrator: 'administrator' },
+}), { virtual: true })
+
+jest.mock('./salesforce-sync.service', () => ({
+    salesforceSyncErrorMessage: () => 'Salesforce sync failed. Please try again.',
+    syncSalesforceData: jest.fn(),
+}))
 
 jest.mock('./sales.service', () => ({
     fetchSalesReport: jest.fn(),
@@ -40,6 +52,9 @@ jest.mock('~/libs/ui', () => ({
 
 const fetchReport = fetchSalesReport as jest.MockedFunction<typeof fetchSalesReport>
 const fetchOpportunityDetails = fetchOpportunity as jest.MockedFunction<typeof fetchOpportunity>
+const profileContext = useProfileContext as jest.MockedFunction<typeof useProfileContext>
+const syncData = syncSalesforceData as jest.MockedFunction<typeof syncSalesforceData>
+const syncCounts = { conflicted: 0, scanned: 2, unchanged: 0, unmatched: 1, updated: 1 }
 
 /** Creates non-customer Sales test data. @returns A synthetic report page. Does not throw. */
 function fixture(): SalesReport {
@@ -158,9 +173,77 @@ function clearButton(section: string): HTMLElement {
 
 describe('Sales page', () => {
     beforeEach(() => {
+        profileContext.mockReturnValue({ profile: { roles: ['administrator'] } } as never)
+        syncData.mockReset()
+            .mockResolvedValue({ billingAccounts: syncCounts, clients: syncCounts })
         fetchOpportunityDetails.mockReset()
         fetchReport.mockReset()
             .mockResolvedValue(fixture())
+    })
+
+    it('syncs once per click, waits for commit, then refreshes the page data', async () => {
+        let complete: (value: Awaited<ReturnType<typeof syncSalesforceData>>) => void = () => undefined
+        syncData.mockReturnValue(new Promise(resolve => { complete = resolve }))
+        render(<SalesPage />)
+        await screen.findByText('Example opportunity')
+        const button = screen.getByRole('button', { name: 'Sync SF Data' })
+        expect(screen.getByText('Read only').nextElementSibling)
+            .toBe(button)
+        fireEvent.click(button)
+        fireEvent.click(button)
+        expect(syncData)
+            .toHaveBeenCalledTimes(1)
+        expect(screen.getByRole('button', { name: 'Syncing SF Data…' }))
+            .toBeDisabled()
+        expect(fetchReport)
+            .toHaveBeenCalledTimes(1)
+        await act(async () => complete({ billingAccounts: syncCounts, clients: syncCounts }))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({ refresh: true }), expect.any(AbortSignal)))
+        expect(await screen.findByText('Salesforce sync complete. 2 updated; 2 unmatched; 0 conflicts.'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Sync SF Data' }))
+            .not.toBeDisabled()
+    })
+
+    it('hides the sync action from Talent Managers and unloaded profiles', async () => {
+        profileContext.mockReturnValue({ profile: { roles: ['Talent Manager'] } } as never)
+        const view = render(<SalesPage />)
+        await screen.findByText('Example opportunity')
+        expect(screen.queryByRole('button', { name: 'Sync SF Data' }))
+            .not.toBeInTheDocument()
+        profileContext.mockReturnValue({} as never)
+        view.rerender(<SalesPage />)
+        expect(screen.queryByRole('button', { name: 'Sync SF Data' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('refreshes after sync even while an earlier report request is still pending', async () => {
+        fetchReport.mockReturnValueOnce(new Promise(() => { /* Deliberately pending until the effect cancels it. */ }))
+        render(<SalesPage />)
+        const originalSignal = fetchReport.mock.calls[0][1]
+        fireEvent.click(screen.getByRole('button', { name: 'Sync SF Data' }))
+        await screen.findByText('Example opportunity')
+        expect(originalSignal?.aborted)
+            .toBe(true)
+        expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({ refresh: true }), expect.any(AbortSignal))
+    })
+
+    it('keeps the loaded data and permits retry after a failed sync', async () => {
+        syncData.mockRejectedValueOnce({ response: { status: 502 } })
+        render(<SalesPage />)
+        await screen.findByText('Example opportunity')
+        fireEvent.click(screen.getByRole('button', { name: 'Sync SF Data' }))
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent('Salesforce sync failed. Please try again.')
+        expect(fetchReport)
+            .toHaveBeenCalledTimes(1)
+        expect(screen.getByText('Example opportunity'))
+            .toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'Sync SF Data' }))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenCalledTimes(2))
     })
 
     it('renders live metadata and sends search, column filters, sorting and pagination to the API', async () => {

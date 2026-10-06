@@ -15,6 +15,7 @@
 }
 
 .header, .panelHeader, .status, .pagination { justify-content: space-between; }
+.headerActions { flex-wrap: wrap; }
 
 .eyebrow {
     font-size: 12px;
