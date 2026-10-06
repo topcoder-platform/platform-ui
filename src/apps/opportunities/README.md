@@ -768,3 +768,14 @@ disabled presentation. Fun-challenge prize copy is centered and wraps inside
 the prize card at every supported width. The prize summary uses the light
 second- and third-place card illustrations, while Winners continues to use the
 dark podium medals.
+
+
+### Shared public forums
+
+The [Forums app](../forums/README.md) reuses the challenge forum member, topic,
+post and Markdown editor components. `ForumTopicView` accepts optional
+`contentOnly`, `onSignIn` and `onWatch` props for the public page layout and guest
+login handoff. Topic detail may include API `permissions`; an explicit denied
+reply permission hides the composer. Existing challenge callers need no changes.
+The shared toolbar includes configured Filestack attachments through
+`uploadForumAttachment`, preserving Markdown links and rated @mentions.

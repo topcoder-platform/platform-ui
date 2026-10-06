@@ -24,6 +24,7 @@ export enum AppSubdomain {
     status = 'status',
     support = 'support',
     opportunities = 'opportunities',
+    forums = 'forums',
     topgear = 'topgear'
 }
 
@@ -54,6 +55,7 @@ export enum ToolTitle {
     status = 'Status',
     support = 'Support',
     opportunities = 'Opportunities',
+    forums = 'Forums',
     thrive = 'Thrive'
 }
 

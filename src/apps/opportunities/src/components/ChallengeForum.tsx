@@ -1,17 +1,10 @@
 /* eslint-disable no-use-before-define, ordered-imports/ordered-imports, react/jsx-no-bind */
-import {
-    ChangeEvent,
-    FC,
-    FormEvent,
-    KeyboardEvent,
-    useMemo,
-    useRef,
-    useState,
-} from 'react'
+import { ChangeEvent, FC, FormEvent, Fragment, KeyboardEvent, useMemo, useRef, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { BaseModal, ConfirmModal, IconOutline } from '~/libs/ui'
-import { ReactComponent as DeleteIcon } from '../assets/submission-delete.svg'
+import { uploadForumAttachment } from '../services/forum-attachments.service'
+import { ForumIcon } from './ForumIcon'
 
 import {
     ChallengeOpportunity,
@@ -38,10 +31,7 @@ import {
 } from '../services'
 
 import { OpportunityTabLoading } from './OpportunityTabLoading'
-import {
-    challengeForumUrl,
-    memberProfileUrl,
-} from '../utils'
+import { challengeForumUrl, memberProfileUrl } from '../utils'
 import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 import { ForumMarkdown } from './ForumMarkdown'
 import { ForumMentionTextarea } from './ForumMentionTextarea'
@@ -146,15 +136,13 @@ export function formatForumDate(value?: string): string {
 export function flattenForumPosts(posts: ForumPost[], depth: number = 0): FlatForumPost[] {
     return [...posts]
         .sort((left, right) => {
-            const createdAtDelta = new Date(left.createdAt)
-                .getTime() - new Date(right.createdAt)
-                .getTime()
+            const createdAtDelta
+                = new Date(left.createdAt)
+                    .getTime() - new Date(right.createdAt)
+                    .getTime()
             return createdAtDelta || left.id.localeCompare(right.id)
         })
-        .flatMap(post => [
-            { depth, post },
-            ...flattenForumPosts(post.replies ?? [], depth + 1),
-        ])
+        .flatMap(post => [{ depth, post }, ...flattenForumPosts(post.replies ?? [], depth + 1)])
 }
 
 /**
@@ -222,9 +210,11 @@ export function forumRatingClass(maxRating?: number): ForumRatingClass {
  * @throws Does not throw.
  */
 export function forumErrorMessage(error: unknown): string {
-    const responseMessage = (error as {
-        response?: { data?: { message?: string | string[] } }
-    })?.response?.data?.message
+    const responseMessage = (
+        error as {
+            response?: { data?: { message?: string | string[] } }
+        }
+    )?.response?.data?.message
     if (Array.isArray(responseMessage)) return responseMessage.join(' ')
     if (typeof responseMessage === 'string' && responseMessage.trim()) return responseMessage
     if (error instanceof Error && error.message.trim()) return error.message
@@ -266,9 +256,11 @@ function topicParticipants(topic: ForumTopicSummary): ForumParticipant[] {
                 : undefined,
         ].filter((participant): participant is ForumParticipant => !!participant)
 
-    return participants.filter((participant, index) => (
-        participants.findIndex(candidate => candidate.memberId === participant.memberId) === index
-    ))
+    return participants.filter(
+        (participant, index) => participants.findIndex(
+            candidate => candidate.memberId === participant.memberId,
+        ) === index,
+    )
 }
 
 /**
@@ -278,7 +270,7 @@ function topicParticipants(topic: ForumTopicSummary): ForumParticipant[] {
  * @returns profile link with avatar and rating-colored canonical handle.
  * @throws Does not throw.
  */
-const ForumMember: FC<{
+export const ForumMember: FC<{
     handle: string
     profile?: MemberProfileSummary
 }> = props => {
@@ -288,7 +280,9 @@ const ForumMember: FC<{
     return (
         <span className={styles.member}>
             <MemberAvatar className={styles.avatar} handle={handle} photoURL={props.profile?.photoURL} />
-            <a className={styles[ratingClass]} href={memberProfileUrl(handle)}>{handle}</a>
+            <a className={styles[ratingClass]} href={memberProfileUrl(handle)}>
+                {handle}
+            </a>
         </span>
     )
 }
@@ -300,14 +294,14 @@ const ForumMember: FC<{
  * @returns accessible linked avatar group.
  * @throws Does not throw.
  */
-const ParticipantGroup: FC<{
+export const ParticipantGroup: FC<{
     participants: ForumParticipant[]
     profilesByMemberId: MemberProfilesById
     total: number
 }> = props => {
-    const labels = props.participants.map(participant => (
-        props.profilesByMemberId.get(participant.memberId)?.handle ?? participant.handle
-    ))
+    const labels = props.participants.map(
+        participant => props.profilesByMemberId.get(participant.memberId)?.handle ?? participant.handle,
+    )
     const overflow = Math.max(0, props.total - props.participants.length)
 
     return (
@@ -318,7 +312,11 @@ const ParticipantGroup: FC<{
 
                 return (
                     <a href={memberProfileUrl(handle)} key={participant.memberId} title={handle}>
-                        <MemberAvatar className={styles.avatar} handle={handle} photoURL={profile?.photoURL} />
+                        <MemberAvatar
+                            className={styles.avatar}
+                            handle={handle}
+                            photoURL={profile?.photoURL}
+                        />
                     </a>
                 )
             })}
@@ -347,7 +345,7 @@ interface ForumFallbackProps {
  */
 const ForumFallback: FC<ForumFallbackProps> = props => (
     <div className={styles.fallback}>
-        <IconOutline.ChatAlt2Icon aria-hidden='true' />
+        <ForumIcon name='posts' />
         <h2>{props.title}</h2>
         {props.text && <p>{props.text}</p>}
         {props.externalUrl && (
@@ -379,12 +377,12 @@ const ForumOverview: FC<{
         <section className={styles.overview}>
             <h2>Challenge Forum</h2>
             <div className={styles.overviewStats}>
-                <span className={unread > 0 ? `${styles.newCount} ${styles.hasUnread}` : styles.newCount}>
+                <span
+                    className={unread > 0 ? `${styles.newCount} ${styles.hasUnread}` : styles.newCount}
+                >
                     {unread}
                     {' '}
-                    new
-                    {' '}
-                    {unread === 1 ? 'topic' : 'topics'}
+                    {`new ${unread === 1 ? 'topic' : 'topics'}`}
                 </span>
                 <span>
                     {props.total}
@@ -438,17 +436,14 @@ const ForumFilters: FC<ForumFiltersProps> = props => {
         <section className={styles.filters}>
             <header>
                 <h2>Filters</h2>
-                <button onClick={props.onReset} type='button'>Reset all</button>
+                <button onClick={props.onReset} type='button'>
+                    Reset all
+                </button>
             </header>
             <label className={styles.searchField}>
                 <span className={styles.visuallyHidden}>Search forum topics</span>
                 <IconOutline.SearchIcon aria-hidden='true' />
-                <input
-                    onChange={onSearch}
-                    placeholder='Search'
-                    type='search'
-                    value={props.search}
-                />
+                <input onChange={onSearch} placeholder='Search' type='search' value={props.search} />
             </label>
             <small>Search topic, comment</small>
             <label className={styles.sortField}>
@@ -461,12 +456,14 @@ const ForumFilters: FC<ForumFiltersProps> = props => {
             </label>
             <fieldset>
                 <legend className={styles.visuallyHidden}>Topic type</legend>
-                {([
-                    ['all', 'All topics'],
-                    ['unread', 'Unread'],
-                    ['announcements', 'Announcements'],
-                    ['discussions', 'Discussions'],
-                ] as Array<[ForumScope, string]>).map(([value, label]) => (
+                {(
+                    [
+                        ['all', 'All topics'],
+                        ['unread', 'Unread'],
+                        ['announcements', 'Announcements'],
+                        ['discussions', 'Discussions'],
+                    ] as Array<[ForumScope, string]>
+                ).map(([value, label]) => (
                     <label key={value}>
                         <input
                             checked={props.scope === value}
@@ -496,7 +493,8 @@ const DiscussionInfo: FC<{
     topics: ForumTopicSummary[]
 }> = props => {
     if (!props.topics.length) return <></>
-    const creator = props.topics.find(topic => topic.isAnnouncement) ?? props.topics[props.topics.length - 1]
+    const creator
+        = props.topics.find(topic => topic.isAnnouncement) ?? props.topics[props.topics.length - 1]
     const lastActivity = [...props.topics].sort((a, b) => activityTimestamp(b) - activityTimestamp(a))[0]
     return (
         <section className={styles.discussionInfo}>
@@ -529,11 +527,11 @@ const DiscussionInfo: FC<{
  * opens the topic. The footer row is reserved for the Edit, Delete, and Watch
  * actions, and member links stay clickable throughout.
  *
- * @param props topic data, current member, projections, and mutation callbacks.
+ * @param props topic data, current member, projections, and mutation callbacks shared by challenge/public lists.
  * @returns Figma-aligned topic card.
  * @throws Does not throw; callbacks own API error handling.
  */
-const ForumTopicCard: FC<{
+export const ForumTopicCard: FC<{
     canDelete: boolean
     memberId: string
     onDelete: (topic: ForumTopicSummary) => void
@@ -553,10 +551,10 @@ const ForumTopicCard: FC<{
     return (
         <article className={cardClass}>
             {/*
-              * Aria-hidden and unreachable by keyboard on purpose: it duplicates the
-              * title button so the whole upper card opens the topic, while the title
-              * stays the single control announced to assistive technology.
-              */}
+             * Aria-hidden and unreachable by keyboard on purpose: it duplicates the
+             * title button so the whole upper card opens the topic, while the title
+             * stays the single control announced to assistive technology.
+             */}
             <button
                 aria-hidden='true'
                 className={styles.topicOverlay}
@@ -566,16 +564,24 @@ const ForumTopicCard: FC<{
             />
             <div className={styles.topicMain}>
                 <div className={styles.tags}>
-                    {props.topic.isAnnouncement && <span className={styles.announcement}>Announcement</span>}
+                    {props.topic.isAnnouncement && (
+                        <span className={styles.announcement}>Announcement</span>
+                    )}
                     {props.topic.unread && (
                         <>
-                            {props.topic.postsCount <= 1 && <span className={styles.newTopic}>New topic</span>}
+                            {props.topic.postsCount <= 1 && (
+                                <span className={styles.newTopic}>New topic</span>
+                            )}
                             <span className={styles.newPost}>New post</span>
                         </>
                     )}
                     {props.topic.locked && <span className={styles.locked}>Locked</span>}
                 </div>
-                <button className={styles.topicTitle} onClick={() => props.onSelect(props.topic.id)} type='button'>
+                <button
+                    className={styles.topicTitle}
+                    onClick={() => props.onSelect(props.topic.id)}
+                    type='button'
+                >
                     {props.topic.title}
                 </button>
                 <div className={styles.createdBy}>
@@ -585,8 +591,7 @@ const ForumTopicCard: FC<{
                         profile={props.profilesByMemberId.get(props.topic.authorMemberId)}
                     />
                     <span>
-                        at
-                        {' '}
+                        {'at '}
                         {formatForumDate(props.topic.createdAt)}
                     </span>
                 </div>
@@ -597,20 +602,19 @@ const ForumTopicCard: FC<{
                 )}
                 <div className={styles.topicFooter}>
                     <span>
-                        Last post at
-                        {' '}
+                        {'Last post at '}
                         {formatForumDate(props.topic.latestActivity?.createdAt)}
                     </span>
                     <div className={styles.topicActions}>
                         {owner && !props.topic.locked && (
                             <button onClick={() => props.onEdit(props.topic)} type='button'>
-                                <IconOutline.PencilIcon aria-hidden='true' />
+                                <ForumIcon name='edit' />
                                 Edit
                             </button>
                         )}
                         {props.canDelete && !props.topic.locked && (
                             <button onClick={() => props.onDelete(props.topic)} type='button'>
-                                <DeleteIcon aria-hidden='true' />
+                                <ForumIcon name='delete' />
                                 Delete
                             </button>
                         )}
@@ -619,7 +623,7 @@ const ForumTopicCard: FC<{
                             onClick={() => props.onWatch(props.topic)}
                             type='button'
                         >
-                            <IconOutline.EyeIcon aria-hidden='true' />
+                            <ForumIcon name='watch' />
                             {props.topic.watching ? 'Watched' : 'Watch'}
                         </button>
                     </div>
@@ -627,23 +631,25 @@ const ForumTopicCard: FC<{
             </div>
             <aside className={styles.topicMetrics}>
                 <p>
-                    <IconOutline.ChatAlt2Icon aria-hidden='true' />
+                    <ForumIcon name='posts' />
                     <strong>Posts:</strong>
                     {' '}
                     {props.topic.postsCount}
                 </p>
                 <p>
-                    <IconOutline.EyeIcon aria-hidden='true' />
+                    <ForumIcon name='watch' />
                     <strong>Views:</strong>
                     {' '}
                     {props.topic.viewsCount ?? 0}
                 </p>
-                <strong>Participants</strong>
-                <ParticipantGroup
-                    participants={participants}
-                    profilesByMemberId={props.profilesByMemberId}
-                    total={props.topic.participantsCount ?? participants.length}
-                />
+                <div className={styles.participantMetric}>
+                    <strong>Participants</strong>
+                    <ParticipantGroup
+                        participants={participants}
+                        profilesByMemberId={props.profilesByMemberId}
+                        total={props.topic.participantsCount ?? participants.length}
+                    />
+                </div>
             </aside>
         </article>
     )
@@ -666,8 +672,38 @@ interface MarkdownEditorProps {
  * @returns accessible Markdown authoring control.
  * @throws Does not throw.
  */
-const MarkdownEditor: FC<MarkdownEditorProps> = props => {
+export const MarkdownEditor: FC<MarkdownEditorProps> = props => {
     const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const uploadRef = useRef<HTMLInputElement>(null)
+    const currentValue = useRef(props.value)
+    currentValue.current = props.value
+    const [uploading, setUploading] = useState(false)
+    const [uploadError, setUploadError] = useState<string>()
+    const [expanded, setExpanded] = useState(false)
+
+    /** Uploads the selected file and appends its Markdown to the latest editor value.
+     * @param event File selection. @returns Completion. @throws None; failures remain beside the editor.
+     */
+    const attach = async (event: ChangeEvent<HTMLInputElement>): Promise<void> => {
+        const file = event.target.files?.[0]
+        event.target.value = ''
+        if (!file) return
+        setUploading(true)
+        setUploadError(undefined)
+        try {
+            const markdown = await uploadForumAttachment(file)
+            const value = `${currentValue.current}\n${markdown}`
+            if (value.length > props.maxLength) {
+                throw new Error('This attachment exceeds the remaining character limit.')
+            }
+
+            props.onChange(value)
+        } catch (error) {
+            setUploadError(forumErrorMessage(error))
+        } finally {
+            setUploading(false)
+        }
+    }
 
     /** Applies one toolbar token to the active textarea selection. */
     const format = (prefix: string, suffix: string = ''): void => {
@@ -686,18 +722,27 @@ const MarkdownEditor: FC<MarkdownEditorProps> = props => {
         })
     }
 
-    const toolbarItems: Array<[string, string, string]> = [
-        ['Bold', '**', '**'],
-        ['Italic', '_', '_'],
-        ['Underline', '<u>', '</u>'],
-        ['Heading 1', '# ', ''],
-        ['Heading 2', '## ', ''],
-        ['Heading 3', '### ', ''],
-        ['Bulleted list', '- ', ''],
-        ['Numbered list', '1. ', ''],
-        ['Link', '[', '](https://)'],
-        ['Inline code', '`', '`'],
-        ['Quote', '> ', ''],
+    const toolbarItems: Array<[string, string, string, Parameters<typeof ForumIcon>[0]['name']]> = [
+        ['Bold', '**', '**', 'bold'],
+        ['Italic', '_', '_', 'italic'],
+        ['Underline', '<u>', '</u>', 'underline'],
+        ['Strikethrough', '~~', '~~', 'strike'],
+        ['Heading 1', '# ', '', 'h1'],
+        ['Heading 2', '## ', '', 'h2'],
+        ['Heading 3', '### ', '', 'h3'],
+        ['Align left', '<p align="left">', '</p>', 'left'],
+        ['Align center', '<p align="center">', '</p>', 'center'],
+        ['Align right', '<p align="right">', '</p>', 'right'],
+        ['Numbered list', '1. ', '', 'ordered'],
+        ['Bulleted list', '- ', '', 'unordered'],
+        ['Link', '[', '](https://)', 'link'],
+        ['Attachment', '', '', 'attachment'],
+        ['Image', '![', '](https://)', 'image'],
+        ['Inline code', '`', '`', 'code'],
+        ['Table', '\n| Column | Column |\n| --- | --- |\n| ', ' |  |\n', 'table'],
+        ['Mention member', '@', '', 'mention'],
+        ['Quote', '> ', '', 'quote'],
+        ['Expand editor', '', '', 'expand'],
     ]
 
     /** Continues or exits the active Markdown list without a toolbar round trip. */
@@ -720,50 +765,72 @@ const MarkdownEditor: FC<MarkdownEditorProps> = props => {
     }
 
     return (
-        <div className={styles.markdownField}>
+        <div className={`${styles.markdownField} ${expanded ? styles.expandedEditor : ''}`}>
             <label htmlFor={props.id}>{props.label}</label>
+            <input aria-label='Choose attachment' hidden onChange={attach} ref={uploadRef} type='file' />
             <div className={styles.editorShell}>
                 <div aria-label='Markdown formatting' className={styles.editorToolbar} role='toolbar'>
-                    {toolbarItems.map(([label, prefix, suffix]) => (
-                        <button
-                            aria-label={label}
-                            key={label}
-                            onClick={() => format(prefix, suffix)}
-                            tabIndex={props.preview ? -1 : 0}
-                            type='button'
-                        >
-                            {label === 'Bold' && <strong>B</strong>}
-                            {label === 'Italic' && <em>I</em>}
-                            {label === 'Underline' && <u>U</u>}
-                            {label.startsWith('Heading') && `H${label.slice(-1)}`}
-                            {label === 'Bulleted list' && '• ≡'}
-                            {label === 'Numbered list' && '1. ≡'}
-                            {label === 'Link' && <IconOutline.LinkIcon aria-hidden='true' />}
-                            {label === 'Inline code' && <IconOutline.CodeIcon aria-hidden='true' />}
-                            {label === 'Quote' && '❞'}
-                        </button>
+                    {toolbarItems.map(([label, prefix, suffix, icon], index) => (
+                        <Fragment key={label}>
+                            {index === 7 && (
+                                <select
+                                    aria-label='Text size'
+                                    defaultValue='16'
+                                    disabled={props.preview}
+                                    onChange={event => format(
+                                        `<span data-forum-size="${event.target.value}">`,
+                                        '</span>',
+                                    )}
+                                >
+                                    {[12, 14, 16, 18, 20, 24].map(size => (
+                                        <option key={size} value={size}>
+                                            {size}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                            <button
+                                aria-label={label}
+                                aria-pressed={icon === 'expand' ? expanded : undefined}
+                                disabled={props.preview || (icon === 'attachment' && uploading)}
+                                onClick={() => {
+                                    if (icon === 'attachment') uploadRef.current?.click()
+                                    else if (icon === 'expand') setExpanded(value => !value)
+                                    else format(prefix, suffix)
+                                }}
+                                type='button'
+                            >
+                                <ForumIcon name={icon} />
+                            </button>
+                        </Fragment>
                     ))}
                 </div>
-                {props.preview
-                    ? (
-                        <div aria-label={`${props.label} preview`} className={styles.editorPreview}>
-                            {props.value.trim()
-                                ? <ForumMarkdown markdown={props.value} />
-                                : <p>Nothing to preview yet.</p>}
-                        </div>
-                    )
-                    : (
-                        <ForumMentionTextarea
-                            id={props.id}
-                            maxLength={props.maxLength}
-                            onChange={props.onChange}
-                            onKeyDown={continueList}
-                            placeholder={props.placeholder}
-                            textareaRef={textareaRef}
-                            value={props.value}
-                        />
-                    )}
+                {props.preview ? (
+                    <div aria-label={`${props.label} preview`} className={styles.editorPreview}>
+                        {props.value.trim() ? (
+                            <ForumMarkdown markdown={props.value} />
+                        ) : (
+                            <p>Nothing to preview yet.</p>
+                        )}
+                    </div>
+                ) : (
+                    <ForumMentionTextarea
+                        id={props.id}
+                        maxLength={props.maxLength}
+                        onChange={props.onChange}
+                        onKeyDown={continueList}
+                        placeholder={props.placeholder}
+                        textareaRef={textareaRef}
+                        value={props.value}
+                    />
+                )}
             </div>
+            {uploading && <p role='status'>Uploading attachment…</p>}
+            {uploadError && (
+                <p className={styles.actionError} role='alert'>
+                    {uploadError}
+                </p>
+            )}
             <div className={styles.editorHelp}>
                 <span>You can use Markdown formatting.</span>
                 <span>
@@ -855,8 +922,10 @@ const ForumCreateTopicView: FC<{
                         label='Topic Content'
                         maxLength={TOPIC_CHARACTER_LIMIT}
                         onChange={setContent}
-                        placeholder={'Describe your question, share insights, or start a discussion '
-                            + 'about the challenge...'}
+                        placeholder={
+                            'Describe your question, share insights, or start a discussion '
+                            + 'about the challenge...'
+                        }
                         preview={preview}
                         value={content}
                     />
@@ -870,12 +939,17 @@ const ForumCreateTopicView: FC<{
                             <span>
                                 <strong>Post as announcement</strong>
                                 <small>
-                                    Highlight this topic as an official challenge update for every participant.
+                                    Highlight this topic as an official challenge update for every
+                                    participant.
                                 </small>
                             </span>
                         </label>
                     )}
-                    {error && <p className={styles.actionError} role='alert'>{error}</p>}
+                    {error && (
+                        <p className={styles.actionError} role='alert'>
+                            {error}
+                        </p>
+                    )}
                     <div className={styles.formActions}>
                         <button disabled={pending} type='submit'>
                             {pending ? 'Creating…' : 'Create topic'}
@@ -904,10 +978,11 @@ interface ForumTopicEditModalProps {
  * @returns modal Markdown form for an owned discussion.
  * @throws Does not throw; mutation failures remain visible inside the modal.
  */
-const ForumTopicEditModal: FC<ForumTopicEditModalProps> = props => {
-    const starterPost = props.detail.posts.find(post => (
-        post.parentType === 'TOPIC' && post.parentId === props.detail.topic.id
-    )) ?? props.detail.posts[0]
+export const ForumTopicEditModal: FC<ForumTopicEditModalProps> = props => {
+    const starterPost
+        = props.detail.posts.find(
+            post => post.parentType === 'TOPIC' && post.parentId === props.detail.topic.id,
+        ) ?? props.detail.posts[0]
     const [content, setContent] = useState(starterPost?.content ?? '')
     const [error, setError] = useState<string>()
     const [pending, setPending] = useState(false)
@@ -963,7 +1038,11 @@ const ForumTopicEditModal: FC<ForumTopicEditModalProps> = props => {
             showCloseIcon={!pending}
             size='md'
             spacer={false}
-            title={<h2 className={styles.modalTitle} id='forum-edit-topic-title'>Edit topic</h2>}
+            title={(
+                <h2 className={styles.modalTitle} id='forum-edit-topic-title'>
+                    Edit topic
+                </h2>
+            )}
         >
             <div className={styles.editModalBody}>
                 <label className={styles.titleField}>
@@ -992,7 +1071,11 @@ const ForumTopicEditModal: FC<ForumTopicEditModalProps> = props => {
                 >
                     {preview ? 'Write' : 'Preview'}
                 </button>
-                {error && <p className={styles.actionError} role='alert'>{error}</p>}
+                {error && (
+                    <p className={styles.actionError} role='alert'>
+                        {error}
+                    </p>
+                )}
             </div>
         </BaseModal>
     )
@@ -1066,7 +1149,11 @@ const ForumPostEditModal: FC<ForumPostEditModalProps> = props => {
             showCloseIcon={!pending}
             size='md'
             spacer={false}
-            title={<h2 className={styles.modalTitle} id='forum-edit-post-title'>Edit comment</h2>}
+            title={(
+                <h2 className={styles.modalTitle} id='forum-edit-post-title'>
+                    Edit comment
+                </h2>
+            )}
         >
             <div className={styles.editModalBody}>
                 <MarkdownEditor
@@ -1086,7 +1173,11 @@ const ForumPostEditModal: FC<ForumPostEditModalProps> = props => {
                 >
                     {preview ? 'Write' : 'Preview'}
                 </button>
-                {error && <p className={styles.actionError} role='alert'>{error}</p>}
+                {error && (
+                    <p className={styles.actionError} role='alert'>
+                        {error}
+                    </p>
+                )}
             </div>
         </BaseModal>
     )
@@ -1129,6 +1220,8 @@ const ForumPostCard: FC<{
     parent?: ForumPost
     profilesByMemberId: MemberProfilesById
     reactionPending: boolean
+    onWatch?: () => void
+    canReply?: boolean
 }> = props => {
     const post = props.item.post
     const owner = post.authorMemberId === props.memberId
@@ -1136,8 +1229,9 @@ const ForumPostCard: FC<{
     return (
         <article className={postClass}>
             <header>
-                {post.id === props.detail.topic.latestActivity?.postId
-                    && props.detail.topic.unread && <span className={styles.newPost}>New post</span>}
+                {post.id === props.detail.topic.latestActivity?.postId && props.detail.topic.unread && (
+                    <span className={styles.newPost}>New post</span>
+                )}
                 <div className={styles.postIdentity}>
                     <ForumMember
                         handle={post.authorHandle}
@@ -1145,31 +1239,31 @@ const ForumPostCard: FC<{
                     />
                     {post.authorIsCopilot && (
                         <span className={styles.copilotBadge}>
-                            <IconOutline.StarIcon aria-hidden='true' />
+                            <ForumIcon name='star' />
                             Copilot
                         </span>
                     )}
                     {post.authorMemberId === props.detail.topic.authorMemberId && (
                         <span className={styles.authorBadge}>
-                            <IconOutline.PencilIcon aria-hidden='true' />
+                            <ForumIcon name='author' />
                             Author
                         </span>
                     )}
                     <span>
                         {post.authorPostsCount ?? 0}
                         {' '}
-                        posts
+                        {post.authorPostsCount === 1 ? 'post' : 'posts'}
                     </span>
                 </div>
                 <div className={styles.postMeta}>
                     <time dateTime={post.createdAt}>
-                        Posted:
+                        <strong>Posted:</strong>
                         {' '}
                         {formatForumDate(post.createdAt)}
                     </time>
                     {!post.deleted && Date.parse(post.updatedAt) > Date.parse(post.createdAt) && (
                         <time dateTime={post.updatedAt}>
-                            Edited:
+                            <strong>Edited:</strong>
                             {' '}
                             {formatForumDate(post.updatedAt)}
                         </time>
@@ -1186,60 +1280,73 @@ const ForumPostCard: FC<{
                 </div>
             </header>
             <div className={styles.postContent}>
-                {post.deleted || !post.content
-                    ? <p className={styles.deleted}>This post has been deleted.</p>
-                    : <ForumMarkdown markdown={post.content} />}
+                {post.deleted || !post.content ? (
+                    <p className={styles.deleted}>This post has been deleted.</p>
+                ) : (
+                    <ForumMarkdown markdown={post.content} />
+                )}
             </div>
             {!post.deleted && (
                 <footer className={styles.postActions}>
                     <button
-                        aria-label={`${post.viewerReaction === 'THUMBS_UP'
-                            ? 'Remove'
-                            : 'Add'} thumbs up (${post.thumbsUpCount ?? 0})`}
+                        aria-label={`${
+                            post.viewerReaction === 'THUMBS_UP' ? 'Remove' : 'Add'
+                        } thumbs up (${post.thumbsUpCount ?? 0})`}
                         aria-pressed={post.viewerReaction === 'THUMBS_UP'}
-                        className={post.viewerReaction === 'THUMBS_UP' ? styles.reactionActive : undefined}
+                        className={
+                            post.viewerReaction === 'THUMBS_UP' ? styles.reactionActive : undefined
+                        }
                         disabled={props.reactionPending}
                         onClick={() => props.onReact(post, 'THUMBS_UP')}
                         type='button'
                     >
-                        <IconOutline.ThumbUpIcon aria-hidden='true' />
+                        <ForumIcon name={post.viewerReaction === 'THUMBS_UP' ? 'activeUp' : 'up'} />
                         {post.thumbsUpCount ?? 0}
                     </button>
                     <button
-                        aria-label={`${post.viewerReaction === 'THUMBS_DOWN'
-                            ? 'Remove'
-                            : 'Add'} thumbs down (${post.thumbsDownCount ?? 0})`}
+                        aria-label={`${
+                            post.viewerReaction === 'THUMBS_DOWN' ? 'Remove' : 'Add'
+                        } thumbs down (${post.thumbsDownCount ?? 0})`}
                         aria-pressed={post.viewerReaction === 'THUMBS_DOWN'}
-                        className={post.viewerReaction === 'THUMBS_DOWN' ? styles.reactionActive : undefined}
+                        className={
+                            post.viewerReaction === 'THUMBS_DOWN' ? styles.reactionActive : undefined
+                        }
                         disabled={props.reactionPending}
                         onClick={() => props.onReact(post, 'THUMBS_DOWN')}
                         type='button'
                     >
-                        <IconOutline.ThumbDownIcon aria-hidden='true' />
+                        <ForumIcon name='downVote' />
                         {post.thumbsDownCount ?? 0}
                     </button>
-                    {!props.detail.topic.locked && (
+                    <span aria-hidden className={styles.postActionDivider} />
+                    {!props.detail.topic.locked && props.canReply !== false && (
                         <>
                             <button onClick={() => props.onReply(post)} type='button'>
-                                <IconOutline.ReplyIcon aria-hidden='true' />
+                                <ForumIcon name='reply' />
                                 Reply
                             </button>
                             <button onClick={() => props.onQuote(post)} type='button'>
-                                ❞
+                                <ForumIcon name='quoteAction' />
                                 Quote
                             </button>
                         </>
                     )}
                     {owner && !props.detail.topic.locked && (
                         <button onClick={() => props.onEdit(post)} type='button'>
-                            <IconOutline.PencilIcon aria-hidden='true' />
+                            <ForumIcon name='edit' />
                             Edit
                         </button>
                     )}
                     {props.canDelete && !props.detail.topic.locked && (
                         <button onClick={() => props.onDelete(post)} type='button'>
-                            <DeleteIcon aria-hidden='true' />
+                            <ForumIcon name='delete' />
                             Delete
+                        </button>
+                    )}
+                    {props.onWatch && (
+                        <button onClick={props.onWatch} type='button'>
+                            <ForumIcon name='watch' />
+                            {props.detail.topic.watching ? 'Watched' : 'Watch'}
                         </button>
                     )}
                 </footer>
@@ -1252,12 +1359,18 @@ const ForumPostCard: FC<{
  * Renders interactive topic detail with nested posts, per-member reactions,
  * and an in-page Markdown composer.
  *
- * @param props topic detail, current member, projections, navigation, and refresh callback.
+ * @param props topic detail, optional public presentation/sign-in callback, current member, projections,
+ * navigation, and refresh callback.
+ * Empty member IDs render read-only posts and send interaction attempts to sign-in.
  * @returns topic information, post cards, and comment workflow.
  * @throws Does not throw; API failures render beside the affected workflow.
  */
-const ForumTopicView: FC<{
+export const ForumTopicView: FC<{
     canDeletePosts: boolean
+    /** Public pages provide their own title/sidebar and keep guests read-only. */
+    contentOnly?: boolean
+    onSignIn?: () => void
+    onWatch?: () => void
     detail: ForumTopicDetail
     memberId: string
     onBack: () => void
@@ -1291,6 +1404,11 @@ const ForumTopicView: FC<{
      * @throws Does not throw.
      */
     const reply = (post: ForumPost): void => {
+        if (!props.memberId) {
+            props.onSignIn?.()
+            return
+        }
+
         setCommentError(undefined)
         setReplyTarget(post)
         setPreview(false)
@@ -1305,6 +1423,11 @@ const ForumTopicView: FC<{
      * @throws Does not throw.
      */
     const quote = (post: ForumPost): void => {
+        if (!props.memberId) {
+            props.onSignIn?.()
+            return
+        }
+
         setCommentError(undefined)
         setReplyTarget(post)
         setComment(value => `${value}${value ? '\n\n' : ''}${quoteForumPost(post)}`.slice(0, COMMENT_CHARACTER_LIMIT))
@@ -1343,17 +1466,16 @@ const ForumTopicView: FC<{
     }
 
     /** Adds, switches, or removes the current member's post reaction. */
-    const reactToPost = async (
-        post: ForumPost,
-        reaction: ForumPostReaction,
-    ): Promise<void> => {
+    const reactToPost = async (post: ForumPost, reaction: ForumPostReaction): Promise<void> => {
+        if (!props.memberId) {
+            props.onSignIn?.()
+            return
+        }
+
         setError(undefined)
         setReactionPendingPostId(post.id)
         try {
-            await setForumPostReaction(
-                post.id,
-                post.viewerReaction === reaction ? undefined : reaction,
-            )
+            await setForumPostReaction(post.id, post.viewerReaction === reaction ? undefined : reaction)
             await props.onChanged()
         } catch (mutationError) {
             setError(forumErrorMessage(mutationError))
@@ -1379,13 +1501,16 @@ const ForumTopicView: FC<{
         setCommentError(undefined)
         setPending(true)
         try {
-            await createForumPost(props.detail.topic.id, replyTarget
-                ? {
-                    content: comment.trim(),
-                    parentId: replyTarget.id,
-                    parentType: 'POST',
-                }
-                : { content: comment.trim() })
+            await createForumPost(
+                props.detail.topic.id,
+                replyTarget
+                    ? {
+                        content: comment.trim(),
+                        parentId: replyTarget.id,
+                        parentType: 'POST',
+                    }
+                    : { content: comment.trim() },
+            )
             setComment('')
             setReplyTarget(undefined)
             setPreview(false)
@@ -1399,59 +1524,67 @@ const ForumTopicView: FC<{
 
     return (
         <div className={styles.detailView}>
-            <button className={styles.back} onClick={props.onBack} type='button'>
-                <IconOutline.ArrowLeftIcon aria-hidden='true' />
-                {props.detail.topic.title}
-            </button>
-            <div className={styles.detailLayout}>
-                <aside className={styles.topicInfo}>
-                    <h2>
-                        <IconOutline.InformationCircleIcon aria-hidden='true' />
-                        Topic info
-                    </h2>
-                    <div className={styles.topicInfoAuthor}>
-                        <ForumMember
-                            handle={props.detail.topic.authorHandle}
-                            profile={props.profilesByMemberId.get(props.detail.topic.authorMemberId)}
-                        />
-                        <span className={styles.authorBadge}>
-                            <IconOutline.PencilIcon aria-hidden='true' />
-                            Author
-                        </span>
-                    </div>
-                    <dl>
-                        <div>
-                            <dt>Last post</dt>
-                            <dd>{formatForumDate(props.detail.topic.latestActivity?.createdAt)}</dd>
+            {!props.contentOnly && (
+                <button className={styles.back} onClick={props.onBack} type='button'>
+                    <IconOutline.ArrowLeftIcon aria-hidden='true' />
+                    {props.detail.topic.title}
+                </button>
+            )}
+            <div className={props.contentOnly ? styles.publicDetailLayout : styles.detailLayout}>
+                {!props.contentOnly && (
+                    <aside className={styles.topicInfo}>
+                        <h2>
+                            <IconOutline.InformationCircleIcon aria-hidden='true' />
+                            Topic info
+                        </h2>
+                        <div className={styles.topicInfoAuthor}>
+                            <ForumMember
+                                handle={props.detail.topic.authorHandle}
+                                profile={props.profilesByMemberId.get(props.detail.topic.authorMemberId)}
+                            />
+                            <span className={styles.authorBadge}>
+                                <ForumIcon name='edit' />
+                                Author
+                            </span>
                         </div>
-                        <div>
-                            <dt>Created</dt>
-                            <dd>{formatForumDate(props.detail.topic.createdAt)}</dd>
+                        <dl>
+                            <div>
+                                <dt>Last post</dt>
+                                <dd>{formatForumDate(props.detail.topic.latestActivity?.createdAt)}</dd>
+                            </div>
+                            <div>
+                                <dt>Created</dt>
+                                <dd>{formatForumDate(props.detail.topic.createdAt)}</dd>
+                            </div>
+                        </dl>
+                        <div className={styles.topicInfoMetrics}>
+                            <p>
+                                <ForumIcon name='posts' />
+                                Posts:
+                                {' '}
+                                {props.detail.topic.postsCount}
+                            </p>
+                            <p>
+                                <ForumIcon name='watch' />
+                                Views:
+                                {' '}
+                                {props.detail.topic.viewsCount ?? 0}
+                            </p>
+                            <strong>Participants</strong>
+                            <ParticipantGroup
+                                participants={participants}
+                                profilesByMemberId={props.profilesByMemberId}
+                                total={props.detail.topic.participantsCount ?? participants.length}
+                            />
                         </div>
-                    </dl>
-                    <div className={styles.topicInfoMetrics}>
-                        <p>
-                            <IconOutline.ChatAlt2Icon aria-hidden='true' />
-                            Posts:
-                            {' '}
-                            {props.detail.topic.postsCount}
-                        </p>
-                        <p>
-                            <IconOutline.EyeIcon aria-hidden='true' />
-                            Views:
-                            {' '}
-                            {props.detail.topic.viewsCount ?? 0}
-                        </p>
-                        <strong>Participants</strong>
-                        <ParticipantGroup
-                            participants={participants}
-                            profilesByMemberId={props.profilesByMemberId}
-                            total={props.detail.topic.participantsCount ?? participants.length}
-                        />
-                    </div>
-                </aside>
+                    </aside>
+                )}
                 <div className={styles.posts} aria-busy={pending || !!reactionPendingPostId}>
-                    {error && <p className={styles.actionError} role='alert'>{error}</p>}
+                    {error && (
+                        <p className={styles.actionError} role='alert'>
+                            {error}
+                        </p>
+                    )}
                     {flatPosts.map(item => (
                         <ForumPostCard
                             canDelete={props.canDeletePosts}
@@ -1464,11 +1597,15 @@ const ForumTopicView: FC<{
                             onQuote={quote}
                             onReact={reactToPost}
                             onReply={reply}
-                            parent={item.post.parentType === 'POST'
-                                ? postById.get(item.post.parentId)
-                                : undefined}
+                            onWatch={props.onWatch}
+                            parent={
+                                item.post.parentType === 'POST'
+                                    ? postById.get(item.post.parentId)
+                                    : undefined
+                            }
                             profilesByMemberId={props.profilesByMemberId}
                             reactionPending={reactionPendingPostId === item.post.id}
+                            canReply={props.detail.permissions?.createPost !== false || !props.memberId}
                         />
                     ))}
                     {!flatPosts.length && (
@@ -1477,7 +1614,16 @@ const ForumTopicView: FC<{
                             <p>Start the conversation below.</p>
                         </div>
                     )}
-                    {!props.detail.topic.locked && (
+                    {!props.memberId && (
+                        <p className={styles.lockedNotice}>
+                            <button onClick={props.onSignIn} type='button'>
+                                Sign in to join the discussion
+                            </button>
+                        </p>
+                    )}
+                    {!!props.memberId
+                        && !props.detail.topic.locked
+                        && props.detail.permissions?.createPost !== false && (
                         <form className={styles.commentForm} onSubmit={submitComment}>
                             <h2>Leave a comment</h2>
                             {replyTarget && (
@@ -1500,7 +1646,9 @@ const ForumTopicView: FC<{
                                 value={comment}
                             />
                             {commentError && (
-                                <p className={styles.actionError} role='alert'>{commentError}</p>
+                                <p className={styles.actionError} role='alert'>
+                                    {commentError}
+                                </p>
                             )}
                             <div className={styles.formActions}>
                                 <button disabled={pending} type='submit'>
@@ -1513,7 +1661,9 @@ const ForumTopicView: FC<{
                         </form>
                     )}
                     {props.detail.topic.locked && (
-                        <p className={styles.lockedNotice}>This topic is locked and no longer accepts comments.</p>
+                        <p className={styles.lockedNotice}>
+                            This topic is locked and no longer accepts comments.
+                        </p>
                     )}
                 </div>
             </div>
@@ -1631,25 +1781,30 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         [detailResponse.data?.posts],
     )
     const discussionCreator = topics.find(topic => topic.isAnnouncement) ?? topics[topics.length - 1]
-    const memberIds = useMemo(() => Array.from(new Set([
-        ...visibleTopics.flatMap(topic => [
-            topic.authorMemberId,
-            topic.latestActivity?.authorMemberId,
-            ...(topic.participants ?? []).map(participant => participant.memberId),
-        ]),
-        discussionCreator?.authorMemberId,
-        detailResponse.data?.topic.authorMemberId,
-        ...detailPosts.map(item => item.post.authorMemberId),
-    ].filter((memberId): memberId is string => !!memberId))), [
-        detailPosts,
-        detailResponse.data?.topic.authorMemberId,
-        discussionCreator?.authorMemberId,
-        visibleTopics,
-    ])
+    const memberIds = useMemo(
+        () => Array.from(
+            new Set(
+                [
+                    ...visibleTopics.flatMap(topic => [
+                        topic.authorMemberId,
+                        topic.latestActivity?.authorMemberId,
+                        ...(topic.participants ?? []).map(participant => participant.memberId),
+                    ]),
+                    discussionCreator?.authorMemberId,
+                    detailResponse.data?.topic.authorMemberId,
+                    ...detailPosts.map(item => item.post.authorMemberId),
+                ].filter((memberId): memberId is string => !!memberId),
+            ),
+        ),
+        [
+            detailPosts,
+            detailResponse.data?.topic.authorMemberId,
+            discussionCreator?.authorMemberId,
+            visibleTopics,
+        ],
+    )
     const profileResponse: SWRResponse<MemberProfileSummary[], Error> = useSWR(
-        props.memberId && memberIds.length
-            ? ['opportunities:forum-members', memberIds]
-            : undefined,
+        props.memberId && memberIds.length ? ['opportunities:forum-members', memberIds] : undefined,
         () => getMemberProfilesByUserIds(memberIds),
         { revalidateOnFocus: false },
     )
@@ -1738,11 +1893,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
     }
 
     /** Saves the editable topic title and starter-post body through their owning endpoints. */
-    const saveTopic = async (
-        title: string,
-        content: string,
-        starterPost: ForumPost,
-    ): Promise<void> => {
+    const saveTopic = async (title: string, content: string, starterPost: ForumPost): Promise<void> => {
         if (!editingTopicDetail) return
 
         if (title !== editingTopicDetail.topic.title) {
@@ -1805,18 +1956,17 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
     }
 
     if (response.error) {
-        return (
-            <ForumFallback
-                externalUrl={externalUrl}
-                title='Forum temporarily unavailable'
-            />
-        )
+        return <ForumFallback externalUrl={externalUrl} title='Forum temporarily unavailable' />
     }
 
     if (creatingTopic) {
         return (
             <>
-                {mutationError && <p className={styles.actionError} role='alert'>{mutationError}</p>}
+                {mutationError && (
+                    <p className={styles.actionError} role='alert'>
+                        {mutationError}
+                    </p>
+                )}
                 <ForumCreateTopicView
                     canCreateAnnouncements={!!props.canCreateAnnouncements}
                     challenge={props.challenge}
@@ -1839,7 +1989,9 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         if (detailResponse.error || !detailResponse.data) {
             return (
                 <div className={styles.detailError}>
-                    <button onClick={closeTopic} type='button'>Back to topics</button>
+                    <button onClick={closeTopic} type='button'>
+                        Back to topics
+                    </button>
                     <ForumFallback
                         externalUrl={externalUrl}
                         text='This topic could not be loaded from the v6 Forums API.'
@@ -1909,7 +2061,11 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 <DiscussionInfo profilesByMemberId={profilesByMemberId} topics={topics} />
             </aside>
             <section aria-label='Forum topics' className={styles.topicList}>
-                {mutationError && <p className={styles.actionError} role='alert'>{mutationError}</p>}
+                {mutationError && (
+                    <p className={styles.actionError} role='alert'>
+                        {mutationError}
+                    </p>
+                )}
                 {response.data?.truncated && (
                     <p className={styles.limitNotice}>
                         Showing the first
@@ -1920,7 +2076,8 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                         {' '}
                         {response.data.sourceTotalCount}
                         {' '}
-                        topics. Refine the filters to narrow the loaded discussion set.
+                        topics.
+                        Refine the filters to narrow the loaded discussion set.
                     </p>
                 )}
                 {visibleTopics.map(topic => (

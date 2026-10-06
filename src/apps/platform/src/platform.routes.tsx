@@ -21,6 +21,7 @@ import { procurementRoutes } from '~/apps/procurement'
 import { statusRoutes } from '~/apps/status'
 import { supportRoutes } from '~/apps/support'
 import { thriveRoutes } from '~/apps/thrive'
+import { forumsRoutes } from '~/apps/forums'
 import { legacyOpportunityRoutes, opportunitiesRoutes, topgearRoutes } from '~/apps/opportunities'
 import { analyticsRoutes } from '~/apps/analytics'
 import { contactRoutes } from '~/apps/contact'
@@ -63,6 +64,7 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...topgearRoutes,
     ...legacyOpportunityRoutes,
     ...opportunitiesRoutes,
+    ...forumsRoutes,
     ...gigsRoutes,
     ...devCenterRoutes,
     ...campusRoutes,
