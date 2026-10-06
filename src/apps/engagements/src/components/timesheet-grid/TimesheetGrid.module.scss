@@ -44,8 +44,12 @@
 }
 
 .remarksInput {
+    display: block;
     width: 100%;
     min-width: 160px;
+    min-height: 34px;
+    font: inherit;
+    resize: vertical;
 }
 
 .hoursInput,
@@ -97,6 +101,11 @@
 
 .approvalDetail {
     display: block;
+    margin-top: 4px;
+    color: $black-60;
+}
+
+.approvalComment {
     margin-top: 4px;
     color: $black-60;
 }

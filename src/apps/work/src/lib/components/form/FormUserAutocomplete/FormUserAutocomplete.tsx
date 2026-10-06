@@ -271,7 +271,10 @@ export const FormUserAutocomplete: FC<FormUserAutocompleteProps> = (props: FormU
                 onBlur={field.onBlur}
                 onChange={handleSelectionChange}
                 placeholder={props.placeholder || 'Search user handles'}
-                value={value}
+                // react-select treats `undefined` as uncontrolled and keeps showing its last option,
+                // so pass `null` to clear the input when the form value is reset.
+                // eslint-disable-next-line unicorn/no-null
+                value={value ?? null}
             />
         </FormFieldWrapper>
     )

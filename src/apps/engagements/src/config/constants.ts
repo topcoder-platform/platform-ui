@@ -9,3 +9,6 @@ export const TIMESHEET_MAX_RANGE_DAYS = 31
 
 /** Hard ceiling on hours for one day. Above the assignment's standard hours is only a warning. */
 export const TIMESHEET_MAX_HOURS_PER_DAY = 24
+
+/** Longest remark the API accepts for one day's entry. */
+export const TIMESHEET_MAX_REMARKS_LENGTH = 2000

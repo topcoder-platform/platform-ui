@@ -1,0 +1,18 @@
+@import '@libs/ui/styles/includes';
+
+.text {
+    overflow-wrap: anywhere;
+    // Remarks come from a textarea, so keep the member's line breaks.
+    white-space: pre-wrap;
+}
+
+.clamped {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+.toggle {
+    margin-top: 2px;
+}

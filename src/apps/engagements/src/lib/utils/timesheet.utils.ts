@@ -1,4 +1,8 @@
-import { TIMESHEET_MAX_HOURS_PER_DAY, TIMESHEET_MAX_RANGE_DAYS } from '../../config/constants'
+import {
+    TIMESHEET_MAX_HOURS_PER_DAY,
+    TIMESHEET_MAX_RANGE_DAYS,
+    TIMESHEET_MAX_REMARKS_LENGTH,
+} from '../../config/constants'
 import type { TimesheetEntry } from '../models'
 import { TimesheetEntryStatus } from '../models'
 
@@ -250,6 +254,25 @@ export const validateHours = (
 
     return {}
 }
+
+/**
+ * Checks a remark against the API's length cap. Measured on the trimmed value, because that is what
+ * gets sent.
+ */
+export const validateRemarks = (value: string): { error?: string } => (
+    value.trim().length > TIMESHEET_MAX_REMARKS_LENGTH
+        ? { error: `Remarks cannot be longer than ${TIMESHEET_MAX_REMARKS_LENGTH} characters.` }
+        : {}
+)
+
+/** True when the row holds a value the API would refuse, so the views can block saving it. */
+export const hasRowValidationError = (
+    row: Pick<TimesheetRow, 'hoursWorked' | 'remarks'>,
+    standardHoursPerDay?: number | null,
+): boolean => Boolean(
+    validateHours(row.hoursWorked, standardHoursPerDay).error
+    || validateRemarks(row.remarks).error,
+)
 
 /** True when the row holds hours that could be saved. */
 export const hasEnteredHours = (row: TimesheetRow): boolean => {

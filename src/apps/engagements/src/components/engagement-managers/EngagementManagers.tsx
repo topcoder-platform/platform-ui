@@ -1,4 +1,4 @@
-import { FC, useCallback, useState } from 'react'
+import { FC, useCallback, useEffect, useState } from 'react'
 import {
     FormProvider,
     useForm,
@@ -64,6 +64,14 @@ const AddManagerForm: FC<AddManagerFormProps> = (props: AddManagerFormProps) => 
         name: MANAGER_USER_ID_FIELD,
     }) as string | undefined
 
+    // Drop the remembered selection once the form is reset after a successful assign, so the add
+    // button disables along with the cleared picker.
+    useEffect(() => {
+        if (!selectedUserId) {
+            setSelectedManager(undefined)
+        }
+    }, [selectedUserId])
+
     // The picker hands back the member it selected, so the user id and the handle both come from one
     // selection. Nothing has to look the member up again - not here, and not on the server.
     const handleSelectionChange = useCallback((value: string, user?: User) => {
@@ -85,7 +93,6 @@ const AddManagerForm: FC<AddManagerFormProps> = (props: AddManagerFormProps) => 
         }
 
         props.onAssign(selectedManager)
-        setSelectedManager(undefined)
     })
 
     return (

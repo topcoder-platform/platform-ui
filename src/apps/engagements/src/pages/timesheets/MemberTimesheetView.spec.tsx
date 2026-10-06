@@ -102,7 +102,10 @@ const entry = (overrides: Partial<TimesheetEntry> = {}): TimesheetEntry => ({
     ...overrides,
 } as TimesheetEntry)
 
-const timesheet = (entries: TimesheetEntry[] = []): TimesheetView => ({
+const timesheet = (
+    entries: TimesheetEntry[] = [],
+    assignmentStatus: string = 'ASSIGNED',
+): TimesheetView => ({
     assignment: {
         endDate: '2026-09-30',
         id: 'asg-1',
@@ -111,7 +114,7 @@ const timesheet = (entries: TimesheetEntry[] = []): TimesheetView => ({
         memberName: 'John Smith',
         standardHoursPerDay: 8,
         startDate: '2026-09-01',
-        status: 'ASSIGNED',
+        status: assignmentStatus,
     },
     engagementId: 'eng-1',
     engagementTitle: 'Senior Frontend Engineer',
@@ -120,7 +123,7 @@ const timesheet = (entries: TimesheetEntry[] = []): TimesheetView => ({
     viewerRole: TimesheetViewerRole.MEMBER,
 })
 
-const renderView = (entries: TimesheetEntry[] = []): {
+const renderView = (entries?: TimesheetEntry[], assignmentStatus?: string): {
     onTimesheetChange: jest.Mock
 } & ReturnType<typeof render> => {
     const onTimesheetChange = jest.fn()
@@ -128,7 +131,7 @@ const renderView = (entries: TimesheetEntry[] = []): {
         <MemberTimesheetView
             onDirtyChange={jest.fn()}
             onTimesheetChange={onTimesheetChange}
-            timesheet={timesheet(entries)}
+            timesheet={timesheet(entries, assignmentStatus)}
         />,
     )
 
@@ -357,7 +360,7 @@ describe('MemberTimesheetView', () => {
         await user.click(screen.getByRole('button', { name: 'Save' }))
 
         expect(mockSave).not.toHaveBeenCalled()
-        expect(screen.getByText('Fix the highlighted hours before saving.'))
+        expect(screen.getByText('Fix the highlighted fields before saving.'))
             .toBeInTheDocument()
     })
 
@@ -429,6 +432,97 @@ describe('MemberTimesheetView', () => {
             .toHaveTextContent('Hours worked cannot exceed 24 for a single day.')
     })
 
+    it('shows API validation errors under the input on the row they belong to', async () => {
+        const user = userEvent.setup()
+        mockSave.mockRejectedValue({
+            message: 'Request failed with status code 400',
+            response: {
+                data: {
+                    message: ['entries.0.remarks must be shorter than or equal to 2000 characters'],
+                },
+            },
+        })
+        renderView()
+
+        await pickRange('2026-09-07', '2026-09-08')
+        await waitFor(() => {
+            expect(screen.getByLabelText('Hours worked on 08-09-2026'))
+                .toBeInTheDocument()
+        })
+
+        // Only the second day is filled in, so it is entries[0] in the payload but row 2 on screen.
+        await user.type(screen.getByLabelText('Hours worked on 08-09-2026'), '8')
+        await user.type(screen.getByLabelText('Remarks for 08-09-2026'), 'Long remarks')
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+
+        const rowsOnScreen = await screen.findAllByRole('row')
+        const secondDayRow = rowsOnScreen.find(row => within(row)
+            .queryByText('08-09-2026'))
+        const firstDayRow = rowsOnScreen.find(row => within(row)
+            .queryByText('07-09-2026'))
+
+        expect(await within(secondDayRow as HTMLElement)
+            .findByText('Remarks must be shorter than or equal to 2000 characters'))
+            .toBeInTheDocument()
+        expect(within(firstDayRow as HTMLElement)
+            .queryByRole('alert')).not.toBeInTheDocument()
+        expect(screen.queryByText(/entries\.0\.remarks/)).not.toBeInTheDocument()
+        expect(screen.getByText('Fix the highlighted fields and try again.'))
+            .toBeInTheDocument()
+
+        // Editing the field clears both the row error and the banner.
+        await user.type(screen.getByLabelText('Remarks for 08-09-2026'), '!')
+
+        expect(screen.queryByText('Remarks must be shorter than or equal to 2000 characters'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Fix the highlighted fields and try again.'))
+            .not.toBeInTheDocument()
+    })
+
+    it('blocks saving a remark longer than 2000 characters and flags it on the row', async () => {
+        renderView()
+
+        await pickRange('2026-09-07', '2026-09-07')
+        const user = userEvent.setup()
+        await user.type(await screen.findByLabelText('Hours worked on 07-09-2026'), '8')
+        // Pasting stands in for typing 2001 characters, which userEvent would do one key at a time.
+        fireEvent.change(screen.getByLabelText('Remarks for 07-09-2026'), {
+            target: { value: 'a'.repeat(2001) },
+        })
+
+        expect(screen.getByText('Remarks cannot be longer than 2000 characters.'))
+            .toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+
+        expect(screen.getByText('Fix the highlighted fields before saving.'))
+            .toBeInTheDocument()
+        expect(mockSave).not.toHaveBeenCalled()
+
+        fireEvent.change(screen.getByLabelText('Remarks for 07-09-2026'), {
+            target: { value: 'a'.repeat(2000) },
+        })
+
+        expect(screen.queryByText('Remarks cannot be longer than 2000 characters.'))
+            .not.toBeInTheDocument()
+    })
+
+    it('clears a save error when the date range changes', async () => {
+        const user = userEvent.setup()
+        mockSave.mockRejectedValue({ response: { data: { message: 'Something went wrong.' } } })
+        renderView()
+
+        await pickRange('2026-09-07', '2026-09-07')
+        await user.type(await screen.findByLabelText('Hours worked on 07-09-2026'), '8')
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+        expect(await screen.findByText('Something went wrong.'))
+            .toBeInTheDocument()
+
+        await pickRange('2026-09-07', '2026-09-08')
+
+        expect(screen.queryByText('Something went wrong.')).not.toBeInTheDocument()
+    })
+
     it('leaves approved rows read-only', async () => {
         renderView([
             entry({
@@ -450,4 +544,21 @@ describe('MemberTimesheetView', () => {
         expect(screen.getByLabelText('Select 07-09-2026'))
             .toBeDisabled()
     })
+
+    it.each(['COMPLETED', 'TERMINATED'])(
+        'makes the timesheet read-only once the assignment is %s',
+        async (assignmentStatus: string) => {
+            renderView([entry({ workDate: '2026-09-07' })], assignmentStatus)
+
+            await pickRange('2026-09-07', '2026-09-07')
+
+            expect(await screen.findByRole('status'))
+                .toHaveTextContent('no longer active')
+            expect(screen.queryByLabelText('Hours worked on 07-09-2026')).not.toBeInTheDocument()
+            expect(screen.getByLabelText('Select 07-09-2026'))
+                .toBeDisabled()
+            expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
+            expect(screen.queryByRole('button', { name: /Submit/ })).not.toBeInTheDocument()
+        },
+    )
 })

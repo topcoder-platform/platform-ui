@@ -111,8 +111,12 @@ export interface TimesheetQuery {
     toDate?: string
 }
 
-/** Rolled-up per-assignee status on the manager and administrator landing lists. */
-export type TimesheetRollupStatus = 'Approved' | 'Pending Approval'
+/**
+ * Rolled-up per-assignee status on the manager and administrator landing lists. `Not Submitted` means
+ * nothing is awaiting approval and nothing has been approved yet; it is a display value only, not a
+ * filter option.
+ */
+export type TimesheetRollupStatus = 'Approved' | 'Not Submitted' | 'Pending Approval'
 
 export interface TimesheetEngagementRow {
     assigneeHandle: string
