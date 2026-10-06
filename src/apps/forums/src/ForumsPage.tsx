@@ -35,6 +35,7 @@ import {
 import authorIcon from '~/apps/opportunities/src/assets/forums/1bd8b.svg'
 import backIcon from '~/apps/opportunities/src/assets/forums/ce6d4.svg'
 import chevronIcon from '~/apps/opportunities/src/assets/forums/36954.svg'
+import forwardIcon from '~/apps/opportunities/src/assets/forums/6292b.svg'
 import helpIcon from '~/apps/opportunities/src/assets/forums/78d47.svg'
 import infoIcon from '~/apps/opportunities/src/assets/forums/3faa9.svg'
 import plusIcon from '~/apps/opportunities/src/assets/forums/f8147.svg'
@@ -555,7 +556,8 @@ const ForumsPage: FC = () => {
                             discussion.
                         </p>
                         <a href='https://www.topcoder.com/community/how-it-works/code-of-conduct'>
-                            Read Code of Conduct →
+                            Read Code of Conduct
+                            <img alt='' src={forwardIcon} />
                         </a>
                     </section>
                 </aside>

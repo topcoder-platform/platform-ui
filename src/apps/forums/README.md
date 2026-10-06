@@ -10,7 +10,9 @@ the Platform UI SPA for the forums hostname and its nested routes.
 The design source is [Forums in Figma](https://www.figma.com/design/I45k1Djt2XkYY692wopp3C/Forums?node-id=14382-6451).
 The pages use Figtree headings and Nunito Sans body text, the 1200 px page width,
 280 px sidebar, 32 px column gap, 32/40 px title typography, supplied Figma SVG
-assets, and the existing universal header/footer. Mobile stacks the sidebar and
+assets, and the existing universal header/footer. Forum controls use a scoped
+border-box reset so their Figma dimensions do not depend on another app's CSS.
+Mobile stacks the sidebar and
 content at 767 px. My Drafts is intentionally omitted.
 
 `ForumsPage` renders the category index, category topic list, search, Watching,
