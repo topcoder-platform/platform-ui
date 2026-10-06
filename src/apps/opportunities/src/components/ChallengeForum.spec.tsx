@@ -622,7 +622,8 @@ describe('ChallengeForum', () => {
         expect(screen.getAllByText(/^Edited:/))
             .toHaveLength(2)
         screen.getAllByText(/^Edited:/)
-            .forEach(timestamp => {
+            .forEach(label => {
+                const timestamp = label.closest('time')
                 expect(timestamp)
                     .toHaveAttribute('datetime', editedAt)
                 expect(timestamp)

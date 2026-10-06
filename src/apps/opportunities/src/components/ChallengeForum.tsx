@@ -591,7 +591,7 @@ export const ForumTopicCard: FC<{
                         profile={props.profilesByMemberId.get(props.topic.authorMemberId)}
                     />
                     <span>
-                        at
+                        {'at '}
                         {formatForumDate(props.topic.createdAt)}
                     </span>
                 </div>
@@ -602,7 +602,7 @@ export const ForumTopicCard: FC<{
                 )}
                 <div className={styles.topicFooter}>
                     <span>
-                        Last post at
+                        {'Last post at '}
                         {formatForumDate(props.topic.latestActivity?.createdAt)}
                     </span>
                     <div className={styles.topicActions}>
@@ -642,12 +642,14 @@ export const ForumTopicCard: FC<{
                     {' '}
                     {props.topic.viewsCount ?? 0}
                 </p>
-                <strong>Participants</strong>
-                <ParticipantGroup
-                    participants={participants}
-                    profilesByMemberId={props.profilesByMemberId}
-                    total={props.topic.participantsCount ?? participants.length}
-                />
+                <div className={styles.participantMetric}>
+                    <strong>Participants</strong>
+                    <ParticipantGroup
+                        participants={participants}
+                        profilesByMemberId={props.profilesByMemberId}
+                        total={props.topic.participantsCount ?? participants.length}
+                    />
+                </div>
             </aside>
         </article>
     )
@@ -1250,17 +1252,19 @@ const ForumPostCard: FC<{
                     <span>
                         {post.authorPostsCount ?? 0}
                         {' '}
-                        posts
+                        {post.authorPostsCount === 1 ? 'post' : 'posts'}
                     </span>
                 </div>
                 <div className={styles.postMeta}>
                     <time dateTime={post.createdAt}>
-                        {'Posted: '}
+                        <strong>Posted:</strong>
+                        {' '}
                         {formatForumDate(post.createdAt)}
                     </time>
                     {!post.deleted && Date.parse(post.updatedAt) > Date.parse(post.createdAt) && (
                         <time dateTime={post.updatedAt}>
-                            {'Edited: '}
+                            <strong>Edited:</strong>
+                            {' '}
                             {formatForumDate(post.updatedAt)}
                         </time>
                     )}
@@ -1314,6 +1318,7 @@ const ForumPostCard: FC<{
                         <ForumIcon name='downVote' />
                         {post.thumbsDownCount ?? 0}
                     </button>
+                    <span aria-hidden className={styles.postActionDivider} />
                     {!props.detail.topic.locked && props.canReply !== false && (
                         <>
                             <button onClick={() => props.onReply(post)} type='button'>

@@ -640,6 +640,13 @@
     }
 }
 
+.participantMetric {
+    font-size: 14px;
+    line-height: 20px;
+    margin-top: 16px;
+    > strong { font-weight: 700; }
+}
+
 .fallback,
 .noResults {
     align-items: center;
@@ -1623,17 +1630,39 @@
 
 // Public card geometry and typography from the Forums Figma frames.
 :global(.forums-app) {
+    .topicCard, .announcementCard { min-height: 0; }
+    .topicTitle { font-size: 20px; line-height: 30px; }
+    .topicFooter { margin-top: 16px; padding-top: 0; }
+    .topicActions button { min-height: 38px; padding: 8px 4px; line-height: 22px; }
     .topicMetrics { gap: 16px; justify-content: center; padding: 0 24px; }
-    .topicMetrics p + p, .topicMetrics > strong { margin-top: 0; }
+    .topicMetrics p + p, .participantMetric { margin-top: 0; }
+    .topicMetrics p strong, .participantMetric > strong { font-weight: 400; }
     .tags:empty { display: none; }
     .postContent { min-height: 0; }
-    .postIdentity > .authorBadge, .postIdentity > .copilotBadge {
-        background: #f5f7fa; color: #161616; font-size: 14px; font-weight: 400; line-height: 20px; padding: 0 4px;
+    .postIdentity { gap: 16px; }
+    .postMeta strong { font-weight: 700; }
+    .postIdentity > span:not(.member):not(.authorBadge):not(.copilotBadge) {
+        align-items: center; background: #e9ecef; color: #161616; display: inline-flex; height: 20px;
     }
+    .postIdentity > .authorBadge, .postIdentity > .copilotBadge {
+        background: #f5f7fa; color: #161616; font-size: 14px; font-weight: 400; height: 24px;
+        line-height: 20px; padding: 0 4px;
+    }
+    .postActions { gap: 16px; margin-top: 16px; padding-top: 16px; }
+    .postActionDivider { align-self: center; background: #e0e0e0; display: block; flex: 0 0 1px; height: 24px; }
+    .postActions button { line-height: 22px; min-height: 38px; padding: 8px 4px; }
     .editorToolbar select { appearance: none; background: #fff url('../assets/forums/1e461.svg') no-repeat right 4px center;
         padding: 0 32px 0 12px; width: 80px; }
+    .editorToolbar button:nth-of-type(5), .editorToolbar button:nth-of-type(11),
+    .editorToolbar button:nth-of-type(13), .editorToolbar button:nth-of-type(20) {
+        border-left: 1px solid #e0e0e0; margin-left: 4px; padding-left: 11px; width: 43px;
+    }
+    .editorToolbar button:nth-of-type(4), .editorToolbar button:nth-of-type(10),
+    .editorToolbar button:nth-of-type(12), .editorToolbar button:nth-of-type(19) { margin-right: 4px; }
     @media (max-width: 767px) {
         .topicCard, .post, .replyPost, .commentForm { padding: 16px; }
         .topicMetrics { padding: 24px 0 0; }
     }
 }
+
+.postActionDivider { display: none; }

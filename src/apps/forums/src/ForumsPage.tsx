@@ -420,8 +420,8 @@ const ForumsPage: FC = () => {
                     <h1>{heading}</h1>
                 </div>
                 {threadId && <div className={styles.emptySubtitle} />}
-                {!category && !threadId && (
-                    <p>
+                {(!category || threadId) && (
+                    <p className={threadId ? styles.mobileOnly : undefined}>
                         Explore community conversations, find answers, and join discussions with Topcoder
                         members around the world.
                     </p>
@@ -466,30 +466,28 @@ const ForumsPage: FC = () => {
                     </nav>
                     {category && (
                         <>
-                            {!detail && (
-                                <section className={styles.sideCard}>
-                                    <div className={styles.tags}>
-                                        {category.unread && (
-                                            <span className={styles.newTag}>New posts</span>
-                                        )}
-                                        <span>{`${category.topicsCount} topics`}</span>
-                                        <span>{`${category.postsCount} posts`}</span>
-                                    </div>
-                                    {(category.canCreate || !memberId) && (
-                                        <button
-                                            className={styles.primary}
-                                            onClick={() => {
-                                                if (!memberId) signIn()
-                                                else setCreating(true)
-                                            }}
-                                            type='button'
-                                        >
-                                            <img alt='' src={plusIcon} />
-                                            Create new topic
-                                        </button>
+                            <section className={`${styles.sideCard} ${detail ? styles.mobileOnly : ''}`}>
+                                <div className={styles.tags}>
+                                    {category.unread && (
+                                        <span className={styles.newTag}>New posts</span>
                                     )}
-                                </section>
-                            )}
+                                    <span>{`${category.topicsCount} topics`}</span>
+                                    <span>{`${category.postsCount} posts`}</span>
+                                </div>
+                                {(category.canCreate || !memberId) && (
+                                    <button
+                                        className={styles.primary}
+                                        onClick={() => {
+                                            if (!memberId) signIn()
+                                            else setCreating(true)
+                                        }}
+                                        type='button'
+                                    >
+                                        <img alt='' src={plusIcon} />
+                                        Create new topic
+                                    </button>
+                                )}
+                            </section>
                             <section className={`${styles.sideCard} ${styles.infoCard}`}>
                                 <h2>
                                     <img alt='' src={infoIcon} />
@@ -502,7 +500,7 @@ const ForumsPage: FC = () => {
                                             (detail?.topic ?? category).authorMemberId,
                                         )}
                                     />
-                                    <span>
+                                    <span className={styles.authorFlag}>
                                         <img alt='' src={authorIcon} />
                                         Author
                                     </span>

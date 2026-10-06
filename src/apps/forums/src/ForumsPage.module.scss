@@ -22,15 +22,8 @@
         margin: 0;
         text-transform: none;
     }
-    p {
-        margin: 0;
-    }
     a {
         text-decoration: none;
-    }
-    button,
-    input {
-        font: inherit;
     }
     button {
         cursor: pointer;
@@ -44,6 +37,16 @@
     input:focus-visible {
         outline: 2px solid #007d79;
         outline-offset: 3px;
+    }
+}
+// Defaults must not override the shared forum components' own typography.
+:where(.page) {
+    p {
+        margin: 0;
+    }
+    button,
+    input {
+        font: inherit;
     }
 }
 .header {
@@ -203,7 +206,7 @@
     display: flex;
     gap: 16px;
     padding: 16px 0;
-    > span {
+    .authorFlag {
         background: #f5f7fa;
         border-radius: 2px;
         font-size: 14px;
@@ -458,10 +461,13 @@
 .emptySubtitle {
     height: 44px;
 }
+.mobileOnly {
+    display: none;
+}
 .infoCard {
     border-color: transparent;
 }
-.infoAuthor > span {
+.infoAuthor .authorFlag {
     align-items: center;
     display: flex;
     gap: 4px;
@@ -479,4 +485,11 @@
         display: flex;
         gap: 4px;
     }
+}
+
+@media (max-width: 767px) {
+    .header h1 { font-size: 28px; line-height: 36px; }
+    .breadcrumb > :not(:first-child), .titleRow > button, .emptySubtitle, .infoMetrics { display: none; }
+    .mobileOnly { display: flex; }
+    .infoCard { border-color: #e0e0e0; }
 }

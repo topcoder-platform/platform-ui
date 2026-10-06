@@ -12,8 +12,11 @@ The pages use Figtree headings and Nunito Sans body text, the 1200 px page width
 280 px sidebar, 32 px column gap, 32/40 px title typography, supplied Figma SVG
 assets, and the existing universal header/footer. Forum controls use a scoped
 border-box reset so their Figma dimensions do not depend on another app's CSS.
-Mobile stacks the sidebar and
-content at 767 px. My Drafts is intentionally omitted.
+Typography and paragraph defaults use low-specificity selectors so shared card
+titles, action buttons, and Markdown keep their own styles. Mobile stacks the
+sidebar and content at 767 px, uses 28/36 px headings, and shows the compact
+breadcrumb and category creation card on thread pages. Desktop headings remain
+32/40 px. My Drafts is intentionally omitted.
 
 `ForumsPage` renders the category index, category topic list, search, Watching,
 thread details and creation flow. It reads `/v6/forums/public/categories` and
