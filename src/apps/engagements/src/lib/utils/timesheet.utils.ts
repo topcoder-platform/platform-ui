@@ -319,3 +319,20 @@ export const formatHoursLabel = (hours: string): string => {
     const value = Number(hours)
     return Number.isFinite(value) ? String(value) : hours
 }
+
+/** Entry statuses the manager, TM, and administrator timesheet views can be filtered to. */
+export type TimesheetReviewStatus = TimesheetEntryStatus.APPROVED | TimesheetEntryStatus.SUBMITTED
+
+/**
+ * Query parameter carrying the review status from the landing list into an assignee's timesheet, so
+ * the timesheet opens on what the list was showing. A URL parameter rather than router state, so a
+ * refresh or a shared link keeps it.
+ */
+export const TIMESHEET_REVIEW_STATUS_PARAM = 'status'
+
+/** Reads the review status from the URL. Anything unrecognised falls back to Pending Approval. */
+export const parseTimesheetReviewStatus = (value?: string | null): TimesheetReviewStatus => (
+    value === TimesheetEntryStatus.APPROVED
+        ? TimesheetEntryStatus.APPROVED
+        : TimesheetEntryStatus.SUBMITTED
+)

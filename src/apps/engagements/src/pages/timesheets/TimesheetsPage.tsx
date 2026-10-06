@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 
 import { BaseModal, Button, ContentLayout, LoadingSpinner } from '~/libs/ui'
 
@@ -9,6 +9,10 @@ import { getTimesheet } from '../../lib/services'
 import { EngagementsTabs } from '../../components'
 import { EngagementManagers } from '../../components/engagement-managers'
 import { AuthCtx, useAuth } from '../../lib/utils/auth'
+import {
+    parseTimesheetReviewStatus,
+    TIMESHEET_REVIEW_STATUS_PARAM,
+} from '../../lib/utils'
 
 import AdminTimesheetView from './AdminTimesheetView'
 import ManagerTimesheetView from './ManagerTimesheetView'
@@ -46,6 +50,9 @@ const TimesheetsPage: FC = () => {
         assignmentId?: string
         engagementId?: string
     } = useParams<{ assignmentId: string, engagementId: string }>()
+    const [searchParams] = useSearchParams()
+    // The status the landing list was filtered by, so the review views open on the same thing.
+    const initialStatus = parseTimesheetReviewStatus(searchParams.get(TIMESHEET_REVIEW_STATUS_PARAM))
 
     const [timesheet, setTimesheet] = useState<TimesheetView | undefined>()
     const [isLoading, setIsLoading] = useState<boolean>(true)
@@ -176,6 +183,7 @@ const TimesheetsPage: FC = () => {
 
                     {timesheet.viewerRole === TimesheetViewerRole.MANAGER && (
                         <ManagerTimesheetView
+                            initialStatus={initialStatus}
                             onTimesheetChange={setTimesheet}
                             timesheet={timesheet}
                         />
@@ -183,6 +191,7 @@ const TimesheetsPage: FC = () => {
 
                     {timesheet.viewerRole === TimesheetViewerRole.TM && (
                         <TmTimesheetView
+                            initialStatus={initialStatus}
                             onTimesheetChange={setTimesheet}
                             timesheet={timesheet}
                         />
@@ -190,6 +199,7 @@ const TimesheetsPage: FC = () => {
 
                     {timesheet.viewerRole === TimesheetViewerRole.ADMINISTRATOR && (
                         <AdminTimesheetView
+                            initialStatus={initialStatus}
                             onTimesheetChange={setTimesheet}
                             timesheet={timesheet}
                         />

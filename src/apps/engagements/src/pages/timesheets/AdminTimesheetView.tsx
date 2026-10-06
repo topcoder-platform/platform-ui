@@ -13,7 +13,7 @@ import {
     saveTimesheetEntries,
     submitTimesheetEntries,
 } from '../../lib/services'
-import type { TimesheetRow } from '../../lib/utils'
+import type { TimesheetReviewStatus, TimesheetRow } from '../../lib/utils'
 import {
     buildRowsFromEntries,
     formatDisplayDate,
@@ -37,11 +37,13 @@ import styles from './TimesheetsPage.module.scss'
 interface AdminTimesheetViewProps {
     timesheet: TimesheetView
     onTimesheetChange: (timesheet: TimesheetView) => void
+    /** Status filter to open on - the one the landing list was showing. Defaults to Pending Approval. */
+    initialStatus?: TimesheetReviewStatus
 }
 
 /** Which override the reason dialog is collecting a reason for. */
 type PendingOverride = 'correct' | 'reopen' | 'submit'
-type StatusFilter = TimesheetEntryStatus.APPROVED | TimesheetEntryStatus.SUBMITTED
+type StatusFilter = TimesheetReviewStatus
 
 const OVERRIDE_COPY: Record<PendingOverride, { confirmLabel: string, description: string, title: string }> = {
     correct: {
@@ -138,7 +140,9 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
     const defaultRange = useMemo(getDefaultRange, [])
     const [rows, setRows] = useState<TimesheetRow[]>([])
     const [selectedDates, setSelectedDates] = useState<string[]>([])
-    const [statusFilter, setStatusFilter] = useState<StatusFilter>(TimesheetEntryStatus.SUBMITTED)
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>(
+        props.initialStatus ?? TimesheetEntryStatus.SUBMITTED,
+    )
     const [filterFromDate, setFilterFromDate] = useState<string>('')
     const [filterToDate, setFilterToDate] = useState<string>('')
     const [fromDate, setFromDate] = useState<string>(defaultRange.fromDate)

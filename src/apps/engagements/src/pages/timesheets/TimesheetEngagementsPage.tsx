@@ -10,8 +10,9 @@ import {
 } from '~/libs/ui'
 
 import type { TimesheetEngagementRow, TimesheetRollupStatus } from '../../lib/models'
-import { TimesheetViewerRole } from '../../lib/models'
+import { TimesheetEntryStatus, TimesheetViewerRole } from '../../lib/models'
 import { getTimesheetEngagements } from '../../lib/services'
+import { TIMESHEET_REVIEW_STATUS_PARAM } from '../../lib/utils'
 import { rootRoute } from '../../engagements.routes'
 import { EngagementsTabs } from '../../components'
 
@@ -156,9 +157,17 @@ const TimesheetEngagementsPage: FC = () => {
         setAppliedFilters(EMPTY_FILTERS)
     }, [])
 
+    // Open the timesheet on the status the list was filtered by. Under "All" the row's own rollup is
+    // the best guide to what the user came to look at.
     const openTimesheet = useCallback((row: TimesheetEngagementRow) => {
-        navigate(`${rootRoute}/${row.engagementId}/timesheets/${row.assignmentId}`)
-    }, [navigate])
+        const listStatus = appliedFilters.status || row.timesheetStatus
+        const reviewStatus = listStatus === 'Approved'
+            ? TimesheetEntryStatus.APPROVED
+            : TimesheetEntryStatus.SUBMITTED
+        const query = new URLSearchParams({ [TIMESHEET_REVIEW_STATUS_PARAM]: reviewStatus })
+
+        navigate(`${rootRoute}/${row.engagementId}/timesheets/${row.assignmentId}?${query.toString()}`)
+    }, [appliedFilters.status, navigate])
 
     const assigneeLabel = useMemo(() => (row: TimesheetEngagementRow): string => (
         row.assigneeName ? `${row.assigneeName} (${row.assigneeHandle})` : row.assigneeHandle

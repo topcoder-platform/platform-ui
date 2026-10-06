@@ -15,6 +15,7 @@ import {
     hasRowValidationError,
     isRowReadOnly,
     isRowReopened,
+    parseTimesheetReviewStatus,
     sumSelectedTotals,
     validateDateRange,
     validateEntryRange,
@@ -399,5 +400,20 @@ describe('timesheet.utils', () => {
             expect(hasRowValidationError({ hoursWorked: '8', remarks: 'Sprint planning' }))
                 .toBe(false)
         })
+    })
+
+    describe('parseTimesheetReviewStatus', () => {
+        it('reads Approved from the URL', () => {
+            expect(parseTimesheetReviewStatus('APPROVED'))
+                .toBe(TimesheetEntryStatus.APPROVED)
+        })
+
+        it.each([null, undefined, '', 'SUBMITTED', 'DRAFT', 'nonsense'])(
+            'falls back to Pending Approval for %p',
+            value => {
+                expect(parseTimesheetReviewStatus(value))
+                    .toBe(TimesheetEntryStatus.SUBMITTED)
+            },
+        )
     })
 })

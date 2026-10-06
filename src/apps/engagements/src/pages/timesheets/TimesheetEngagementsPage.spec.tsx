@@ -251,7 +251,47 @@ describe('TimesheetEngagementsPage', () => {
         await user.click(await screen.findByRole('button', { name: 'View' }))
 
         expect(mockNavigate)
-            .toHaveBeenCalledWith('/engagements/eng-1/timesheets/asg-1')
+            .toHaveBeenCalledWith('/engagements/eng-1/timesheets/asg-1?status=SUBMITTED')
+    })
+
+    it('opens the timesheet on Approved when the list was filtered to Approved', async () => {
+        const user = userEvent.setup()
+        mockGetEngagements.mockResolvedValue(response(
+            [row({ timesheetStatus: 'Approved' })],
+            TimesheetViewerRole.MANAGER,
+        ))
+
+        render(<TimesheetEngagementsPage />)
+
+        await user.selectOptions(await screen.findByLabelText('Status'), 'Approved')
+        await waitFor(() => {
+            expect(mockGetEngagements)
+                .toHaveBeenLastCalledWith(expect.objectContaining({ status: 'Approved' }))
+        })
+        await user.click(await screen.findByRole('button', { name: 'View' }))
+
+        expect(mockNavigate)
+            .toHaveBeenCalledWith('/engagements/eng-1/timesheets/asg-1?status=APPROVED')
+    })
+
+    it('follows the row status under All', async () => {
+        const user = userEvent.setup()
+        mockGetEngagements.mockResolvedValue(response(
+            [row({ timesheetStatus: 'Approved' })],
+            TimesheetViewerRole.MANAGER,
+        ))
+
+        render(<TimesheetEngagementsPage />)
+
+        await user.selectOptions(await screen.findByLabelText('Status'), '')
+        await waitFor(() => {
+            expect(mockGetEngagements)
+                .toHaveBeenLastCalledWith(expect.objectContaining({ status: undefined }))
+        })
+        await user.click(await screen.findByRole('button', { name: 'View' }))
+
+        expect(mockNavigate)
+            .toHaveBeenCalledWith('/engagements/eng-1/timesheets/asg-1?status=APPROVED')
     })
 
     it('tells a manager when nothing is pending approval', async () => {
