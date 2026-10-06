@@ -322,7 +322,14 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         props.onTimesheetChange(updated)
     }, [props, rows, selectedDates])
 
-    const savePendingRowsIfNeeded = useCallback(async (): Promise<TimesheetView> => {
+    /**
+     * Saves outstanding edits ahead of an approve or submit. The API keeps an administrator's
+     * correction to a submitted entry submitted, so the action that follows still finds it; the reason
+     * is passed along so the correction is audited with it.
+     */
+    const savePendingRowsIfNeeded = useCallback(async (
+        overrideReason?: string,
+    ): Promise<TimesheetView> => {
         if (!hasPendingRowChanges) {
             return props.timesheet
         }
@@ -342,7 +349,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         const updated = await saveTimesheetEntries(
             props.timesheet.engagementId,
             props.timesheet.assignment.id,
-            { entries },
+            { entries, overrideReason },
         )
 
         props.onTimesheetChange(updated)
@@ -369,7 +376,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                     return
                 }
 
-                const currentTimesheet = await savePendingRowsIfNeeded()
+                const currentTimesheet = await savePendingRowsIfNeeded(overrideReason)
                 const entryIds = currentTimesheet.entries
                     .filter(entry => selectedDates.includes(entry.workDate))
                     .filter(entry => entry.status === TimesheetEntryStatus.DRAFT)
@@ -426,7 +433,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         setIsWorking(true)
 
         try {
-            const currentTimesheet = await savePendingRowsIfNeeded()
+            const currentTimesheet = await savePendingRowsIfNeeded(overrideReason)
             const entryIds = currentTimesheet.entries
                 .filter(entry => selectedDates.includes(entry.workDate))
                 .filter(entry => entry.status === TimesheetEntryStatus.SUBMITTED)

@@ -110,6 +110,11 @@ jest.mock('~/libs/ui', () => ({
     LoadingSpinner: () => <div>loading</div>,
 }), { virtual: true })
 
+// The audit modal links handles to profiles; jest has no path alias for `~/config`.
+jest.mock('~/config', () => ({
+    EnvironmentConfig: { URLS: { USER_PROFILE: 'https://profiles.example' } },
+}), { virtual: true })
+
 jest.mock('../../lib/services', () => ({
     approveTimesheetEntries: jest.fn(),
     getTimesheet: jest.fn(),
@@ -477,6 +482,9 @@ describe('AdminTimesheetView', () => {
                     overrideReason: 'Manager on leave',
                 })
         })
+        // The correction is saved with the same reason, so its audit record explains it.
+        expect(mockSave.mock.calls[0][2])
+            .toEqual(expect.objectContaining({ overrideReason: 'Manager on leave' }))
     })
 
     it('offers reopen only for approved rows and submit only for drafts', async () => {
