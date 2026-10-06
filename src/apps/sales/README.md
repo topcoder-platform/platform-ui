@@ -7,9 +7,21 @@ combined host). Route guards and the Reports API independently enforce access.
 
 The page calls `GET {REPORTS_API}/sales` with the signed-in user's token, and
 `GET {API.V6}/projects/salesforce/opportunities/{id}` for the opportunity popup.
-All Salesforce credentials stay in `reports-api-v6` and `projects-api-v6`. No
-create, update, delete, export, machine credentials or direct Salesforce API
-calls exist in the UI.
+All Salesforce credentials stay in the server APIs. No machine credentials or
+direct Salesforce API calls exist in the UI.
+
+Administrators also see **Sync SF Data** immediately to the right of **Read only**.
+It calls `POST {API.V6}/billing-accounts/salesforce-sync` with the signed-in user's
+JWT to copy the extra client and billing-account metadata (including opportunity
+IDs) into the platform. The report remains read-only; Salesforce is never modified.
+The action is disabled while running, shows completion counts or a recoverable
+error, and then refreshes page data with `refresh=true` while preserving filters.
+Any open opportunity popup closes so its next lookup reads the updated metadata.
+Talent Managers do not see the action. The API independently requires an
+administrator role; M2M scopes do not grant access. Deploy the billing API endpoint
+and configure its Salesforce client credentials before enabling this UI release.
+The request allows six minutes for the API's five-minute transaction; the API
+gateway/proxy must allow this duration as well.
 
 Report cells whose value is a Salesforce opportunity id (the `006` key prefix)
 render the opportunity name as a button. Opening it shows a popup with the
