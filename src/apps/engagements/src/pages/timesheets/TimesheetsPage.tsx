@@ -168,9 +168,13 @@ const TimesheetsPage: FC = () => {
                                 setIsManagersModalOpen(true)
                             }
                             : undefined}
-                        onViewManagersAudit={function onViewManagersAudit() {
-                            setIsManagersAuditOpen(true)
-                        }}
+                        // The history is for whoever can change managers - administrators and TMs.
+                        // The API refuses anyone else, so the button follows the same rule.
+                        onViewManagersAudit={canEditManagers
+                            ? function onViewManagersAudit() {
+                                setIsManagersAuditOpen(true)
+                            }
+                            : undefined}
                     />
 
                     {timesheet.viewerRole === TimesheetViewerRole.MEMBER && (
