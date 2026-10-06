@@ -32,6 +32,25 @@ interface Filters {
     title: string
 }
 
+/**
+ * A manager's empty list says what was actually looked for. The default view is Pending Approval, so
+ * an empty list usually means nothing is waiting - not that the manager has no engagements.
+ */
+const getManagerEmptyMessage = (filters: Filters): string => {
+    if (filters.title.trim() || filters.assignee.trim()) {
+        return 'No timesheets match these filters.'
+    }
+
+    switch (filters.status) {
+        case 'Pending Approval':
+            return 'You have no timesheets in pending approval status.'
+        case 'Approved':
+            return 'You have no approved timesheets.'
+        default:
+            return 'You have no timesheets to review.'
+    }
+}
+
 const EMPTY_FILTERS: Filters = {
     assignee: '',
     manager: '',
@@ -64,7 +83,7 @@ const TimesheetEngagementsPage: FC = () => {
         ? 'No timesheets match these filters.'
         : isTm
             ? 'No submitted timesheets match these filters.'
-            : 'You have no engagements with timesheet approval authority.'
+            : getManagerEmptyMessage(appliedFilters)
 
     useEffect(() => {
         let mounted = true

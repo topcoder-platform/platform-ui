@@ -254,14 +254,25 @@ describe('TimesheetEngagementsPage', () => {
             .toHaveBeenCalledWith('/engagements/eng-1/timesheets/asg-1')
     })
 
-    it('tells a manager with no approval authority that the list is empty', async () => {
+    it('tells a manager when nothing is pending approval', async () => {
         mockGetEngagements.mockResolvedValue(response([], TimesheetViewerRole.MANAGER))
 
         render(<TimesheetEngagementsPage />)
 
-        expect(await screen.findByText(
-            'You have no engagements with timesheet approval authority.',
-        ))
+        expect(await screen.findByText('You have no timesheets in pending approval status.'))
+            .toBeInTheDocument()
+    })
+
+    it('names the status a manager filtered by when nothing is approved', async () => {
+        const user = userEvent.setup()
+        mockGetEngagements.mockResolvedValue(response([], TimesheetViewerRole.MANAGER))
+
+        render(<TimesheetEngagementsPage />)
+
+        await screen.findByText('You have no timesheets in pending approval status.')
+        await user.selectOptions(screen.getByLabelText('Status'), 'Approved')
+
+        expect(await screen.findByText('You have no approved timesheets.'))
             .toBeInTheDocument()
     })
 
