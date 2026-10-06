@@ -1,9 +1,8 @@
-import { Outlet } from 'react-router-dom'
-
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
 import { lazyLoad, LazyLoadedComponent, PlatformRoute } from '~/libs/core'
 
 const ForumsPage: LazyLoadedComponent = lazyLoad(() => import('./ForumsPage'))
+const ForumsApp: LazyLoadedComponent = lazyLoad(() => import('./ForumsApp'))
 export const forumsRoot: string = EnvironmentConfig.SUBDOMAIN === AppSubdomain.forums ? '' : '/forums'
 
 /** Public routes require no login; the API enforces visibility and every mutation.
@@ -17,7 +16,7 @@ export const forumsRoutes: ReadonlyArray<PlatformRoute> = [
             { element: <ForumsPage />, id: 'Forum thread', route: 'thread/:threadId', title: ToolTitle.forums },
         ],
         domain: AppSubdomain.forums,
-        element: <Outlet />,
+        element: <ForumsApp />,
         id: ToolTitle.forums,
         route: forumsRoot,
         title: ToolTitle.forums,

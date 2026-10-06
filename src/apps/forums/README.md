@@ -2,7 +2,9 @@
 
 The Forums app is available at `/forums` on the platform host and at `/` when
 `EnvironmentConfig.SUBDOMAIN` is `forums`. Its single domain root contains the
-category and thread routes so deep links work on both hosts. Hosting must serve
+category and thread routes so deep links work on both hosts. `ForumsApp` renders
+the child routes through the platform router context, matching the sub-app routing
+contract (a bare React Router `Outlet` does not render these declarations). Hosting must serve
 the Platform UI SPA for the forums hostname and its nested routes.
 
 The design source is [Forums in Figma](https://www.figma.com/design/I45k1Djt2XkYY692wopp3C/Forums?node-id=14382-6451).
@@ -51,7 +53,7 @@ From this project folder, run `nvm use`, `yarn lint`, `yarn run build`, and:
 
 ```sh
 CI=true yarn test:no-watch --runInBand \
-  --testPathPattern='forums.routes.spec|ChallengeForum.spec|ForumMarkdown.spec|forum.service.spec|forum-attachments.service.spec|forum-mention|member-profile.service'
+  --testPathPattern='ForumsApp.spec|forums.routes.spec|ChallengeForum.spec|ForumMarkdown.spec|forum.service.spec|forum-attachments.service.spec|forum-mention|member-profile.service'
 ```
 
 On memory-constrained build runners use `NODE_OPTIONS=--max-old-space-size=8192`
