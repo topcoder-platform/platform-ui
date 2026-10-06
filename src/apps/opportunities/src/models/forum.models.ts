@@ -84,13 +84,15 @@ export interface ForumPost {
 
 /** Read-only topic detail response with its complete post tree. */
 export interface ForumTopicDetail {
+    permissions?: { createPost: boolean; createTopic: boolean; watch: boolean; update: boolean; delete: boolean }
     posts: ForumPost[]
     topic: ForumTopicSummary
 }
 
-/** Request body used to create a challenge-scoped topic and starter post. */
+/** Request body used to create a challenge root or a public category thread and starter post. */
 export interface CreateForumTopicRequest {
-    challengeId: string
+    challengeId?: string
+    parentTopicId?: string
     content: string
     isAnnouncement?: boolean
     title: string

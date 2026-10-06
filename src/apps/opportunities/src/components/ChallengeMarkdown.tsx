@@ -136,6 +136,11 @@ const MARKDOWN_COMPONENTS: Components = {
 
 const MARKDOWN_SANITIZE_SCHEMA = {
     ...defaultSchema,
+    attributes: {
+        ...defaultSchema.attributes,
+        p: [...(defaultSchema.attributes?.p ?? []), ['align', 'left', 'center', 'right']],
+        span: [...(defaultSchema.attributes?.span ?? []), ['dataForumSize', '12', '14', '16', '18', '20', '24']],
+    },
     tagNames: [...(defaultSchema.tagNames ?? []), 'u'],
 }
 

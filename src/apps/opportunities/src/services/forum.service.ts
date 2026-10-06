@@ -114,7 +114,8 @@ export async function getChallengeForumTopics(
 }
 
 /**
- * Loads a visible topic and its nested post tree using the current member token.
+ * Loads a visible topic and its nested post tree using an optional member token; unrestricted public threads
+  * support guests.
  *
  * @param topicId Forums API topic identifier.
  * @returns topic summary and nested visible/deleted-placeholder post tree.
@@ -127,9 +128,9 @@ export function getForumTopicDetail(topicId: string): Promise<ForumTopicDetail> 
 }
 
 /**
- * Creates a challenge-scoped topic and its starter post with the member token.
+ * Creates a challenge root or public category thread and starter post with the member token.
  *
- * @param request validated topic title, markdown content, and challenge ID.
+ * @param request validated title/content and either a challenge ID or public parent category ID.
  * @returns transactional topic and starter-post response.
  * @throws Propagates Forums API authentication, access, validation, and network errors.
  */

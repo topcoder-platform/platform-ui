@@ -1594,3 +1594,29 @@
     position: relative;
     z-index: 2;
 }
+
+/* Public forum pages supply the shared thread header/sidebar at page level. */
+.publicDetailLayout {
+    display: block;
+    min-width: 0;
+}
+
+// Shared Figma editor controls retain intrinsic SVG dimensions.
+.editorToolbar {
+    min-height: 38px;
+    padding: 0;
+    button { border-right: 0; height: 38px; min-width: 38px; padding: 7px; }
+    select { background: #fff; border: 0; border-left: 1px solid #e0e0e0; border-right: 1px solid #e0e0e0;
+        color: #6f6f6f; font: 14px/20px 'Nunito Sans', sans-serif; height: 38px; padding: 0 8px; }
+}
+.expandedEditor { background: white; inset: 24px; overflow: auto; padding: 24px; position: fixed; z-index: 1000;
+    textarea { min-height: 65vh; }
+}
+.publicDetailLayout {
+    .replyPost { margin-left: 40px; }
+    .post > header, .replyPost > header { margin-bottom: 24px; }
+    .editorShell { border-color: #e0e0e0; border-radius: 2px; }
+    .markdownField > label { display: none; }
+    .postActions { gap: 24px; }
+    .postActions button { gap: 4px; }
+}

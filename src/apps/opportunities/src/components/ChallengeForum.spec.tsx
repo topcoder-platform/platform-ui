@@ -19,6 +19,7 @@ import {
 } from '../models'
 import {
     ChallengeForum,
+    ForumTopicView,
     continueMarkdownList,
     flattenForumPosts,
     forumRatingClass,
@@ -47,6 +48,8 @@ jest.mock('~/libs/core', () => ({
     getRatingColor: jest.requireActual('../../../../libs/core/lib/profile/profile-functions/rating.functions')
         .getRatingColor,
 }), { virtual: true })
+
+jest.mock('../services/forum-attachments.service', () => ({ uploadForumAttachment: jest.fn() }))
 
 jest.mock('swr', () => ({
     __esModule: true,
@@ -258,6 +261,27 @@ describe('ChallengeForum', () => {
                 mutate: jest.fn(),
             }
         })
+    })
+
+    it('keeps guest threads read-only and routes replies and reactions to sign in', () => {
+        const onSignIn = jest.fn()
+        render(<ForumTopicView
+            canDeletePosts={false}
+            contentOnly
+            detail={topicDetail as ForumTopicDetail}
+            memberId=''
+            onBack={jest.fn()}
+            onChanged={jest.fn()}
+            onSignIn={onSignIn}
+            profilesByMemberId={new Map()}
+        />)
+        expect(screen.queryByRole('button', { name: 'Post comment' })).not.toBeInTheDocument()
+        fireEvent.click(screen.getAllByRole('button', { name: 'Reply' })[0])
+        fireEvent.click(screen.getAllByRole('button', { name: /Add thumbs up/ })[0])
+        expect(onSignIn)
+            .toHaveBeenCalledTimes(2)
+        expect(mockCreateForumPost).not.toHaveBeenCalled()
+        expect(mockSetForumPostReaction).not.toHaveBeenCalled()
     })
 
     it('renders Figma topic controls, truthful metrics, local search, and filters', () => {
