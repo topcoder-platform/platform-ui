@@ -474,7 +474,8 @@ Registrants table immediately instead of waiting for a page reload. Once a
 registered member has submitted, Unregister stays disabled; a pending or failed
 submission-count check also fails closed so a transient read cannot expose a
 destructive action. Registrant and submission rating cells use the same public
-member rating bands as their handles.
+member rating bands as their handles. Handles without a usable rating use the
+canonical unrated dark gray (`#2a2a2a`) across challenge detail tables and cards.
 
 Design challenges with `submissionsViewable=true` use the private-submission
 gallery from the Figma flow. Authenticated members receive the protected
