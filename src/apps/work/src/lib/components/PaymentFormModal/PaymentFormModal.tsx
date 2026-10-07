@@ -427,6 +427,10 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                     ...loaded,
                     alreadyPaidEntryIds: excludedEntryIds,
                     entryIds: payableEntryIds,
+                    // Entries paid through the finance system but not yet linked are paid hours too.
+                    paidHours: fromHourHundredths(
+                        toHourHundredths(loaded.paidHours) + excludedHoursHundredths,
+                    ),
                     totalDays: payableEntryIds.length,
                     totalHours: fromHourHundredths(adjustedHoursHundredths),
                 })
@@ -701,6 +705,29 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                         : undefined}
                 </div>
 
+                {summary && !isLoadingSummary
+                    ? (
+                        <div className={styles.infoGrid} aria-label='Hours for the selected period'>
+                            <div className={styles.infoItem}>
+                                <span className={styles.infoLabel}>Expected Hours</span>
+                                <span className={styles.infoValue}>{summary.expectedHours ?? '-'}</span>
+                            </div>
+                            <div className={styles.infoItem}>
+                                <span className={styles.infoLabel}>Approved Hours</span>
+                                <span className={styles.infoValue}>
+                                    {toHourHundredths(summary.approvedHours) > 0
+                                        ? summary.approvedHours
+                                        : 'No approved timesheets'}
+                                </span>
+                            </div>
+                            <div className={styles.infoItem}>
+                                <span className={styles.infoLabel}>Paid Hours</span>
+                                <span className={styles.infoValue}>{summary.paidHours}</span>
+                            </div>
+                        </div>
+                    )
+                    : undefined}
+
                 <div className={styles.fieldRow}>
                     <label className={styles.label} htmlFor='payment-hours-worked'>
                         <span>Hours worked *</span>
@@ -740,27 +767,15 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                                 value={hoursWorked}
                             />
                         )}
-                    <p className={styles.helperText}>
-                        {summary
-                            ? `${summary.totalDays} approved `
-                                + `${summary.totalDays === 1 ? 'day' : 'days'} in this period`
-                            : PAYMENT_HOURS_LOCKED_TO_TIMESHEETS
-                                ? 'Hours come from approved timesheet entries for the selected period.'
-                                : 'Hours are prefilled from approved timesheet entries for the selected period.'}
-                    </p>
-                    {summary && summary.alreadyPaidEntryIds.length > 0
-                        ? (
+                    {summary
+                        ? undefined
+                        : (
                             <p className={styles.helperText}>
-                                {`${summary.alreadyPaidEntryIds.length} approved `}
-                                {summary.alreadyPaidEntryIds.length === 1 ? 'entry' : 'entries'}
-                                {' in this period '}
-                                {summary.alreadyPaidEntryIds.length === 1 ? 'was' : 'were'}
-                                {' already paid and '}
-                                {summary.alreadyPaidEntryIds.length === 1 ? 'is' : 'are'}
-                                {' excluded.'}
+                                {PAYMENT_HOURS_LOCKED_TO_TIMESHEETS
+                                    ? 'Hours come from approved timesheet entries for the selected period.'
+                                    : 'Hours are prefilled from approved timesheet entries for the selected period.'}
                             </p>
-                        )
-                        : undefined}
+                        )}
                     {summaryError
                         ? <p className={styles.error}>{summaryError}</p>
                         : undefined}

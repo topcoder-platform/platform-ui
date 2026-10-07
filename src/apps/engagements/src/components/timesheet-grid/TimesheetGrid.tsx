@@ -178,7 +178,7 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                                         type='checkbox'
                                     />
                                 </td>
-                                <td data-label='Date'>
+                                <td data-label='Date' className={styles.dateCol}>
                                     {row.displayDate}
                                     {row.outsideAssignmentWindow && (
                                         <span className={styles.outsideWindow} title='Outside the assignment dates'>

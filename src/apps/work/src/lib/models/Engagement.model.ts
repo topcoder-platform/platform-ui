@@ -138,9 +138,16 @@ export interface Engagement {
  */
 export interface TimesheetPaymentSummary {
     alreadyPaidEntryIds: string[]
+    /** Every approved hour in the period, paid or not. */
+    approvedHours: string
     entryIds: string[]
+    /** Standard hours for the period's weekdays inside the assignment; null when it cannot be derived. */
+    expectedHours: string | null
+    /** Hours in the period a payment already consumed. */
+    paidHours: string
     ratePerHour: string | null
     totalDays: number
+    /** Approved, unpaid hours - what this payment would cover. */
     totalHours: string
 }
 
