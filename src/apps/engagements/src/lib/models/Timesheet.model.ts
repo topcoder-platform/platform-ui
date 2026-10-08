@@ -123,8 +123,12 @@ export interface TimesheetEngagementRow {
     assigneeId: string
     assigneeName: string | null
     assignmentId: string
+    /** The assignment's own status. A manager's list only carries `ASSIGNED` and `COMPLETED`. */
+    assignmentStatus: string
     engagementId: string
     engagementTitle: string
+    /** True when at least one entry is submitted and awaiting approval. */
+    hasPendingApproval: boolean
     timesheetStatus: TimesheetRollupStatus
     viewerRole: TimesheetViewerRole
 }
