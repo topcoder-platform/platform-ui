@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/control-has-associated-label */
 import { ChangeEvent, FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { debounce } from 'lodash'
 import { useNavigate } from 'react-router-dom'

@@ -36,7 +36,6 @@ import {
     getAssignmentPaymentCycle,
     getAssignmentRatePerHour,
     getAssignmentStandardHoursPerDay,
-    getExpectedHoursLabel,
 } from '../../utils'
 import {
     calculatePaymentChallengeFee,
@@ -240,10 +239,10 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         () => getAssignmentStandardHoursPerDay(props.member || {}),
         [props.member],
     )
-    const expectedHoursLabel = useMemo(
-        () => getExpectedHoursLabel(props.member || {}),
-        [props.member],
-    )
+    // const expectedHoursLabel = useMemo(
+    //     () => getExpectedHoursLabel(props.member || {}),
+    //     [props.member],
+    // )
     const paymentTitle = useMemo(
         () => {
             if (!fromDate || !toDate) {
@@ -731,13 +730,6 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                 <div className={styles.fieldRow}>
                     <label className={styles.label} htmlFor='payment-hours-worked'>
                         <span>Hours worked *</span>
-                        {expectedHoursLabel
-                            ? (
-                                <span className={styles.helperText}>
-                                    {`* Expected: ${expectedHoursLabel}`}
-                                </span>
-                            )
-                            : undefined}
                     </label>
                     {PAYMENT_HOURS_LOCKED_TO_TIMESHEETS || isLoadingSummary
                         ? (
