@@ -58,24 +58,28 @@ import {
 } from '../../../lib/contexts'
 import {
     createMemberPayment,
+    fetchAssignmentPaymentSplits,
     getPaymentReference,
     linkTimesheetEntriesToPayment,
     partiallyUpdateEngagement,
     updateEngagementAssignmentStatus,
 } from '../../../lib/services'
 import {
+    calculateAssignmentHoursLeft,
     calculateAssignmentRatePerWeek,
     canManageEngagementManagers,
     deserializeTentativeAssignmentDate,
     formatAssignmentDaysLeftInEngagement,
     getAssignmentPaymentCycle,
     getAssignmentStandardHoursPerDay,
+    getAssignmentTotalHours,
     getCountableEngagementAssignments,
     normalizeAssignmentStatus,
     sanitizePositiveNumericInput,
     serializeTentativeAssignmentDate,
     showErrorToast,
     showSuccessToast,
+    sumProcessedPaymentHours,
     toPositiveInteger,
     toPositiveNumber,
     toPositiveNumberWithMaxDecimalPlaces,
@@ -323,6 +327,7 @@ function buildAssignmentDetailsPayloadEntry(
     appendPayloadNumberField(payload, 'standardHoursPerDay', assignment.standardHoursPerDay)
     appendPayloadNumberField(payload, 'standardHoursPerWeek', assignment.standardHoursPerWeek)
     appendPayloadStringField(payload, 'startDate', assignment.startDate)
+    appendPayloadNumberField(payload, 'totalHours', assignment.totalHours)
     appendPayloadStringField(payload, 'wiproIdEndDate', assignment.wiproIdEndDate)
 
     return payload
@@ -339,6 +344,7 @@ interface EditAssignmentPayload {
     startDate: string
     standardHoursPerDay: number
     standardHoursPerWeek: number
+    totalHours?: number
     wiproIdEndDate?: string
 }
 
@@ -391,6 +397,13 @@ interface EditAssignmentErrors {
     ratePerHour?: string
     startDate?: string
     standardHoursPerDay?: string
+    totalHours?: string
+}
+
+function toTotalHoursInputValue(assignment: Assignment | undefined): string {
+    const totalHours = getAssignmentTotalHours(assignment || {})
+
+    return totalHours === undefined ? '' : String(totalHours)
 }
 
 export const EditAssignmentModal: FC<EditAssignmentModalProps> = (
@@ -420,6 +433,7 @@ export const EditAssignmentModal: FC<EditAssignmentModalProps> = (
             ? String(getAssignmentStandardHoursPerDay(props.assignment || {}))
             : '',
     )
+    const [totalHours, setTotalHours] = useState<string>(toTotalHoursInputValue(props.assignment))
 
     const weeklyHours = useMemo(
         () => {
@@ -465,6 +479,7 @@ export const EditAssignmentModal: FC<EditAssignmentModalProps> = (
                 : '',
         )
         setWiproIdEndDate(deserializeTentativeAssignmentDate(props.assignment?.wiproIdEndDate))
+        setTotalHours(toTotalHoursInputValue(props.assignment))
     }, [props.assignment])
 
     const handleCancel = useCallback((): void => {
@@ -501,6 +516,15 @@ export const EditAssignmentModal: FC<EditAssignmentModalProps> = (
 
         if (hasDurationValue && parsedDurationMonths === undefined) {
             nextErrors.durationMonths = 'Duration must be a positive whole number.'
+        }
+
+        // Optional: blank clears the total, which leaves hours left blank.
+        const parsedTotalHours = totalHours.trim()
+            ? toPositiveNumberWithMaxDecimalPlaces(totalHours, 2)
+            : undefined
+
+        if (totalHours.trim() && parsedTotalHours === undefined) {
+            nextErrors.totalHours = 'Total hours must be a positive number with up to 2 decimal places.'
         }
 
         if (parsedRatePerHour === undefined) {
@@ -546,6 +570,7 @@ export const EditAssignmentModal: FC<EditAssignmentModalProps> = (
             standardHoursPerDay: parsedStandardHoursPerDay,
             standardHoursPerWeek: parsedStandardHoursPerWeek,
             startDate: serializeTentativeAssignmentDate(startDate),
+            totalHours: parsedTotalHours,
             wiproIdEndDate: wiproIdEndDate
                 ? serializeTentativeAssignmentDate(wiproIdEndDate)
                 : undefined,
@@ -564,6 +589,7 @@ export const EditAssignmentModal: FC<EditAssignmentModalProps> = (
         source,
         standardHoursPerDay,
         startDate,
+        totalHours,
         wiproIdEndDate,
     ])
 
@@ -685,6 +711,30 @@ export const EditAssignmentModal: FC<EditAssignmentModalProps> = (
                         />
                         {errors.standardHoursPerDay
                             ? <p className={styles.modalError}>{errors.standardHoursPerDay}</p>
+                            : undefined}
+                    </div>
+
+                    <div className={styles.modalFieldRow}>
+                        <label className={styles.modalLabel} htmlFor='edit-assignment-total-hours'>
+                            Total hours
+                        </label>
+                        <input
+                            id='edit-assignment-total-hours'
+                            className={styles.modalInput}
+                            inputMode='decimal'
+                            onChange={event => {
+                                setTotalHours(sanitizePositiveNumericInput(event.target.value, 2))
+                                setErrors(previous => ({
+                                    ...previous,
+                                    totalHours: undefined,
+                                }))
+                            }}
+                            pattern='[0-9.]*'
+                            type='text'
+                            value={totalHours}
+                        />
+                        {errors.totalHours
+                            ? <p className={styles.modalError}>{errors.totalHours}</p>
                             : undefined}
                     </div>
 
@@ -818,6 +868,62 @@ export const EngagementPaymentPage: FC = () => {
         return engagementResult.engagement?.assignments || []
     }, [engagementResult.engagement?.assignments])
 
+    // Hours already processed for payment, per assignment, from the finance API. Only assignments with
+    // total hours need it - without a total there are no hours left to show. `null` marks a failed
+    // lookup, so the card can say so instead of showing a wrong number.
+    const [processedHoursByAssignmentId, setProcessedHoursByAssignmentId] = useState<
+        Record<string, number | null>
+    >({})
+    const [processedHoursReloadToken, setProcessedHoursReloadToken] = useState<number>(0)
+    const assignmentIdsWithTotalHours = useMemo(
+        () => assignments
+            .filter(assignment => getAssignmentTotalHours(assignment) !== undefined)
+            .map(assignment => String(assignment.id)),
+        [assignments],
+    )
+
+    useEffect(() => {
+        let mounted = true
+
+        Promise.all(assignmentIdsWithTotalHours.map(async assignmentId => {
+            try {
+                const payments = await fetchAssignmentPaymentSplits(assignmentId)
+                return [assignmentId, sumProcessedPaymentHours(payments)] as const
+            } catch {
+                // eslint-disable-next-line unicorn/no-null
+                return [assignmentId, null] as const
+            }
+        }))
+            .then(entries => {
+                if (mounted) {
+                    setProcessedHoursByAssignmentId(Object.fromEntries(entries))
+                }
+            })
+
+        return () => {
+            mounted = false
+        }
+    }, [assignmentIdsWithTotalHours, processedHoursReloadToken])
+
+    const renderHoursLeft = useCallback((assignment: Assignment): string => {
+        if (getAssignmentTotalHours(assignment) === undefined) {
+            return ''
+        }
+
+        const processedHours = processedHoursByAssignmentId[String(assignment.id)]
+
+        if (processedHours === undefined) {
+            return 'Loading...'
+        }
+
+        if (processedHours === null) {
+            return 'Unavailable'
+        }
+
+        const hoursLeft = calculateAssignmentHoursLeft(assignment, processedHours)
+        return hoursLeft === undefined ? '' : String(hoursLeft)
+    }, [processedHoursByAssignmentId])
+
     const pageTitle = engagementResult.engagement?.title
         ? `${engagementResult.engagement.title} Assignees`
         : 'Assignees'
@@ -924,6 +1030,8 @@ export const EngagementPaymentPage: FC = () => {
             }
 
             setPaymentMember(undefined)
+            // A new payment uses up hours, so hours left has to be recounted.
+            setProcessedHoursReloadToken(previous => previous + 1)
         } catch (error) {
             const message = error instanceof Error
                 ? error.message
@@ -1196,6 +1304,16 @@ export const EngagementPaymentPage: FC = () => {
                                                     <span aria-hidden='true' className={styles.required}>*</span>
                                                 </span>
                                                 <span className={styles.value}>{formatPaymentCycle(assignment.paymentCycle)}</span>
+                                            </div>
+                                            <div>
+                                                <span className={styles.label}>Total Hours</span>
+                                                <span className={styles.value}>
+                                                    {getAssignmentTotalHours(assignment) ?? '-'}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className={styles.label}>Hours Left</span>
+                                                <span className={styles.value}>{renderHoursLeft(assignment)}</span>
                                             </div>
                                             <div>
                                                 <span className={styles.label}>Candidate Wipro ID</span>
