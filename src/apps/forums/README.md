@@ -19,7 +19,16 @@ breadcrumb and category creation card on thread pages. Desktop headings remain
 32/40 px. My Drafts is intentionally omitted.
 
 `ForumsPage` renders the category index, category topic list, search, Watching,
-thread details and creation flow. It reads `/v6/forums/public/categories` and
+thread details and creation flow. The index hides the migrated **Legacy forums**
+root (every category the forums API Jive migration authored as
+`legacy-jive:migration`) and instead shows a sidebar card linking to `/legacy`
+(`legacyForumsPath`, `/forums/legacy` on the platform host). `ForumsPage` with the
+`legacy` prop renders that archive: the root's namespace groups without the root
+header, with the content-less `Jive / Jive2` wrapper replaced by its own groups,
+and a sidebar card linking back to the current forums. Breadcrumbs and the back
+button on archived categories return to `/legacy` rather than to the hidden
+wrapper. Searching from the archive runs on the main index because the API
+searches every forum. It reads `/v6/forums/public/categories` and
 `/v6/forums/public/topics`; normal topic/post commands are shared with challenge
 forums. Search, pagination, watches and category visibility are enforced by the
 API. Authenticated response cache keys include the member ID and roles. Legacy
@@ -58,7 +67,7 @@ From this project folder, run `nvm use`, `yarn lint`, `yarn run build`, and:
 
 ```sh
 CI=true yarn test:no-watch --runInBand \
-  --testPathPattern='ForumsApp.spec|forums.routes.spec|ChallengeForum.spec|ForumMarkdown.spec|forum.service.spec|forum-attachments.service.spec|forum-mention|member-profile.service'
+  --testPathPattern='ForumsApp.spec|ForumsPage.spec|forums.routes.spec|ChallengeForum.spec|ForumMarkdown.spec|forum.service.spec|forum-attachments.service.spec|forum-mention|member-profile.service'
 ```
 
 On memory-constrained build runners use `NODE_OPTIONS=--max-old-space-size=8192`

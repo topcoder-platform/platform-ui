@@ -45,10 +45,20 @@ import topicsIcon from '~/apps/opportunities/src/assets/forums/171f8.svg'
 import viewsIcon from '~/apps/opportunities/src/assets/forums/0a628.svg'
 import watchIcon from '~/apps/opportunities/src/assets/forums/74494.svg'
 
-import { forumsRoot } from './forums.routes'
+import { forumsRoot, legacyForumsPath } from './forums.routes'
 import { getPublicForumCategories, getPublicForumTopics, PublicForumCategory } from './forums.service'
 import styles from './ForumsPage.module.scss'
 import './forums.scss'
+
+/** Author marker the forums API legacy Jive migration writes on every imported category. */
+export const LEGACY_AUTHOR_ID: string = 'legacy-jive:migration'
+/** Migration namespace container that only wraps the Jive categories and holds no discussions. */
+export const LEGACY_WRAPPER_TITLE: string = 'Jive / Jive2'
+
+export interface ForumsPageProps {
+    /** Renders the migrated legacy archive index instead of the current public forums. */
+    legacy?: boolean
+}
 
 /** Sends a guest to the shared login flow and returns them to their current forum URL.
  * @returns Nothing. @throws Does not throw.
@@ -57,11 +67,22 @@ function signIn(): void {
     window.location.assign(authUrlLogin(window.location.href))
 }
 
+/** Whether a category was imported by the legacy Jive migration.
+ * @param item Category metadata. @returns True for the legacy root and all of its descendants. @throws Never.
+ */
+export function isLegacyCategory(item?: PublicForumCategory): boolean {
+    return item?.authorMemberId === LEGACY_AUTHOR_ID
+}
+
 /** Public category index, paginated topic listing, and shared interactive thread view.
  * Auth-sensitive cache keys prevent a previously authenticated response being reused by guests.
+ * With `legacy`, the index shows the archive root's groups (lifting the empty Jive wrapper)
+ * and the sidebar links back to the current forums instead of the archive.
+ * @param props `legacy` selects the archive index.
  * @returns Figma desktop/mobile forum pages. @throws None; failures are rendered with retry controls.
  */
-const ForumsPage: FC = () => {
+const ForumsPage: FC<ForumsPageProps> = (props: ForumsPageProps) => {
+    const legacyRoute = !!props.legacy
     const profileContext = useProfileContext()
     const profile = profileContext.profile
     const initialized = profileContext.initialized
@@ -92,6 +113,18 @@ const ForumsPage: FC = () => {
         getPublicForumCategories,
     )
     const categories = useMemo(() => categoryResponse.data ?? [], [categoryResponse.data])
+    const legacyRoot = categories.find(item => !item.parentTopicId && isLegacyCategory(item))
+    // The archive index lists the root's namespaces, replacing the content-less Jive wrapper with its groups.
+    const legacyGroups = useMemo(
+        () => (legacyRoot
+            ? categories
+                .filter(item => item.parentTopicId === legacyRoot.id)
+                .flatMap(item => (item.title === LEGACY_WRAPPER_TITLE
+                    ? categories.filter(child => child.parentTopicId === item.id)
+                    : [item]))
+            : []),
+        [categories, legacyRoot],
+    )
     const detailResponse = useSWR(
         initialized && threadId ? ['public-forums:thread', threadId, identity] : undefined,
         () => getForumTopicDetail(threadId as string),
@@ -286,8 +319,22 @@ const ForumsPage: FC = () => {
         || (listing && !threadId && !listResponse.data)
     const heading = creating
         ? 'Create new topic'
-        : (detail?.topic.title ?? category?.title ?? (watching ? 'Watching' : 'Public Forums'))
-    const breadcrumb = category && categories.find(item => item.id === category.parentTopicId)
+        : (detail?.topic.title
+            ?? category?.title
+            ?? (watching ? 'Watching' : legacyRoute ? 'Legacy forums' : 'Public Forums'))
+    const parent = category && categories.find(item => item.id === category.parentTopicId)
+    // The hidden Jive wrapper never appears in the breadcrumb; its children sit directly under the archive.
+    const breadcrumb = parent && parent.title === LEGACY_WRAPPER_TITLE && isLegacyCategory(parent)
+        ? legacyRoot
+        : parent
+
+    /** Resolves the index page a category belongs to (the archive index for the legacy root).
+     * @param item Category metadata. @returns Router path. @throws Never.
+     */
+    const categoryPath = (item: PublicForumCategory): string => (
+        item.id === legacyRoot?.id ? legacyForumsPath : `${forumsRoot}/category/${item.id}`
+    )
+    const indexPath = isLegacyCategory(category) ? legacyForumsPath : forumsRoot || '/'
 
     /** Renders a category row with shared rated identities and participant avatars.
      * @param item Category metadata. @returns Figma category row. @throws Never.
@@ -385,7 +432,7 @@ const ForumsPage: FC = () => {
                     {breadcrumb && (
                         <>
                             <span>/</span>
-                            <Link to={`${forumsRoot}/category/${breadcrumb.id}`}>
+                            <Link to={categoryPath(breadcrumb)}>
                                 {breadcrumb.title}
                             </Link>
                         </>
@@ -410,7 +457,7 @@ const ForumsPage: FC = () => {
                             onClick={() => navigate(
                                 threadId && category
                                     ? `${forumsRoot}/category/${category.id}`
-                                    : forumsRoot || '/',
+                                    : indexPath,
                             )}
                             type='button'
                         >
@@ -422,8 +469,11 @@ const ForumsPage: FC = () => {
                 {threadId && <div className={styles.emptySubtitle} />}
                 {(!category || threadId) && (
                     <p className={threadId ? styles.mobileOnly : undefined}>
-                        Explore community conversations, find answers, and join discussions with Topcoder
-                        members around the world.
+                        {legacyRoute
+                            ? 'Browse tutorials and discussions archived from more than 20 years of Topcoder '
+                                + 'forums history.'
+                            : 'Explore community conversations, find answers, and join discussions with '
+                                + 'Topcoder members around the world.'}
                     </p>
                 )}
                 {category && !threadId && category.description && <p>{category.description}</p>}
@@ -434,8 +484,10 @@ const ForumsPage: FC = () => {
                         className={styles.search}
                         onSubmit={event => {
                             event.preventDefault()
-                            if (threadId) navigate(`${forumsRoot}?search=${encodeURIComponent(searchInput)}`)
-                            else setFilter('search', searchInput.trim())
+                            // Search always runs across every forum, so leave thread and archive pages first.
+                            if (threadId || legacyRoute) {
+                                navigate(`${forumsRoot}?search=${encodeURIComponent(searchInput.trim())}`)
+                            } else setFilter('search', searchInput.trim())
                         }}
                     >
                         <img alt='' src={searchIcon} />
@@ -447,7 +499,7 @@ const ForumsPage: FC = () => {
                         />
                     </form>
                     <nav className={styles.navigation} aria-label='Forum navigation'>
-                        <Link aria-current={!watching ? 'page' : undefined} to={forumsRoot || '/'}>
+                        <Link aria-current={!watching && !legacyRoute ? 'page' : undefined} to={forumsRoot || '/'}>
                             Public Forums
                         </Link>
                         <Link
@@ -558,6 +610,34 @@ const ForumsPage: FC = () => {
                             <img alt='' src={forwardIcon} />
                         </a>
                     </section>
+                    {legacyRoute ? (
+                        <section className={styles.sideCard}>
+                            <h2>
+                                <img alt='' src={infoIcon} />
+                                Public forums
+                            </h2>
+                            <p>
+                                Our current forums and discussions can be found
+                                {' '}
+                                <Link to={forumsRoot || '/'}>here</Link>
+                                .
+                            </p>
+                        </section>
+                    ) : legacyRoot && (
+                        <section className={styles.sideCard}>
+                            <h2>
+                                <img alt='' src={infoIcon} />
+                                Legacy forums
+                            </h2>
+                            <p>
+                                Our forums history goes back over 20 years. To see old tutorials and
+                                discussions, go
+                                {' '}
+                                <Link to={legacyForumsPath}>here</Link>
+                                .
+                            </p>
+                        </section>
+                    )}
                 </aside>
                 <main className={styles.content} aria-busy={loading || !!busy}>
                     {actionError && (
@@ -665,9 +745,14 @@ const ForumsPage: FC = () => {
                                 />
                             )}
                         </>
+                    ) : legacyRoute ? (
+                        <>
+                            {legacyGroups.map(categoryGroup)}
+                            {!legacyGroups.length && <p>No legacy forums are available yet.</p>}
+                        </>
                     ) : (
                         <>
-                            {categories.filter(item => !item.parentTopicId)
+                            {categories.filter(item => !item.parentTopicId && item.id !== legacyRoot?.id)
                                 .map(categoryGroup)}
                             {!categories.length && <p>No public forums are available yet.</p>}
                         </>
