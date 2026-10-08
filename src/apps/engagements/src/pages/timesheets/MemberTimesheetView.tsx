@@ -358,6 +358,14 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                 </p>
             )}
 
+            {/* The range opens on the current week, which hides any earlier day the member missed. */}
+            {isAssignmentActive && (
+                <p className={styles.notice} role='note'>
+                    This page shows the current week. Make sure you have entered hours for all the days
+                    you worked - use From Date and To Date to check earlier weeks and add ALL missing days.
+                </p>
+            )}
+
             {rangeError
                 ? <p className={styles.error} role='alert'>{rangeError}</p>
                 : (

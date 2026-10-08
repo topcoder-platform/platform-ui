@@ -586,6 +586,13 @@ describe('MemberTimesheetView', () => {
             .toBeDisabled()
     })
 
+    it('reminds an active member to add all the days they missed, not just this week', () => {
+        renderView()
+
+        expect(screen.getByRole('note'))
+            .toHaveTextContent('add ALL missing days')
+    })
+
     it.each(['COMPLETED', 'TERMINATED'])(
         'makes the timesheet read-only once the assignment is %s',
         async (assignmentStatus: string) => {
@@ -595,6 +602,8 @@ describe('MemberTimesheetView', () => {
 
             expect(await screen.findByRole('status'))
                 .toHaveTextContent('no longer active')
+            // Nothing can be added any more, so there is nothing to remind them about.
+            expect(screen.queryByRole('note')).not.toBeInTheDocument()
             expect(screen.queryByLabelText('Hours worked on 07-09-2026')).not.toBeInTheDocument()
             expect(screen.getByLabelText('Select 07-09-2026'))
                 .toBeDisabled()
