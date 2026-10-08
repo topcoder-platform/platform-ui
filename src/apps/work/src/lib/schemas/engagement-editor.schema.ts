@@ -12,6 +12,7 @@ interface EngagementEditorSchemaAssignmentDetails {
     startDate?: string
     standardHoursPerDay?: number | string
     standardHoursPerWeek?: number | string
+    totalHours?: number | string
     wiproIdEndDate?: string
 }
 
@@ -141,6 +142,12 @@ function hasCompleteAssignmentDetails(
         && toPositiveInteger(detail.durationMonths) !== undefined
         && isPositiveDecimal(detail.ratePerHour)
         && isPositiveDecimal(detail.standardHoursPerDay, 2)
+        // Total hours are optional, but when given must be a positive amount.
+        && (
+            detail.totalHours === undefined
+            || detail.totalHours === ''
+            || isPositiveDecimal(detail.totalHours, 2)
+        )
         && ['WEEKLY', 'FORTNIGHTLY', 'MONTHLY'].includes(
             String(detail.paymentCycle || 'WEEKLY')
                 .trim()

@@ -68,6 +68,7 @@ interface AssignmentDetails {
     startDate?: string
     standardHoursPerDay?: number | string
     standardHoursPerWeek?: number | string
+    totalHours?: number | string
     wiproIdEndDate?: string
 }
 
@@ -393,6 +394,14 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
 
                     if (Number.isFinite(standardHoursPerWeek)) {
                         entry.standardHoursPerWeek = String(standardHoursPerWeek)
+                    }
+                }
+
+                if (assignment.totalHours !== undefined && assignment.totalHours !== '') {
+                    const totalHours = Number(assignment.totalHours)
+
+                    if (Number.isFinite(totalHours) && totalHours > 0) {
+                        entry.totalHours = String(totalHours)
                     }
                 }
 

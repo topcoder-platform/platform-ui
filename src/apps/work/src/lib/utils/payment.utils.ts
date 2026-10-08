@@ -488,3 +488,72 @@ export function normalizeAssignmentStatus(status: string): string {
             .toLowerCase())
         .join(' ')
 }
+
+/**
+ * Finance statuses whose hours were never paid out, or were taken back. Every other status - paid,
+ * processing, owed, on hold - has committed those hours to a payment.
+ */
+const UNPROCESSED_PAYMENT_STATUSES = new Set(['CANCELLED', 'CREDITED', 'FAILED', 'RETURNED'])
+
+/**
+ * Reads a payment's status. The finance API reports it per installment, and an engagement payment
+ * has exactly one, so the first installment is the payment's status.
+ */
+function getPaymentProcessingStatus(payment: AssignmentPayment): string {
+    const paymentDetails = Array.isArray(payment.details) && payment.details.length > 0
+        ? payment.details[0]
+        : undefined
+
+    return String(paymentDetails?.status ?? payment.status ?? '')
+        .trim()
+        .toUpperCase()
+}
+
+/**
+ * Sums the hours on payments that have been processed, skipping cancelled, failed, returned, and
+ * credited ones.
+ *
+ * @param payments finance payments for one assignment.
+ * @returns processed hours, rounded to 2 decimal places.
+ */
+export function sumProcessedPaymentHours(payments: AssignmentPayment[]): number {
+    const totalHundredths = payments
+        .filter(payment => !UNPROCESSED_PAYMENT_STATUSES.has(getPaymentProcessingStatus(payment)))
+        .reduce((total, payment) => total + Math.round((toNumber(getPaymentHoursWorked(payment)) ?? 0) * 100), 0)
+
+    return totalHundredths / 100
+}
+
+/**
+ * Reads the hours allocated to an assignment.
+ *
+ * @param assignment assignment record.
+ * @returns total hours, or `undefined` when none were set.
+ */
+export function getAssignmentTotalHours(assignment: Partial<Assignment>): number | undefined {
+    const totalHours = toNumber(assignment.totalHours)
+
+    return totalHours !== undefined && totalHours > 0 ? totalHours : undefined
+}
+
+/**
+ * Hours left on an assignment: total hours minus hours already processed for payment. Undefined
+ * when the assignment has no total hours, so the caller leaves the value blank. Can go negative
+ * when more was paid than allocated, which is worth seeing rather than hiding.
+ *
+ * @param assignment assignment record.
+ * @param processedHours hours on processed payments, from {@link sumProcessedPaymentHours}.
+ * @returns hours left, rounded to 2 decimal places.
+ */
+export function calculateAssignmentHoursLeft(
+    assignment: Partial<Assignment>,
+    processedHours: number,
+): number | undefined {
+    const totalHours = getAssignmentTotalHours(assignment)
+
+    if (totalHours === undefined) {
+        return undefined
+    }
+
+    return Math.round((totalHours - processedHours) * 100) / 100
+}
