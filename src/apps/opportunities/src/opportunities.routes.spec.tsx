@@ -56,6 +56,27 @@ describe('Opportunities application routes', () => {
             .toEqual(expect.arrayContaining(['/challenges', '/challenges/:challengeId']))
     })
 
+    it('serves the login-only member home ahead of the category catch-all on every host', () => {
+        const hosts: Array<[string, string]> = [
+            ['platform-ui', '/opportunities'],
+            ['opportunities', ''],
+        ]
+        hosts.forEach(([subdomain, expectedRoot]) => {
+            const routes = loadRoutes(subdomain)
+            const children = routes.opportunitiesRoutes[0].children ?? []
+            const homeIndex = children.findIndex(route => route.route === 'home')
+
+            expect(routes.rootRoute)
+                .toBe(expectedRoot)
+            expect(homeIndex)
+                .toBeGreaterThanOrEqual(0)
+            expect(homeIndex)
+                .toBeLessThan(children.findIndex(route => route.route === ':kind'))
+            expect(children[homeIndex])
+                .toMatchObject({ authRequired: true, id: 'Opportunities member home', title: 'Home' })
+        })
+    })
+
     it('leaves the platform home page alone on other hosts', () => {
         expect(loadRoutes('platform-ui').topgearRoutes)
             .toEqual([])
