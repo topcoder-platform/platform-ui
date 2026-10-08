@@ -239,6 +239,13 @@ to their authored subtype icons and member-facing labels.
   Design challenges use screening and review score copy for the Review App,
   title case educational links with more space between them, and a white arrow
   in the program banner.
+- TopGear (Wipro) challenges, detected on the `topgear` host or through the
+  configured TopGear group (`isTopgearChallenge`), follow community-app's Wipro
+  rail: the Review App card, the Topcoder Thrive article, the AI reviewer guide,
+  and Usable Code Rules are omitted, and Educational Materials links to the
+  TopGear terms (`topgearTermsUrl`, from `URLS.TOPGEAR_TERMS`) as "TopGear
+  Challenges Explained". The
+  Challenge Terms card still lists the challenge's own terms, as community-app did.
 
 ## Challenge detail timeline
 
