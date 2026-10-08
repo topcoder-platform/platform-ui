@@ -24,6 +24,8 @@ import {
     challengeSidebarLinks,
     challengeSubmissionLimit,
     isMarathonMatchChallenge,
+    isTopgearChallenge,
+    topgearTermsUrl,
 } from '../utils'
 import {
     AI_EXPONENTIAL_LEAGUE_URL,
@@ -195,6 +197,9 @@ const ChallengeTermButton: FC<ChallengeTermButtonProps> = props => {
 /**
  * Renders the challenge-details support column, including Review App, learning,
  * submission guidance, challenge terms, source files, and team contact.
+ * TopGear (Wipro) challenges follow community-app's Wipro rail: the Review App
+ * card, Topcoder Thrive articles, AI reviewer guide, and Usable Code Rules are
+ * replaced by a single "TopGear Challenges Explained" link to the TopGear terms.
  *
  * @param props challenge context and modal actions.
  * @returns Figma right rail cards.
@@ -208,6 +213,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
     const trackKey = challengeCatalogKey(props.challenge.track)
     const designChallenge = trackKey === 'design'
     const marathonMatch = isMarathonMatchChallenge(props.challenge)
+    const topgearChallenge = isTopgearChallenge(props.challenge)
     const developmentChallenge = trackKey === 'development'
     const qualityAssuranceChallenge = ['qa', 'qualityassurance'].includes(trackKey)
     const termsRequestKey = props.challenge.terms?.some(term => !!term.id && !term.title)
@@ -286,28 +292,49 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                         )}
                 </div>
             </section>
-            <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarReviewIcon} />} title='Review App'>
-                <p>{reviewAppDescription}</p>
-                <a
-                    href={challengeReviewAppUrl(props.challenge.id)}
-                    rel='noreferrer'
-                    target='_blank'
-                >
-                    View Review App
-                    <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
-                </a>
-            </SidebarCard>
+            {!topgearChallenge && (
+                <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarReviewIcon} />} title='Review App'>
+                    <p>{reviewAppDescription}</p>
+                    <a
+                        href={challengeReviewAppUrl(props.challenge.id)}
+                        rel='noreferrer'
+                        target='_blank'
+                    >
+                        View Review App
+                        <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                    </a>
+                </SidebarCard>
+            )}
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarBookIcon} />} title='Educational Materials'>
-                <p>Read educational material on Topcoder Thrive.</p>
-                <a
-                    className={styles.learningLink}
-                    href={CHALLENGE_EXPLAINED_URL}
-                    rel='noreferrer'
-                    target='_blank'
-                >
-                    Topcoder Challenges Explained
-                    <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
-                </a>
+                {topgearChallenge
+                    ? (
+                        <>
+                            <p>Read how TopGear challenges work.</p>
+                            <a
+                                className={styles.learningLink}
+                                href={topgearTermsUrl()}
+                                rel='noreferrer'
+                                target='_blank'
+                            >
+                                TopGear Challenges Explained
+                                <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                            </a>
+                        </>
+                    )
+                    : (
+                        <>
+                            <p>Read educational material on Topcoder Thrive.</p>
+                            <a
+                                className={styles.learningLink}
+                                href={CHALLENGE_EXPLAINED_URL}
+                                rel='noreferrer'
+                                target='_blank'
+                            >
+                                Topcoder Challenges Explained
+                                <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                            </a>
+                        </>
+                    )}
                 {marathonMatch && (
                     <a
                         className={styles.learningLink}
@@ -319,7 +346,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                         <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
                     </a>
                 )}
-                {developmentChallenge && !marathonMatch && (
+                {developmentChallenge && !marathonMatch && !topgearChallenge && (
                     <>
                         <a
                             className={styles.learningLink}
