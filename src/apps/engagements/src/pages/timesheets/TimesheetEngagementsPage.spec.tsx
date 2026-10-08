@@ -2,7 +2,7 @@
 import '@testing-library/jest-dom'
 
 import React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import type { TimesheetEngagementListResponse, TimesheetEngagementRow } from '../../lib/models'
@@ -93,6 +93,14 @@ jest.mock('../../components', () => ({
     EngagementsTabs: (props: { activeTab: string }) => (
         <div data-testid='engagements-tabs' data-active-tab={props.activeTab} />
     ),
+    // Mirrors the real badge's label: an explicit label, or the status in title case.
+    StatusBadge: (props: { label?: string, status: string }) => (
+        <span>
+            {props.label
+                ?? `${props.status.charAt(0)}${props.status.slice(1)
+                    .toLowerCase()}`}
+        </span>
+    ),
 }), { virtual: true })
 
 jest.mock('react-markdown', () => ({
@@ -144,8 +152,10 @@ const row = (overrides: Partial<TimesheetEngagementRow> = {}): TimesheetEngageme
     assigneeId: '1001',
     assigneeName: 'John Smith',
     assignmentId: 'asg-1',
+    assignmentStatus: 'ASSIGNED',
     engagementId: 'eng-1',
     engagementTitle: 'Senior Frontend Engineer',
+    hasPendingApproval: true,
     timesheetStatus: 'Pending Approval',
     viewerRole: TimesheetViewerRole.MANAGER,
     ...overrides,
@@ -343,6 +353,63 @@ describe('TimesheetEngagementsPage', () => {
                     title: 'Frontend',
                 }))
         })
+    })
+
+    it('shows a manager the assignee, engagement, assignment status, and pending flag', async () => {
+        mockGetEngagements.mockResolvedValue(response([
+            row(),
+            row({
+                assignmentId: 'asg-2',
+                assignmentStatus: 'COMPLETED',
+                hasPendingApproval: false,
+                timesheetStatus: 'Approved',
+            }),
+        ], TimesheetViewerRole.MANAGER))
+
+        render(<TimesheetEngagementsPage />)
+
+        // Wait past the loading skeleton, which is a table too.
+        await screen.findAllByText('John Smith (johnsmith)')
+        const table = screen.getByRole('table')
+        expect(within(table)
+            .getAllByRole('columnheader')
+            .map(header => header.textContent))
+            .toEqual(['Assignee', 'Engagement', 'Assignment Status', 'Pending Approval', 'Action'])
+
+        const [, assignedRow, completedRow] = within(table)
+            .getAllByRole('row')
+        expect(within(assignedRow)
+            .getAllByRole('cell')
+            .map(cell => cell.textContent))
+            .toEqual([
+                'John Smith (johnsmith)',
+                'Senior Frontend Engineer',
+                'Assigned',
+                'Pending approval',
+                'View',
+            ])
+        expect(within(completedRow)
+            .getByText('Completed'))
+            .toBeInTheDocument()
+        expect(within(completedRow)
+            .queryByText('Pending approval')).not.toBeInTheDocument()
+    })
+
+    it('keeps the timesheet status column for an administrator', async () => {
+        mockGetEngagements.mockResolvedValue(response(
+            [row({ viewerRole: TimesheetViewerRole.ADMINISTRATOR })],
+            TimesheetViewerRole.ADMINISTRATOR,
+        ))
+
+        render(<TimesheetEngagementsPage />)
+
+        // Wait past the loading skeleton, which is a table too.
+        await screen.findAllByText('John Smith (johnsmith)')
+        const table = screen.getByRole('table')
+        expect(within(table)
+            .getAllByRole('columnheader')
+            .map(header => header.textContent))
+            .toEqual(['Engagement Title', 'Assignee', 'Timesheet Status', 'Action'])
     })
 
     it('opens the nested timesheet route from View', async () => {

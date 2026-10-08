@@ -20,7 +20,7 @@ import {
 } from '../../lib/utils'
 import { AuthCtx, useAuth } from '../../lib/utils/auth'
 import { rootRoute } from '../../engagements.routes'
-import { EngagementsTabs } from '../../components'
+import { EngagementsTabs, StatusBadge } from '../../components'
 
 import styles from './TimesheetsPage.module.scss'
 
@@ -117,6 +117,17 @@ const TimesheetEngagementsPage: FC = () => {
     const isAdministrator = viewerRole === TimesheetViewerRole.ADMINISTRATOR
     const isTm = viewerRole === TimesheetViewerRole.TM
     const dateRangeError = validateDateRange(filters.fromDate, filters.toDate)
+
+    // A manager reviews people rather than engagements, so their list leads with the assignee and
+    // shows where each assignment stands instead of the rolled-up timesheet status.
+    const isManagerList = !isAdministrator && !isTm
+    let columnCount = 3
+    if (isAdministrator) {
+        columnCount = 4
+    } else if (isManagerList) {
+        columnCount = 5
+    }
+
     const emptyStateMessage = isAdministrator
         ? 'No timesheets match these filters.'
         : isTm
@@ -347,7 +358,7 @@ const TimesheetEngagementsPage: FC = () => {
                             <thead>
                                 <tr>
                                     <td
-                                        colSpan={isAdministrator ? 4 : 3}
+                                        colSpan={columnCount}
                                     >
                                         Loading engagement timesheets...
                                     </td>
@@ -356,11 +367,11 @@ const TimesheetEngagementsPage: FC = () => {
                             <tbody>
                                 {skeletonRows.map(index => (
                                     <tr key={`timesheet-skeleton-${index}`}>
-                                        <td><div className={styles.skeletonCell} aria-label='loading cell' /></td>
-                                        <td><div className={styles.skeletonCell} aria-label='loading cell' /></td>
-                                        {isAdministrator && (
-                                            <td><div className={styles.skeletonCell} aria-label='loading cell' /></td>
-                                        )}
+                                        {Array.from({ length: columnCount - 1 }, (_, cell) => (
+                                            <td key={`timesheet-skeleton-${index}-${cell}`}>
+                                                <div className={styles.skeletonCell} aria-label='loading cell' />
+                                            </td>
+                                        ))}
                                         <td><div className={styles.skeletonAction} aria-label='loading cell' /></td>
                                     </tr>
                                 ))}
@@ -381,37 +392,83 @@ const TimesheetEngagementsPage: FC = () => {
 
                 {!isLoading && !error && rows.length > 0 && (
                     <>
-                        <table className={styles.listTable}>
-                            <thead>
-                                <tr>
-                                    <th scope='col'>Engagement Title</th>
-                                    <th scope='col'>Assignee</th>
-                                    {(isAdministrator || isTm) && <th scope='col'>Timesheet Status</th>}
-                                    <th scope='col'>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {rows.map(row => (
-                                    <tr key={row.assignmentId}>
-                                        <td data-label='Engagement Title'>{row.engagementTitle}</td>
-                                        <td data-label='Assignee'>{assigneeLabel(row)}</td>
-                                        {(isAdministrator || isTm) && (
-                                            <td data-label='Timesheet Status'>{row.timesheetStatus}</td>
-                                        )}
-                                        <td data-label='Action'>
-                                            <Button
-                                                label='View'
-                                                onClick={function onView() {
-                                                    openTimesheet(row)
-                                                }}
-                                                secondary
-                                                size='sm'
-                                            />
-                                        </td>
+                        {isManagerList ? (
+                            <table className={styles.listTable}>
+                                <thead>
+                                    <tr>
+                                        <th scope='col'>Assignee</th>
+                                        <th scope='col'>Engagement</th>
+                                        <th scope='col'>Assignment Status</th>
+                                        <th scope='col'>Pending Approval</th>
+                                        <th scope='col'>Action</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {rows.map(row => (
+                                        <tr key={row.assignmentId}>
+                                            <td data-label='Assignee'>{assigneeLabel(row)}</td>
+                                            <td data-label='Engagement'>{row.engagementTitle}</td>
+                                            <td data-label='Assignment Status'>
+                                                <StatusBadge size='sm' status={row.assignmentStatus} />
+                                            </td>
+                                            <td data-label='Pending Approval'>
+                                                {row.hasPendingApproval
+                                                    ? (
+                                                        <StatusBadge
+                                                            label='Pending approval'
+                                                            size='sm'
+                                                            status='pending_approval'
+                                                        />
+                                                    )
+                                                    : '-'}
+                                            </td>
+                                            <td data-label='Action'>
+                                                <Button
+                                                    label='View'
+                                                    onClick={function onView() {
+                                                        openTimesheet(row)
+                                                    }}
+                                                    secondary
+                                                    size='sm'
+                                                />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <table className={styles.listTable}>
+                                <thead>
+                                    <tr>
+                                        <th scope='col'>Engagement Title</th>
+                                        <th scope='col'>Assignee</th>
+                                        {(isAdministrator || isTm) && <th scope='col'>Timesheet Status</th>}
+                                        <th scope='col'>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {rows.map(row => (
+                                        <tr key={row.assignmentId}>
+                                            <td data-label='Engagement Title'>{row.engagementTitle}</td>
+                                            <td data-label='Assignee'>{assigneeLabel(row)}</td>
+                                            {(isAdministrator || isTm) && (
+                                                <td data-label='Timesheet Status'>{row.timesheetStatus}</td>
+                                            )}
+                                            <td data-label='Action'>
+                                                <Button
+                                                    label='View'
+                                                    onClick={function onView() {
+                                                        openTimesheet(row)
+                                                    }}
+                                                    secondary
+                                                    size='sm'
+                                                />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
 
                         {totalPages > 1 && (
                             <div className={styles.pagination}>
