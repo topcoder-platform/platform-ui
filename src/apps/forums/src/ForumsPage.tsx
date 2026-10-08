@@ -44,6 +44,7 @@ import searchIcon from '~/apps/opportunities/src/assets/forums/a02e3.svg'
 import topicsIcon from '~/apps/opportunities/src/assets/forums/171f8.svg'
 import viewsIcon from '~/apps/opportunities/src/assets/forums/0a628.svg'
 import watchIcon from '~/apps/opportunities/src/assets/forums/74494.svg'
+import watchedIcon from '~/apps/opportunities/src/assets/forums/watched.svg'
 
 import { forumsRoot, legacyForumsPath } from './forums.routes'
 import { getPublicForumCategories, getPublicForumTopics, PublicForumCategory } from './forums.service'
@@ -58,6 +59,46 @@ export const LEGACY_WRAPPER_TITLE: string = 'Jive / Jive2'
 export interface ForumsPageProps {
     /** Renders the migrated legacy archive index instead of the current public forums. */
     legacy?: boolean
+}
+
+/** Unsent topic composer content kept in this browser until the topic is created or discarded. */
+export interface TopicDraft {
+    content: string
+    savedAt: string
+    title: string
+}
+
+/** Builds the browser storage key for a member's draft in one category.
+ * @param memberId Signed-in member. @param categoryId Target category.
+ * @returns Storage key, or undefined for guests. @throws Never.
+ */
+export function topicDraftKey(memberId: string, categoryId?: string): string | undefined {
+    return memberId && categoryId ? `public-forums:draft:${memberId}:${categoryId}` : undefined
+}
+
+/** Reads a saved draft.
+ * @param key Storage key. @returns Draft, or undefined when absent or unreadable. @throws Never.
+ */
+function readTopicDraft(key?: string): TopicDraft | undefined {
+    if (!key) return undefined
+    try {
+        const raw = window.localStorage.getItem(key)
+        return raw ? JSON.parse(raw) as TopicDraft : undefined
+    } catch {
+        return undefined
+    }
+}
+
+/** Writes or removes a saved draft. Storage failures (private mode, quota) are ignored.
+ * @param key Storage key. @param draft Draft to keep, or undefined to remove. @returns Nothing. @throws Never.
+ */
+function writeTopicDraft(key: string, draft?: TopicDraft): void {
+    try {
+        if (draft) window.localStorage.setItem(key, JSON.stringify(draft))
+        else window.localStorage.removeItem(key)
+    } catch {
+        // Drafts are a convenience; the composer still works without storage.
+    }
 }
 
 /** Sends a guest to the shared login flow and returns them to their current forum URL.
@@ -108,6 +149,7 @@ const ForumsPage: FC<ForumsPageProps> = (props: ForumsPageProps) => {
     const [actionError, setActionError] = useState<string>()
     const [deleteTarget, setDeleteTarget] = useState<ForumTopicSummary>()
     const [editTarget, setEditTarget] = useState<ForumTopicDetail>()
+    const [draft, setDraft] = useState<TopicDraft>()
     const categoryResponse = useSWR(
         initialized ? ['public-forums:categories', identity] : undefined,
         getPublicForumCategories,
@@ -131,6 +173,7 @@ const ForumsPage: FC<ForumsPageProps> = (props: ForumsPageProps) => {
     )
     const detail = detailResponse.data
     const category = categories.find(item => item.id === (categoryId ?? detail?.topic.parentTopicId))
+    const draftKey = topicDraftKey(memberId, category?.id)
     const listQuery = new URLSearchParams({ page: String(page), perPage: String(perPage) })
     if (categoryId) listQuery.set('categoryId', categoryId)
     if (search) listQuery.set('search', search)
@@ -198,6 +241,23 @@ const ForumsPage: FC<ForumsPageProps> = (props: ForumsPageProps) => {
             .then(() => mutateCategories())
             .catch(() => undefined)
     }, [memberId, detail, mutateCategories])
+    useEffect(() => {
+        setDraft(readTopicDraft(draftKey))
+    }, [draftKey])
+    // Autosave the composer shortly after each keystroke so an abandoned topic can be resumed later.
+    useEffect(() => {
+        if (!creating || !draftKey) return undefined
+        const timer = window.setTimeout(() => {
+            const savedAt = new Date()
+                .toISOString()
+            const next = titleInput.trim() || content.trim()
+                ? { content, savedAt, title: titleInput }
+                : undefined
+            writeTopicDraft(draftKey, next)
+            setDraft(next)
+        }, 500)
+        return () => window.clearTimeout(timer)
+    }, [creating, draftKey, titleInput, content])
 
     /** Refreshes data after a shared forum mutation. @returns Completion. @throws API errors. */
     const refresh = async (): Promise<void> => {
@@ -218,6 +278,32 @@ const ForumsPage: FC<ForumsPageProps> = (props: ForumsPageProps) => {
         else next.delete(name)
         if (name !== 'page') next.delete('page')
         setQuery(next)
+    }
+
+    /** Empties the search box and, when results are showing, returns to the unfiltered page.
+     * @returns Nothing. @throws Never.
+     */
+    const clearSearch = (): void => {
+        setSearchInput('')
+        if (search) setFilter('search', '')
+    }
+
+    /** Opens the composer, restoring any draft saved for this category. @returns Nothing. @throws Never. */
+    const openComposer = (): void => {
+        if (draft) {
+            setTitleInput(draft.title)
+            setContent(draft.content)
+        }
+
+        setCreating(true)
+    }
+
+    /** Removes the saved draft and empties the composer. @returns Nothing. @throws Never. */
+    const discardDraft = (): void => {
+        if (draftKey) writeTopicDraft(draftKey)
+        setDraft(undefined)
+        setTitleInput('')
+        setContent('')
     }
 
     /** Updates the member's category/thread watch. @param topic Target. @returns Completion. @throws
@@ -283,8 +369,7 @@ const ForumsPage: FC<ForumsPageProps> = (props: ForumsPageProps) => {
                 title: titleInput.trim(),
             })
             setCreating(false)
-            setTitleInput('')
-            setContent('')
+            discardDraft()
             await categoryResponse.mutate()
             navigate(`${forumsRoot}/thread/${created.topic.id}`)
         } catch (error) {
@@ -317,11 +402,18 @@ const ForumsPage: FC<ForumsPageProps> = (props: ForumsPageProps) => {
         || !categoryResponse.data
         || (!!threadId && !detail)
         || (listing && !threadId && !listResponse.data)
+    const searching = !!search && !category && !threadId
     const heading = creating
         ? 'Create new topic'
         : (detail?.topic.title
             ?? category?.title
-            ?? (watching ? 'Watching' : legacyRoute ? 'Legacy forums' : 'Public Forums'))
+            ?? (watching ? 'Watching' : searching ? 'Search results' : legacyRoute ? 'Legacy forums' : 'Public Forums'))
+    const subtitle = searching
+        ? `Showing results for “${search}”.`
+        : legacyRoute
+            ? 'Browse tutorials and discussions archived from more than 20 years of Topcoder forums history.'
+            : 'Explore community conversations, find answers, and join discussions with Topcoder members around '
+                + 'the world.'
     const parent = category && categories.find(item => item.id === category.parentTopicId)
     // The hidden Jive wrapper never appears in the breadcrumb; its children sit directly under the archive.
     const breadcrumb = parent && parent.title === LEGACY_WRAPPER_TITLE && isLegacyCategory(parent)
@@ -367,7 +459,7 @@ const ForumsPage: FC<ForumsPageProps> = (props: ForumsPageProps) => {
                         onClick={() => watch(item)}
                         type='button'
                     >
-                        <img alt='' src={watchIcon} />
+                        <img alt='' src={item.watching ? watchedIcon : watchIcon} />
                         {item.watching ? 'Watched' : 'Watch'}
                     </button>
                 </div>
@@ -468,13 +560,7 @@ const ForumsPage: FC<ForumsPageProps> = (props: ForumsPageProps) => {
                 </div>
                 {threadId && <div className={styles.emptySubtitle} />}
                 {(!category || threadId) && (
-                    <p className={threadId ? styles.mobileOnly : undefined}>
-                        {legacyRoute
-                            ? 'Browse tutorials and discussions archived from more than 20 years of Topcoder '
-                                + 'forums history.'
-                            : 'Explore community conversations, find answers, and join discussions with '
-                                + 'Topcoder members around the world.'}
-                    </p>
+                    <p className={threadId ? styles.mobileOnly : undefined}>{subtitle}</p>
                 )}
                 {category && !threadId && category.description && <p>{category.description}</p>}
             </header>
@@ -490,13 +576,28 @@ const ForumsPage: FC<ForumsPageProps> = (props: ForumsPageProps) => {
                             } else setFilter('search', searchInput.trim())
                         }}
                     >
-                        <img alt='' src={searchIcon} />
+                        <button aria-label='Search' type='submit'>
+                            <img alt='' src={searchIcon} />
+                        </button>
                         <input
                             aria-label='Search forums'
                             onChange={event => setSearchInput(event.target.value)}
+                            onKeyDown={event => {
+                                if (event.key === 'Escape') clearSearch()
+                            }}
                             placeholder='Search'
                             value={searchInput}
                         />
+                        {(searchInput || search) && (
+                            <button
+                                aria-label='Clear search'
+                                className={styles.clearSearch}
+                                onClick={clearSearch}
+                                type='button'
+                            >
+                                ×
+                            </button>
+                        )}
                     </form>
                     <nav className={styles.navigation} aria-label='Forum navigation'>
                         <Link aria-current={!watching && !legacyRoute ? 'page' : undefined} to={forumsRoot || '/'}>
@@ -531,12 +632,12 @@ const ForumsPage: FC<ForumsPageProps> = (props: ForumsPageProps) => {
                                         className={styles.primary}
                                         onClick={() => {
                                             if (!memberId) signIn()
-                                            else setCreating(true)
+                                            else openComposer()
                                         }}
                                         type='button'
                                     >
                                         <img alt='' src={plusIcon} />
-                                        Create new topic
+                                        {draft ? 'Continue draft' : 'Create new topic'}
                                     </button>
                                 )}
                             </section>
@@ -688,7 +789,17 @@ const ForumsPage: FC<ForumsPageProps> = (props: ForumsPageProps) => {
                                 <button onClick={() => setCreating(false)} type='button'>
                                     Cancel
                                 </button>
+                                {draft && (
+                                    <button onClick={discardDraft} type='button'>
+                                        Discard draft
+                                    </button>
+                                )}
                             </div>
+                            <p className={styles.draftStatus} role='status'>
+                                {draft
+                                    ? `Draft saved in this browser at ${formatForumDate(draft.savedAt)}.`
+                                    : 'Your topic is saved as a draft in this browser while you write.'}
+                            </p>
                         </form>
                     ) : detail ? (
                         <ForumTopicView
@@ -710,20 +821,24 @@ const ForumsPage: FC<ForumsPageProps> = (props: ForumsPageProps) => {
                                     .map(item => (item.displayAs === 'Categories'
                                         ? categoryGroup(item)
                                         : categoryRow(item)))}
-                            {topics.map(topic => (
-                                <ForumTopicCard
-                                    canDelete={isAdmin}
-                                    key={topic.id}
-                                    memberId={memberId}
-                                    onDelete={setDeleteTarget}
-                                    onEdit={edit}
-                                    onSelect={openTopic}
-                                    onWatch={watch}
-                                    pendingAction={busy}
-                                    profilesByMemberId={profiles}
-                                    topic={topic}
-                                />
-                            ))}
+                            {topics.map(topic => {
+                                // Watched categories come back as bare topics; show their aggregated card.
+                                const watchedCategory = categories.find(item => item.id === topic.id)
+                                return watchedCategory ? categoryRow(watchedCategory) : (
+                                    <ForumTopicCard
+                                        canDelete={isAdmin}
+                                        key={topic.id}
+                                        memberId={memberId}
+                                        onDelete={setDeleteTarget}
+                                        onEdit={edit}
+                                        onSelect={openTopic}
+                                        onWatch={watch}
+                                        pendingAction={busy}
+                                        profilesByMemberId={profiles}
+                                        topic={topic}
+                                    />
+                                )
+                            })}
                             {!topics.length && category?.displayAs !== 'Categories' && (
                                 <section className={styles.sideCard}>
                                     <h2>{watching ? 'No watched discussions' : 'No topics found'}</h2>

@@ -807,6 +807,12 @@
             padding: 4px;
         }
 
+        // Keep the unread marker in its Figma red rather than the muted meta style.
+        > .newPost {
+            background: #ffe5ec;
+            color: #c1294f;
+        }
+
         > time {
             color: #6f6f6f;
             flex-basis: 100%;

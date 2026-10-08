@@ -623,7 +623,7 @@ export const ForumTopicCard: FC<{
                             onClick={() => props.onWatch(props.topic)}
                             type='button'
                         >
-                            <ForumIcon name='watch' />
+                            <ForumIcon name={props.topic.watching ? 'watched' : 'watch'} />
                             {props.topic.watching ? 'Watched' : 'Watch'}
                         </button>
                     </div>
@@ -1345,7 +1345,7 @@ const ForumPostCard: FC<{
                     )}
                     {props.onWatch && (
                         <button onClick={props.onWatch} type='button'>
-                            <ForumIcon name='watch' />
+                            <ForumIcon name={props.detail.topic.watching ? 'watched' : 'watch'} />
                             {props.detail.topic.watching ? 'Watched' : 'Watch'}
                         </button>
                     )}

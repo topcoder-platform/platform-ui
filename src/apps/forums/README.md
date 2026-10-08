@@ -35,6 +35,21 @@ API. Authenticated response cache keys include the member ID and roles. Legacy
 non-login author IDs retain their handle/initials and are excluded from numeric
 member-profile lookup batches.
 
+The sidebar search box submits with its magnifier button or Enter; a clear
+button empties it and returns from the "Search results" page to the unfiltered
+index. Watched categories in the Watching list render with the category card
+(topics, posts, last post and participants from the category catalog) because
+the topics endpoint returns them as bare summaries. The mobile layout keeps the
+back arrow beside the page title. Active watches use the filled `watched` icon
+from `ForumIcon`.
+
+The topic composer autosaves a draft to `localStorage` under
+`public-forums:draft:<memberId>:<categoryId>` half a second after each change
+(`topicDraftKey`). The category card's button reads "Continue draft" when one
+exists, opening the composer restores it, creating the topic or "Discard draft"
+removes it, and Cancel keeps it. Drafts are per browser; the forums API has no
+draft endpoint, so the Figma "My Drafts" list is still omitted.
+
 Guest pages require no login. Interaction controls send guests through the
 existing login flow with the current URL as their return location. Signed-in
 members see creation/reply controls according to API permissions; locks still
