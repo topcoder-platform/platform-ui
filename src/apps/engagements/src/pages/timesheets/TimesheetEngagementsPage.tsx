@@ -399,7 +399,7 @@ const TimesheetEngagementsPage: FC = () => {
                                         <th scope='col'>Assignee</th>
                                         <th scope='col'>Engagement</th>
                                         <th scope='col'>Assignment Status</th>
-                                        <th scope='col'>Pending Approval</th>
+                                        <th scope='col'></th>
                                         <th scope='col'>Action</th>
                                     </tr>
                                 </thead>
@@ -420,7 +420,7 @@ const TimesheetEngagementsPage: FC = () => {
                                                             status='pending_approval'
                                                         />
                                                     )
-                                                    : '-'}
+                                                    : ''}
                                             </td>
                                             <td data-label='Action'>
                                                 <Button
