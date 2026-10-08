@@ -33,6 +33,7 @@ import unordered from '../assets/forums/8ce62.svg'
 import up from '../assets/forums/5f27f.svg'
 import views from '../assets/forums/0a628.svg'
 import watch from '../assets/forums/74494.svg'
+import watched from '../assets/forums/watched.svg'
 
 const icons = {
     activeUp,
@@ -68,9 +69,10 @@ const icons = {
     up,
     views,
     watch,
+    watched,
 }
 
-/** Displays an original Figma forum icon at its intrinsic size.
+/** Displays an original Figma forum icon at its intrinsic size (`watched` is the filled eye for active watches).
  * @param props Named action icon. @returns Decorative image; the parent supplies its accessible label.
  * @throws Never.
  */

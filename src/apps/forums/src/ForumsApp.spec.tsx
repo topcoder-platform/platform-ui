@@ -27,20 +27,26 @@ jest.mock('~/libs/shared', () => ({ RestrictedPage: () => <div>Restricted</div> 
 jest.mock('~/libs/ui', () => ({ LoadingSpinner: () => <div>Loading</div> }), { virtual: true })
 jest.mock('./ForumsPage', () => ({
     __esModule: true,
-    default: () => {
+    default: (props: { legacy?: boolean }) => {
         const params = jest.requireActual('react-router-dom')
             .useParams()
 
-        return <div>{params.categoryId || params.threadId || 'Forum index'}</div>
+        return (
+            <div>
+                {params.categoryId || params.threadId || (props.legacy ? 'Legacy index' : 'Forum index')}
+            </div>
+        )
     },
 }))
 
 describe('ForumsApp with the platform router', () => {
     it.each([
         ['platform', '/forums', '', 'Forum index'],
+        ['platform', '/forums', '/legacy', 'Legacy index'],
         ['platform', '/forums', '/category/category-123', 'category-123'],
         ['platform', '/forums', '/thread/thread-456', 'thread-456'],
         ['forums', '', '', 'Forum index'],
+        ['forums', '', '/legacy', 'Legacy index'],
         ['forums', '', '/category/category-123', 'category-123'],
         ['forums', '', '/thread/thread-456', 'thread-456'],
     ])('renders the %s host at %s%s', async (host, root, path, expected) => {

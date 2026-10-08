@@ -107,7 +107,28 @@
     display: flex;
     gap: 4px;
     height: 38px;
-    padding: 9px 16px;
+    padding: 9px 12px 9px 16px;
+    button {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        color: #6f6f6f;
+        display: flex;
+        flex-shrink: 0;
+        justify-content: center;
+        padding: 0;
+    }
+    .clearSearch {
+        border-radius: 50%;
+        font-size: 20px;
+        height: 24px;
+        line-height: 1;
+        width: 24px;
+        &:hover {
+            background: #e9ecef;
+            color: #161616;
+        }
+    }
     input {
         border: 0;
         color: #161616;
@@ -167,6 +188,10 @@
     p {
         font-size: 14px;
         line-height: 20px;
+    }
+    p a {
+        color: #007d79;
+        font-weight: 700;
     }
     > a {
         align-items: center;
@@ -394,6 +419,11 @@
         padding: 8px 24px;
     }
 }
+.draftStatus {
+    color: #6f6f6f;
+    font-size: 12px;
+    line-height: 16px;
+}
 .error {
     background: #ffe5ec;
     border-radius: 4px;
@@ -489,7 +519,7 @@
 
 @media (max-width: 767px) {
     .header h1 { font-size: 28px; line-height: 36px; }
-    .breadcrumb > :not(:first-child), .titleRow > button, .emptySubtitle, .infoMetrics { display: none; }
+    .breadcrumb > :not(:first-child), .emptySubtitle, .infoMetrics { display: none; }
     .mobileOnly { display: flex; }
     .infoCard { border-color: #e0e0e0; }
 }

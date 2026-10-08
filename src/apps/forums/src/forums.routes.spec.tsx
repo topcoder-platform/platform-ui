@@ -4,7 +4,11 @@ import type { PlatformRoute } from '~/libs/core'
 /** Loads route declarations for one simulated host.
  * @param subdomain Host label. @returns Fresh public forum route tree. @throws Module loading errors.
  */
-function loadRoutes(subdomain: string): { forumsRoot: string; forumsRoutes: ReadonlyArray<PlatformRoute> } {
+function loadRoutes(subdomain: string): {
+    forumsRoot: string
+    forumsRoutes: ReadonlyArray<PlatformRoute>
+    legacyForumsPath: string
+} {
     jest.resetModules()
     jest.doMock('~/libs/core', () => ({ lazyLoad: () => () => <div /> }), { virtual: true })
     jest.doMock('~/config', () => ({
@@ -21,13 +25,15 @@ describe('public forums routes', () => {
         const routes = loadRoutes(host)
         expect(routes.forumsRoot)
             .toBe(root)
+        expect(routes.legacyForumsPath)
+            .toBe(`${root}/legacy`)
         expect(routes.forumsRoutes)
             .toHaveLength(1)
         expect(routes.forumsRoutes[0].domain)
             .toBe('forums')
         expect(routes.forumsRoutes[0].authRequired).not.toBe(true)
         expect(routes.forumsRoutes[0].children?.map(child => child.route))
-            .toEqual(['', 'category/:categoryId', 'thread/:threadId'])
+            .toEqual(['', 'legacy', 'category/:categoryId', 'thread/:threadId'])
         expect(routes.forumsRoutes[0].children?.some(child => child.authRequired))
             .toBe(false)
     })
