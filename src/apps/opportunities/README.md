@@ -244,8 +244,9 @@ to their authored subtype icons and member-facing labels.
   rail: the Review App card, the Topcoder Thrive article, the AI reviewer guide,
   and Usable Code Rules are omitted, and Educational Materials links to the
   TopGear terms (`topgearTermsUrl`, from `URLS.TOPGEAR_TERMS`) as "TopGear
-  Challenges Explained". The
-  Challenge Terms card still lists the challenge's own terms, as community-app did.
+  Challenges Explained". The Review Style and Challenge Terms sections are also
+  omitted, so the challenge-information card only appears for TopGear challenges
+  that have design guidance or authored Challenge Links.
 
 ## Challenge detail timeline
 

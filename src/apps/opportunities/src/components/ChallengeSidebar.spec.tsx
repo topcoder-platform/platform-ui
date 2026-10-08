@@ -298,12 +298,29 @@ describe('ChallengeSidebar Review Style', () => {
             .not.toBeInTheDocument()
         expect(screen.queryByRole('link', { name: 'Usable Code Rules' }))
             .not.toBeInTheDocument()
-        expect(screen.getByRole('heading', { name: 'Review Style' }))
+        expect(screen.queryByRole('heading', { name: 'Review Style' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: 'Challenge Terms' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Standard Terms 2026' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Review challenge terms' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Need help?' }))
             .toBeInTheDocument()
-        expect(screen.getByRole('heading', { name: 'Challenge Terms' }))
+    })
+
+    it('keeps design submission guidance without terms for TopGear design challenges', () => {
+        mockIsTopgearChallenge.mockReturnValue(true)
+
+        renderSidebar(undefined, designChallenge)
+
+        expect(screen.getByRole('heading', { name: 'Submission Format' }))
             .toBeInTheDocument()
-        expect(screen.getByRole('button', { name: 'Standard Terms 2026' }))
+        expect(screen.getByRole('heading', { name: 'Source files' }))
             .toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: 'Challenge Terms' }))
+            .not.toBeInTheDocument()
     })
 
     it('keeps track-specific guides for TopGear challenges', () => {

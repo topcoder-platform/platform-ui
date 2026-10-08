@@ -199,7 +199,8 @@ const ChallengeTermButton: FC<ChallengeTermButtonProps> = props => {
  * submission guidance, challenge terms, source files, and team contact.
  * TopGear (Wipro) challenges follow community-app's Wipro rail: the Review App
  * card, Topcoder Thrive articles, AI reviewer guide, and Usable Code Rules are
- * replaced by a single "TopGear Challenges Explained" link to the TopGear terms.
+ * replaced by a single "TopGear Challenges Explained" link to the TopGear terms,
+ * and the Review Style and Challenge Terms sections are omitted.
  *
  * @param props challenge context and modal actions.
  * @returns Figma right rail cards.
@@ -243,6 +244,11 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
     if (forumUrl && !challengeLinks.some(link => link.url === forumUrl)) {
         challengeLinks.push({ label: 'Challenge Forum', url: forumUrl })
     }
+
+    const showReviewStyle = developmentChallenge && !marathonMatch && props.showReviewStyle && !topgearChallenge
+    const showChallengeTerms = !topgearChallenge
+    const showChallengeLinks = !developmentChallenge && challengeLinks.length > 0
+    const showChallengeInfo = designChallenge || showReviewStyle || showChallengeTerms || showChallengeLinks
 
     /**
      * Renders one safe external right-rail link.
@@ -417,166 +423,170 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                     </>
                 )}
             </SidebarCard>
-            <section className={`${styles.card} ${styles.challengeInfo}`}>
-                {designChallenge && (
-                    <>
-                        <div className={styles.infoSection}>
-                            <h3>
-                                <img alt='' aria-hidden='true' src={sidebarFolderIcon} />
-                                Submission Format
-                            </h3>
-                            <ol>
-                                <li>Look for instructions in this challenge regarding what files to provide.</li>
-                                <li>
-                                    <strong className={styles.fileNameLabel}>Submission.zip:</strong>
+            {showChallengeInfo && (
+                <section className={`${styles.card} ${styles.challengeInfo}`}>
+                    {designChallenge && (
+                        <>
+                            <div className={styles.infoSection}>
+                                <h3>
+                                    <img alt='' aria-hidden='true' src={sidebarFolderIcon} />
+                                    Submission Format
+                                </h3>
+                                <ol>
+                                    <li>Look for instructions in this challenge regarding what files to provide.</li>
+                                    <li>
+                                        <strong className={styles.fileNameLabel}>Submission.zip:</strong>
+                                        {' '}
+                                        Place your submission files into a zip file.
+                                    </li>
+                                    <li>
+                                        <strong className={styles.fileNameLabel}>Source.zip:</strong>
+                                        {' '}
+                                        Place all of your source files into a zip file.
+                                    </li>
+                                    <li>
+                                        <strong className={styles.fileNameLabel}>Declaration.txt:</strong>
+                                        {' '}
+                                        Declare your fonts, stock photos, and icons in a txt file.
+                                    </li>
+                                    <li>
+                                        <strong className={styles.fileNameLabel}>Preview.jpg:</strong>
+                                        {' '}
+                                        Create a 1024 x 1024 px preview image file.
+                                    </li>
+                                    <li>
+                                        Place the 4 files you just created into a single zip file.
+                                        This will be what you upload.
+                                    </li>
+                                </ol>
+                                <p>
+                                    Trouble formatting your submission or want to learn more?
                                     {' '}
-                                    Place your submission files into a zip file.
-                                </li>
-                                <li>
-                                    <strong className={styles.fileNameLabel}>Source.zip:</strong>
+                                    <a
+                                        className={styles.inlineAnchor}
+                                        href={DESIGN_SUBMISSION_FORMAT_URL}
+                                        rel='noreferrer'
+                                        target='_blank'
+                                    >
+                                        Read the FAQ.
+                                    </a>
+                                </p>
+                            </div>
+                            <div className={styles.infoSection}>
+                                <h3>
+                                    <img alt='' aria-hidden='true' src={sidebarFrameIcon} />
+                                    Fonts, Stock Photos, and Icons
+                                </h3>
+                                <p>
+                                    All fonts, stock photos, and icons within your design must be declared when you
+                                    submit. DO NOT include any 3rd party files in your submission or source files.
                                     {' '}
-                                    Place all of your source files into a zip file.
-                                </li>
-                                <li>
-                                    <strong className={styles.fileNameLabel}>Declaration.txt:</strong>
+                                    Read about
                                     {' '}
-                                    Declare your fonts, stock photos, and icons in a txt file.
-                                </li>
-                                <li>
-                                    <strong className={styles.fileNameLabel}>Preview.jpg:</strong>
+                                    the
                                     {' '}
-                                    Create a 1024 x 1024 px preview image file.
-                                </li>
-                                <li>
-                                    Place the 4 files you just created into a single zip file.
-                                    This will be what you upload.
-                                </li>
-                            </ol>
-                            <p>
-                                Trouble formatting your submission or want to learn more?
-                                {' '}
-                                <a
-                                    className={styles.inlineAnchor}
-                                    href={DESIGN_SUBMISSION_FORMAT_URL}
-                                    rel='noreferrer'
-                                    target='_blank'
-                                >
-                                    Read the FAQ.
-                                </a>
-                            </p>
-                        </div>
+                                    <a
+                                        className={styles.inlineAnchor}
+                                        href={FILE_SUBMISSION_POLICY_URL}
+                                        rel='noreferrer'
+                                        target='_blank'
+                                    >
+                                        Policy
+                                    </a>
+                                    .
+                                </p>
+                                {challengeAllowsStockArt(props.challenge) && (
+                                    <p>Stock photography is allowed in this challenge.</p>
+                                )}
+                            </div>
+                            <div className={styles.infoSection}>
+                                <h3>
+                                    <img alt='' aria-hidden='true' src={sidebarSearchIcon} />
+                                    Screening
+                                </h3>
+                                <p>
+                                    All submissions are screened for eligibility before the challenge
+                                    holder picks winners.
+                                    {' '}
+                                    Don&apos;t let your hard work go to waste. Learn more about
+                                    {' '}
+                                    <a
+                                        className={styles.inlineAnchor}
+                                        href={DESIGN_SCREENING_LEARNING_URL}
+                                        rel='noreferrer'
+                                        target='_blank'
+                                    >
+                                        how to pass screening
+                                    </a>
+                                    .
+                                </p>
+                            </div>
+                        </>
+                    )}
+                    {showReviewStyle && (
+                        <ReviewStyleSection
+                            config={props.aiReviewConfig}
+                            loading={props.reviewStyleLoading}
+                            unavailable={props.reviewStyleUnavailable}
+                        />
+                    )}
+                    {showChallengeTerms && (
                         <div className={styles.infoSection}>
                             <h3>
-                                <img alt='' aria-hidden='true' src={sidebarFrameIcon} />
-                                Fonts, Stock Photos, and Icons
+                                <img alt='' aria-hidden='true' src={sidebarPolicyIcon} />
+                                Challenge Terms
                             </h3>
-                            <p>
-                                All fonts, stock photos, and icons within your design must be declared when you
-                                submit. DO NOT include any 3rd party files in your submission or source files.
-                                {' '}
-                                Read about
-                                {' '}
-                                the
-                                {' '}
-                                <a
-                                    className={styles.inlineAnchor}
-                                    href={FILE_SUBMISSION_POLICY_URL}
-                                    rel='noreferrer'
-                                    target='_blank'
-                                >
-                                    Policy
-                                </a>
-                                .
-                            </p>
-                            {challengeAllowsStockArt(props.challenge) && (
-                                <p>Stock photography is allowed in this challenge.</p>
-                            )}
+                            {displayedTerms.length > 0
+                                ? displayedTerms.map((term, index) => (
+                                    <ChallengeTermButton
+                                        index={index}
+                                        key={term.id ?? term.title ?? `term-${index}`}
+                                        onShowTerms={props.onShowTerms}
+                                        term={term}
+                                    />
+                                ))
+                                : <button onClick={showAllTerms} type='button'>Review challenge terms</button>}
                         </div>
+                    )}
+                    {showChallengeLinks && (
                         <div className={styles.infoSection}>
                             <h3>
-                                <img alt='' aria-hidden='true' src={sidebarSearchIcon} />
-                                Screening
+                                <IconOutline.LinkIcon />
+                                Challenge Links
                             </h3>
-                            <p>
-                                All submissions are screened for eligibility before the challenge
-                                holder picks winners.
-                                {' '}
-                                Don&apos;t let your hard work go to waste. Learn more about
-                                {' '}
-                                <a
-                                    className={styles.inlineAnchor}
-                                    href={DESIGN_SCREENING_LEARNING_URL}
-                                    rel='noreferrer'
-                                    target='_blank'
-                                >
-                                    how to pass screening
-                                </a>
-                                .
-                            </p>
+                            {challengeLinks.map(externalLink)}
                         </div>
-                    </>
-                )}
-                {developmentChallenge && !marathonMatch && props.showReviewStyle && (
-                    <ReviewStyleSection
-                        config={props.aiReviewConfig}
-                        loading={props.reviewStyleLoading}
-                        unavailable={props.reviewStyleUnavailable}
-                    />
-                )}
-                <div className={styles.infoSection}>
-                    <h3>
-                        <img alt='' aria-hidden='true' src={sidebarPolicyIcon} />
-                        Challenge Terms
-                    </h3>
-                    {displayedTerms.length > 0
-                        ? displayedTerms.map((term, index) => (
-                            <ChallengeTermButton
-                                index={index}
-                                key={term.id ?? term.title ?? `term-${index}`}
-                                onShowTerms={props.onShowTerms}
-                                term={term}
-                            />
-                        ))
-                        : <button onClick={showAllTerms} type='button'>Review challenge terms</button>}
-                </div>
-                {!developmentChallenge && challengeLinks.length > 0 && (
-                    <div className={styles.infoSection}>
-                        <h3>
-                            <IconOutline.LinkIcon />
-                            Challenge Links
-                        </h3>
-                        {challengeLinks.map(externalLink)}
-                    </div>
-                )}
-                {designChallenge && (
-                    <>
-                        <div className={styles.infoSection}>
-                            <h3>
-                                <img alt='' aria-hidden='true' src={sidebarInventoryIcon} />
-                                Source files
-                            </h3>
-                            {fileTypes.length > 0 && (
-                                <ul>{fileTypes.map(fileType => <li key={fileType}>{fileType}</li>)}</ul>
-                            )}
-                            <p>You must include all source files with your submission.</p>
-                            {links.attachments.length > 0 && (
-                                <div className={styles.resourceLinks}>{links.attachments.map(externalLink)}</div>
-                            )}
-                        </div>
-                        <div className={styles.infoSection}>
-                            <h3>
-                                <img alt='' aria-hidden='true' src={sidebarLimitIcon} />
-                                Submission limit
-                            </h3>
-                            <p>
-                                {submissionLimit
-                                    ? `${submissionLimit} ${submissionLimit === 1 ? 'submission' : 'submissions'}`
-                                    : 'Unlimited'}
-                            </p>
-                        </div>
-                    </>
-                )}
-            </section>
+                    )}
+                    {designChallenge && (
+                        <>
+                            <div className={styles.infoSection}>
+                                <h3>
+                                    <img alt='' aria-hidden='true' src={sidebarInventoryIcon} />
+                                    Source files
+                                </h3>
+                                {fileTypes.length > 0 && (
+                                    <ul>{fileTypes.map(fileType => <li key={fileType}>{fileType}</li>)}</ul>
+                                )}
+                                <p>You must include all source files with your submission.</p>
+                                {links.attachments.length > 0 && (
+                                    <div className={styles.resourceLinks}>{links.attachments.map(externalLink)}</div>
+                                )}
+                            </div>
+                            <div className={styles.infoSection}>
+                                <h3>
+                                    <img alt='' aria-hidden='true' src={sidebarLimitIcon} />
+                                    Submission limit
+                                </h3>
+                                <p>
+                                    {submissionLimit
+                                        ? `${submissionLimit} ${submissionLimit === 1 ? 'submission' : 'submissions'}`
+                                        : 'Unlimited'}
+                                </p>
+                            </div>
+                        </>
+                    )}
+                </section>
+            )}
             <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarHelpIcon} />} title='Need help?'>
                 <p>If you are facing technical difficulties with this challenge, contact the team to get assistance.</p>
                 <button onClick={props.onContactTeam} type='button'>
