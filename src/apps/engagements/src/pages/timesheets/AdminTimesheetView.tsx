@@ -2,7 +2,13 @@ import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'reac
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { BaseModal, Button, InputDatePicker, InputSelect } from '~/libs/ui'
+import {
+    BaseModal,
+    Button,
+    InputDatePicker,
+    InputSelect,
+    useConfirmationModal,
+} from '~/libs/ui'
 
 import type { TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus } from '../../lib/models'
@@ -214,13 +220,34 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                 || normalizeRemarks(row.remarks) !== normalizeRemarks(saved.remarks)
         }
     }, [props.timesheet.entries])
-    // Any edit anywhere: approve and submit save these first, whatever is selected.
-    const hasPendingRowChanges = useMemo(() => rows.some(isRowChanged), [isRowChanged, rows])
-    // Save only sends the selected rows, so it is only offered when one of them has an edit.
+    // Every action sends only the selected rows, so Save is only offered when one of them has an edit.
     const hasSelectedRowChanges = useMemo(
         () => selectedRows.some(isRowChanged),
         [isRowChanged, selectedRows],
     )
+    // Edits outside the selection are not sent, and the grid reloads from the server after any
+    // action - so they would be lost without a word.
+    const unselectedChangedRowCount = useMemo(
+        () => rows.filter(row => !selectedDates.includes(row.workDate) && isRowChanged(row)).length,
+        [isRowChanged, rows, selectedDates],
+    )
+    const confirmation = useConfirmationModal()
+    const confirmDiscardingUnselectedEdits = useCallback(async (): Promise<boolean> => {
+        if (!unselectedChangedRowCount) {
+            return true
+        }
+
+        const rowsLabel = unselectedChangedRowCount === 1
+            ? '1 row that is not selected has'
+            : `${unselectedChangedRowCount} rows that are not selected have`
+
+        return confirmation.confirm({
+            action: 'Continue',
+            content: `${rowsLabel} unsaved edits. Only the selected rows are sent, so those edits `
+                + 'will be discarded. Select them as well to keep them.',
+            title: 'Discard unsaved edits?',
+        })
+    }, [confirmation, unselectedChangedRowCount])
 
     const reload = useCallback(async (): Promise<void> => {
         const loaded = await getTimesheet(
@@ -350,11 +377,15 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
     const savePendingRowsIfNeeded = useCallback(async (
         overrideReason?: string,
     ): Promise<TimesheetView> => {
-        if (!hasPendingRowChanges) {
+        // Only what the admin selected is acted on, so only the selected rows' edits are saved;
+        // edits on rows outside the selection are not sent with someone else's approval.
+        const changedSelectedRows = selectedRows.filter(isRowChanged)
+
+        if (!changedSelectedRows.length) {
             return props.timesheet
         }
 
-        const entries = rows
+        const entries = changedSelectedRows
             .filter(hasEnteredHours)
             .filter(row => !hasRowValidationError(
                 row,
@@ -374,7 +405,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
 
         props.onTimesheetChange(updated)
         return updated
-    }, [hasPendingRowChanges, props, rows])
+    }, [isRowChanged, props, selectedRows])
 
     const runOverride = useCallback(async (overrideReason: string) => {
         setActionError(undefined)
@@ -506,6 +537,10 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
             return
         }
 
+        if (!(await confirmDiscardingUnselectedEdits())) {
+            return
+        }
+
         // Touching an approved row is an override, so route it through the reason dialog instead.
         if (selectedStatuses.has(TimesheetEntryStatus.APPROVED)) {
             setPendingOverride('correct')
@@ -524,7 +559,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         } finally {
             setIsWorking(false)
         }
-    }, [invalidRows.length, saveRows, selectedStatuses])
+    }, [confirmDiscardingUnselectedEdits, invalidRows.length, saveRows, selectedStatuses])
 
     const canApprove = selectedIds.length > 0
         && selectedRows.every(row => row.status === TimesheetEntryStatus.SUBMITTED)
@@ -622,7 +657,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                     <Button
                         disabled={isWorking}
                         label={`Submit on behalf (${selectedIds.length})`}
-                        onClick={function onSubmitOnBehalf() {
+                        onClick={async function onSubmitOnBehalf() {
                             // Check remarks before asking for a reason; the API refuses the submit
                             // anyway, and this points at the rows to fix.
                             const missingRemarks = findMissingRemarksErrors(selectedRows)
@@ -634,7 +669,9 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                                 return
                             }
 
-                            setPendingOverride('submit')
+                            if (await confirmDiscardingUnselectedEdits()) {
+                                setPendingOverride('submit')
+                            }
                         }}
                         secondary
                     />
@@ -643,8 +680,10 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                     <Button
                         disabled={isWorking}
                         label={`Approve on behalf (${selectedIds.length})`}
-                        onClick={function onApproveOnBehalf() {
-                            setIsApproveOpen(true)
+                        onClick={async function onApproveOnBehalf() {
+                            if (await confirmDiscardingUnselectedEdits()) {
+                                setIsApproveOpen(true)
+                            }
                         }}
                         primary
                     />
@@ -653,8 +692,10 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                     <Button
                         disabled={isWorking}
                         label={`Reopen (${selectedIds.length})`}
-                        onClick={function onReopen() {
-                            setPendingOverride('reopen')
+                        onClick={async function onReopen() {
+                            if (await confirmDiscardingUnselectedEdits()) {
+                                setPendingOverride('reopen')
+                            }
                         }}
                         secondary
                     />
@@ -776,6 +817,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                 </section>
                 {addRangeError && <p className={styles.error}>{addRangeError}</p>}
             </BaseModal>
+            {confirmation.modal}
         </div>
     )
 }

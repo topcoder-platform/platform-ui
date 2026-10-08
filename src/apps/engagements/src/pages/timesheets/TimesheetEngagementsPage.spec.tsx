@@ -33,6 +33,28 @@ jest.mock('~/libs/ui', () => ({
             {props.children}
         </div>
     ),
+    // Only a complete YYYY-MM-DD value reports a change, the way the real picker reports a whole date.
+    InputDatePicker: (props: {
+        label: string
+        onChange: (date: Date | null) => void
+    }) => (
+        <label>
+            <span>{props.label}</span>
+            <input
+                aria-label={props.label}
+                onChange={function onPickerChange(event: React.ChangeEvent<HTMLInputElement>) {
+                    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(event.target.value)
+
+                    if (match) {
+                        props.onChange(
+                            new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])),
+                        )
+                    }
+                }}
+                type='text'
+            />
+        </label>
+    ),
     InputSelect: (props: {
         label: string
         onChange?: React.ChangeEventHandler<HTMLSelectElement>
@@ -60,6 +82,12 @@ jest.mock('~/libs/ui', () => ({
     ),
     LoadingSpinner: () => <div>loading-spinner</div>,
 }), { virtual: true })
+
+const mockAuth = { isAdmin: false, isLoggedIn: true, isTm: false, userRoles: [] as string[] }
+
+jest.mock('../../lib/utils/auth', () => ({
+    useAuth: () => mockAuth,
+}))
 
 jest.mock('../../components', () => ({
     EngagementsTabs: (props: { activeTab: string }) => (
@@ -141,6 +169,81 @@ const response = (
 describe('TimesheetEngagementsPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        mockAuth.isAdmin = false
+    })
+
+    it('opens an administrator on All timesheets rather than Pending Approval', async () => {
+        mockAuth.isAdmin = true
+        mockGetEngagements.mockResolvedValue(response(
+            [row({ viewerRole: TimesheetViewerRole.ADMINISTRATOR })],
+            TimesheetViewerRole.ADMINISTRATOR,
+        ))
+
+        render(<TimesheetEngagementsPage />)
+
+        await waitFor(() => {
+            expect(mockGetEngagements)
+                .toHaveBeenCalledWith(expect.objectContaining({ status: undefined }))
+        })
+        expect(mockGetEngagements).not.toHaveBeenCalledWith(
+            expect.objectContaining({ status: 'Pending Approval' }),
+        )
+        expect(await screen.findByLabelText('Status'))
+            .toHaveValue('')
+    })
+
+    it('keeps a manager on Pending Approval by default', async () => {
+        mockGetEngagements.mockResolvedValue(response([row()], TimesheetViewerRole.MANAGER))
+
+        render(<TimesheetEngagementsPage />)
+
+        await waitFor(() => {
+            expect(mockGetEngagements)
+                .toHaveBeenCalledWith(expect.objectContaining({ status: 'Pending Approval' }))
+        })
+        expect(screen.queryByLabelText('From Date')).not.toBeInTheDocument()
+    })
+
+    it('filters an administrator list by date range', async () => {
+        const user = userEvent.setup()
+        mockAuth.isAdmin = true
+        mockGetEngagements.mockResolvedValue(response(
+            [row({ viewerRole: TimesheetViewerRole.ADMINISTRATOR })],
+            TimesheetViewerRole.ADMINISTRATOR,
+        ))
+
+        render(<TimesheetEngagementsPage />)
+
+        await user.type(await screen.findByLabelText('From Date'), '2026-01-01')
+        await user.type(screen.getByLabelText('To Date'), '2026-09-30')
+
+        await waitFor(() => {
+            expect(mockGetEngagements)
+                .toHaveBeenLastCalledWith(expect.objectContaining({
+                    fromDate: '2026-01-01',
+                    toDate: '2026-09-30',
+                }))
+        })
+    })
+
+    it('shows an inverted date range as an error and does not send it', async () => {
+        const user = userEvent.setup()
+        mockAuth.isAdmin = true
+        mockGetEngagements.mockResolvedValue(response(
+            [row({ viewerRole: TimesheetViewerRole.ADMINISTRATOR })],
+            TimesheetViewerRole.ADMINISTRATOR,
+        ))
+
+        render(<TimesheetEngagementsPage />)
+
+        await user.type(await screen.findByLabelText('From Date'), '2026-09-30')
+        await user.type(screen.getByLabelText('To Date'), '2026-09-01')
+
+        expect(await screen.findByText('The to date cannot be earlier than the from date.'))
+            .toBeInTheDocument()
+        expect(mockGetEngagements).not.toHaveBeenCalledWith(
+            expect.objectContaining({ toDate: '2026-09-01' }),
+        )
     })
 
     it('lists one row per assignee with name and handle for a manager', async () => {

@@ -1,10 +1,11 @@
-import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { ChangeEvent, FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { debounce } from 'lodash'
 import { useNavigate } from 'react-router-dom'
 
 import {
     Button,
     ContentLayout,
+    InputDatePicker,
     InputSelect,
     InputText,
 } from '~/libs/ui'
@@ -12,7 +13,12 @@ import {
 import type { TimesheetEngagementRow, TimesheetRollupStatus } from '../../lib/models'
 import { TimesheetEntryStatus, TimesheetViewerRole } from '../../lib/models'
 import { getTimesheetEngagements } from '../../lib/services'
-import { TIMESHEET_REVIEW_STATUS_PARAM } from '../../lib/utils'
+import {
+    TIMESHEET_REVIEW_STATUS_PARAM,
+    toWorkDateString,
+    validateDateRange,
+} from '../../lib/utils'
+import { AuthCtx, useAuth } from '../../lib/utils/auth'
 import { rootRoute } from '../../engagements.routes'
 import { EngagementsTabs } from '../../components'
 
@@ -28,9 +34,13 @@ const TIMESHEET_STATUS_OPTIONS = [
 
 interface Filters {
     assignee: string
+    /** `YYYY-MM-DD`; administrators only. */
+    fromDate: string
     manager: string
     status: string
     title: string
+    /** `YYYY-MM-DD`; administrators only. */
+    toDate: string
 }
 
 /**
@@ -54,9 +64,30 @@ const getManagerEmptyMessage = (filters: Filters): string => {
 
 const EMPTY_FILTERS: Filters = {
     assignee: '',
+    fromDate: '',
     manager: '',
     status: 'Pending Approval',
     title: '',
+    toDate: '',
+}
+
+/**
+ * Administrators oversee every timesheet, so their list opens on All. Managers and TMs come here to
+ * clear what is waiting, so theirs opens on Pending Approval.
+ */
+const getDefaultFilters = (isAdmin: boolean): Filters => (
+    isAdmin ? { ...EMPTY_FILTERS, status: '' } : EMPTY_FILTERS
+)
+
+const toPickerDate = (value: string): Date | undefined => {
+    if (!value) {
+        return undefined
+    }
+
+    const [year, month, day] = value.split('-')
+        .map(Number)
+
+    return new Date(year, month - 1, day)
 }
 
 /**
@@ -67,19 +98,25 @@ const EMPTY_FILTERS: Filters = {
  */
 const TimesheetEngagementsPage: FC = () => {
     const navigate = useNavigate()
+    // The default status has to be picked before the first request, which is before the API reports
+    // `viewerRole` - so it comes from the caller's roles. Everything else still follows viewerRole.
+    const authCtx: AuthCtx = useAuth()
+    const isAdmin = authCtx.isAdmin
+    const isStatusTouchedRef = useRef<boolean>(false)
 
     const [rows, setRows] = useState<TimesheetEngagementRow[]>([])
     const [viewerRole, setViewerRole] = useState<TimesheetViewerRole | undefined>()
     const [page, setPage] = useState<number>(1)
     const [totalPages, setTotalPages] = useState<number>(1)
     const [totalCount, setTotalCount] = useState<number>(0)
-    const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
-    const [appliedFilters, setAppliedFilters] = useState<Filters>(EMPTY_FILTERS)
+    const [filters, setFilters] = useState<Filters>(() => getDefaultFilters(isAdmin))
+    const [appliedFilters, setAppliedFilters] = useState<Filters>(() => getDefaultFilters(isAdmin))
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | undefined>()
 
     const isAdministrator = viewerRole === TimesheetViewerRole.ADMINISTRATOR
     const isTm = viewerRole === TimesheetViewerRole.TM
+    const dateRangeError = validateDateRange(filters.fromDate, filters.toDate)
     const emptyStateMessage = isAdministrator
         ? 'No timesheets match these filters.'
         : isTm
@@ -95,11 +132,13 @@ const TimesheetEngagementsPage: FC = () => {
             try {
                 const response = await getTimesheetEngagements({
                     assignee: appliedFilters.assignee || undefined,
+                    fromDate: appliedFilters.fromDate || undefined,
                     manager: appliedFilters.manager || undefined,
                     page,
                     perPage: PER_PAGE,
                     status: (appliedFilters.status || undefined) as TimesheetRollupStatus | undefined,
                     title: appliedFilters.title || undefined,
+                    toDate: appliedFilters.toDate || undefined,
                 })
 
                 if (mounted) {
@@ -127,10 +166,30 @@ const TimesheetEngagementsPage: FC = () => {
         }
     }, [appliedFilters, page])
 
+    // The profile can arrive after the first render. Once it shows an administrator, move to their
+    // default - unless they already picked a status themselves.
+    useEffect(() => {
+        if (!isAdmin || isStatusTouchedRef.current) {
+            return
+        }
+
+        setFilters(current => ({ ...current, status: '' }))
+    }, [isAdmin])
+
     const handleFilterChange = useCallback((
         field: keyof Filters,
     ) => function onFilterChange(event: ChangeEvent<HTMLInputElement>) {
+        if (field === 'status') {
+            isStatusTouchedRef.current = true
+        }
+
         setFilters(current => ({ ...current, [field]: event.target.value }))
+    }, [])
+
+    const handleDateChange = useCallback((
+        field: 'fromDate' | 'toDate',
+    ) => function onDateChange(date: Date | null) {
+        setFilters(current => ({ ...current, [field]: date ? toWorkDateString(date) : '' }))
     }, [])
 
     const handleFilterBlur = useCallback(() => undefined, [])
@@ -144,6 +203,12 @@ const TimesheetEngagementsPage: FC = () => {
     )
 
     useEffect(() => {
+        // An inverted range is shown as an error and never sent.
+        if (validateDateRange(filters.fromDate, filters.toDate)) {
+            debouncedApplyFilters.cancel()
+            return undefined
+        }
+
         debouncedApplyFilters(filters)
 
         return () => {
@@ -152,10 +217,13 @@ const TimesheetEngagementsPage: FC = () => {
     }, [debouncedApplyFilters, filters])
 
     const handleClearFilters = useCallback(() => {
+        const defaults = getDefaultFilters(isAdmin)
+
+        isStatusTouchedRef.current = false
         setPage(1)
-        setFilters(EMPTY_FILTERS)
-        setAppliedFilters(EMPTY_FILTERS)
-    }, [])
+        setFilters(defaults)
+        setAppliedFilters(defaults)
+    }, [isAdmin])
 
     // Open the timesheet on the status the list was filtered by. Under "All" the row's own rollup is
     // the best guide to what the user came to look at.
@@ -238,7 +306,36 @@ const TimesheetEngagementsPage: FC = () => {
                                 classNameWrapper={styles.selectFilter}
                             />
                         </div>
+                        {isAdministrator && (
+                            <>
+                                <div className={styles.field}>
+                                    <InputDatePicker
+                                        className={styles.dateFilter}
+                                        classNameWrapper={styles.dateFilterWrapper}
+                                        date={toPickerDate(filters.fromDate)}
+                                        disabled={false}
+                                        isClearable
+                                        label='From Date'
+                                        onChange={handleDateChange('fromDate')}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <InputDatePicker
+                                        className={styles.dateFilter}
+                                        classNameWrapper={styles.dateFilterWrapper}
+                                        date={toPickerDate(filters.toDate)}
+                                        disabled={false}
+                                        isClearable
+                                        label='To Date'
+                                        onChange={handleDateChange('toDate')}
+                                    />
+                                </div>
+                            </>
+                        )}
                     </div>
+                    {dateRangeError && (
+                        <p className={styles.error} role='alert'>{dateRangeError}</p>
+                    )}
                     <div className={styles.filterActions}>
                         <Button label='Clear Filters' onClick={handleClearFilters} secondary />
                     </div>
