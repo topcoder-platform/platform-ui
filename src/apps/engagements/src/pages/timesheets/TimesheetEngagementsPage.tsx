@@ -399,7 +399,7 @@ const TimesheetEngagementsPage: FC = () => {
                                         <th scope='col'>Assignee</th>
                                         <th scope='col'>Engagement</th>
                                         <th scope='col'>Assignment Status</th>
-                                        <th scope='col'></th>
+                                        <th scope='col' data-label='Approval Status Col' />
                                         <th scope='col'>Action</th>
                                     </tr>
                                 </thead>
@@ -411,7 +411,7 @@ const TimesheetEngagementsPage: FC = () => {
                                             <td data-label='Assignment Status'>
                                                 <StatusBadge size='sm' status={row.assignmentStatus} />
                                             </td>
-                                            <td data-label='Pending Approval'>
+                                            <td data-label='Approval Status'>
                                                 {row.hasPendingApproval
                                                     ? (
                                                         <StatusBadge
