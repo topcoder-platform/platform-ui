@@ -627,6 +627,57 @@ describe('getSubTrackSummaryStats', () => {
                 wins: 76,
             })
     })
+
+    it('keeps aggregate First2Finish wins when legacy placement history is partial', () => {
+        const summaryStats = getSubTrackSummaryStats({
+            challenges: 290,
+            name: 'First2Finish',
+            submissions: {
+                submissions: 201,
+            },
+            wins: 195,
+        } as MemberStats, [
+            {
+                challengeId: 'legacy-f2f-1',
+                challengeName: 'Legacy First2Finish 1',
+                newRating: 1972,
+                placement: 1,
+                ratingDate: 1555394674000,
+            },
+            {
+                challengeId: 'legacy-f2f-2',
+                challengeName: 'Legacy First2Finish 2',
+                newRating: 1972,
+                placement: 1,
+                ratingDate: 1530172097000,
+            },
+        ])
+
+        expect(summaryStats)
+            .toEqual({
+                submissions: 201,
+                wins: 195,
+            })
+    })
+
+    it('keeps aggregate SRM wins when legacy placement history disagrees', () => {
+        const summaryStats = getSubTrackSummaryStats({
+            challenges: 123,
+            name: 'SRM',
+            wins: 3,
+        } as MemberStats, [
+            {
+                challengeId: 'legacy-srm-1',
+                challengeName: 'Legacy SRM 1',
+                newRating: 2950,
+                placement: 4,
+                ratingDate: 1274659200000,
+            },
+        ])
+
+        expect(summaryStats.wins)
+            .toEqual(3)
+    })
 })
 
 describe('getTrackSummaryStats', () => {
@@ -767,5 +818,116 @@ describe('getTrackSummaryStats', () => {
 
         expect(summaryStats.wins)
             .toEqual(8)
+    })
+
+    it('uses aggregate First2Finish wins in the Development total when legacy history is partial', () => {
+        const partialHistoryStats = {
+            DEVELOP: {
+                subTracks: [
+                    {
+                        challenges: 2,
+                        name: 'Task',
+                        submissions: {
+                            submissions: 2,
+                        },
+                        wins: 2,
+                    },
+                    {
+                        challenges: 1,
+                        name: 'Challenge',
+                        submissions: {
+                            submissions: 1,
+                        },
+                    },
+                    {
+                        challenges: 12,
+                        name: 'First2Finish',
+                        submissions: {
+                            submissions: 12,
+                        },
+                        wins: 10,
+                    },
+                    {
+                        challenges: 19,
+                        name: 'CODE',
+                        submissions: {
+                            submissions: 19,
+                        },
+                        wins: 2,
+                    },
+                ],
+                wins: 14,
+            },
+        } as unknown as UserStats
+        const partialHistory = {
+            DEVELOP: {
+                subTracks: [
+                    {
+                        history: [
+                            {
+                                challengeId: 'task-1',
+                                challengeName: 'Task 1',
+                                placement: 1,
+                                ratingDate: 1514592000000,
+                            },
+                            {
+                                challengeId: 'task-2',
+                                challengeName: 'Task 2',
+                                placement: 1,
+                                ratingDate: 1602028800000,
+                            },
+                        ],
+                        name: 'Task',
+                    },
+                    {
+                        history: [
+                            {
+                                challengeId: 'challenge-1',
+                                challengeName: 'Challenge 1',
+                                placement: 3,
+                                ratingDate: 1628640000000,
+                            },
+                        ],
+                        name: 'Challenge',
+                    },
+                    {
+                        history: [
+                            {
+                                challengeId: 'legacy-f2f-1',
+                                challengeName: 'Legacy First2Finish 1',
+                                placement: 1,
+                                ratingDate: 1543449600000,
+                            },
+                            {
+                                challengeId: 'legacy-f2f-2',
+                                challengeName: 'Legacy First2Finish 2',
+                                placement: 1,
+                                ratingDate: 1543449600001,
+                            },
+                        ],
+                        name: 'First2Finish',
+                    },
+                ],
+            },
+        } as unknown as UserStatsHistory
+        const developmentTrack: MemberStatsTrack | undefined = getActiveTracks(
+            partialHistoryStats,
+            partialHistory,
+        )
+            .find(track => track.name === 'Development')
+        const subTrackWins: number = developmentTrack?.subTracks.reduce((wins, subTrack) => {
+            const trackHistory = partialHistory.DEVELOP?.subTracks
+                ?.find(historyEntry => historyEntry.name === subTrack.name)
+                ?.history ?? []
+            const summaryStats: SubTrackSummaryStats = getSubTrackSummaryStats(subTrack, trackHistory)
+
+            return wins + summaryStats.wins
+        }, 0) ?? 0
+
+        // 2 Task placements + 10 aggregate First2Finish + 2 CODE, matching the API DEVELOP wins
+        expect(developmentTrack?.wins)
+            .toEqual(partialHistoryStats.DEVELOP?.wins)
+        expect(developmentTrack?.wins)
+            .toEqual(subTrackWins)
     })
 })
