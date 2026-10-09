@@ -66,10 +66,11 @@
         }
 
         .percentileWrap {
+            align-items: center;
+            justify-self: start;
             margin-top: 0;
 
             .name {
-                margin-left: $sp-2;
                 margin-top: calc(#{$sp-2} + 2px);
                 white-space: nowrap;
             }
@@ -178,5 +179,6 @@
 
 .tooltipContent {
     display: block;
+    text-align: center;
     white-space: nowrap;
 }
