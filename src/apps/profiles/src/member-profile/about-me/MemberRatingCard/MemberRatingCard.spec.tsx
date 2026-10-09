@@ -4,13 +4,15 @@ import type { PropsWithChildren } from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 
 import type { UserProfile, UserStats, UserStatsDistributionResponse } from '~/libs/core'
-import { useMemberStats, useStatsDistribution } from '~/libs/core'
+import { useMemberStats, useProfileCompleteness, useStatsDistribution } from '~/libs/core'
 
 import { getPreferredRolesText } from '../../../lib'
 
 import MemberRatingCard from './MemberRatingCard'
 
-const mockTooltip = jest.fn((props: PropsWithChildren<{ disableTooltip?: boolean }>) => <>{props.children}</>)
+type MockTooltipProps = PropsWithChildren<{ disableTooltip?: boolean, offset?: number }>
+
+const mockTooltip = jest.fn((props: MockTooltipProps) => <>{props.children}</>)
 
 jest.mock('~/libs/core', () => ({
     getRatingColor: jest.fn(() => '#616BD5'),
@@ -27,7 +29,7 @@ jest.mock('~/libs/core', () => ({
 })
 
 jest.mock('~/libs/ui', () => ({
-    Tooltip: (props: PropsWithChildren<{ disableTooltip?: boolean }>) => mockTooltip(props),
+    Tooltip: (props: MockTooltipProps) => mockTooltip(props),
 }), {
     virtual: true,
 })
@@ -57,6 +59,7 @@ jest.mock('./ModifyPreferredRolesModal', () => ({
 
 const mockedUseMemberStats = useMemberStats as jest.MockedFunction<typeof useMemberStats>
 const mockedUseStatsDistribution = useStatsDistribution as jest.MockedFunction<typeof useStatsDistribution>
+const mockedUseProfileCompleteness = useProfileCompleteness as jest.MockedFunction<typeof useProfileCompleteness>
 const mockedGetPreferredRolesText = getPreferredRolesText as jest.MockedFunction<typeof getPreferredRolesText>
 const profile = { handle: 'dave' } as UserProfile
 const ratingDistribution: UserStatsDistributionResponse = {
@@ -81,11 +84,11 @@ const defaultProps = {
 
 /**
  * Returns the props from the latest mocked Tooltip render.
- * Used to verify the rating card disables its percentile tooltip while the rating modal is open.
+ * Used to verify the rating card's percentile tooltip offset and that it is disabled while the rating modal is open.
  *
  * @returns The most recent Tooltip props captured by the mock.
  */
-function getLastTooltipProps(): PropsWithChildren<{ disableTooltip?: boolean }> {
+function getLastTooltipProps(): MockTooltipProps {
     const lastTooltipCall = mockTooltip.mock.calls[mockTooltip.mock.calls.length - 1]
 
     return lastTooltipCall[0]
@@ -94,10 +97,16 @@ function getLastTooltipProps(): PropsWithChildren<{ disableTooltip?: boolean }> 
 describe('MemberRatingCard', () => {
     beforeEach(() => {
         jest.clearAllMocks()
-        mockTooltip.mockImplementation((props: PropsWithChildren<{ disableTooltip?: boolean }>) => (
+        mockTooltip.mockImplementation((props: MockTooltipProps) => (
             <>{props.children}</>
         ))
         mockedUseStatsDistribution.mockReturnValue(ratingDistribution)
+        mockedUseProfileCompleteness.mockReturnValue({
+            entries: {},
+            isLoading: false,
+            mutate: jest.fn(),
+            percent: 100,
+        } as unknown as ReturnType<typeof useProfileCompleteness>)
         mockedGetPreferredRolesText.mockReturnValue('')
     })
 
@@ -216,6 +225,28 @@ describe('MemberRatingCard', () => {
             .toBeInTheDocument()
         expect(screen.getByText('Data Scientists'))
             .toBeInTheDocument()
+    })
+
+    it('offsets the percentile tooltip above the card so its arrow has room', () => {
+        mockedUseMemberStats.mockReturnValue({
+            DATA_SCIENCE: {
+                MARATHON_MATCH: {
+                    mostRecentEventDate: 1000,
+                    rank: {
+                        percentile: 42,
+                        rating: 1200,
+                    },
+                },
+            },
+            maxRating: {
+                rating: 1200,
+            },
+        } as unknown as UserStats)
+
+        render(<MemberRatingCard {...defaultProps} />)
+
+        expect(getLastTooltipProps().offset)
+            .toBe(16)
     })
 
     it('disables the percentile tooltip while the rating modal is open', () => {

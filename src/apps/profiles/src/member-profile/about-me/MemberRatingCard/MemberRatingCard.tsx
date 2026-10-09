@@ -31,6 +31,9 @@ import { MemberRatingInfoModal } from './MemberRatingInfoModal'
 import { ModifyPreferredRolesModal } from './ModifyPreferredRolesModal'
 import styles from './MemberRatingCard.module.scss'
 
+// Matches the card's top padding so the tooltip sits above the card and its arrow points into it
+const ratingTooltipOffset = 16
+
 interface MemberRatingCardProps {
     authProfile: UserProfile | undefined
     memberPersonalizationTraitsData: UserTrait[] | undefined
@@ -187,6 +190,7 @@ const MemberRatingCard: FC<MemberRatingCardProps> = (props: MemberRatingCardProp
                                     </span>
                                 )}
                                 disableTooltip={isInfoModalOpen}
+                                offset={ratingTooltipOffset}
                                 place='top'
                             >
                                 <button

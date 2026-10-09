@@ -63,3 +63,31 @@ describe('Tooltip event modes', () => {
             }))
     })
 })
+
+describe('Tooltip offset', () => {
+    beforeEach(() => {
+        mockReactTooltip.mockClear()
+    })
+
+    it('forwards a custom offset to react-tooltip', () => {
+        render(
+            <Tooltip content='Help' offset={16}>
+                <button type='button'>Help</button>
+            </Tooltip>,
+        )
+
+        expect(mockReactTooltip.mock.calls[0][0])
+            .toEqual(expect.objectContaining({ offset: 16 }))
+    })
+
+    it('leaves the react-tooltip default offset in place when no offset is given', () => {
+        render(
+            <Tooltip content='Help'>
+                <button type='button'>Help</button>
+            </Tooltip>,
+        )
+
+        expect(mockReactTooltip.mock.calls[0][0])
+            .toEqual(expect.objectContaining({ offset: undefined }))
+    })
+})
