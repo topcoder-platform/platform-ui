@@ -2,6 +2,7 @@
 import {
     render,
     screen,
+    waitFor,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {
@@ -159,17 +160,75 @@ interface TestHarnessProps {
     canConfigureFullReview?: boolean
     isReadOnly?: boolean
     numOfSubmissions?: number
+    phases?: ChallengeEditorFormData['phases']
     reviewers: Reviewer[]
     screenerOnly?: boolean
+    status?: string
 }
+
+const AI_ONLY_TIMELINE_PHASES: ChallengeEditorFormData['phases'] = [
+    {
+        id: 'challenge-phase-registration',
+        name: 'Registration',
+        phaseId: 'phase-registration',
+    },
+    {
+        id: 'challenge-phase-submission',
+        name: 'Submission',
+        phaseId: 'phase-submission',
+    },
+    {
+        id: 'challenge-phase-ai-review',
+        name: 'AI Review',
+        phaseId: 'phase-ai-review',
+    },
+    {
+        id: 'challenge-phase-approval',
+        name: 'Approval',
+        phaseId: 'phase-approval',
+    },
+]
+const DEFAULT_TIMELINE_CHALLENGE = {
+    phases: [
+        {
+            duration: 86400,
+            id: 'challenge-phase-registration-2',
+            name: 'Registration',
+            phaseId: 'phase-registration',
+        },
+        {
+            duration: 86400,
+            id: 'challenge-phase-submission-2',
+            name: 'Submission',
+            phaseId: 'phase-submission',
+        },
+        {
+            duration: 86400,
+            id: 'challenge-phase-review-2',
+            name: 'Review',
+            phaseId: 'phase-review',
+        },
+        {
+            duration: 86400,
+            id: 'challenge-phase-approval-2',
+            name: 'Approval',
+            phaseId: 'phase-approval',
+        },
+    ],
+    timelineTemplateId: 'default-timeline-template',
+} as Challenge
 
 const TestHarness = (props: TestHarnessProps): JSX.Element => {
     const formMethods = useForm<ChallengeEditorFormData>({
         defaultValues: {
             id: 'challenge-1',
             numOfSubmissions: props.numOfSubmissions,
-            phases: [],
+            phases: props.phases || [],
             reviewers: props.reviewers,
+            status: props.status,
+            timelineTemplateId: props.phases
+                ? 'ai-only-timeline-template'
+                : undefined,
             trackId: 'track-id',
             typeId: 'type-id',
         },
@@ -183,6 +242,10 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
     )
 
     const reviewersFormError = formMethods.formState.errors.reviewers?.message
+    const formPhaseNames = (formMethods.watch('phases') || [])
+        .map(phase => phase.name)
+        .join(',')
+    const formTimelineTemplateId = formMethods.watch('timelineTemplateId')
 
     return (
         <FormProvider {...formMethods}>
@@ -190,6 +253,8 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
             {reviewersFormError
                 ? <div data-testid='reviewers-form-error'>{reviewersFormError}</div>
                 : undefined}
+            <div data-testid='form-phases'>{formPhaseNames}</div>
+            <div data-testid='form-timeline-template'>{formTimelineTemplateId}</div>
         </FormProvider>
     )
 }
@@ -477,6 +542,109 @@ describe('ReviewersField', () => {
 
         expect(screen.queryByTestId('reviewers-form-error'))
             .toBeNull()
+    })
+
+    it('restores the default timeline when AI gating replaces AI only on a draft', async () => {
+        const user = userEvent.setup()
+        mockedPatchChallenge.mockResolvedValue(DEFAULT_TIMELINE_CHALLENGE)
+
+        render(
+            <TestHarness
+                phases={AI_ONLY_TIMELINE_PHASES}
+                reviewers={[]}
+                status='DRAFT'
+            />,
+        )
+
+        await user.click(screen.getByRole('tab', { name: 'AI Review (0)' }))
+        await user.click(screen.getByRole('button', { name: 'Persist AI config' }))
+
+        expect(mockedPatchChallenge)
+            .toHaveBeenCalledWith('challenge-1', {
+                reviewers: [],
+            })
+        await waitFor(() => {
+            expect(screen.getByTestId('form-phases').textContent)
+                .toBe('Registration,Submission,Review,Approval')
+        })
+        expect(screen.getByTestId('form-timeline-template').textContent)
+            .toBe('default-timeline-template')
+        expect(screen.getByTestId('reviewers-form-error').textContent)
+            .toBe('Manual review configuration is required.')
+    })
+
+    it('keeps the AI only timeline while AI only stays selected', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                phases={AI_ONLY_TIMELINE_PHASES}
+                reviewers={[]}
+                status='DRAFT'
+            />,
+        )
+
+        await user.click(screen.getByRole('tab', { name: 'AI Review (0)' }))
+        await user.click(screen.getByRole('button', { name: 'Persist AI only config' }))
+
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(screen.getByTestId('form-phases').textContent)
+            .toBe('Registration,Submission,AI Review,Approval')
+    })
+
+    it('does not change the timeline of an active AI only challenge', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                phases={AI_ONLY_TIMELINE_PHASES}
+                reviewers={[]}
+                status='ACTIVE'
+            />,
+        )
+
+        await user.click(screen.getByRole('tab', { name: 'AI Review (0)' }))
+        await user.click(screen.getByRole('button', { name: 'Persist AI config' }))
+
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(screen.getByTestId('form-phases').textContent)
+            .toBe('Registration,Submission,AI Review,Approval')
+    })
+
+    it('restores the default timeline when the AI config is removed from an AI only draft', async () => {
+        const user = userEvent.setup()
+        mockedPatchChallenge.mockResolvedValue(DEFAULT_TIMELINE_CHALLENGE)
+
+        render(
+            <TestHarness
+                phases={AI_ONLY_TIMELINE_PHASES}
+                reviewers={[
+                    {
+                        aiWorkflowId: 'workflow-1',
+                        isMemberReview: false,
+                        phaseId: 'phase-ai-review',
+                        scorecardId: 'scorecard-1',
+                    },
+                ]}
+                status='DRAFT'
+            />,
+        )
+
+        await user.click(screen.getByRole('tab', { name: 'AI Review (1)' }))
+        await user.click(screen.getByRole('button', { name: 'Remove AI config' }))
+
+        expect(mockedPatchChallenge)
+            .toHaveBeenCalledWith('challenge-1', {
+                reviewers: [],
+            })
+        await waitFor(() => {
+            expect(screen.getByTestId('form-phases').textContent)
+                .toBe('Registration,Submission,Review,Approval')
+        })
+        expect(screen.getByTestId('form-timeline-template').textContent)
+            .toBe('default-timeline-template')
     })
 
     it('does not require manual reviewer configuration in the simplified screener view', async () => {
