@@ -463,8 +463,13 @@ The compact Important Reminder uses the Figma teal action buttons and rounded
 checkmark asset without a footer separator.
 DocuSign-template terms, plus NDA-titled terms that use the environment's
 legacy DocuSign template fallback, replace placeholder Terms API text with the
-embedded recipient view in both registration and passive review. The frame
-returns through community-app's iframe callback, and registration remains
+embedded recipient view in both registration and passive review. DocuSign
+returns the frame to this app's own `terms/docusign-return` route
+(`/opportunities/terms/docusign-return`, or `/terms/docusign-return` on the
+opportunities subdomain), which replaced community-app's
+`/community-app-assets/iframe-break` callback. That page posts the DocuSign query
+(`event`, `envelopeId`, …) with `type: 'DocuSign'` to its same-origin parent,
+and the modal accepts only messages from that frame and origin. Registration remains
 blocked while Opportunities polls authenticated outstanding terms until the
 service confirms the signature. Confirmation reads bypass HTTP caches and use
 a bounded 91-second backoff window, including retries for transient Terms API
