@@ -417,6 +417,37 @@ describe('ReviewOpportunityDetailsPage', () => {
         })
     })
 
+    it('applies to a First2Finish iterative review opportunity with the Iterative Reviewer role', async () => {
+        const mutate = jest.fn()
+        mockProfile = { roles: ['Reviewer'], userId: 12345 }
+        mockUseSWR.mockReturnValue({
+            data: reviewFixture({
+                applicationRoles: ['ITERATIVE_REVIEWER'],
+                challengeData: { track: 'Development', type: 'First2Finish' },
+                defaultApplicationRole: 'ITERATIVE_REVIEWER',
+                incrementalPayment: 0,
+                payments: [{ payment: 0.23, role: 'IterativeReviewer', roleId: 8 }],
+                type: 'ITERATIVE_REVIEW',
+            }),
+            error: undefined,
+            isValidating: false,
+            mutate,
+        })
+
+        renderPage()
+
+        expect(screen.getByText('$0.23'))
+            .toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Apply to be a reviewer' }))
+        await waitFor(() => {
+            expect(mockedApplyToReviewOpportunity)
+                .toHaveBeenCalledWith('review-id', 'ITERATIVE_REVIEWER')
+            expect(mutate)
+                .toHaveBeenCalled()
+        })
+    })
+
     it('keeps a full opportunity open and confirms reviewer waitlist placement', async () => {
         const mutate = jest.fn()
         mockProfile = { roles: ['Reviewer'], userId: 12345 }
