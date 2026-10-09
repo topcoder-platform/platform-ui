@@ -8,6 +8,7 @@ import {
     RenderResult,
     screen,
     waitFor,
+    within,
 } from '@testing-library/react'
 
 import {
@@ -39,6 +40,7 @@ const mockSetForumTopicWatching = jest.fn()
 const mockUseSWR = jest.fn()
 const mockUpdateForumPost = jest.fn()
 const mockUpdateForumTopic = jest.fn()
+const mockUploadForumAttachment = jest.fn()
 let listError: Error | undefined
 let memberProfiles: MemberProfileSummary[] | undefined
 let topicCollection: ForumTopicCollection | undefined
@@ -49,7 +51,9 @@ jest.mock('~/libs/core', () => ({
         .getRatingColor,
 }), { virtual: true })
 
-jest.mock('../services/forum-attachments.service', () => ({ uploadForumAttachment: jest.fn() }))
+jest.mock('../services/forum-attachments.service', () => ({
+    uploadForumAttachment: (...args: unknown[]) => mockUploadForumAttachment(...args),
+}))
 
 jest.mock('swr', () => ({
     __esModule: true,
@@ -510,6 +514,67 @@ describe('ChallengeForum', () => {
             .closest('form')
             ?.contains(alert))
             .toBe(true)
+    })
+
+    it('offers the Figma comment toolbar for size, alignment, files, tables, mentions and expand', async () => {
+        mockUploadForumAttachment.mockResolvedValue('[brief.pdf](<https://cdn.example/brief.pdf>)')
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+
+        const textarea = screen.getByPlaceholderText('Type here') as HTMLTextAreaElement
+        const toolbar = within(screen.getByRole('toolbar', { name: 'Markdown formatting' }))
+        const applyToDraft = (value: string, caret: number, apply: () => void): string => {
+            fireEvent.change(textarea, { target: { value } })
+            textarea.setSelectionRange(caret, value.length)
+            apply()
+            return textarea.value
+        }
+
+        const clickTool = (name: string) => (): void => {
+            fireEvent.click(toolbar.getByRole('button', { name }))
+        }
+
+        expect(applyToDraft('Big', 0, () => fireEvent.change(
+            toolbar.getByRole('combobox', { name: 'Text size' }),
+            { target: { value: '20' } },
+        )))
+            .toBe('<span data-forum-size="20">Big</span>')
+        expect(toolbar.getAllByRole('button', { name: /^Align (left|center|right)$/ }))
+            .toHaveLength(3)
+        expect(applyToDraft('Centered', 0, clickTool('Align center')))
+            .toBe('<p align="center">Centered</p>')
+        expect(applyToDraft('Results', 7, clickTool('Table')))
+            .toBe('Results\n| Column | Column |\n| --- | --- |\n|  |  |\n')
+        expect(applyToDraft('Thanks ', 7, clickTool('Mention member')))
+            .toBe('Thanks @')
+
+        const chooser = screen.getByLabelText('Choose attachment') as HTMLInputElement
+        const openChooser = jest.spyOn(chooser, 'click')
+            .mockImplementation(() => undefined)
+        clickTool('Attachment')()
+        expect(openChooser)
+            .toHaveBeenCalledTimes(1)
+        const file = new File(['brief'], 'brief.pdf', { type: 'application/pdf' })
+        await act(async () => fireEvent.change(chooser, { target: { files: [file] } }))
+        await waitFor(() => expect(textarea.value)
+            .toBe('Thanks @\n[brief.pdf](<https://cdn.example/brief.pdf>)'))
+        expect(mockUploadForumAttachment)
+            .toHaveBeenCalledWith(file)
+
+        const expand = toolbar.getByRole('button', { name: 'Expand editor' })
+        fireEvent.click(expand)
+        expect(expand)
+            .toHaveAttribute('aria-pressed', 'true')
+        expect(textarea.closest('.expandedEditor'))
+            .not.toBeNull()
+    })
+
+    it('groups the shared comment toolbar like the Figma editor outside the public forums app', () => {
+        const sharedStyles = forumStyles.split(':global(.forums-app)')[0]
+        expect(sharedStyles)
+            .toContain('button:nth-of-type(5), button:nth-of-type(11), button:nth-of-type(13), button:nth-of-type(20)')
+        expect(sharedStyles)
+            .toContain("url('../assets/forums/1e461.svg')")
     })
 
     it('toggles topic watches through forums-api-v6', async () => {
