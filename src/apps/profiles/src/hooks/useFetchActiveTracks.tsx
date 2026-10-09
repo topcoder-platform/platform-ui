@@ -331,6 +331,24 @@ const getDataScienceSummarySubTrack = (subTracks: MemberStats[]): MemberStats | 
 )[0]
 
 /**
+ * Returns the highest current rating across a track's active subtracks.
+ *
+ * Development ratings are stored per subtrack (for example `Challenge`, `Code`,
+ * or `AI Engineering`), so the parent track uses the strongest one. Without it
+ * the Member Stats card and the Development summary show no rating at all.
+ *
+ * @param {MemberStats[]} subTracks - Active subtracks included in the parent track.
+ * @returns {number | undefined} The highest positive rating, or undefined when no subtrack is rated.
+ */
+export const getHighestSubTrackRating = (subTracks: MemberStats[]): number | undefined => {
+    const ratings = subTracks
+        .map(subTrack => getFiniteNumber(subTrack.rank?.rating))
+        .filter((rating): rating is number => rating !== undefined && rating > 0)
+
+    return ratings.length > 0 ? Math.max(...ratings) : undefined
+}
+
+/**
  * Normalizes a track or rating path name for alias comparison.
  *
  * @param {string | undefined} value - Raw track, subtrack, or configured rating path name.
@@ -782,7 +800,7 @@ export const getActiveTracks = (
     const developSubTrackValues = Object.values(developSubTracks)
     const hasDevelopmentAIEngineeringSubTrack = developSubTrackValues
         .some(subTrack => isAIEngineeringRatingPathName(subTrack.name))
-    const developTrackStats: MemberStatsTrack = (
+    const developTrackData: MemberStatsTrack = (
         buildTrackData(
             'Development',
             [
@@ -795,6 +813,10 @@ export const getActiveTracks = (
             statsHistory,
         )
     )
+    const developTrackStats: MemberStatsTrack = {
+        ...developTrackData,
+        rating: getHighestSubTrackRating(developTrackData.subTracks),
+    }
 
     // Testing
     const testingTrackStats: MemberStatsTrack = (
