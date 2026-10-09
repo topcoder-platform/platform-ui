@@ -1,5 +1,6 @@
 export const PAYMENT_TYPE_CATEGORY_BY_FILTER_VALUE: Record<string, string> = {
     Contest: 'CONTEST_PAYMENT',
+    'Contest Checkpoint': 'CONTEST_CHECKPOINT_PAYMENT',
     Copilot: 'COPILOT_PAYMENT',
     Engagement: 'ENGAGEMENT_PAYMENT',
     'Review Board': 'REVIEW_BOARD_PAYMENT',

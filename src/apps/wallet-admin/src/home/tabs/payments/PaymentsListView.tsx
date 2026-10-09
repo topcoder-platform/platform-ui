@@ -59,6 +59,7 @@ type PaymentListingTab = 'topcoder' | 'topgear' | 'taas'
 const TOPCODER_PAYMENT_CATEGORIES: ReadonlyArray<string> = [
     'TASK_PAYMENT',
     'CONTEST_PAYMENT',
+    'CONTEST_CHECKPOINT_PAYMENT',
     'COPILOT_PAYMENT',
     'REVIEW_BOARD_PAYMENT',
     'ENGAGEMENT_PAYMENT',
@@ -80,6 +81,7 @@ const ALL_STATUS_FILTER_VALUES: ReadonlyArray<string> = STATUS_FILTER_OPTIONS.ma
 const TOPCODER_TYPE_FILTER_OPTIONS: { label: string, value: string }[] = [
     { label: 'Task Payment', value: 'Task' },
     { label: 'Contest Payment', value: 'Contest' },
+    { label: 'Contest Checkpoint Payment', value: 'Contest Checkpoint' },
     { label: 'Copilot Payment', value: 'Copilot' },
     { label: 'Review Board Payment', value: 'Review Board' },
     { label: 'Engagement Payment', value: 'Engagement' },
