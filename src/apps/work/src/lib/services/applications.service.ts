@@ -209,6 +209,7 @@ export interface AssignmentApprovalDetails {
     startDate: string
     standardHoursPerDay?: number
     standardHoursPerWeek: number
+    totalHours?: number
     wiproIdEndDate?: string
 }
 

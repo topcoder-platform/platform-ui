@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/control-has-associated-label */
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 
@@ -355,6 +356,14 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
             {!isAssignmentActive && (
                 <p className={styles.pending} role='status'>
                     This assignment is no longer active, so its timesheet is read-only.
+                </p>
+            )}
+
+            {/* The range opens on the current week, which hides any earlier day the member missed. */}
+            {isAssignmentActive && (
+                <p className={styles.notice} role='note'>
+                    This page shows the current week. Make sure you have entered hours for all the days
+                    you worked - use From Date and To Date to check earlier weeks and add ALL missing days.
                 </p>
             )}
 

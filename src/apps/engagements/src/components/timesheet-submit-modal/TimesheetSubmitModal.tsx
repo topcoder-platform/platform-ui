@@ -48,7 +48,7 @@ const TimesheetSubmitModal: FC<TimesheetSubmitModalProps> = (props: TimesheetSub
             {`You are about to submit ${props.entryCount} timesheet `}
             {props.entryCount === 1 ? 'entry' : 'entries'}
             {` totaling ${formatHoursLabel(props.totalHours)} hours. `}
-            Once submitted, these entries will be sent to the engagement manager for approval.
+            Once submitted, these entries will be sent to your manager for approval.
             Do you want to continue?
         </p>
     </BaseModal>

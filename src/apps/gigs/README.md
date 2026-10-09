@@ -31,22 +31,28 @@ with the opener relationship removed.
 
 ## Data and behavior
 
-`gigs.service.ts` uses the environment's community-app `/api/recruit` endpoints.
-Public listings, details and candidate lookup need no member token; candidate
-lookup accepts both Recruit's current direct array and its legacy `{ data }`
-envelope. Applications use the refreshed platform token and preserve the existing
-multipart `form`/`resume` contract and Recruit custom field IDs 1, 2, 13 and 14. A saved
-resume may be reused; otherwise PDF/DOCX up to **8,000,000 bytes** is required to
-match the server's multer limit. Recruit's populated assignment response and its
-idempotent `{ success: true }` response both confirm submission; empty, explicitly
-unsuccessful, HTTP-error and HTTP-200 error-envelope responses reject. Candidate
-searches return an existing profile from either
-response shape. A bare `[]` or `{ data: [] }` means no existing candidate and
-opens the application form with the member's Topcoder profile. Candidate lookup
+`gigs.service.ts` uses the Topcoder website runtime API (`WEBSITE_API_URL`, default
+`https://www.<domain>/__api`), which replaced the community-app `/api/recruit` and CMS
+proxies. The Gigs app is served on the website host, so these calls are same-origin.
+
+- `GET /recruit/jobs` and `GET /recruit/jobs/:slug` are public and need no member token.
+- `GET /recruit/candidate` sends the refreshed member token and returns
+  `{ candidate }` for the token's verified email (`null` when the member has no
+  profile). There is no email parameter, so members cannot look up other candidates.
+- `POST /recruit/jobs/:slug/apply` sends the refreshed token and preserves the
+  multipart `form`/`resume` contract and Recruit custom field IDs 1, 2, 13 and 14. The
+  API rejects a form whose email or handle differs from the token. A saved resume may
+  be reused; otherwise PDF/DOCX up to **4,000,000 bytes** is required, because the
+  multipart body must fit Lambda's 6 MB request limit once base64-encoded.
+
+The API confirms submission with `{ success: true, candidate_slug, job_slug }`, including
+for an existing assignment. Empty, explicitly unsuccessful and HTTP-error responses reject;
+a `409` with `code: candidate_placed` shows the one-gig-limit message. Candidate lookup
 failures still block prefill/submission and expose a retry.
 
 Candidate Terms and the Equal Employment Opportunity Policy load on demand
-from the existing Payload compatibility endpoint using the original modal IDs.
+from the website API's published CMS proxy (`GET /cms/default/entries/:id`) using the
+original modal IDs.
 Descriptions and policy bodies are sanitized before display. Styling, scripts,
 unsafe URLs and embedded form controls cannot affect the surrounding application.
 Policy dialogs size to their content, center their titles and provide both the

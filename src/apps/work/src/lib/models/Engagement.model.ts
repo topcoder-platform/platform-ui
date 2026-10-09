@@ -47,6 +47,8 @@ export interface Assignment {
     standardHoursPerWeek?: number | string
     status: AssignmentStatus | string
     terminationReason?: string
+    /** Hours allocated to the assignment overall; hours left are derived from it. Optional. */
+    totalHours?: number | string
     termsAccepted: boolean
     wiproIdEndDate?: string
 }
@@ -138,9 +140,16 @@ export interface Engagement {
  */
 export interface TimesheetPaymentSummary {
     alreadyPaidEntryIds: string[]
+    /** Every approved hour in the period, paid or not. */
+    approvedHours: string
     entryIds: string[]
+    /** Standard hours for the period's weekdays inside the assignment; null when it cannot be derived. */
+    expectedHours: string | null
+    /** Hours in the period a payment already consumed. */
+    paidHours: string
     ratePerHour: string | null
     totalDays: number
+    /** Approved, unpaid hours - what this payment would cover. */
     totalHours: string
 }
 
@@ -191,6 +200,8 @@ export interface AssignmentPayment {
         grossAmount?: number
         hoursWorked?: number | string
         releaseDate?: string
+        /** Finance payment status of this installment, e.g. PAID or CANCELLED. */
+        status?: string
         totalAmount?: number
     }>
     hoursWorked?: number | string

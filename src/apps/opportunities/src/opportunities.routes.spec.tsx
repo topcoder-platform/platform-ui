@@ -77,6 +77,16 @@ describe('Opportunities application routes', () => {
         })
     })
 
+    it('serves the DocuSign return route before the category catch-all', () => {
+        const children = loadRoutes('platform-ui').opportunitiesRoutes[0].children ?? []
+        const routes = children.map(route => route.route)
+
+        expect(routes)
+            .toContain('terms/docusign-return')
+        expect(routes.indexOf('terms/docusign-return'))
+            .toBeLessThan(routes.indexOf(':kind'))
+    })
+
     it('leaves the platform home page alone on other hosts', () => {
         expect(loadRoutes('platform-ui').topgearRoutes)
             .toEqual([])

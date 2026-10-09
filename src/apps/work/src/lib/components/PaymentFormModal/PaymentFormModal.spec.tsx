@@ -1,11 +1,14 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
+    fireEvent,
     render,
     screen,
 } from '@testing-library/react'
 
 import { ChangeEvent } from 'react'
 import type { Assignment } from '../../models'
+
+import { fetchTimesheetPaymentSummary, findTimesheetPaymentConflicts } from '../../services'
 
 import PaymentFormModal from './PaymentFormModal'
 
@@ -18,7 +21,7 @@ interface MockDatePickerProps {
  * Stands in for react-datepicker. Reports a whole date at once, the way the real picker does, so the
  * modal's period-change effect fires exactly once per selection.
  */
-const mockDatePicker = jest.fn((props: unknown) => {
+const renderMockDatePicker = (props: unknown): JSX.Element => {
     const typedProps = props as MockDatePickerProps
 
     return (
@@ -45,7 +48,9 @@ const mockDatePicker = jest.fn((props: unknown) => {
                 : ''}
         />
     )
-})
+}
+
+const mockDatePicker = jest.fn(renderMockDatePicker)
 
 jest.mock('react-datepicker', () => ({
     __esModule: true,
@@ -89,7 +94,15 @@ jest.mock('../../utils', () => ({
 
 jest.mock('../../services', () => ({
     fetchTimesheetPaymentSummary: jest.fn(),
+    findTimesheetPaymentConflicts: jest.fn(),
 }))
+
+const mockFetchSummary = fetchTimesheetPaymentSummary as jest.MockedFunction<
+    typeof fetchTimesheetPaymentSummary
+>
+const mockFindConflicts = findTimesheetPaymentConflicts as jest.MockedFunction<
+    typeof findTimesheetPaymentConflicts
+>
 
 jest.mock('../../constants', () => ({
     BILLING_ACCOUNT_MEMBER_PAYMENT_DETAILS_ENABLED: true,
@@ -113,6 +126,9 @@ describe('PaymentFormModal', () => {
 
     beforeEach(() => {
         mockDatePicker.mockClear()
+        // The test setup resets mock implementations between tests, so put these back.
+        mockDatePicker.mockImplementation(renderMockDatePicker)
+        mockFindConflicts.mockResolvedValue({ conflicts: [], overlappingEntryIds: [] })
     })
 
     it('prevents the week ending calendar from opening on initial focus', () => {
@@ -131,6 +147,90 @@ describe('PaymentFormModal', () => {
             .toHaveBeenCalledWith(expect.objectContaining({
                 preventOpenOnFocus: true,
             }))
+    })
+
+    it('shows expected, approved, and paid hours for the picked period instead of approved days', async () => {
+        mockFetchSummary.mockResolvedValue({
+            alreadyPaidEntryIds: ['paid-1'],
+            approvedHours: '40.00',
+            entryIds: ['e1', 'e2', 'e3', 'e4'],
+            expectedHours: '48.00',
+            paidHours: '8.00',
+            ratePerHour: '20.53',
+            totalDays: 4,
+            totalHours: '32.00',
+        })
+
+        render(
+            <PaymentFormModal
+                engagementId='engagement-1'
+                engagementName='Engagement'
+                member={member}
+                onCancel={jest.fn()}
+                onConfirm={jest.fn()}
+                open
+                projectName='Project'
+            />,
+        )
+
+        expect(screen.queryByText('Expected Hours'))
+            .toBeNull()
+
+        const [fromPicker, toPicker] = screen.getAllByTestId('payment-date-picker')
+        fireEvent.change(fromPicker, { target: { value: '2026-09-01' } })
+        fireEvent.change(toPicker, { target: { value: '2026-09-08' } })
+
+        expect(await screen.findByText('Expected Hours'))
+            .toBeTruthy()
+        expect(screen.getByText('48.00'))
+            .toBeTruthy()
+        expect(screen.getByText('40.00'))
+            .toBeTruthy()
+        expect(screen.getByText('Paid Hours'))
+            .toBeTruthy()
+        expect(screen.getByText('8.00'))
+            .toBeTruthy()
+        expect(screen.queryByText(/approved days? in this period/))
+            .toBeNull()
+        // Paid Hours replaces the count of already-paid entries.
+        expect(screen.queryByText(/already paid and (is|are) excluded/))
+            .toBeNull()
+        expect(mockFetchSummary)
+            .toHaveBeenCalledWith('engagement-1', 'assignment-1', '2026-09-01', '2026-09-08')
+    })
+
+    it('says when the period has no approved timesheets', async () => {
+        mockFetchSummary.mockResolvedValue({
+            alreadyPaidEntryIds: [],
+            approvedHours: '0.00',
+            entryIds: [],
+            // The API sends null when expected hours cannot be derived.
+            // eslint-disable-next-line unicorn/no-null
+            expectedHours: null,
+            paidHours: '0.00',
+            ratePerHour: '20.53',
+            totalDays: 0,
+            totalHours: '0.00',
+        })
+
+        render(
+            <PaymentFormModal
+                engagementId='engagement-1'
+                engagementName='Engagement'
+                member={member}
+                onCancel={jest.fn()}
+                onConfirm={jest.fn()}
+                open
+                projectName='Project'
+            />,
+        )
+
+        const [fromPicker, toPicker] = screen.getAllByTestId('payment-date-picker')
+        fireEvent.change(fromPicker, { target: { value: '2026-09-01' } })
+        fireEvent.change(toPicker, { target: { value: '2026-09-08' } })
+
+        expect(await screen.findByText('No approved timesheets'))
+            .toBeTruthy()
     })
 
     it('shows billing account id when enabled', () => {

@@ -1,4 +1,4 @@
-/** Recruit CRM's public job and candidate contracts, served by community-app. */
+/** Recruit CRM's public job and candidate contracts, served by the Topcoder website runtime API. */
 export interface RecruitField {
     field_id: number
     field_name?: string

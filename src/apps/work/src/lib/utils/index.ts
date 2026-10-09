@@ -12,11 +12,13 @@ export * from './file.utils'
 export * from './metadata.utils'
 export * from './navigation.utils'
 export {
+    calculateAssignmentHoursLeft,
     calculatePaymentAmount,
     getAssignmentPaymentCycle,
     getAssignmentRatePerHour,
     getAssignmentStandardHoursPerDay,
     getAssignmentStandardHoursPerWeek,
+    getAssignmentTotalHours,
     getExpectedHoursLabel,
     getAssignmentStatus,
     getPaymentAmount,
@@ -26,6 +28,7 @@ export {
     getPaymentStatus,
     normalizeAssignmentStatus,
     renderPaymentLinkedText,
+    sumProcessedPaymentHours,
 } from './payment.utils'
 export * from './pagination.utils'
 export * from './phase.utils'

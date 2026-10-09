@@ -44,11 +44,62 @@ import searchIcon from '~/apps/opportunities/src/assets/forums/a02e3.svg'
 import topicsIcon from '~/apps/opportunities/src/assets/forums/171f8.svg'
 import viewsIcon from '~/apps/opportunities/src/assets/forums/0a628.svg'
 import watchIcon from '~/apps/opportunities/src/assets/forums/74494.svg'
+import watchedIcon from '~/apps/opportunities/src/assets/forums/watched.svg'
 
-import { forumsRoot } from './forums.routes'
+import { forumsRoot, legacyForumsPath } from './forums.routes'
 import { getPublicForumCategories, getPublicForumTopics, PublicForumCategory } from './forums.service'
 import styles from './ForumsPage.module.scss'
 import './forums.scss'
+
+/** Author marker the forums API legacy Jive migration writes on every imported category. */
+export const LEGACY_AUTHOR_ID: string = 'legacy-jive:migration'
+/** Migration namespace container that only wraps the Jive categories and holds no discussions. */
+export const LEGACY_WRAPPER_TITLE: string = 'Jive / Jive2'
+
+export interface ForumsPageProps {
+    /** Renders the migrated legacy archive index instead of the current public forums. */
+    legacy?: boolean
+}
+
+/** Unsent topic composer content kept in this browser until the topic is created or discarded. */
+export interface TopicDraft {
+    content: string
+    savedAt: string
+    title: string
+}
+
+/** Builds the browser storage key for a member's draft in one category.
+ * @param memberId Signed-in member. @param categoryId Target category.
+ * @returns Storage key, or undefined for guests. @throws Never.
+ */
+export function topicDraftKey(memberId: string, categoryId?: string): string | undefined {
+    return memberId && categoryId ? `public-forums:draft:${memberId}:${categoryId}` : undefined
+}
+
+/** Reads a saved draft.
+ * @param key Storage key. @returns Draft, or undefined when absent or unreadable. @throws Never.
+ */
+function readTopicDraft(key?: string): TopicDraft | undefined {
+    if (!key) return undefined
+    try {
+        const raw = window.localStorage.getItem(key)
+        return raw ? JSON.parse(raw) as TopicDraft : undefined
+    } catch {
+        return undefined
+    }
+}
+
+/** Writes or removes a saved draft. Storage failures (private mode, quota) are ignored.
+ * @param key Storage key. @param draft Draft to keep, or undefined to remove. @returns Nothing. @throws Never.
+ */
+function writeTopicDraft(key: string, draft?: TopicDraft): void {
+    try {
+        if (draft) window.localStorage.setItem(key, JSON.stringify(draft))
+        else window.localStorage.removeItem(key)
+    } catch {
+        // Drafts are a convenience; the composer still works without storage.
+    }
+}
 
 /** Sends a guest to the shared login flow and returns them to their current forum URL.
  * @returns Nothing. @throws Does not throw.
@@ -57,11 +108,22 @@ function signIn(): void {
     window.location.assign(authUrlLogin(window.location.href))
 }
 
+/** Whether a category was imported by the legacy Jive migration.
+ * @param item Category metadata. @returns True for the legacy root and all of its descendants. @throws Never.
+ */
+export function isLegacyCategory(item?: PublicForumCategory): boolean {
+    return item?.authorMemberId === LEGACY_AUTHOR_ID
+}
+
 /** Public category index, paginated topic listing, and shared interactive thread view.
  * Auth-sensitive cache keys prevent a previously authenticated response being reused by guests.
+ * With `legacy`, the index shows the archive root's groups (lifting the empty Jive wrapper)
+ * and the sidebar links back to the current forums instead of the archive.
+ * @param props `legacy` selects the archive index.
  * @returns Figma desktop/mobile forum pages. @throws None; failures are rendered with retry controls.
  */
-const ForumsPage: FC = () => {
+const ForumsPage: FC<ForumsPageProps> = (props: ForumsPageProps) => {
+    const legacyRoute = !!props.legacy
     const profileContext = useProfileContext()
     const profile = profileContext.profile
     const initialized = profileContext.initialized
@@ -87,17 +149,31 @@ const ForumsPage: FC = () => {
     const [actionError, setActionError] = useState<string>()
     const [deleteTarget, setDeleteTarget] = useState<ForumTopicSummary>()
     const [editTarget, setEditTarget] = useState<ForumTopicDetail>()
+    const [draft, setDraft] = useState<TopicDraft>()
     const categoryResponse = useSWR(
         initialized ? ['public-forums:categories', identity] : undefined,
         getPublicForumCategories,
     )
     const categories = useMemo(() => categoryResponse.data ?? [], [categoryResponse.data])
+    const legacyRoot = categories.find(item => !item.parentTopicId && isLegacyCategory(item))
+    // The archive index lists the root's namespaces, replacing the content-less Jive wrapper with its groups.
+    const legacyGroups = useMemo(
+        () => (legacyRoot
+            ? categories
+                .filter(item => item.parentTopicId === legacyRoot.id)
+                .flatMap(item => (item.title === LEGACY_WRAPPER_TITLE
+                    ? categories.filter(child => child.parentTopicId === item.id)
+                    : [item]))
+            : []),
+        [categories, legacyRoot],
+    )
     const detailResponse = useSWR(
         initialized && threadId ? ['public-forums:thread', threadId, identity] : undefined,
         () => getForumTopicDetail(threadId as string),
     )
     const detail = detailResponse.data
     const category = categories.find(item => item.id === (categoryId ?? detail?.topic.parentTopicId))
+    const draftKey = topicDraftKey(memberId, category?.id)
     const listQuery = new URLSearchParams({ page: String(page), perPage: String(perPage) })
     if (categoryId) listQuery.set('categoryId', categoryId)
     if (search) listQuery.set('search', search)
@@ -165,6 +241,23 @@ const ForumsPage: FC = () => {
             .then(() => mutateCategories())
             .catch(() => undefined)
     }, [memberId, detail, mutateCategories])
+    useEffect(() => {
+        setDraft(readTopicDraft(draftKey))
+    }, [draftKey])
+    // Autosave the composer shortly after each keystroke so an abandoned topic can be resumed later.
+    useEffect(() => {
+        if (!creating || !draftKey) return undefined
+        const timer = window.setTimeout(() => {
+            const savedAt = new Date()
+                .toISOString()
+            const next = titleInput.trim() || content.trim()
+                ? { content, savedAt, title: titleInput }
+                : undefined
+            writeTopicDraft(draftKey, next)
+            setDraft(next)
+        }, 500)
+        return () => window.clearTimeout(timer)
+    }, [creating, draftKey, titleInput, content])
 
     /** Refreshes data after a shared forum mutation. @returns Completion. @throws API errors. */
     const refresh = async (): Promise<void> => {
@@ -185,6 +278,32 @@ const ForumsPage: FC = () => {
         else next.delete(name)
         if (name !== 'page') next.delete('page')
         setQuery(next)
+    }
+
+    /** Empties the search box and, when results are showing, returns to the unfiltered page.
+     * @returns Nothing. @throws Never.
+     */
+    const clearSearch = (): void => {
+        setSearchInput('')
+        if (search) setFilter('search', '')
+    }
+
+    /** Opens the composer, restoring any draft saved for this category. @returns Nothing. @throws Never. */
+    const openComposer = (): void => {
+        if (draft) {
+            setTitleInput(draft.title)
+            setContent(draft.content)
+        }
+
+        setCreating(true)
+    }
+
+    /** Removes the saved draft and empties the composer. @returns Nothing. @throws Never. */
+    const discardDraft = (): void => {
+        if (draftKey) writeTopicDraft(draftKey)
+        setDraft(undefined)
+        setTitleInput('')
+        setContent('')
     }
 
     /** Updates the member's category/thread watch. @param topic Target. @returns Completion. @throws
@@ -250,8 +369,7 @@ const ForumsPage: FC = () => {
                 title: titleInput.trim(),
             })
             setCreating(false)
-            setTitleInput('')
-            setContent('')
+            discardDraft()
             await categoryResponse.mutate()
             navigate(`${forumsRoot}/thread/${created.topic.id}`)
         } catch (error) {
@@ -284,10 +402,31 @@ const ForumsPage: FC = () => {
         || !categoryResponse.data
         || (!!threadId && !detail)
         || (listing && !threadId && !listResponse.data)
+    const searching = !!search && !category && !threadId
     const heading = creating
         ? 'Create new topic'
-        : (detail?.topic.title ?? category?.title ?? (watching ? 'Watching' : 'Public Forums'))
-    const breadcrumb = category && categories.find(item => item.id === category.parentTopicId)
+        : (detail?.topic.title
+            ?? category?.title
+            ?? (watching ? 'Watching' : searching ? 'Search results' : legacyRoute ? 'Legacy forums' : 'Public Forums'))
+    const subtitle = searching
+        ? `Showing results for “${search}”.`
+        : legacyRoute
+            ? 'Browse tutorials and discussions archived from more than 20 years of Topcoder forums history.'
+            : 'Explore community conversations, find answers, and join discussions with Topcoder members around '
+                + 'the world.'
+    const parent = category && categories.find(item => item.id === category.parentTopicId)
+    // The hidden Jive wrapper never appears in the breadcrumb; its children sit directly under the archive.
+    const breadcrumb = parent && parent.title === LEGACY_WRAPPER_TITLE && isLegacyCategory(parent)
+        ? legacyRoot
+        : parent
+
+    /** Resolves the index page a category belongs to (the archive index for the legacy root).
+     * @param item Category metadata. @returns Router path. @throws Never.
+     */
+    const categoryPath = (item: PublicForumCategory): string => (
+        item.id === legacyRoot?.id ? legacyForumsPath : `${forumsRoot}/category/${item.id}`
+    )
+    const indexPath = isLegacyCategory(category) ? legacyForumsPath : forumsRoot || '/'
 
     /** Renders a category row with shared rated identities and participant avatars.
      * @param item Category metadata. @returns Figma category row. @throws Never.
@@ -320,7 +459,7 @@ const ForumsPage: FC = () => {
                         onClick={() => watch(item)}
                         type='button'
                     >
-                        <img alt='' src={watchIcon} />
+                        <img alt='' src={item.watching ? watchedIcon : watchIcon} />
                         {item.watching ? 'Watched' : 'Watch'}
                     </button>
                 </div>
@@ -385,7 +524,7 @@ const ForumsPage: FC = () => {
                     {breadcrumb && (
                         <>
                             <span>/</span>
-                            <Link to={`${forumsRoot}/category/${breadcrumb.id}`}>
+                            <Link to={categoryPath(breadcrumb)}>
                                 {breadcrumb.title}
                             </Link>
                         </>
@@ -410,7 +549,7 @@ const ForumsPage: FC = () => {
                             onClick={() => navigate(
                                 threadId && category
                                     ? `${forumsRoot}/category/${category.id}`
-                                    : forumsRoot || '/',
+                                    : indexPath,
                             )}
                             type='button'
                         >
@@ -421,10 +560,7 @@ const ForumsPage: FC = () => {
                 </div>
                 {threadId && <div className={styles.emptySubtitle} />}
                 {(!category || threadId) && (
-                    <p className={threadId ? styles.mobileOnly : undefined}>
-                        Explore community conversations, find answers, and join discussions with Topcoder
-                        members around the world.
-                    </p>
+                    <p className={threadId ? styles.mobileOnly : undefined}>{subtitle}</p>
                 )}
                 {category && !threadId && category.description && <p>{category.description}</p>}
             </header>
@@ -434,20 +570,37 @@ const ForumsPage: FC = () => {
                         className={styles.search}
                         onSubmit={event => {
                             event.preventDefault()
-                            if (threadId) navigate(`${forumsRoot}?search=${encodeURIComponent(searchInput)}`)
-                            else setFilter('search', searchInput.trim())
+                            // Search always runs across every forum, so leave thread and archive pages first.
+                            if (threadId || legacyRoute) {
+                                navigate(`${forumsRoot}?search=${encodeURIComponent(searchInput.trim())}`)
+                            } else setFilter('search', searchInput.trim())
                         }}
                     >
-                        <img alt='' src={searchIcon} />
+                        <button aria-label='Search' type='submit'>
+                            <img alt='' src={searchIcon} />
+                        </button>
                         <input
                             aria-label='Search forums'
                             onChange={event => setSearchInput(event.target.value)}
+                            onKeyDown={event => {
+                                if (event.key === 'Escape') clearSearch()
+                            }}
                             placeholder='Search'
                             value={searchInput}
                         />
+                        {(searchInput || search) && (
+                            <button
+                                aria-label='Clear search'
+                                className={styles.clearSearch}
+                                onClick={clearSearch}
+                                type='button'
+                            >
+                                ×
+                            </button>
+                        )}
                     </form>
                     <nav className={styles.navigation} aria-label='Forum navigation'>
-                        <Link aria-current={!watching ? 'page' : undefined} to={forumsRoot || '/'}>
+                        <Link aria-current={!watching && !legacyRoute ? 'page' : undefined} to={forumsRoot || '/'}>
                             Public Forums
                         </Link>
                         <Link
@@ -479,12 +632,12 @@ const ForumsPage: FC = () => {
                                         className={styles.primary}
                                         onClick={() => {
                                             if (!memberId) signIn()
-                                            else setCreating(true)
+                                            else openComposer()
                                         }}
                                         type='button'
                                     >
                                         <img alt='' src={plusIcon} />
-                                        Create new topic
+                                        {draft ? 'Continue draft' : 'Create new topic'}
                                     </button>
                                 )}
                             </section>
@@ -558,6 +711,34 @@ const ForumsPage: FC = () => {
                             <img alt='' src={forwardIcon} />
                         </a>
                     </section>
+                    {legacyRoute ? (
+                        <section className={styles.sideCard}>
+                            <h2>
+                                <img alt='' src={infoIcon} />
+                                Public forums
+                            </h2>
+                            <p>
+                                Our current forums and discussions can be found
+                                {' '}
+                                <Link to={forumsRoot || '/'}>here</Link>
+                                .
+                            </p>
+                        </section>
+                    ) : legacyRoot && (
+                        <section className={styles.sideCard}>
+                            <h2>
+                                <img alt='' src={infoIcon} />
+                                Legacy forums
+                            </h2>
+                            <p>
+                                Our forums history goes back over 20 years. To see old tutorials and
+                                discussions, go
+                                {' '}
+                                <Link to={legacyForumsPath}>here</Link>
+                                .
+                            </p>
+                        </section>
+                    )}
                 </aside>
                 <main className={styles.content} aria-busy={loading || !!busy}>
                     {actionError && (
@@ -608,7 +789,17 @@ const ForumsPage: FC = () => {
                                 <button onClick={() => setCreating(false)} type='button'>
                                     Cancel
                                 </button>
+                                {draft && (
+                                    <button onClick={discardDraft} type='button'>
+                                        Discard draft
+                                    </button>
+                                )}
                             </div>
+                            <p className={styles.draftStatus} role='status'>
+                                {draft
+                                    ? `Draft saved in this browser at ${formatForumDate(draft.savedAt)}.`
+                                    : 'Your topic is saved as a draft in this browser while you write.'}
+                            </p>
                         </form>
                     ) : detail ? (
                         <ForumTopicView
@@ -630,20 +821,24 @@ const ForumsPage: FC = () => {
                                     .map(item => (item.displayAs === 'Categories'
                                         ? categoryGroup(item)
                                         : categoryRow(item)))}
-                            {topics.map(topic => (
-                                <ForumTopicCard
-                                    canDelete={isAdmin}
-                                    key={topic.id}
-                                    memberId={memberId}
-                                    onDelete={setDeleteTarget}
-                                    onEdit={edit}
-                                    onSelect={openTopic}
-                                    onWatch={watch}
-                                    pendingAction={busy}
-                                    profilesByMemberId={profiles}
-                                    topic={topic}
-                                />
-                            ))}
+                            {topics.map(topic => {
+                                // Watched categories come back as bare topics; show their aggregated card.
+                                const watchedCategory = categories.find(item => item.id === topic.id)
+                                return watchedCategory ? categoryRow(watchedCategory) : (
+                                    <ForumTopicCard
+                                        canDelete={isAdmin}
+                                        key={topic.id}
+                                        memberId={memberId}
+                                        onDelete={setDeleteTarget}
+                                        onEdit={edit}
+                                        onSelect={openTopic}
+                                        onWatch={watch}
+                                        pendingAction={busy}
+                                        profilesByMemberId={profiles}
+                                        topic={topic}
+                                    />
+                                )
+                            })}
                             {!topics.length && category?.displayAs !== 'Categories' && (
                                 <section className={styles.sideCard}>
                                     <h2>{watching ? 'No watched discussions' : 'No topics found'}</h2>
@@ -665,9 +860,14 @@ const ForumsPage: FC = () => {
                                 />
                             )}
                         </>
+                    ) : legacyRoute ? (
+                        <>
+                            {legacyGroups.map(categoryGroup)}
+                            {!legacyGroups.length && <p>No legacy forums are available yet.</p>}
+                        </>
                     ) : (
                         <>
-                            {categories.filter(item => !item.parentTopicId)
+                            {categories.filter(item => !item.parentTopicId && item.id !== legacyRoot?.id)
                                 .map(categoryGroup)}
                             {!categories.length && <p>No public forums are available yet.</p>}
                         </>

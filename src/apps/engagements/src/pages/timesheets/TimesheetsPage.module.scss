@@ -82,6 +82,16 @@
     color: $black-60;
 }
 
+.notice {
+    margin: 0;
+    padding: 6px 12px;
+    border: 1px solid $orange-25;
+    border-radius: 6px;
+    background: #fffdfa;
+    color: $orange-140;
+    font-size: 14px;
+}
+
 .headerActions {
     display: flex;
     flex-wrap: wrap;

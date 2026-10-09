@@ -25,8 +25,6 @@ import {
     useDownloadSubmissionProps,
     useFetchChallenge,
     useFetchChallengeProps,
-    useManageAVScan,
-    useManageAVScanProps,
     useManageBusEvent,
     useManageBusEventProps,
     useManageChallengeSubmissions,
@@ -63,8 +61,6 @@ interface Props {
 interface SubmissionsContentProps {
     isLoading: boolean
     submissions: useManageChallengeSubmissionsProps['submissions']
-    isDoingAvScan: useManageAVScanProps['isLoading']
-    doPostBusEventAvScan: useManageAVScanProps['doPostBusEvent']
     isDownloadingSubmission: useDownloadSubmissionProps['isLoading']
     downloadSubmission: useDownloadSubmissionProps['downloadSubmission']
     isRemovingSubmission: useManageChallengeSubmissionsProps['isRemovingSubmission']
@@ -79,7 +75,6 @@ interface SubmissionsContentProps {
     isReprocessingSubmission: useManageSubmissionReprocessProps['isLoading']
     doReprocessSubmission: useManageSubmissionReprocessProps['doReprocessSubmission']
     canReprocessSubmission: boolean
-    isDoingAvScanBool: useManageAVScanProps['isLoadingBool']
     isDownloadingSubmissionBool: useDownloadSubmissionProps['isLoadingBool']
     isRemovingSubmissionBool: useManageChallengeSubmissionsProps['isRemovingSubmissionBool']
     isRunningTestBool: useManageBusEventProps['isRunningTestBool']
@@ -111,8 +106,7 @@ interface ManualSubmissionUploadModalProps {
 const SubmissionsContent: FC<SubmissionsContentProps> = (
     props: SubmissionsContentProps,
 ) => {
-    const shouldShowActionLoading = props.isDoingAvScanBool
-        || props.isDownloadingSubmissionBool
+    const shouldShowActionLoading = props.isDownloadingSubmissionBool
         || props.isRemovingSubmissionBool
         || props.isRunningTestBool
         || props.isRemovingReviewSummationsBool
@@ -129,8 +123,6 @@ const SubmissionsContent: FC<SubmissionsContentProps> = (
     return (
         <div className={styles.blockTableContainer}>
             <SubmissionTable
-                isDoingAvScan={props.isDoingAvScan}
-                doPostBusEventAvScan={props.doPostBusEventAvScan}
                 isDownloading={props.isDownloadingSubmission}
                 downloadSubmission={props.downloadSubmission}
                 data={props.submissions}
@@ -309,11 +301,6 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
         downloadSubmission,
     }: useDownloadSubmissionProps = useDownloadSubmission()
     const {
-        isLoading: isDoingAvScan,
-        isLoadingBool: isDoingAvScanBool,
-        doPostBusEvent: doPostBusEventAvScan,
-    }: useManageAVScanProps = useManageAVScan()
-    const {
         isLoading: isReprocessingSubmission,
         isLoadingBool: isReprocessingSubmissionBool,
         doReprocessSubmission,
@@ -470,8 +457,6 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
             <SubmissionsContent
                 isLoading={isLoading}
                 submissions={submissions}
-                isDoingAvScan={isDoingAvScan}
-                doPostBusEventAvScan={doPostBusEventAvScan}
                 isDownloadingSubmission={isDownloadingSubmission}
                 downloadSubmission={downloadSubmission}
                 isRemovingSubmission={isRemovingSubmission}
@@ -486,7 +471,6 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
                 isReprocessingSubmission={isReprocessingSubmission}
                 doReprocessSubmission={doReprocessSubmission}
                 canReprocessSubmission={Boolean(submissionReprocessTopic)}
-                isDoingAvScanBool={isDoingAvScanBool}
                 isDownloadingSubmissionBool={isDownloadingSubmissionBool}
                 isRemovingSubmissionBool={isRemovingSubmissionBool}
                 isRunningTestBool={isRunningTestBool}

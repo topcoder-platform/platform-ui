@@ -18,9 +18,7 @@ interface Props {
     isRemovingSubmission: IsRemovingType
     isRemovingReviewSummations: IsRemovingType
     isDownloading: IsRemovingType
-    isDoingAvScan: IsRemovingType
     downloadSubmission: (submissionId: string) => void
-    doPostBusEventAvScan: (submission: Submission) => void
     doPostBusEvent: DoPostBusEvent
     setShowConfirmDeleteSubmissionDialog: Dispatch<
         SetStateAction<Submission | undefined>
@@ -96,17 +94,6 @@ export const SubmissionTableActions: FC<Props> = (props: Props) => {
                     }}
                 >
                     Download
-                </li>
-                <li
-                    className={classNames({
-                        disabled: props.isDoingAvScan[props.data.id],
-                    })}
-                    onClick={function onClick() {
-                        setOpenDropdown(false)
-                        props.doPostBusEventAvScan(props.data)
-                    }}
-                >
-                    AV Rescan
                 </li>
                 <li
                     className={classNames({

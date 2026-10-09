@@ -109,6 +109,49 @@ jest.mock('~/libs/ui', () => ({
         </label>
     ),
     LoadingSpinner: () => <div>loading</div>,
+    // A working stand-in for the shared confirmation hook: confirm() opens a dialog and resolves with
+    // the button pressed.
+    useConfirmationModal: () => {
+        // jest.mock factories cannot close over imports, so React is required here.
+        // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+        const mockReact: typeof import('react') = require('react')
+
+        const [pending, setPending] = mockReact.useState<{
+            content: string
+            resolve:(confirmed: boolean) => void
+            title: string
+        } | undefined>()
+
+        return {
+            confirm: (props: { content: string, title: string }) => new Promise<boolean>(resolve => {
+                setPending({ ...props, resolve })
+            }),
+            modal: pending && (
+                <div role='alertdialog'>
+                    <h2>{pending.title}</h2>
+                    <p>{pending.content}</p>
+                    <button
+                        onClick={function onContinue() {
+                            setPending(undefined)
+                            pending.resolve(true)
+                        }}
+                        type='button'
+                    >
+                        Continue
+                    </button>
+                    <button
+                        onClick={function onCancel() {
+                            setPending(undefined)
+                            pending.resolve(false)
+                        }}
+                        type='button'
+                    >
+                        Cancel
+                    </button>
+                </div>
+            ),
+        }
+    },
 }), { virtual: true })
 
 // The audit modal links handles to profiles; jest has no path alias for `~/config`.
@@ -524,6 +567,136 @@ describe('AdminTimesheetView', () => {
         // The correction is saved with the same reason, so its audit record explains it.
         expect(mockSave.mock.calls[0][2])
             .toEqual(expect.objectContaining({ overrideReason: 'Manager on leave' }))
+    })
+
+    it('sends only the selected rows when approving, leaving other edits unsent', async () => {
+        const user = userEvent.setup()
+        const submitted = [
+            entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED }),
+            entry({ id: 'e2', status: TimesheetEntryStatus.SUBMITTED, workDate: '2026-09-08' }),
+        ]
+        mockSave.mockResolvedValue(timesheet(submitted))
+        mockApprove.mockResolvedValue({ approved: ['e1'], skipped: [] })
+        renderView(submitted)
+
+        // Both rows are edited, but only the first is selected.
+        await user.type(screen.getByLabelText('Remarks for 07-09-2026'), ' updated')
+        await user.type(screen.getByLabelText('Remarks for 08-09-2026'), ' not this one')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
+        // The unselected edit is about to be dropped; accept that.
+        await user.click(within(await screen.findByRole('alertdialog'))
+            .getByRole('button', { name: 'Continue' }))
+
+        const dialog = await screen.findByRole('dialog')
+        await user.type(within(dialog)
+            .getByLabelText('Approval comment'), 'Approved for week 37')
+        await user.type(within(dialog)
+            .getByLabelText(/Override reason/), 'Manager on leave')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Approve' }))
+
+        await waitFor(() => {
+            expect(mockApprove)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', expect.objectContaining({ entryIds: ['e1'] }))
+        })
+        expect(mockSave)
+            .toHaveBeenCalledTimes(1)
+        expect(mockSave.mock.calls[0][2].entries)
+            .toEqual([
+                { hoursWorked: '8.50', remarks: 'Sprint planning updated', workDate: '2026-09-07' },
+            ])
+    })
+
+    it('warns before an action when unselected rows have unsaved edits, and stops on cancel', async () => {
+        const user = userEvent.setup()
+        renderView([
+            entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED }),
+            entry({ id: 'e2', status: TimesheetEntryStatus.SUBMITTED, workDate: '2026-09-08' }),
+        ])
+
+        await user.type(screen.getByLabelText('Remarks for 08-09-2026'), ' not this one')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
+
+        const warning = await screen.findByRole('alertdialog')
+        expect(within(warning)
+            .getByText(/1 row that is not selected has unsaved edits/))
+            .toBeInTheDocument()
+
+        await user.click(within(warning)
+            .getByRole('button', { name: 'Cancel' }))
+
+        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+        // Cancelling leaves the approval dialog closed and nothing sent.
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+        expect(mockApprove).not.toHaveBeenCalled()
+    })
+
+    it('goes on with the action once the warning is accepted', async () => {
+        const user = userEvent.setup()
+        renderView([
+            entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED }),
+            entry({ id: 'e2', status: TimesheetEntryStatus.SUBMITTED, workDate: '2026-09-08' }),
+        ])
+
+        await user.type(screen.getByLabelText('Remarks for 08-09-2026'), ' not this one')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
+        await user.click(within(await screen.findByRole('alertdialog'))
+            .getByRole('button', { name: 'Continue' }))
+
+        expect(await screen.findByRole('dialog'))
+            .toBeInTheDocument()
+        expect(screen.getByLabelText('Approval comment'))
+            .toBeInTheDocument()
+    })
+
+    it('does not warn when every edited row is selected', async () => {
+        const user = userEvent.setup()
+        renderView([
+            entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED }),
+            entry({ id: 'e2', status: TimesheetEntryStatus.SUBMITTED, workDate: '2026-09-08' }),
+        ])
+
+        await user.type(screen.getByLabelText('Remarks for 07-09-2026'), ' updated')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
+
+        expect(await screen.findByRole('dialog'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    })
+
+    it('does not save anything before approving when the selected rows are unedited', async () => {
+        const user = userEvent.setup()
+        const submitted = [
+            entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED }),
+            entry({ id: 'e2', status: TimesheetEntryStatus.SUBMITTED, workDate: '2026-09-08' }),
+        ]
+        mockApprove.mockResolvedValue({ approved: ['e1'], skipped: [] })
+        renderView(submitted)
+
+        await user.type(screen.getByLabelText('Remarks for 08-09-2026'), ' not this one')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
+        // The unselected edit is about to be dropped; accept that.
+        await user.click(within(await screen.findByRole('alertdialog'))
+            .getByRole('button', { name: 'Continue' }))
+
+        const dialog = await screen.findByRole('dialog')
+        await user.type(within(dialog)
+            .getByLabelText('Approval comment'), 'Approved for week 37')
+        await user.type(within(dialog)
+            .getByLabelText(/Override reason/), 'Manager on leave')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Approve' }))
+
+        await waitFor(() => {
+            expect(mockApprove)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', expect.objectContaining({ entryIds: ['e1'] }))
+        })
+        expect(mockSave).not.toHaveBeenCalled()
     })
 
     it('offers reopen only for approved rows and submit only for drafts', async () => {

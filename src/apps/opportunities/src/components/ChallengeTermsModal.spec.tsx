@@ -48,9 +48,10 @@ jest.mock('../services', () => ({
 }))
 
 jest.mock('~/config', () => ({
+    AppSubdomain: { opportunities: 'opportunities' },
     EnvironmentConfig: {
-        COMMUNITY_APP_URL: 'https://www.topcoder-dev.com/',
         NDA_DOCUSIGN_TEMPLATE_ID: 'configured-nda-template',
+        SUBDOMAIN: 'www',
     },
 }), { virtual: true })
 
@@ -271,7 +272,7 @@ describe('ChallengeTermsModal', () => {
         expect(mockGetDocuSignUrl)
             .toHaveBeenCalledWith(
                 'configured-nda-template',
-                'https://www.topcoder-dev.com/community-app-assets/iframe-break',
+                `${window.location.origin}/opportunities/terms/docusign-return`,
             )
         expect(screen.queryByText('Test'))
             .not.toBeInTheDocument()
@@ -282,7 +283,7 @@ describe('ChallengeTermsModal', () => {
 
         fireEvent(window, new MessageEvent('message', {
             data: { event: 'signing_complete', type: 'DocuSign' },
-            origin: 'https://www.topcoder-dev.com',
+            origin: window.location.origin,
             source: (frame as HTMLIFrameElement).contentWindow,
         }))
 
@@ -338,7 +339,7 @@ describe('ChallengeTermsModal', () => {
 
         fireEvent(window, new MessageEvent('message', {
             data: { event: 'signing_complete', type: 'DocuSign' },
-            origin: 'https://www.topcoder-dev.com',
+            origin: window.location.origin,
             source: (frame as HTMLIFrameElement).contentWindow,
         }))
 
@@ -738,7 +739,7 @@ describe('ChallengeTermsModal', () => {
         expect(mockGetDocuSignUrl)
             .toHaveBeenCalledWith(
                 'nda-template',
-                'https://www.topcoder-dev.com/community-app-assets/iframe-break',
+                `${window.location.origin}/opportunities/terms/docusign-return`,
             )
         expect(screen.queryByRole('button', { name: 'I agree' }))
             .not.toBeInTheDocument()
@@ -829,7 +830,7 @@ describe('ChallengeTermsModal', () => {
             .toHaveBeenCalledWith('message', expect.any(Function)))
         fireEvent(window, new MessageEvent('message', {
             data: { event: 'signing_complete', type: 'DocuSign' },
-            origin: 'https://www.topcoder-dev.com',
+            origin: window.location.origin,
             source: (frame as HTMLIFrameElement).contentWindow,
         }))
 
@@ -878,7 +879,7 @@ describe('ChallengeTermsModal', () => {
             .not.toBeInTheDocument()
         fireEvent(window, new MessageEvent('message', {
             data: { event: 'viewing_complete', type: 'DocuSign' },
-            origin: 'https://www.topcoder-dev.com',
+            origin: window.location.origin,
             source: (frame as HTMLIFrameElement).contentWindow,
         }))
 
@@ -926,7 +927,7 @@ describe('ChallengeTermsModal', () => {
         jest.useFakeTimers()
         fireEvent(window, new MessageEvent('message', {
             data: { event: 'viewing_complete', type: 'DocuSign' },
-            origin: 'https://www.topcoder-dev.com',
+            origin: window.location.origin,
             source: (frame as HTMLIFrameElement).contentWindow,
         }))
         await act(async () => Promise.resolve())
@@ -992,7 +993,7 @@ describe('ChallengeTermsModal', () => {
 
         fireEvent(window, new MessageEvent('message', {
             data: { event: 'cancel', type: 'DocuSign' },
-            origin: 'https://www.topcoder-dev.com',
+            origin: window.location.origin,
             source: (frame as HTMLIFrameElement).contentWindow,
         }))
         expect(onClose)
@@ -1037,7 +1038,7 @@ describe('ChallengeTermsModal', () => {
 
         fireEvent(window, new MessageEvent('message', {
             data: { event: 'signing_complete', type: 'DocuSign' },
-            origin: 'https://www.topcoder-dev.com',
+            origin: window.location.origin,
             source: (frame as HTMLIFrameElement).contentWindow,
         }))
         await act(async () => Promise.resolve())
@@ -1108,7 +1109,7 @@ describe('ChallengeTermsModal', () => {
 
         fireEvent(window, new MessageEvent('message', {
             data: { event: 'signing_complete', type: 'DocuSign' },
-            origin: 'https://www.topcoder-dev.com',
+            origin: window.location.origin,
             source: (frame as HTMLIFrameElement).contentWindow,
         }))
         await act(async () => Promise.resolve())
@@ -1168,7 +1169,7 @@ describe('ChallengeTermsModal', () => {
         jest.useFakeTimers()
         fireEvent(window, new MessageEvent('message', {
             data: { event: 'signing_complete', type: 'DocuSign' },
-            origin: 'https://www.topcoder-dev.com',
+            origin: window.location.origin,
             source: (frame as HTMLIFrameElement).contentWindow,
         }))
 
@@ -1241,7 +1242,7 @@ describe('ChallengeTermsModal', () => {
         jest.useFakeTimers()
         fireEvent(window, new MessageEvent('message', {
             data: { event: 'signing_complete', type: 'DocuSign' },
-            origin: 'https://www.topcoder-dev.com',
+            origin: window.location.origin,
             source: (frame as HTMLIFrameElement).contentWindow,
         }))
         await act(async () => Promise.resolve())
@@ -1302,7 +1303,7 @@ describe('ChallengeTermsModal', () => {
         jest.useFakeTimers()
         fireEvent(window, new MessageEvent('message', {
             data: { event: 'signing_complete', type: 'DocuSign' },
-            origin: 'https://www.topcoder-dev.com',
+            origin: window.location.origin,
             source: (frame as HTMLIFrameElement).contentWindow,
         }))
         await act(async () => {

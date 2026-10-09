@@ -676,10 +676,44 @@
 
 .voteSummary {
   display: flex;
+  flex-wrap: wrap;
   gap: 24px;
   margin-top: 40px;
   color: #555;
   justify-content: center;
+}
+
+.voteButton {
+  min-width: 72px;
+  padding: 6px 16px;
+  border: 1px solid #c8c8c8;
+  border-radius: 20px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &[aria-pressed='true'] {
+    border-color: #0d61bf;
+    color: #0d61bf;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #0d61bf;
+    outline-offset: 2px;
+  }
+}
+
+.voteError {
+  flex-basis: 100%;
+  margin: 0;
+  color: #b3261e;
+  text-align: center;
 }
 
 .recommended {

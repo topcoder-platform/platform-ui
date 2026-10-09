@@ -2,7 +2,7 @@
 import '@testing-library/jest-dom'
 
 import React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import type { TimesheetEngagementListResponse, TimesheetEngagementRow } from '../../lib/models'
@@ -33,6 +33,28 @@ jest.mock('~/libs/ui', () => ({
             {props.children}
         </div>
     ),
+    // Only a complete YYYY-MM-DD value reports a change, the way the real picker reports a whole date.
+    InputDatePicker: (props: {
+        label: string
+        onChange: (date: Date | null) => void
+    }) => (
+        <label>
+            <span>{props.label}</span>
+            <input
+                aria-label={props.label}
+                onChange={function onPickerChange(event: React.ChangeEvent<HTMLInputElement>) {
+                    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(event.target.value)
+
+                    if (match) {
+                        props.onChange(
+                            new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])),
+                        )
+                    }
+                }}
+                type='text'
+            />
+        </label>
+    ),
     InputSelect: (props: {
         label: string
         onChange?: React.ChangeEventHandler<HTMLSelectElement>
@@ -61,9 +83,23 @@ jest.mock('~/libs/ui', () => ({
     LoadingSpinner: () => <div>loading-spinner</div>,
 }), { virtual: true })
 
+const mockAuth = { isAdmin: false, isLoggedIn: true, isTm: false, userRoles: [] as string[] }
+
+jest.mock('../../lib/utils/auth', () => ({
+    useAuth: () => mockAuth,
+}))
+
 jest.mock('../../components', () => ({
     EngagementsTabs: (props: { activeTab: string }) => (
         <div data-testid='engagements-tabs' data-active-tab={props.activeTab} />
+    ),
+    // Mirrors the real badge's label: an explicit label, or the status in title case.
+    StatusBadge: (props: { label?: string, status: string }) => (
+        <span>
+            {props.label
+                ?? `${props.status.charAt(0)}${props.status.slice(1)
+                    .toLowerCase()}`}
+        </span>
     ),
 }), { virtual: true })
 
@@ -116,8 +152,10 @@ const row = (overrides: Partial<TimesheetEngagementRow> = {}): TimesheetEngageme
     assigneeId: '1001',
     assigneeName: 'John Smith',
     assignmentId: 'asg-1',
+    assignmentStatus: 'ASSIGNED',
     engagementId: 'eng-1',
     engagementTitle: 'Senior Frontend Engineer',
+    hasPendingApproval: true,
     timesheetStatus: 'Pending Approval',
     viewerRole: TimesheetViewerRole.MANAGER,
     ...overrides,
@@ -141,6 +179,81 @@ const response = (
 describe('TimesheetEngagementsPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        mockAuth.isAdmin = false
+    })
+
+    it('opens an administrator on All timesheets rather than Pending Approval', async () => {
+        mockAuth.isAdmin = true
+        mockGetEngagements.mockResolvedValue(response(
+            [row({ viewerRole: TimesheetViewerRole.ADMINISTRATOR })],
+            TimesheetViewerRole.ADMINISTRATOR,
+        ))
+
+        render(<TimesheetEngagementsPage />)
+
+        await waitFor(() => {
+            expect(mockGetEngagements)
+                .toHaveBeenCalledWith(expect.objectContaining({ status: undefined }))
+        })
+        expect(mockGetEngagements).not.toHaveBeenCalledWith(
+            expect.objectContaining({ status: 'Pending Approval' }),
+        )
+        expect(await screen.findByLabelText('Status'))
+            .toHaveValue('')
+    })
+
+    it('keeps a manager on Pending Approval by default', async () => {
+        mockGetEngagements.mockResolvedValue(response([row()], TimesheetViewerRole.MANAGER))
+
+        render(<TimesheetEngagementsPage />)
+
+        await waitFor(() => {
+            expect(mockGetEngagements)
+                .toHaveBeenCalledWith(expect.objectContaining({ status: 'Pending Approval' }))
+        })
+        expect(screen.queryByLabelText('From Date')).not.toBeInTheDocument()
+    })
+
+    it('filters an administrator list by date range', async () => {
+        const user = userEvent.setup()
+        mockAuth.isAdmin = true
+        mockGetEngagements.mockResolvedValue(response(
+            [row({ viewerRole: TimesheetViewerRole.ADMINISTRATOR })],
+            TimesheetViewerRole.ADMINISTRATOR,
+        ))
+
+        render(<TimesheetEngagementsPage />)
+
+        await user.type(await screen.findByLabelText('From Date'), '2026-01-01')
+        await user.type(screen.getByLabelText('To Date'), '2026-09-30')
+
+        await waitFor(() => {
+            expect(mockGetEngagements)
+                .toHaveBeenLastCalledWith(expect.objectContaining({
+                    fromDate: '2026-01-01',
+                    toDate: '2026-09-30',
+                }))
+        })
+    })
+
+    it('shows an inverted date range as an error and does not send it', async () => {
+        const user = userEvent.setup()
+        mockAuth.isAdmin = true
+        mockGetEngagements.mockResolvedValue(response(
+            [row({ viewerRole: TimesheetViewerRole.ADMINISTRATOR })],
+            TimesheetViewerRole.ADMINISTRATOR,
+        ))
+
+        render(<TimesheetEngagementsPage />)
+
+        await user.type(await screen.findByLabelText('From Date'), '2026-09-30')
+        await user.type(screen.getByLabelText('To Date'), '2026-09-01')
+
+        expect(await screen.findByText('The to date cannot be earlier than the from date.'))
+            .toBeInTheDocument()
+        expect(mockGetEngagements).not.toHaveBeenCalledWith(
+            expect.objectContaining({ toDate: '2026-09-01' }),
+        )
     })
 
     it('lists one row per assignee with name and handle for a manager', async () => {
@@ -240,6 +353,63 @@ describe('TimesheetEngagementsPage', () => {
                     title: 'Frontend',
                 }))
         })
+    })
+
+    it('shows a manager the assignee, engagement, assignment status, and pending flag', async () => {
+        mockGetEngagements.mockResolvedValue(response([
+            row(),
+            row({
+                assignmentId: 'asg-2',
+                assignmentStatus: 'COMPLETED',
+                hasPendingApproval: false,
+                timesheetStatus: 'Approved',
+            }),
+        ], TimesheetViewerRole.MANAGER))
+
+        render(<TimesheetEngagementsPage />)
+
+        // Wait past the loading skeleton, which is a table too.
+        await screen.findAllByText('John Smith (johnsmith)')
+        const table = screen.getByRole('table')
+        expect(within(table)
+            .getAllByRole('columnheader')
+            .map(header => header.textContent))
+            .toEqual(['Assignee', 'Engagement', 'Assignment Status', 'Pending Approval', 'Action'])
+
+        const [, assignedRow, completedRow] = within(table)
+            .getAllByRole('row')
+        expect(within(assignedRow)
+            .getAllByRole('cell')
+            .map(cell => cell.textContent))
+            .toEqual([
+                'John Smith (johnsmith)',
+                'Senior Frontend Engineer',
+                'Assigned',
+                'Pending approval',
+                'View',
+            ])
+        expect(within(completedRow)
+            .getByText('Completed'))
+            .toBeInTheDocument()
+        expect(within(completedRow)
+            .queryByText('Pending approval')).not.toBeInTheDocument()
+    })
+
+    it('keeps the timesheet status column for an administrator', async () => {
+        mockGetEngagements.mockResolvedValue(response(
+            [row({ viewerRole: TimesheetViewerRole.ADMINISTRATOR })],
+            TimesheetViewerRole.ADMINISTRATOR,
+        ))
+
+        render(<TimesheetEngagementsPage />)
+
+        // Wait past the loading skeleton, which is a table too.
+        await screen.findAllByText('John Smith (johnsmith)')
+        const table = screen.getByRole('table')
+        expect(within(table)
+            .getAllByRole('columnheader')
+            .map(header => header.textContent))
+            .toEqual(['Engagement Title', 'Assignee', 'Timesheet Status', 'Action'])
     })
 
     it('opens the nested timesheet route from View', async () => {
