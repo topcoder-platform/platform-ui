@@ -8,6 +8,7 @@ import { isTopgearCommunity, TOPGEAR_CHALLENGES_ROUTE } from './utils/topgear.ut
 
 const OpportunitiesApp: LazyLoadedComponent = lazyLoad(() => import('./OpportunitiesApp'))
 const OpportunitiesPage: LazyLoadedComponent = lazyLoad(() => import('./pages/OpportunitiesPage'))
+const HomePage: LazyLoadedComponent = lazyLoad(() => import('./pages/HomePage'))
 const ChallengeDetailsPage: LazyLoadedComponent = lazyLoad(() => import('./pages/ChallengeDetailsPage'))
 const ReviewOpportunityDetailsPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/ReviewOpportunityDetailsPage'),
@@ -71,6 +72,16 @@ export const opportunitiesRoutes: ReadonlyArray<PlatformRoute> = [
                 id: 'Opportunities list',
                 route: '',
                 title: 'Opportunities',
+            },
+            // Member home ported from community-app's `/home` dashboard. It must stay
+            // ahead of the `:kind` category catch-all, and like community-app it sends
+            // anonymous visitors to login with this page as the return URL.
+            {
+                authRequired: true,
+                element: <HomePage />,
+                id: 'Opportunities member home',
+                route: 'home',
+                title: 'Home',
             },
             {
                 element: <ChallengeDetailsPage />,

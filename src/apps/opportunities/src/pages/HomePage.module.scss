@@ -1,0 +1,76 @@
+.page {
+    background: #f5f7fa;
+    color: #161616;
+    font-family: 'Nunito Sans', sans-serif;
+    min-height: 70vh;
+}
+
+.visuallyHidden {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+
+.layout {
+    align-items: start;
+    column-gap: 24px;
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr) 260px;
+    margin: 0 auto;
+    max-width: 1248px;
+    padding: 48px 24px 80px;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+}
+
+.time,
+.leftSlot,
+.banner,
+.feed,
+.rightSlot {
+    min-width: 0;
+
+    &:empty {
+        display: none;
+    }
+}
+
+@media (max-width: 1100px) {
+    // Community-app re-stacked its widgets on narrow screens. The column
+    // wrappers dissolve so each widget can take its mobile position.
+    .layout {
+        align-items: stretch;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        max-width: 720px;
+        padding-top: 32px;
+    }
+
+    .column {
+        display: contents;
+    }
+
+    .time { order: 1; }
+    .banner { order: 2; }
+    .feed { order: 3; }
+    .rightSlot { order: 4; }
+    .leftSlot { order: 5; }
+}
+
+@media (max-width: 520px) {
+    .layout {
+        padding: 24px 16px 40px;
+    }
+}

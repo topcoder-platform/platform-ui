@@ -1,5 +1,6 @@
 export { default as ChallengeDetailsPage } from './ChallengeDetailsPage'
 export { default as DocuSignReturnPage } from './DocuSignReturnPage'
+export { default as HomePage } from './HomePage'
 export { default as LegacyOpportunityRedirectPage } from './LegacyOpportunityRedirectPage'
 export { default as OpportunitiesPage } from './OpportunitiesPage'
 export { default as ReviewOpportunityDetailsPage } from './ReviewOpportunityDetailsPage'

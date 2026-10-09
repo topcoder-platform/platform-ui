@@ -1,0 +1,142 @@
+.feed {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.header {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.title {
+    color: #161616;
+    font-family: 'Figtree', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 38px;
+    margin: 0;
+    text-transform: none;
+}
+
+.viewAll {
+    align-items: center;
+    border: 1px solid #007d79;
+    border-radius: 4px;
+    color: #007d79;
+    display: inline-flex;
+    font-size: 16px;
+    font-weight: 700;
+    gap: 8px;
+    height: 38px;
+    line-height: 22px;
+    padding: 0 16px;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:link,
+    &:visited {
+        color: #007d79;
+    }
+
+    &:hover {
+        background: #007d79;
+        color: #fff;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #0f62fe;
+        outline-offset: 2px;
+    }
+
+    svg {
+        height: 20px;
+        width: 20px;
+    }
+}
+
+.list,
+.loading {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.loading span {
+    animation: pulse 1.2s ease-in-out infinite alternate;
+    background: linear-gradient(90deg, #e7ecef, #f7f9fa, #e7ecef);
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    height: 212px;
+}
+
+.message,
+.empty {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 24px;
+    text-align: center;
+
+    h3 {
+        color: #161616;
+        font-family: 'Figtree', sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 26px;
+        margin: 0 0 4px;
+        text-transform: none;
+    }
+
+    p {
+        color: #6f6f6f;
+        font-size: 14px;
+        line-height: 20px;
+        margin: 0;
+    }
+}
+
+.empty {
+    border-style: dashed;
+    border-color: #a8a8a8;
+}
+
+.message {
+    svg {
+        color: #007d79;
+        height: 34px;
+        margin-bottom: 13px;
+        width: 34px;
+    }
+
+    button {
+        background: #007d79;
+        border: 0;
+        border-radius: 4px;
+        color: #fff;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+        margin-top: 16px;
+        padding: 8px 16px;
+    }
+}
+
+@keyframes pulse {
+    from { opacity: .55; }
+    to { opacity: 1; }
+}
+
+@media (max-width: 520px) {
+    .title {
+        font-size: 20px;
+        line-height: 30px;
+    }
+}

@@ -1,10 +1,85 @@
 # Opportunities
 
 The Opportunities app replaces the legacy community-app challenge discovery,
-challenge detail, and reviewer-opportunity detail experiences. The main route
-is `/opportunities`; domain tabs use `/opportunities/:kind`, challenge details
-use `/opportunities/challenge/:challengeId`, and review details use
-`/opportunities/review/:reviewOpportunityId`.
+challenge detail, reviewer-opportunity detail, and member home experiences. The
+main route is `/opportunities`; domain tabs use `/opportunities/:kind`,
+challenge details use `/opportunities/challenge/:challengeId`, review details
+use `/opportunities/review/:reviewOpportunityId`, and the member home uses
+`/opportunities/home`.
+
+## Member home
+
+`/opportunities/home` (`/home` on the `opportunities` subdomain, where the app
+is mounted at the host root) replaces community-app's `/home` dashboard and its
+`/my-dashboard` alias. Community-app's `/home` route is not redirected here yet.
+The `home` child route is declared ahead of the `:kind` category catch-all.
+
+Like community-app, the page is for signed-in members only: the route sets
+`authRequired`, so an anonymous visitor is sent to login with the page as the
+return URL. The TopGear host has no member home (community-app's Wipro
+community had none), so `HomePage` redirects it to the TopGear challenge listing.
+
+| Community-app widget | Data source | Platform UI |
+| --- | --- | --- |
+| Topcoder Time (`TCTime`) | Browser clock, `America/New_York` | `HomeTopcoderTime` / `useTopcoderTime`; formatted with `Intl` (for example `Oct 8th, 07:31 UTC-4`) and refreshed at each minute boundary |
+| Center viewport (banner slider) | CMS `default` space viewport `IYMEHgYwk6S0S9tx5SsHd` (dev) / `1BK50OyMT29IOavUC7wSEB` (prod) | `HomeCmsViewport` (`banner`) with `HomeBannerSlider` |
+| Opportunities feed (`ChallengesFeed`) | `GET /v6/challenges` | `HomeChallengesFeed` / `useHomeChallengeFeed` / `getHomeChallengeFeed` |
+| Right viewport ("Join us on Discord") | CMS viewport `2qVJTorSdRVNlfRqoQocUH` (dev) / `SSwOFPT8l0WpGhqCBRISG` (prod) | `HomeCmsViewport` (`sidebar`) |
+| Left viewport | CMS viewport `2tq6jtu9GzPab7lAb7swlT` (dev) / `6sjlJHboX3aG3mFS5FnZND` (prod); currently one empty content block | `HomeCmsViewport` (`sidebar`); renders nothing while empty |
+
+Desktop keeps community-app's three columns (time and left slot; banner and
+feed; right slot). At 1100px and below the widgets stack in community-app's
+mobile order: time, banner, feed, right slot, left slot.
+
+The feed requests `page=1&perPage=20&types[]=CH&types[]=F2F&types[]=MM&status=ACTIVE&currentPhaseName=Registration&sortBy=updated&sortOrder=desc&isLightweight=true`,
+removes challenges tagged `Innovation Challenge` (Challenge API has no tag
+exclusion filter), and shows the first five as list-view competition cards (the
+Browse default, which stacks on narrow screens).
+The request goes through the shared XHR client, so a signed-in member's token is
+sent and group challenges the member can see may appear; community-app's
+feed request was anonymous. The member's Submitter registrations reuse the
+Browse Competitions registration request and SWR key to mark Registered cards.
+"View all" and card skill chips open Browse Competitions
+(`<rootRoute>/competitions`, with `?search=` for a skill). Unlike community-app,
+which hid the feed when it had no items, the feed shows loading, empty, and
+retryable error states.
+
+CMS slots read the retained viewport entries from the Payload `default` space
+through `PayloadCmsClient` (`include=10`), so they need
+`REACT_APP_PAYLOAD_CMS_DEFAULT_ACCESS_TOKEN` (see `src/libs/cms`). Development
+domains (`-dev`) use the `[DEV ENV]` entries and every other domain uses the
+production entries, as community-app did. `collectHomeCmsBlocks` flattens
+nested `viewport`, `contentBlock`, and `contentSlider` entries; other content
+types are skipped, as are blocks hidden with `extraStylesForContainer.display:
+none` (the legacy slider CSS carriers) and blocks that are empty once their
+`<style>` elements are removed. Markdown renders through `CmsMarkdown`, so
+authored inline styles are dropped: banner images fill the center column and
+links in the side slots render as teal call-to-action buttons. Sliders honor
+`autoStart` and `duration` (default 5 seconds), pause on hover or focus, and do
+not auto-advance when reduced motion is requested; on pointer devices the
+previous/next arrows appear on hover or keyboard focus so they do not cover the
+banner artwork. A slot whose request fails, including when the access token is
+missing, renders nothing; the rest of the page still works.
+
+`src/libs/cms` currently reads only `cms.topcoder-dev.com` and renders images
+only from `assets.topcoder-dev.com` in every environment. The production
+viewport entries also exist in that CMS with `assets.topcoder-dev.com` images,
+so production builds render them; if the shared client later moves production
+to `cms.topcoder.com`/`assets.topcoder.com`, this page follows it unchanged.
+
+Community-app dashboard pieces that are intentionally not ported:
+
+- `GigsFeed` (Recruit CRM gigs through community-app's `/api/recruit` proxy) and
+  `NewsFeed` (Vanilla forum "Topcoder News & Updates" through
+  `/api/cdn/public/forums/discussions`) were already commented out of the
+  dashboard (CORE-346 and TOP-1390) and depend on community-app server proxies.
+- `BlogFeed` (`/api/blog` RSS proxy) and `ThriveArticlesFeed` containers live
+  under `containers/Dashboard` but were only used by community-app's
+  `/examples` pages, never by `/home`.
+- The `page.dashboard` show/hide state (announcement, earnings, challenge
+  filter, tab selection) has no consumer in the current dashboard, and the
+  `/sandbox/cms/dashboard/announcements` preview is a CMS authoring sandbox,
+  not part of `/home`.
 
 ## TopGear community host
 
