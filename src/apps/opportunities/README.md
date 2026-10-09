@@ -867,4 +867,7 @@ post and Markdown editor components. `ForumTopicView` accepts optional
 login handoff. Topic detail may include API `permissions`; an explicit denied
 reply permission hides the composer. Existing challenge callers need no changes.
 The shared toolbar includes configured Filestack attachments through
-`uploadForumAttachment`, preserving Markdown links and rated @mentions.
+`uploadForumAttachment`, preserving Markdown links and rated @mentions. Its
+Figma grouping (dividers between formatting, heading, size, alignment, list,
+insert and expand controls, plus the size chevron) lives in the shared editor
+styles, so challenge discussion composers match the public forums.

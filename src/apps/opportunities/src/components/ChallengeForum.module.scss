@@ -1619,8 +1619,14 @@
     min-height: 38px;
     padding: 0;
     button { border-right: 0; height: 38px; min-width: 38px; padding: 7px; }
-    select { background: #fff; border: 0; border-left: 1px solid #e0e0e0; border-right: 1px solid #e0e0e0;
-        color: #6f6f6f; font: 14px/20px 'Nunito Sans', sans-serif; height: 38px; padding: 0 8px; }
+    select { appearance: none; background: #fff url('../assets/forums/1e461.svg') no-repeat right 4px center;
+        border: 0; border-left: 1px solid #e0e0e0; border-right: 1px solid #e0e0e0; color: #6f6f6f;
+        font: 14px/20px 'Nunito Sans', sans-serif; height: 38px; padding: 0 32px 0 12px; width: 80px; }
+    // Figma groups: B I U S | H1-H3 | size | alignment | lists | insert tools | expand.
+    button:nth-of-type(5), button:nth-of-type(11), button:nth-of-type(13), button:nth-of-type(20) {
+        border-left: 1px solid #e0e0e0; margin-left: 4px; padding-left: 11px; width: 43px;
+    }
+    button:nth-of-type(4), button:nth-of-type(10), button:nth-of-type(12), button:nth-of-type(19) { margin-right: 4px; }
 }
 .expandedEditor { background: white; inset: 24px; overflow: auto; padding: 24px; position: fixed; z-index: 1000;
     textarea { min-height: 65vh; }
@@ -1657,14 +1663,6 @@
     .postActions { gap: 16px; margin-top: 16px; padding-top: 16px; }
     .postActionDivider { align-self: center; background: #e0e0e0; display: block; flex: 0 0 1px; height: 24px; }
     .postActions button { line-height: 22px; min-height: 38px; padding: 8px 4px; }
-    .editorToolbar select { appearance: none; background: #fff url('../assets/forums/1e461.svg') no-repeat right 4px center;
-        padding: 0 32px 0 12px; width: 80px; }
-    .editorToolbar button:nth-of-type(5), .editorToolbar button:nth-of-type(11),
-    .editorToolbar button:nth-of-type(13), .editorToolbar button:nth-of-type(20) {
-        border-left: 1px solid #e0e0e0; margin-left: 4px; padding-left: 11px; width: 43px;
-    }
-    .editorToolbar button:nth-of-type(4), .editorToolbar button:nth-of-type(10),
-    .editorToolbar button:nth-of-type(12), .editorToolbar button:nth-of-type(19) { margin-right: 4px; }
     @media (max-width: 767px) {
         .topicCard, .post, .replyPost, .commentForm { padding: 16px; }
         .topicMetrics { padding: 24px 0 0; }
