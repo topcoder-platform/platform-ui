@@ -27,6 +27,10 @@ export const applicationFormSchema: yup.ObjectSchema<ApplicationFormData> = yup.
         .required(requiredMessage)
         .max(5000, 'Cover letter must be 5000 characters or less')
         .defined(),
+    cvFileUrl: yup
+        .string()
+        .url('Must be a valid URL')
+        .optional(),
     email: yup
         .string()
         .optional(),

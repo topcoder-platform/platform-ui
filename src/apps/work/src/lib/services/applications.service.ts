@@ -85,6 +85,7 @@ function normalizeApplication(application: Partial<Application>): Application {
         createdAt: typeof application.createdAt === 'string'
             ? application.createdAt
             : '',
+        cvFileUrl: toOptionalString(application.cvFileUrl),
         email: typeof application.email === 'string'
             ? application.email
             : '',

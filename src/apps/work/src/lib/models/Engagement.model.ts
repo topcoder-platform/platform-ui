@@ -58,6 +58,8 @@ export interface Application {
     availability: string
     coverLetter?: string
     createdAt: string
+    /** URL of the CV file the applicant uploaded to S3 through Filestack. */
+    cvFileUrl?: string
     email: string
     engagementId: number | string
     handle: string
@@ -65,6 +67,7 @@ export interface Application {
     mobileNumber?: string
     name: string
     portfolioUrls?: string[]
+    /** Link to a resume or professional profile (LinkedIn, Google Drive CV, personal website). */
     resumeUrl?: string
     status: ApplicationStatus | string
     updatedAt?: string

@@ -7,7 +7,10 @@ export interface ApplicationFormData {
     email?: string
     address?: string
     coverLetter: string
+    /** Link to a resume or professional profile (LinkedIn, Google Drive CV, personal website). */
     resumeUrl?: string
+    /** URL of the CV file uploaded to S3 through Filestack. */
+    cvFileUrl?: string
     portfolioUrls: PortfolioUrlEntry[]
     yearsOfExperience?: number
     availability?: string

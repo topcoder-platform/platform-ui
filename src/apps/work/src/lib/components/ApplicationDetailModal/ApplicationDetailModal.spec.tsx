@@ -71,4 +71,26 @@ describe('ApplicationDetailModal', () => {
         expect(screen.getByText('Address121, Osaka'))
             .toBeTruthy()
     })
+
+    it('links to the uploaded CV separately from the resume/profile link', () => {
+        render(
+            <ApplicationDetailModal
+                application={{
+                    ...application,
+                    cvFileUrl: 'https://cdn.filestackcontent.com/cv-handle',
+                    resumeUrl: 'https://www.linkedin.com/in/testaws1',
+                }}
+                onClose={jest.fn()}
+                open
+            />,
+        )
+
+        expect(screen.getByRole('link', { name: 'View CV' })
+            .getAttribute('href'))
+            .toBe('https://cdn.filestackcontent.com/cv-handle')
+        expect(screen.getByText('Resume / Profile Link'))
+            .toBeTruthy()
+        expect(screen.getByRole('link', { name: 'https://www.linkedin.com/in/testaws1' }))
+            .toBeTruthy()
+    })
 })
