@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-null -- fixtures mirror the API payload, which uses null */
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
 
@@ -95,6 +96,7 @@ const mockGetTimesheet = getTimesheet as jest.MockedFunction<typeof getTimesheet
 const timesheet = (viewerRole: TimesheetViewerRole): TimesheetView => ({
     assignment: {
         endDate: '2026-09-30',
+        hoursLeft: null,
         id: 'asg-1',
         memberHandle: 'johnsmith',
         memberId: '1001',
@@ -102,6 +104,7 @@ const timesheet = (viewerRole: TimesheetViewerRole): TimesheetView => ({
         standardHoursPerDay: 8,
         startDate: '2026-09-01',
         status: 'ASSIGNED',
+        totalHours: null,
     },
     engagementId: 'eng-1',
     engagementTitle: 'Senior Frontend Engineer',

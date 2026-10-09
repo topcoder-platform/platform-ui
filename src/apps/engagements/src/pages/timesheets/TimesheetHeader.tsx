@@ -12,11 +12,24 @@ interface TimesheetHeaderProps {
     managers: EngagementManager[]
     onEditManagers?: () => void
     onViewManagersAudit?: () => void
+    /** Shows total and remaining hours - for the people who review and pay, not the member. */
+    showAssignmentHours?: boolean
 }
 
 const withHandle = (name: string | null | undefined, handle: string): string => (
     name ? `${name} (${handle})` : handle
 )
+
+/** Blank without a total, as there is nothing to count down from; "Unavailable" if payments failed. */
+const formatHoursLeft = (assignment: TimesheetAssignment): string => {
+    if (assignment.totalHours === null || assignment.totalHours === undefined) {
+        return ''
+    }
+
+    return assignment.hoursLeft === null || assignment.hoursLeft === undefined
+        ? 'Unavailable'
+        : String(assignment.hoursLeft)
+}
 
 /**
  * Read-only engagement information, shown above the grid in all three role views.
@@ -49,6 +62,18 @@ const TimesheetHeader: FC<TimesheetHeaderProps> = (props: TimesheetHeaderProps) 
                 <dt>Standard Hours per Day</dt>
                 <dd>{props.assignment.standardHoursPerDay ?? 'Not set'}</dd>
             </div>
+            {props.showAssignmentHours && (
+                <>
+                    <div className={styles.fact}>
+                        <dt>Total Hours</dt>
+                        <dd>{props.assignment.totalHours ?? 'Not set'}</dd>
+                    </div>
+                    <div className={styles.fact}>
+                        <dt>Hours Left</dt>
+                        <dd>{formatHoursLeft(props.assignment)}</dd>
+                    </div>
+                </>
+            )}
             <div className={styles.fact}>
                 <dt>Member</dt>
                 <dd>
