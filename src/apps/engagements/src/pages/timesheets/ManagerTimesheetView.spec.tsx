@@ -99,6 +99,7 @@ const entry = (overrides: Partial<TimesheetEntry> = {}): TimesheetEntry => ({
 const timesheet = (entries: TimesheetEntry[]): TimesheetView => ({
     assignment: {
         endDate: '2026-09-30',
+        hoursLeft: null,
         id: 'asg-1',
         memberHandle: 'johnsmith',
         memberId: '1001',
@@ -106,6 +107,7 @@ const timesheet = (entries: TimesheetEntry[]): TimesheetView => ({
         standardHoursPerDay: 8,
         startDate: '2026-09-01',
         status: 'ASSIGNED',
+        totalHours: null,
     },
     engagementId: 'eng-1',
     engagementTitle: 'Senior Frontend Engineer',
