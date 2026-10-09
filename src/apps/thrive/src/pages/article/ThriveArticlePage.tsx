@@ -11,7 +11,7 @@ import {
     useCmsCollection,
 } from '~/libs/cms'
 
-import { ThriveArticleCard } from '../../components'
+import { ThriveArticleCard, ThriveVoteButtons } from '../../components'
 import { THRIVE_DEFAULT_BANNER } from '../../config'
 import type { ThriveArticleFields } from '../../models'
 import {
@@ -208,16 +208,11 @@ export const ThriveArticlePage: FC = () => {
                             Watch video
                         </a>
                     )}
-                    <div className={styles.voteSummary}>
-                        <span>
-                            ♥
-                            {fields.upvotes || 0}
-                        </span>
-                        <span>
-                            ♡
-                            {fields.downvotes || 0}
-                        </span>
-                    </div>
+                    <ThriveVoteButtons
+                        articleId={article.sys.id}
+                        downvotes={fields.downvotes || 0}
+                        upvotes={fields.upvotes || 0}
+                    />
                     <a
                         className={styles.discordButton}
                         href='https://discord.gg/topcoder?ref=thrive-article'
