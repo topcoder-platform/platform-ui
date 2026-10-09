@@ -626,6 +626,60 @@ describe('PaymentsListView', () => {
         })
     })
 
+    it('enables Reset when only the topcoder Type filter narrows the listing', async () => {
+        render(
+            <PaymentsListView
+                profile={{ roles: ['Payment Admin'] } as any}
+            />,
+        )
+
+        await screen.findByText('Member earnings will appear here.')
+
+        expect(mockFilterBar.mock.calls.at(-1)?.[0].hasActiveFilters)
+            .toBe(false)
+
+        await act(async () => {
+            const filterBarProps = mockFilterBar.mock.calls.at(-1)?.[0]
+            filterBarProps.onFilterChange('category', ['Task', 'Contest'])
+            filterBarProps.onApplyFilters()
+        })
+
+        await waitFor(() => {
+            expect(mockedGetPayments)
+                .toHaveBeenLastCalledWith(10, 0, {
+                    categories: ['TASK_PAYMENT', 'CONTEST_PAYMENT'],
+                })
+        })
+        expect(mockFilterBar.mock.calls.at(-1)?.[0].hasActiveFilters)
+            .toBe(true)
+
+        await act(async () => {
+            mockFilterBar.mock.calls.at(-1)?.[0].onResetFilters()
+        })
+
+        expect(mockFilterBar.mock.calls.at(-1)?.[0].hasActiveFilters)
+            .toBe(false)
+    })
+
+    it('keeps Reset disabled when every topcoder Type is selected', async () => {
+        render(
+            <PaymentsListView
+                profile={{ roles: ['Payment Admin'] } as any}
+            />,
+        )
+
+        await screen.findByText('Member earnings will appear here.')
+
+        await act(async () => {
+            const filterBarProps = mockFilterBar.mock.calls.at(-1)?.[0]
+            filterBarProps.onFilterChange('category', TOPCODER_TAB_TYPE_FILTER_VALUES)
+            filterBarProps.onApplyFilters()
+        })
+
+        expect(mockFilterBar.mock.calls.at(-1)?.[0].hasActiveFilters)
+            .toBe(false)
+    })
+
     it('scopes the type filter to topcoder categories and lists Topgear winnings on its own tab', async () => {
         render(
             <PaymentsListView

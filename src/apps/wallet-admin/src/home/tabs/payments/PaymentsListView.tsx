@@ -467,11 +467,17 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
 
     const hasActiveFilters = React.useMemo(() => {
         const approverDefaultDates = isApproverView ? getApproverDefaultDateRange() : undefined
+        const defaultTypeCategories = isApproverView ? approverAllowedCategories : TOPCODER_PAYMENT_CATEGORIES
 
         return Object.entries(appliedFilters)
             .some(([key, value]) => {
-                if (key === 'category' || key === 'categories') {
+                if (key === 'category') {
                     return false
+                }
+
+                // `categories` falls back to every type in the view, so only a narrowed Type selection is a filter.
+                if (key === 'categories') {
+                    return defaultTypeCategories.some(category => !value.includes(category))
                 }
 
                 if (approverDefaultDates && key === 'dateFrom' && value[0] === approverDefaultDates.dateFrom) {
