@@ -23,12 +23,16 @@ import * as services from '../../../../../lib/services'
 import {
     AiReviewConfig,
     AiReviewMode,
+    Challenge,
     ChallengeEditorFormData,
     Reviewer,
 } from '../../../../../lib/models'
+import { transformChallengeToFormData } from '../../../../../lib/utils/challenge-editor.utils'
+import { showErrorToast } from '../../../../../lib/utils/toast.utils'
 
 import {
     getReviewContextLockReason,
+    hasAiOnlyTimelinePhases,
     isAiReviewer,
     syncAiConfigReviewers,
 } from './reviewers-field.utils'
@@ -76,6 +80,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     const humanTabRef = useRef<HTMLDivElement>(null)
     const aiTabRef = useRef<HTMLDivElement>(null)
     const contextTabRef = useRef<HTMLDivElement>(null)
+    const isRestoringScheduleRef = useRef<boolean>(false)
 
     const fetchAiReviewConfigByChallenge = services.fetchAiReviewConfigByChallenge ?? (async () => undefined)
     const patchChallenge = services.patchChallenge ?? (async () => undefined)
@@ -206,6 +211,16 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
         () => Number(numOfSubmissions || 0) > 0,
         [numOfSubmissions],
     )
+    /**
+     * Draft schedule still built from the AI Only timeline template. challenge-api moves a
+     * draft back to the default template on its next save once the AI config is no longer
+     * AI_ONLY, but until then the form only offers the AI Review and Approval phases.
+     */
+    const hasDraftAiOnlySchedule = useMemo(
+        () => (challengeStatus === ChallengeStatus.New || challengeStatus === ChallengeStatus.Draft)
+            && hasAiOnlyTimelinePhases(phases),
+        [challengeStatus, phases],
+    )
     const reviewContextLockReason = useMemo(
         () => getReviewContextLockReason({
             hasSubmissions,
@@ -275,6 +290,54 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
         [focusTab, handleTabChange],
     )
 
+    /**
+     * Loads the schedule persisted by challenge-api into the form, so the manual reviewer
+     * phase options follow the timeline template challenge-api selected.
+     *
+     * @param savedChallenge challenge returned by the reviewer patch.
+     */
+    const applyPersistedSchedule = useCallback((savedChallenge: Challenge | undefined): void => {
+        const savedFormData = transformChallengeToFormData(savedChallenge)
+
+        if (!savedFormData.phases?.length) {
+            return
+        }
+
+        formContext.setValue('phases', savedFormData.phases, {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
+        formContext.setValue('timelineTemplateId', savedFormData.timelineTemplateId, {
+            shouldDirty: true,
+        })
+    }, [formContext])
+    /**
+     * Persists the reviewers so challenge-api moves the draft off the AI Only timeline
+     * template, then loads the restored schedule into the form. The regular save cannot do
+     * this because the manual reviewer requirement blocks it while only the AI Review and
+     * Approval phases are available. Failures are reported with an error toast.
+     *
+     * @param nextReviewers reviewers to persist with the schedule reset.
+     */
+    const restoreDefaultSchedule = useCallback((nextReviewers: Reviewer[]): void => {
+        if (!challengeId || isRestoringScheduleRef.current) {
+            return
+        }
+
+        isRestoringScheduleRef.current = true
+        patchChallenge(challengeId, {
+            reviewers: nextReviewers,
+        })
+            .then(applyPersistedSchedule)
+            .catch((error: unknown) => {
+                showErrorToast(error instanceof Error
+                    ? error.message
+                    : 'Failed to restore the default challenge timeline')
+            })
+            .finally(() => {
+                isRestoringScheduleRef.current = false
+            })
+    }, [applyPersistedSchedule, challengeId])
     const handleAiConfigPersisted = useCallback(
         (config: AiReviewConfig): void => {
             setAiReviewMode(config.mode)
@@ -291,16 +354,18 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                 nextReviewers = nextReviewers.filter(isAiReviewer)
             }
 
-            if (!hasReviewerChanges(currentReviewers, nextReviewers)) {
-                return
+            if (hasReviewerChanges(currentReviewers, nextReviewers)) {
+                formContext.setValue('reviewers', nextReviewers, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                })
             }
 
-            formContext.setValue('reviewers', nextReviewers, {
-                shouldDirty: true,
-                shouldValidate: true,
-            })
+            if (config.mode !== 'AI_ONLY' && hasDraftAiOnlySchedule) {
+                restoreDefaultSchedule(nextReviewers)
+            }
         },
-        [formContext, phases],
+        [formContext, hasDraftAiOnlySchedule, phases, restoreDefaultSchedule],
     )
     const handleAiConfigRemoved = useCallback(async (): Promise<void> => {
         setAiReviewMode(undefined)
@@ -322,18 +387,26 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
         }
 
         try {
-            await patchChallenge(challengeId, {
+            const savedChallenge = await patchChallenge(challengeId, {
                 reviewers: nextReviewers,
             })
+
+            if (hasDraftAiOnlySchedule) {
+                applyPersistedSchedule(savedChallenge)
+            }
         } catch (error) {
             try {
                 const persistedChallenge = await fetchChallenge(challengeId)
                 const persistedHumanReviewers = (persistedChallenge.reviewers || [])
                     .filter(reviewer => !isAiReviewer(reviewer))
 
-                await patchChallenge(challengeId, {
+                const savedChallenge = await patchChallenge(challengeId, {
                     reviewers: persistedHumanReviewers,
                 })
+
+                if (hasDraftAiOnlySchedule) {
+                    applyPersistedSchedule(savedChallenge)
+                }
             } catch (fallbackError) {
                 throw new Error(fallbackError instanceof Error
                     ? fallbackError.message
@@ -342,7 +415,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                         : 'AI review configuration was removed, but assigned AI workflows could not be cleared')
             }
         }
-    }, [challengeId, formContext])
+    }, [applyPersistedSchedule, challengeId, formContext, hasDraftAiOnlySchedule])
 
     return (
         <div className={styles.tabsContainer}>

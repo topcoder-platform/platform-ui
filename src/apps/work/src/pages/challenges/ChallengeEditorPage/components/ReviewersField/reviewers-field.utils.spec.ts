@@ -2,6 +2,7 @@ import {
     aiReviewConfigHasChanges,
     getAiReviewerPhaseId,
     getReviewContextLockReason,
+    hasAiOnlyTimelinePhases,
     normalizeTrackForAiTemplates,
     syncAiConfigReviewers,
     validateAiReviewConfiguration,
@@ -200,6 +201,31 @@ describe('reviewers-field utils ai reviewer syncing', () => {
             },
         ]))
             .toBe('screening-phase-id')
+    })
+})
+
+describe('reviewers-field utils AI only timeline detection', () => {
+    it('detects schedules built from the AI Only timeline template', () => {
+        expect(hasAiOnlyTimelinePhases([
+            { name: 'Registration' },
+            { name: 'Submission' },
+            { name: ' ai review ' },
+            { name: 'Approval' },
+        ]))
+            .toBe(true)
+    })
+
+    it('ignores regular review schedules and missing phases', () => {
+        expect(hasAiOnlyTimelinePhases([
+            { name: 'Registration' },
+            { name: 'Submission' },
+            { name: 'AI Screening' },
+            { name: 'Review' },
+            { name: 'Approval' },
+        ]))
+            .toBe(false)
+        expect(hasAiOnlyTimelinePhases(undefined))
+            .toBe(false)
     })
 })
 

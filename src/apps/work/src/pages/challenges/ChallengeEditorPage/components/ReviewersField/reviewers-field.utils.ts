@@ -6,6 +6,10 @@ import {
     Reviewer,
     Workflow,
 } from '../../../../../lib/models'
+import {
+    AI_REVIEW_PHASE_NAME,
+    normalizePhaseName,
+} from '../ChallengeScheduleSection/ChallengeScheduleSection.utils'
 
 const TEMPLATE_TRACK_ALIASES: Record<string, string> = {
     DATA_SCIENCE: 'DATA_SCIENCE',
@@ -286,6 +290,20 @@ export function syncAiConfigReviewers(
         ...humanReviewers,
         ...nextAiReviewers,
     ]
+}
+
+/**
+ * Returns whether the schedule was built from the AI Only timeline template, which is the
+ * only template that contains an "AI Review" phase.
+ *
+ * @param phases challenge phases from the editor form.
+ * @returns `true` when an "AI Review" phase is present.
+ * @remarks Used by `ReviewersField` to restore the default timeline once the AI review mode
+ * leaves AI_ONLY, so manual reviewers can be assigned to the regular review phases again.
+ */
+export function hasAiOnlyTimelinePhases(phases: ChallengePhase[] | undefined): boolean {
+    return (Array.isArray(phases) ? phases : [])
+        .some(phase => normalizePhaseName(phase?.name) === normalizePhaseName(AI_REVIEW_PHASE_NAME))
 }
 
 /**
