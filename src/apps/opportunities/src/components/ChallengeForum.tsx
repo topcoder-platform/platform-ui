@@ -290,6 +290,9 @@ export const ForumMember: FC<{
 /**
  * Renders topic participant identities and any bounded overflow count.
  *
+ * Avatars overlap in API activity order, and each one stacks above the next, so the
+ * first participant stays on top. Every stack level stays above the topic card overlay.
+ *
  * @param props participant snapshots, complete count, and member projections.
  * @returns accessible linked avatar group.
  * @throws Does not throw.
@@ -306,12 +309,17 @@ export const ParticipantGroup: FC<{
 
     return (
         <span aria-label={`Participants: ${labels.join(', ')}`} className={styles.participants}>
-            {props.participants.map(participant => {
+            {props.participants.map((participant, index) => {
                 const profile = props.profilesByMemberId.get(participant.memberId)
                 const handle = profile?.handle ?? participant.handle
 
                 return (
-                    <a href={memberProfileUrl(handle)} key={participant.memberId} title={handle}>
+                    <a
+                        href={memberProfileUrl(handle)}
+                        key={participant.memberId}
+                        style={{ zIndex: props.participants.length - index + 1 }}
+                        title={handle}
+                    >
                         <MemberAvatar
                             className={styles.avatar}
                             handle={handle}
@@ -499,7 +507,7 @@ const DiscussionInfo: FC<{
     return (
         <section className={styles.discussionInfo}>
             <h2>
-                <IconOutline.InformationCircleIcon aria-hidden='true' />
+                <ForumIcon name='info' />
                 Discussion info
             </h2>
             <ForumMember
@@ -563,20 +571,23 @@ export const ForumTopicCard: FC<{
                 type='button'
             />
             <div className={styles.topicMain}>
-                <div className={styles.tags}>
-                    {props.topic.isAnnouncement && (
-                        <span className={styles.announcement}>Announcement</span>
-                    )}
-                    {props.topic.unread && (
-                        <>
-                            {props.topic.postsCount <= 1 && (
-                                <span className={styles.newTopic}>New topic</span>
-                            )}
-                            <span className={styles.newPost}>New post</span>
-                        </>
-                    )}
-                    {props.topic.locked && <span className={styles.locked}>Locked</span>}
-                </div>
+                {/* Untagged cards omit the row so the title aligns with the top of the metrics rail. */}
+                {(props.topic.isAnnouncement || props.topic.unread || props.topic.locked) && (
+                    <div className={styles.tags}>
+                        {props.topic.isAnnouncement && (
+                            <span className={styles.announcement}>Announcement</span>
+                        )}
+                        {props.topic.unread && (
+                            <>
+                                {props.topic.postsCount <= 1 && (
+                                    <span className={styles.newTopic}>New topic</span>
+                                )}
+                                <span className={styles.newPost}>New post</span>
+                            </>
+                        )}
+                        {props.topic.locked && <span className={styles.locked}>Locked</span>}
+                    </div>
+                )}
                 <button
                     className={styles.topicTitle}
                     onClick={() => props.onSelect(props.topic.id)}
@@ -1226,6 +1237,9 @@ const ForumPostCard: FC<{
     const post = props.item.post
     const owner = post.authorMemberId === props.memberId
     const postClass = props.item.depth > 0 ? styles.replyPost : styles.post
+    // The divider separates reactions from the actions after it, so it is omitted when none render.
+    const hasPostActions = !!props.onWatch
+        || (!props.detail.topic.locked && (props.canReply !== false || owner || props.canDelete))
     return (
         <article className={postClass}>
             <header>
@@ -1318,7 +1332,7 @@ const ForumPostCard: FC<{
                         <ForumIcon name='downVote' />
                         {post.thumbsDownCount ?? 0}
                     </button>
-                    <span aria-hidden className={styles.postActionDivider} />
+                    {hasPostActions && <span aria-hidden className={styles.postActionDivider} />}
                     {!props.detail.topic.locked && props.canReply !== false && (
                         <>
                             <button onClick={() => props.onReply(post)} type='button'>
@@ -1534,7 +1548,7 @@ export const ForumTopicView: FC<{
                 {!props.contentOnly && (
                     <aside className={styles.topicInfo}>
                         <h2>
-                            <IconOutline.InformationCircleIcon aria-hidden='true' />
+                            <ForumIcon name='info' />
                             Topic info
                         </h2>
                         <div className={styles.topicInfoAuthor}>
@@ -1543,7 +1557,7 @@ export const ForumTopicView: FC<{
                                 profile={props.profilesByMemberId.get(props.detail.topic.authorMemberId)}
                             />
                             <span className={styles.authorBadge}>
-                                <ForumIcon name='edit' />
+                                <ForumIcon name='author' />
                                 Author
                             </span>
                         </div>
@@ -1560,13 +1574,13 @@ export const ForumTopicView: FC<{
                         <div className={styles.topicInfoMetrics}>
                             <p>
                                 <ForumIcon name='posts' />
-                                Posts:
+                                <strong>Posts:</strong>
                                 {' '}
                                 {props.detail.topic.postsCount}
                             </p>
                             <p>
                                 <ForumIcon name='watch' />
-                                Views:
+                                <strong>Views:</strong>
                                 {' '}
                                 {props.detail.topic.viewsCount ?? 0}
                             </p>

@@ -36,10 +36,12 @@
     box-sizing: border-box;
 }
 
+/* Left-rail cards are borderless in the Figma design; content cards keep their outline. */
 .overview,
 .filters,
 .discussionInfo,
 .topicInfo {
+    border: 0;
     padding: 24px;
 }
 
@@ -360,7 +362,7 @@
 
 .discussionInfo > .member,
 .topicInfo > .member {
-    margin-top: 16px;
+    margin-top: 24px;
 }
 
 .discussionInfo dl,
@@ -388,6 +390,7 @@
 
     dd {
         margin: 0;
+        text-align: right;
     }
 }
 
@@ -478,7 +481,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    min-height: 20px;
+    margin-bottom: 4px;
 
     span {
         border-radius: 2px;
@@ -516,7 +519,7 @@
     font-size: 24px;
     font-weight: 700;
     line-height: 38px;
-    margin: 4px 0 0;
+    margin: 0;
     padding: 0;
     position: relative;
     text-align: left;
@@ -620,7 +623,10 @@
         display: inline-flex;
         height: 32px;
 
-        /* Stays above the topic card overlay so the profile link still works. */
+        /*
+         * Stays above the topic card overlay so the profile link still works.
+         * ParticipantGroup sets descending z-indexes so earlier avatars overlap later ones.
+         */
         position: relative;
         text-decoration: none;
         width: 32px;
@@ -724,11 +730,20 @@
     grid-template-columns: 281px minmax(0, 895px);
 }
 
+/* The Author badge stays on the handle's line; long handles truncate instead of wrapping. */
 .topicInfoAuthor {
     align-items: center;
     display: flex;
-    flex-wrap: wrap;
     gap: 8px;
+    margin-top: 24px;
+
+    .member > a {
+        white-space: nowrap;
+    }
+
+    > .authorBadge {
+        flex: 0 0 auto;
+    }
 }
 
 .authorBadge,
@@ -772,8 +787,13 @@
         }
     }
 
+    p strong {
+        font-weight: 700;
+    }
+
     > strong {
         font-size: 14px;
+        font-weight: 700;
         line-height: 20px;
         margin-top: 12px;
     }
@@ -807,8 +827,8 @@
             padding: 4px;
         }
 
-        // Keep the unread marker in its Figma red rather than the muted meta style.
-        > .newPost {
+        // Keep the unread marker in its Figma pink; the type selector outranks the muted meta style.
+        > span.newPost {
             background: #ffe5ec;
             color: #c1294f;
         }
@@ -1096,9 +1116,9 @@
     flex-direction: column;
     gap: 16px;
 
+    // Borderless like the other left-rail cards.
     section {
         background: #fff;
-        border: 1px solid #e0e0e0;
         border-radius: 8px;
         padding: 24px;
     }
@@ -1468,7 +1488,7 @@
     > span:not(.member) {
         background: #f4f4f4;
         border-radius: 2px;
-        color: #6f6f6f;
+        color: #161616;
         font-size: 11px;
         font-weight: 600;
         line-height: 12px;
@@ -1655,7 +1675,6 @@
         line-height: 20px; padding: 0 4px;
     }
     .postActions { gap: 16px; margin-top: 16px; padding-top: 16px; }
-    .postActionDivider { align-self: center; background: #e0e0e0; display: block; flex: 0 0 1px; height: 24px; }
     .postActions button { line-height: 22px; min-height: 38px; padding: 8px 4px; }
     .editorToolbar select { appearance: none; background: #fff url('../assets/forums/1e461.svg') no-repeat right 4px center;
         padding: 0 32px 0 12px; width: 80px; }
@@ -1671,4 +1690,11 @@
     }
 }
 
-.postActionDivider { display: none; }
+// Separates the reactions from the post actions; outranks the `.postActions > span` reset.
+.postActions > .postActionDivider {
+    align-self: center;
+    background: #e0e0e0;
+    display: block;
+    flex: 0 0 1px;
+    height: 24px;
+}
