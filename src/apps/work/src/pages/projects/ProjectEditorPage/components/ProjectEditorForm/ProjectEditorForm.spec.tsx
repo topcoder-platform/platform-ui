@@ -365,7 +365,7 @@ describe('ProjectEditorForm', () => {
                     isEdit
                     projectDetail={{
                         description: 'Description',
-                        details: { smu: 'AMR2' },
+                        details: { smu: 'AM2' },
                         id: 'project-1',
                         name: 'Project',
                         status: 'active',
@@ -375,8 +375,13 @@ describe('ProjectEditorForm', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByText('AM2'))
+        expect(screen.getByText('AMR2'))
             .toBeTruthy()
+        fireEvent.keyDown(screen.getByLabelText('SMU'), { code: 'ArrowDown', key: 'ArrowDown' })
+        expect(screen.getAllByText('AMR2').length)
+            .toBeGreaterThan(1)
+        expect(screen.queryByText('AM2'))
+            .toBeNull()
     })
 
     it('populates the shared metadata from a Salesforce opportunity and links to it', async () => {
