@@ -32,10 +32,10 @@ const GigApplyPage: FC = () => {
         error: candidateError,
         mutate: retryCandidate,
     }: SWRResponse<{ candidate: Candidate | undefined }> = useSWR(
-        profile?.email && job && isOpenGig(job)
-            ? ['gigs-candidate', profile.userId, profile.email]
+        profile && job && isOpenGig(job)
+            ? ['gigs-candidate', profile.userId]
             : undefined,
-        async (_key: string, _id: number, email: string) => ({ candidate: await getCandidate(email) }),
+        async () => ({ candidate: await getCandidate() }),
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
     const missing = error instanceof RecruitError && [400, 404].includes(error.status)

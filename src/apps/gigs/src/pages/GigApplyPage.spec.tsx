@@ -1,4 +1,5 @@
 /* eslint-disable sort-keys, react/jsx-no-bind, import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+/* eslint-disable unicorn/no-null -- the website API reports a missing candidate as JSON null. */
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { SWRConfig } from 'swr'
@@ -14,7 +15,7 @@ jest.mock('react-router-dom', () => {
 })
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
-        COMMUNITY_APP_URL: 'https://www.topcoder-dev.com',
+        WEBSITE_API_URL: 'https://www.topcoder-dev.com/__api',
         USER_PROFILE_URL: 'https://profiles.topcoder-dev.com',
         URLS: { ACCOUNT_SETTINGS: '/settings' },
     },
@@ -88,8 +89,8 @@ afterAll(() => {
 })
 
 describe('Gig application candidate loading', () => {
-    it('opens the application form when Recruit returns its bare empty no-match array', async () => {
-        fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => [] })
+    it('opens the application form when the member has no candidate profile', async () => {
+        fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ candidate: null }) })
         renderApplyPage()
 
         expect(await screen.findByRole('button', { name: 'Apply to this job' }))
@@ -100,18 +101,15 @@ describe('Gig application candidate loading', () => {
             .toBeNull()
         expect(fetchMock)
             .toHaveBeenCalledWith(
-                'https://www.topcoder-dev.com/api/recruit/candidates/search?email=jane%40example.com',
-                expect.objectContaining({ headers: {} }),
+                'https://www.topcoder-dev.com/__api/recruit/candidate',
+                expect.objectContaining({ headers: { Authorization: 'Bearer member-token' } }),
             )
     })
-    it.each([
-        ['envelope', { data: [{ salary_expectation: 500 }] }],
-        ['direct array', [{ salary_expectation: 500 }]],
-    ])('prefills the application form from an existing candidate search %s', async (_label, response) => {
+    it('prefills the application form from the existing candidate profile', async () => {
         fetchMock.mockResolvedValueOnce({
             ok: true,
             status: 200,
-            json: async () => response,
+            json: async () => ({ candidate: { salary_expectation: 500 } }),
         })
         renderApplyPage()
 
@@ -122,14 +120,14 @@ describe('Gig application candidate loading', () => {
             .toBeTruthy()
     })
     it('blocks a failed lookup and opens the form after a successful no-match retry', async () => {
-        fetchMock.mockResolvedValueOnce({ ok: false, status: 503, json: async () => ({ error: true }) })
+        fetchMock.mockResolvedValueOnce({ ok: false, status: 503, json: async () => ({ status: 503 }) })
         renderApplyPage()
 
         expect(await screen.findByText('Unable to load your Gig Work profile'))
             .toBeTruthy()
         expect(screen.queryByRole('button', { name: 'Apply to this job' }))
             .toBeNull()
-        fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => [] })
+        fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ candidate: null }) })
         fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
         expect(await screen.findByRole('button', { name: 'Apply to this job' }))
             .toBeTruthy()
