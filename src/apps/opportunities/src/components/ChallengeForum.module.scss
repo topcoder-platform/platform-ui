@@ -76,24 +76,15 @@
     }
 
     /*
-     * Unread activity is teal with a red dot, matching the challenge tab rail.
-     * The dot appears only while topics are actually unread.
+     * The new-topics pill is the Figma solid red chip with a darker red border.
+     * It turns red only while topics are actually unread; otherwise it keeps the
+     * neutral chip. The 1px border replaces 1px of padding to keep chip height.
      */
-    .newCount {
-        background: #d9fbfb;
-        color: #007d79;
-        position: relative;
-    }
-
-    .newCount.hasUnread::after {
+    .newCount.hasUnread {
         background: #c1294f;
-        border-radius: 50%;
-        content: '';
-        height: 6px;
-        position: absolute;
-        right: -3px;
-        top: -3px;
-        width: 6px;
+        border: 1px solid #a21035;
+        color: #fff;
+        padding: 3px;
     }
 }
 
