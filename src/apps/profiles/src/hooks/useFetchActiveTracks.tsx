@@ -34,6 +34,14 @@ const nativeDataScienceStatsKeys = new Set([
     'wins',
 ])
 
+// Legacy subtracks whose stats history only covers part of the member's legacy
+// activity, so first-place history rows undercount their aggregate wins.
+const partialHistorySubTrackNames = new Set([
+    'First2Finish',
+    'MARATHON_MATCH',
+    'SRM',
+])
+
 const AI_ENGINEERING_DISPLAY_NAME = 'AI Engineering'
 
 const aiEngineeringRatingPathNames = new Set([
@@ -115,13 +123,30 @@ export const getSubTrackDisplaySubmissionCount = (subTrack?: MemberStats): numbe
 }
 
 /**
+ * Checks whether the explicit aggregate win counter is authoritative for a subtrack.
+ *
+ * Legacy First2Finish, Marathon Match, and SRM history only covers part of the
+ * member's legacy activity, so its first-place rows undercount the aggregate
+ * `wins` value returned by the stats API.
+ *
+ * @param {MemberStats | undefined} subTrack - The subtrack to inspect.
+ * @returns {boolean} Whether the aggregate win counter should be displayed instead of placement wins.
+ */
+const hasAuthoritativeAggregateWins = (subTrack?: MemberStats): boolean => (
+    !!subTrack?.name
+    && partialHistorySubTrackNames.has(subTrack.name)
+    && getFiniteNumber(subTrack.wins) !== undefined
+)
+
+/**
  * Builds the displayed win/submission counts for a subtrack card or summary.
  *
  * Some unified stats rows currently include challenge/rating history while the
  * aggregate win or submission counters are stale, omitted, or left at zero. In
  * that case, placement-bearing history is used for wins and history/challenge
- * count is used as the minimum visible submission count. Legacy Marathon Match
- * history is partial, so its explicit aggregate win counter remains authoritative.
+ * count is used as the minimum visible submission count. Legacy First2Finish,
+ * Marathon Match, and SRM history is partial, so their explicit aggregate win
+ * counter remains authoritative.
  *
  * @param {MemberStats | undefined} subTrack - The subtrack to summarize.
  * @param {StatsHistory[]} trackHistory - Optional history rows for the same subtrack.
@@ -131,19 +156,16 @@ export const getSubTrackSummaryStats = (
     subTrack?: MemberStats,
     trackHistory: StatsHistory[] = [],
 ): SubTrackSummaryStats => {
-    const aggregateWins = getFiniteNumber(subTrack?.wins)
-    const statWins = aggregateWins ?? 0
+    const statWins = getFiniteNumber(subTrack?.wins) ?? 0
     const historyWithPlacements = trackHistory
         .filter(history => getFiniteNumber(history.placement) !== undefined)
     const historyWins = historyWithPlacements.filter(history => history.placement === 1).length
     const displaySubmissions = getSubTrackDisplaySubmissionCount(subTrack) ?? 0
     const historySubmissions = trackHistory.length
-    const hasAuthoritativeAggregateWins = subTrack?.name === 'MARATHON_MATCH'
-        && aggregateWins !== undefined
 
     return {
         submissions: Math.max(displaySubmissions, historySubmissions),
-        wins: historyWithPlacements.length > 0 && !hasAuthoritativeAggregateWins
+        wins: historyWithPlacements.length > 0 && !hasAuthoritativeAggregateWins(subTrack)
             ? historyWins
             : statWins,
     }
@@ -208,6 +230,19 @@ const hasPlacementHistory = (summary: SubTrackHistorySummary): boolean => (
     summary.history.some(history => getFiniteNumber(history.placement) !== undefined)
 )
 
+/**
+ * Checks whether the subtrack card derives its wins from first-place history rows.
+ *
+ * Mirrors `getSubTrackSummaryStats`: placement history is the win source unless
+ * the subtrack has no placement rows or its aggregate win counter is authoritative.
+ *
+ * @param {SubTrackHistorySummary} summary - The subtrack history summary to inspect.
+ * @returns {boolean} Whether placement history, rather than the aggregate counter, supplies the wins.
+ */
+const usesPlacementHistoryWins = (summary: SubTrackHistorySummary): boolean => (
+    hasPlacementHistory(summary) && !hasAuthoritativeAggregateWins(summary.subTrack)
+)
+
 const getSubTrackHistorySummaries = (
     subTracks: MemberStats[],
     statsHistory?: UserStatsHistory,
@@ -237,9 +272,10 @@ const getFallbackTrackSummaryStats = (summaries: SubTrackHistorySummary[]): Trac
  * counted once for the parent totals while each child card keeps its own stats.
  *
  * Subtracks whose history only carries rating changes have no placement rows, so
- * their cards fall back to the aggregate win counter. Those wins are added to the
- * parent total as well, otherwise the summary drops them and no longer matches the
- * sum of the subtrack cards.
+ * their cards fall back to the aggregate win counter. Legacy subtracks with partial
+ * placement history, such as First2Finish, also display their aggregate win counter.
+ * Those wins are added to the parent total as well, otherwise the summary drops them
+ * and no longer matches the sum of the subtrack cards.
  *
  * @param {MemberStats[]} subTracks - Active subtracks included in the parent track.
  * @param {UserStatsHistory | undefined} statsHistory - Optional stats-history payload for the same member.
@@ -291,13 +327,17 @@ export const getTrackSummaryStats = (
         0,
         summary.stats.submissions - summary.history.length,
     ))
-    const placementHistorySummaries = historySummaries.filter(hasPlacementHistory)
-    const uniqueHistoryWins = uniqueHistory.filter(history => history.placement === 1).length
+    const placementHistorySummaries = historySummaries.filter(usesPlacementHistoryWins)
+    const uniqueHistoryWins = new Set(
+        placementHistorySummaries.flatMap(summary => summary.history
+            .filter(history => history.placement === 1)
+            .map(getHistoryChallengeKey)),
+    ).size
     const historyStatsWins = hasDuplicateHistory
         ? Math.max(0, ...placementHistorySummaries.map(summary => summary.stats.wins))
         : sumBy(placementHistorySummaries, summary => summary.stats.wins)
     const statsOnlyHistoryWins = sumBy(
-        historySummaries.filter(summary => !hasPlacementHistory(summary)),
+        historySummaries.filter(summary => !usesPlacementHistoryWins(summary)),
         summary => summary.stats.wins,
     )
 
