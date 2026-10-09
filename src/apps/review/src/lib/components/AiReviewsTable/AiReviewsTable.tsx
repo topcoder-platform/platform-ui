@@ -261,8 +261,11 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             const minScore = fromDecision?.minimumPassingScore
                 ?? configured?.workflow?.scorecard?.minimumPassingScore
 
+            // The decision is only rebuilt once a (re-)run completes, so while the run is
+            // in progress its breakdown still holds the previous run's status and score.
+            const isRunInProgress = Boolean(run && aiRunInProgress(run))
             const status = fromDecision
-                ? normalizeStatus(run && aiRunInProgress(run)
+                ? normalizeStatus(isRunInProgress
                     ? undefined
                     : fromDecision.runStatus, fromDecision.runScore, minScore)
                 : undefined
@@ -274,7 +277,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 minScore,
                 reviewDate: run?.completedAt,
                 run,
-                score: fromDecision?.runScore ?? run?.score,
+                score: isRunInProgress ? run?.score : fromDecision?.runScore ?? run?.score,
                 status,
                 title: getConfiguredWorkflowName(configured?.workflow) ?? run?.workflow?.name ?? 'AI Review',
                 weight: fromDecision?.weightPercent ?? configured?.weightPercent,
