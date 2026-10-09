@@ -921,14 +921,12 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                     return <></>
                 }
 
-                if (!props.aiReviewers?.length) {
-                    return <></>
-                }
-
+                // Render even without challenge AI reviewers (e.g. Design): the row still
+                // carries the virus scan, AI review config workflows and the duplicates panel.
                 return (
                     <CollapsibleAiReviewsRow
                         className={styles.aiReviews}
-                        aiReviewers={props.aiReviewers}
+                        aiReviewers={props.aiReviewers ?? []}
                         submission={submissionPayload as Pick<BackendSubmission, 'id'|'virusScan'>}
                         defaultOpen={allRows ? !allRows.indexOf(data) : false}
                     />
