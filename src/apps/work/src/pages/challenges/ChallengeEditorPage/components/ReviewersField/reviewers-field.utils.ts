@@ -6,6 +6,10 @@ import {
     Reviewer,
     Workflow,
 } from '../../../../../lib/models'
+import {
+    AI_REVIEW_PHASE_NAME,
+    normalizePhaseName,
+} from '../ChallengeScheduleSection/ChallengeScheduleSection.utils'
 
 const TEMPLATE_TRACK_ALIASES: Record<string, string> = {
     DATA_SCIENCE: 'DATA_SCIENCE',
@@ -286,6 +290,40 @@ export function syncAiConfigReviewers(
         ...humanReviewers,
         ...nextAiReviewers,
     ]
+}
+
+/**
+ * Returns whether the schedule was built from the AI Only timeline template, which is the
+ * only template that contains an "AI Review" phase.
+ *
+ * @param phases challenge phases from the editor form.
+ * @returns `true` when an "AI Review" phase is present.
+ * @remarks Used by `ReviewersField` to tell whether an active challenge's timeline still
+ * matches its AI review mode after the mode switches between AI_ONLY and AI_GATING.
+ */
+export function hasAiOnlyTimelinePhases(phases: ChallengePhase[] | undefined): boolean {
+    return (Array.isArray(phases) ? phases : [])
+        .some(phase => normalizePhaseName(phase?.name) === normalizePhaseName(AI_REVIEW_PHASE_NAME))
+}
+
+/**
+ * Returns whether a review phase (AI Screening, AI Review, Review, Screening, ...) of the
+ * challenge is open or has already started.
+ *
+ * @param phases challenge phases from the editor form.
+ * @returns `true` when a phase whose name contains "review" or "screening" has started.
+ * @remarks `ReviewersField` uses it to stop AI_ONLY / AI_GATING switches once review starts,
+ * matching the review-api and challenge-api rules.
+ */
+export function hasStartedReviewPhase(phases: ChallengePhase[] | undefined): boolean {
+    return (Array.isArray(phases) ? phases : [])
+        .some(phase => {
+            const phaseName = normalizeReviewerText(phase?.name)
+                .toLowerCase()
+
+            return (phaseName.includes('review') || phaseName.includes('screening'))
+                && (phase.isOpen === true || !!normalizeReviewerText(phase.actualStartDate))
+        })
 }
 
 /**

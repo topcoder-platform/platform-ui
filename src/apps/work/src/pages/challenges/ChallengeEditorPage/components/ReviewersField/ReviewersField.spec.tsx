@@ -2,6 +2,7 @@
 import {
     render,
     screen,
+    waitFor,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {
@@ -60,6 +61,7 @@ jest.mock('./AiReviewTab', () => ({
     __esModule: true,
     default: function AiReviewTabMock(
         props: {
+            canSwitchReviewMode?: boolean
             hasSubmissions?: boolean
             onConfigRemoved?: () => Promise<void> | void
             onConfigPersisted?: (config: unknown) => void
@@ -106,6 +108,9 @@ jest.mock('./AiReviewTab', () => ({
             <div data-testid='ai-review-tab'>
                 {props.hasSubmissions
                     ? <div data-testid='ai-review-tab-read-only'>AI review locked</div>
+                    : undefined}
+                {props.canSwitchReviewMode === false
+                    ? <div data-testid='ai-review-mode-locked'>AI review mode locked</div>
                     : undefined}
                 <button
                     onClick={handleRemoveClick}
@@ -159,21 +164,86 @@ interface TestHarnessProps {
     canConfigureFullReview?: boolean
     isReadOnly?: boolean
     numOfSubmissions?: number
+    phases?: ChallengeEditorFormData['phases']
     reviewers: Reviewer[]
     screenerOnly?: boolean
+    status?: string
+    timelineTemplateId?: string
 }
+
+const STARTED_PHASE = {
+    actualStartDate: '2026-10-01T00:00:00.000Z',
+    isOpen: true,
+}
+const ACTIVE_AI_ONLY_PHASES: ChallengeEditorFormData['phases'] = [
+    {
+        ...STARTED_PHASE,
+        id: 'challenge-phase-registration',
+        name: 'Registration',
+        phaseId: 'phase-registration',
+    },
+    {
+        ...STARTED_PHASE,
+        id: 'challenge-phase-submission',
+        name: 'Submission',
+        phaseId: 'phase-submission',
+    },
+    {
+        id: 'challenge-phase-ai-review',
+        name: 'AI Review',
+        phaseId: 'phase-ai-review',
+    },
+    {
+        id: 'challenge-phase-approval',
+        name: 'Approval',
+        phaseId: 'phase-approval',
+    },
+]
+const ACTIVE_AI_GATING_PHASES: ChallengeEditorFormData['phases'] = [
+    ACTIVE_AI_ONLY_PHASES[0],
+    ACTIVE_AI_ONLY_PHASES[1],
+    {
+        id: 'challenge-phase-ai-screening',
+        name: 'AI Screening',
+        phaseId: 'phase-ai-screening',
+    },
+    {
+        id: 'challenge-phase-review',
+        name: 'Review',
+        phaseId: 'phase-review',
+    },
+    {
+        id: 'challenge-phase-appeals',
+        name: 'Appeals',
+        phaseId: 'phase-appeals',
+    },
+]
+const AI_GATING_TIMELINE_CHALLENGE = {
+    phases: ACTIVE_AI_GATING_PHASES,
+    timelineTemplateId: 'default-timeline-template',
+} as Challenge
+const AI_ONLY_TIMELINE_CHALLENGE = {
+    phases: ACTIVE_AI_ONLY_PHASES,
+    timelineTemplateId: 'ai-only-timeline-template',
+} as Challenge
 
 const TestHarness = (props: TestHarnessProps): JSX.Element => {
     const formMethods = useForm<ChallengeEditorFormData>({
         defaultValues: {
             id: 'challenge-1',
             numOfSubmissions: props.numOfSubmissions,
-            phases: [],
+            phases: props.phases || [],
             reviewers: props.reviewers,
+            status: props.status,
+            timelineTemplateId: props.timelineTemplateId,
             trackId: 'track-id',
             typeId: 'type-id',
         },
     })
+    const formPhaseNames = (formMethods.watch('phases') || [])
+        .map(phase => phase.name)
+        .join(',')
+    const formTimelineTemplateId = formMethods.watch('timelineTemplateId')
     const reviewersField = (
         <ReviewersField
             canConfigureFullReview={props.canConfigureFullReview}
@@ -187,6 +257,8 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
     return (
         <FormProvider {...formMethods}>
             {reviewersField}
+            <div data-testid='form-phases'>{formPhaseNames}</div>
+            <div data-testid='form-timeline-template'>{formTimelineTemplateId}</div>
             {reviewersFormError
                 ? <div data-testid='reviewers-form-error'>{reviewersFormError}</div>
                 : undefined}
@@ -418,6 +490,117 @@ describe('ReviewersField', () => {
         await user.click(screen.getByRole('tab', { name: 'AI Review (1)' }))
 
         expect(screen.getByTestId('ai-review-tab-read-only')).not.toBeNull()
+    })
+
+    it('moves an active AI only challenge to the AI gating timeline before review starts', async () => {
+        const user = userEvent.setup()
+        mockedPatchChallenge.mockResolvedValue(AI_GATING_TIMELINE_CHALLENGE)
+
+        render(
+            <TestHarness
+                numOfSubmissions={2}
+                phases={ACTIVE_AI_ONLY_PHASES}
+                reviewers={[]}
+                status='ACTIVE'
+                timelineTemplateId='ai-only-timeline-template'
+            />,
+        )
+
+        await user.click(screen.getByRole('tab', { name: 'AI Review (0)' }))
+        expect(screen.queryByTestId('ai-review-mode-locked'))
+            .toBeNull()
+        await user.click(screen.getByRole('button', { name: 'Persist AI config' }))
+
+        expect(mockedPatchChallenge)
+            .toHaveBeenCalledWith('challenge-1', {
+                reviewers: [],
+            })
+        await waitFor(() => {
+            expect(screen.getByTestId('form-phases').textContent)
+                .toBe('Registration,Submission,AI Screening,Review,Appeals')
+        })
+        expect(screen.getByTestId('form-timeline-template').textContent)
+            .toBe('default-timeline-template')
+    })
+
+    it('moves an active AI gating challenge to the AI only timeline before review starts', async () => {
+        const user = userEvent.setup()
+        mockedPatchChallenge.mockResolvedValue(AI_ONLY_TIMELINE_CHALLENGE)
+
+        render(
+            <TestHarness
+                numOfSubmissions={2}
+                phases={ACTIVE_AI_GATING_PHASES}
+                reviewers={[
+                    {
+                        isMemberReview: true,
+                        phaseId: 'phase-review',
+                        scorecardId: 'scorecard-1',
+                    },
+                ]}
+                status='ACTIVE'
+                timelineTemplateId='default-timeline-template'
+            />,
+        )
+
+        await user.click(screen.getByRole('tab', { name: 'AI Review (0)' }))
+        await user.click(screen.getByRole('button', { name: 'Persist AI only config' }))
+
+        expect(mockedPatchChallenge)
+            .toHaveBeenCalledWith('challenge-1', {
+                reviewers: [],
+            })
+        await waitFor(() => {
+            expect(screen.getByTestId('form-phases').textContent)
+                .toBe('Registration,Submission,AI Review,Approval')
+        })
+        expect(screen.getByTestId('form-timeline-template').textContent)
+            .toBe('ai-only-timeline-template')
+    })
+
+    it('does not patch an active challenge whose timeline already matches the review mode', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                phases={ACTIVE_AI_ONLY_PHASES}
+                reviewers={[]}
+                status='ACTIVE'
+            />,
+        )
+
+        await user.click(screen.getByRole('tab', { name: 'AI Review (0)' }))
+        await user.click(screen.getByRole('button', { name: 'Persist AI only config' }))
+
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+    })
+
+    it('locks the review mode and keeps the timeline once the review phase has started', async () => {
+        const user = userEvent.setup()
+        const reviewStartedPhases = ACTIVE_AI_ONLY_PHASES.map(phase => (
+            phase.name === 'AI Review'
+                ? { ...phase, ...STARTED_PHASE }
+                : phase
+        ))
+
+        render(
+            <TestHarness
+                numOfSubmissions={2}
+                phases={reviewStartedPhases}
+                reviewers={[]}
+                status='ACTIVE'
+            />,
+        )
+
+        await user.click(screen.getByRole('tab', { name: 'AI Review (0)' }))
+        expect(screen.getByTestId('ai-review-mode-locked')).not.toBeNull()
+        await user.click(screen.getByRole('button', { name: 'Persist AI config' }))
+
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(screen.getByTestId('form-phases').textContent)
+            .toBe('Registration,Submission,AI Review,Approval')
     })
 
     it('requires manual reviewer configuration when AI Review mode is AI GATING', async () => {

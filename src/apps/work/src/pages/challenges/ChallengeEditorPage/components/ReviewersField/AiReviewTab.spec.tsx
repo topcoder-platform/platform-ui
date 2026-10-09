@@ -585,4 +585,149 @@ describe('AiReviewTab review mode options', () => {
         )
             .toBe(true)
     })
+
+    describe('with submissions', () => {
+        const lockedWorkflows = [
+            {
+                id: 'config-workflow-1',
+                isGating: false,
+                weightPercent: 100,
+                workflowId: 'workflow-1',
+            },
+        ]
+
+        /**
+         * Finds the Review Mode select, whose label also wraps the mode description.
+         */
+        async function findReviewModeSelect(): Promise<HTMLSelectElement> {
+            return (await screen.findByRole('option', { name: 'AI_ONLY' }))
+                .closest('select') as HTMLSelectElement
+        }
+
+        beforeEach(() => {
+            mockedFetchWorkflows.mockResolvedValue([
+                {
+                    id: 'workflow-1',
+                    name: 'Workflow 1',
+                },
+            ])
+            mockedUpdateAiReviewConfig.mockImplementation(async (_configId, input) => ({
+                ...baseConfiguration,
+                ...input,
+                id: 'config-1',
+            }))
+        })
+
+        it('keeps only the review mode editable until the review phase starts', async () => {
+            jest.useFakeTimers()
+            mockedFetchAiReviewConfigByChallenge.mockResolvedValueOnce({
+                ...baseConfiguration,
+                mode: 'AI_ONLY',
+                workflows: lockedWorkflows,
+            })
+
+            render(
+                <AiReviewTab
+                    canSwitchReviewMode
+                    challengeId='challenge-1'
+                    hasSubmissions
+                    reviewers={persistedAiReviewers}
+                />,
+            )
+
+            const reviewModeSelect = await findReviewModeSelect()
+
+            expect(reviewModeSelect.disabled)
+                .toBe(false)
+            expect((screen.getByRole('slider') as HTMLInputElement).disabled)
+                .toBe(true)
+            expect((screen.getByLabelText('AI Workflow') as HTMLSelectElement).disabled)
+                .toBe(true)
+            expect(screen.queryByRole('button', { name: 'Remove AI config' }))
+                .toBeNull()
+            expect(screen.getByText(/You can still switch the review mode/)).not.toBeNull()
+
+            fireEvent.change(reviewModeSelect, {
+                target: {
+                    value: 'AI_GATING',
+                },
+            })
+
+            await act(async () => {
+                jest.advanceTimersByTime(1600)
+            })
+
+            await waitFor(() => {
+                expect(mockedUpdateAiReviewConfig)
+                    .toHaveBeenCalledWith(
+                        'config-1',
+                        expect.objectContaining({
+                            minPassingThreshold: 75,
+                            mode: 'AI_GATING',
+                        }),
+                    )
+            })
+        })
+
+        it('lets template configs switch the review mode until the review phase starts', async () => {
+            jest.useFakeTimers()
+            mockedFetchAiReviewTemplates.mockResolvedValue([])
+            mockedFetchAiReviewConfigByChallenge.mockResolvedValueOnce({
+                ...baseConfiguration,
+                templateId: 'template-1',
+                workflows: lockedWorkflows,
+            })
+
+            render(
+                <AiReviewTab
+                    canSwitchReviewMode
+                    challengeId='challenge-1'
+                    hasSubmissions
+                    reviewers={persistedAiReviewers}
+                />,
+            )
+
+            fireEvent.change(await findReviewModeSelect(), {
+                target: {
+                    value: 'AI_ONLY',
+                },
+            })
+
+            await act(async () => {
+                jest.advanceTimersByTime(1600)
+            })
+
+            await waitFor(() => {
+                expect(mockedUpdateAiReviewConfig)
+                    .toHaveBeenCalledWith(
+                        'config-1',
+                        expect.objectContaining({
+                            mode: 'AI_ONLY',
+                            templateId: 'template-1',
+                        }),
+                    )
+            })
+        })
+
+        it('locks the review mode once the review phase has started', async () => {
+            mockedFetchAiReviewConfigByChallenge.mockResolvedValueOnce({
+                ...baseConfiguration,
+                workflows: lockedWorkflows,
+            })
+
+            render(
+                <AiReviewTab
+                    canSwitchReviewMode={false}
+                    challengeId='challenge-1'
+                    hasSubmissions
+                    reviewers={persistedAiReviewers}
+                />,
+            )
+
+            expect((await findReviewModeSelect()).disabled)
+                .toBe(true)
+            expect(screen.queryByText(/You can still switch the review mode/))
+                .toBeNull()
+        })
+    })
 })
