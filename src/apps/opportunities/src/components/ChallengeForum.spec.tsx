@@ -733,6 +733,36 @@ describe('ChallengeForum', () => {
             .toContain('z-index: 2')
     })
 
+    it('shows unread new topics as the Figma red chip and read ones as a neutral chip', () => {
+        const { unmount }: RenderResult = render(
+            <ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />,
+        )
+
+        expect(screen.getByText('1 new topic'))
+            .toHaveClass('newCount', 'hasUnread')
+
+        unmount()
+        topicCollection = {
+            data: [{ ...announcement, unread: false }, discussion],
+            sourceTotalCount: 2,
+            truncated: false,
+        }
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+
+        expect(screen.getByText('0 new topics'))
+            .not.toHaveClass('hasUnread')
+
+        const unreadBlock = (forumStyles.match(/\.newCount\.hasUnread\s*\{[^}]*\}/) ?? [''])[0]
+        expect(unreadBlock)
+            .toContain('background: #c1294f;')
+        expect(unreadBlock)
+            .toContain('border: 1px solid #a21035;')
+        expect(unreadBlock)
+            .toContain('color: #fff;')
+        expect(forumStyles)
+            .not.toMatch(/\.newCount[^{]*::after/)
+    })
+
     it('matches the Figma desktop forum geometry and core tokens', () => {
         expect(forumStyles)
             .toContain('grid-template-columns: 281px minmax(0, 895px);')
