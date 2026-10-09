@@ -165,7 +165,22 @@ const DocumentsSection: FC<DocumentsSectionProps> = (
             <h4>Documents</h4>
             <div className={styles.metaGrid}>
                 <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Resume</span>
+                    <span className={styles.metaLabel}>CV</span>
+                    {application.cvFileUrl ? (
+                        <a
+                            className={styles.link}
+                            href={application.cvFileUrl}
+                            target='_blank'
+                            rel='noreferrer noopener'
+                        >
+                            View CV
+                        </a>
+                    ) : (
+                        <span className={styles.metaValue}>Not provided</span>
+                    )}
+                </div>
+                <div className={styles.metaItem}>
+                    <span className={styles.metaLabel}>Resume / Profile Link</span>
                     {application.resumeUrl ? (
                         <a
                             className={styles.link}

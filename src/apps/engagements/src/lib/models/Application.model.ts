@@ -18,7 +18,10 @@ export interface Application {
     address?: string
     mobileNumber?: string
     coverLetter: string
+    /** Link to a resume or professional profile (LinkedIn, Google Drive CV, personal website). */
     resumeUrl?: string
+    /** URL of the CV file uploaded to S3 through Filestack. */
+    cvFileUrl?: string
     portfolioUrls?: string[]
     yearsOfExperience?: number
     availability: string
@@ -42,7 +45,10 @@ export interface CreateApplicationRequest {
     email?: string
     address?: string
     coverLetter: string
+    /** Link to a resume or professional profile (LinkedIn, Google Drive CV, personal website). */
     resumeUrl?: string
+    /** URL of the CV file uploaded to S3 through Filestack. */
+    cvFileUrl?: string
     portfolioUrls?: string[]
     yearsOfExperience?: number
     availability?: string

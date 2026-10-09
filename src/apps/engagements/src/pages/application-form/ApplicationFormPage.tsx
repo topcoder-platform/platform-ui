@@ -22,6 +22,7 @@ import { rootRoute } from '../../engagements.routes'
 import type { ApplicationFormData, PrePopulatedUserData } from './application-form.types'
 import { applicationFormSchema } from './application-form.schema'
 import CharacterCounter from './components/CharacterCounter'
+import CvUploadField from './components/CvUploadField'
 import PortfolioUrlsField from './components/PortfolioUrlsField'
 import styles from './ApplicationFormPage.module.scss'
 
@@ -31,12 +32,14 @@ interface SubmitDisabledParams {
     hasSubmitted: boolean
     isFormDisabled: boolean
     isLoading: boolean
+    isUploadingCv: boolean
     isValid: boolean
 }
 
 const getIsSubmitDisabled = (params: SubmitDisabledParams): boolean => (
     params.isFormDisabled
     || params.isLoading
+    || params.isUploadingCv
     || params.hasApplied
     || Boolean(params.applicationError)
     || (params.hasSubmitted && !params.isValid)
@@ -56,12 +59,14 @@ const ApplicationFormPage: FC = () => {
     const [checkingApplication, setCheckingApplication] = useState<boolean>(false)
     const [applicationError, setApplicationError] = useState<string | undefined>(undefined)
     const [submitting, setSubmitting] = useState<boolean>(false)
+    const [uploadingCv, setUploadingCv] = useState<boolean>(false)
 
     const form = useForm<ApplicationFormData>({
         defaultValues: {
             address: '',
             availability: '',
             coverLetter: '',
+            cvFileUrl: undefined,
             email: '',
             mobileNumber: '',
             name: '',
@@ -242,6 +247,7 @@ const ApplicationFormPage: FC = () => {
                 address: trimmedAddress || undefined,
                 availability: trimmedAvailability || undefined,
                 coverLetter: trimmedCoverLetter,
+                cvFileUrl: values.cvFileUrl || undefined,
                 email: trimmedEmail || undefined,
                 mobileNumber: values.mobileNumber?.trim() || undefined,
                 name: trimmedName || undefined,
@@ -395,6 +401,7 @@ const ApplicationFormPage: FC = () => {
         hasSubmitted,
         isFormDisabled,
         isLoading,
+        isUploadingCv: uploadingCv,
         isValid,
     })
 
@@ -428,15 +435,29 @@ const ApplicationFormPage: FC = () => {
                     styles.inputField,
                     errors.resumeUrl && styles.inputError,
                 )}
-                placeholder='https://'
+                placeholder='https://www.linkedin.com/in/your-profile'
                 value={renderProps.field.value ?? ''}
                 onChange={handleResumeUrlChange(renderProps.field)}
                 disabled={isFormDisabled}
                 aria-invalid={!!errors.resumeUrl}
-                aria-describedby={errors.resumeUrl ? 'resume-url-error' : undefined}
+                aria-describedby={errors.resumeUrl ? 'resume-url-hint resume-url-error' : 'resume-url-hint'}
             />
         ),
         [errors.resumeUrl, handleResumeUrlChange, isFormDisabled],
+    )
+
+    const renderCvFileField = useCallback(
+        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'cvFileUrl'> }): JSX.Element => (
+            <CvUploadField
+                engagementId={engagement?.id}
+                value={renderProps.field.value}
+                onChange={renderProps.field.onChange}
+                onUploadingChange={setUploadingCv}
+                disabled={isFormDisabled}
+                errorMessage={errors.cvFileUrl?.message}
+            />
+        ),
+        [engagement?.id, errors.cvFileUrl?.message, isFormDisabled],
     )
 
     const renderYearsOfExperienceField = useCallback(
@@ -738,7 +759,24 @@ const ApplicationFormPage: FC = () => {
                     </div>
 
                     <div className={styles.fieldGroup}>
-                        <label className={styles.fieldLabel} htmlFor='resume-url'>Resume URL</label>
+                        <label className={styles.fieldLabel} htmlFor='cv-file'>CV / Resume File</label>
+                        <Controller
+                            name='cvFileUrl'
+                            control={control}
+                            render={renderCvFileField}
+                        />
+                    </div>
+
+                    <div className={styles.fieldGroup}>
+                        <div>
+                            <label className={styles.fieldLabel} htmlFor='resume-url'>
+                                Resume / Profile Link
+                            </label>
+                            <div className={styles.fieldHint} id='resume-url-hint'>
+                                Link to your LinkedIn profile, an online CV (e.g. Google Drive or Dropbox)
+                                or your personal website.
+                            </div>
+                        </div>
                         <Controller
                             name='resumeUrl'
                             control={control}

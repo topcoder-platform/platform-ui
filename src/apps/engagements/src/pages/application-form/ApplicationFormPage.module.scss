@@ -131,6 +131,29 @@
     gap: 12px;
 }
 
+.cvUpload {
+    display: grid;
+    gap: 6px;
+    justify-items: start;
+}
+
+.cvFileInput {
+    display: none;
+}
+
+.cvUploadRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.cvFileLink {
+    color: $turq-160;
+    font-weight: 600;
+    word-break: break-all;
+}
+
 .addButton,
 .removeButton {
     border: none;

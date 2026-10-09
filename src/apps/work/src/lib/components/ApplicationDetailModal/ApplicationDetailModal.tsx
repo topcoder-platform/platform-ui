@@ -197,7 +197,23 @@ const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
                             <h4 className={styles.sectionTitle}>Links</h4>
                             <div className={styles.links}>
                                 <div className={styles.linkRow}>
-                                    <span className={styles.linkLabel}>Resume</span>
+                                    <span className={styles.linkLabel}>CV</span>
+                                    {application.cvFileUrl
+                                        ? (
+                                            <a
+                                                className={styles.link}
+                                                href={application.cvFileUrl}
+                                                rel='noreferrer noopener'
+                                                target='_blank'
+                                            >
+                                                View CV
+                                            </a>
+                                        )
+                                        : <span className={styles.value}>-</span>}
+                                </div>
+
+                                <div className={styles.linkRow}>
+                                    <span className={styles.linkLabel}>Resume / Profile Link</span>
                                     {application.resumeUrl
                                         ? (
                                             <a
