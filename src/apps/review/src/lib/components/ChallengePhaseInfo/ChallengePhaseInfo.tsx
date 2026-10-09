@@ -9,10 +9,12 @@ import moment from 'moment'
 import { EnvironmentConfig } from '~/config'
 import {
     formatInstantReviewLabel,
-    formatReviewModeLabel,
+    getInstantReviewStyleItem,
+    getReviewStyleModeItem,
     hasAiReviewConfig,
     isDevelopmentChallengeTrack,
 } from '~/libs/shared'
+import { IconOutline, Tooltip } from '~/libs/ui'
 
 import type { AiReviewConfig, BackendPhase, BackendResource, ChallengeInfo, ReviewAppContextModel } from '../../models'
 import type { WinningDetailDto } from '../../services'
@@ -40,6 +42,8 @@ interface ChallengePhaseDisplayItem {
     status?: string
     style?: Record<string, unknown>
     title: string
+    /** Explanation shown from an info button beside the value. */
+    tooltip?: string
     type?: undefined
     value: ReactNode
 }
@@ -419,6 +423,22 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
                                     <i className={`icon-${item.status}`} />
                                 )}
                                 {item.value}
+                                {item.tooltip && (
+                                    <Tooltip
+                                        className={styles.infoTooltip}
+                                        content={item.tooltip}
+                                        place='top'
+                                        triggerOn='click-hover'
+                                    >
+                                        <button
+                                            aria-label={`About ${item.title}`}
+                                            className={styles.infoButton}
+                                            type='button'
+                                        >
+                                            <IconOutline.InformationCircleIcon aria-hidden='true' />
+                                        </button>
+                                    </Tooltip>
+                                )}
                             </strong>
                         </div>
                     </div>
@@ -588,6 +608,18 @@ function createNonTaskItems(config: {
     return items
 }
 
+/**
+ * Builds the submitter-facing review configuration items for the challenge header.
+ *
+ * Review Mode is always shown once loaded; Instant Review is only shown when an AI
+ * review configuration exists. Both items carry the same explanation tooltips as the
+ * opportunities challenge sidebar.
+ *
+ * @param config.aiReviewConfig AI review configuration for the challenge, if any.
+ * @param config.isLoading whether the AI review configuration is still loading.
+ * @returns header items for Review Mode and, when AI review is present, Instant Review.
+ * @throws Does not throw.
+ */
 function createReviewConfigItems(config: {
     aiReviewConfig?: AiReviewConfig
     isLoading: boolean
@@ -600,17 +632,21 @@ function createReviewConfigItems(config: {
         }]
     }
 
+    const reviewMode = getReviewStyleModeItem(config.aiReviewConfig)
     const items: ChallengePhaseItem[] = [{
         icon: 'icon-ai-review',
         title: 'Review Mode',
-        value: formatReviewModeLabel(config.aiReviewConfig),
+        tooltip: reviewMode.tooltip,
+        value: reviewMode.label,
     }]
 
     if (hasAiReviewConfig(config.aiReviewConfig)) {
+        const instantReview = config.aiReviewConfig?.instantReview === true
         items.push({
             icon: 'icon-shuffle',
             title: 'Instant Review',
-            value: formatInstantReviewLabel(config.aiReviewConfig?.instantReview === true),
+            tooltip: getInstantReviewStyleItem(instantReview).tooltip,
+            value: formatInstantReviewLabel(instantReview),
         })
     }
 

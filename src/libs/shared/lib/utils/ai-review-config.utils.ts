@@ -33,7 +33,13 @@ export function isDevelopmentChallengeTrack(
 }
 
 /**
- * Returns the sidebar review-mode bullet label and tooltip.
+ * Returns the member-facing review-mode label and tooltip.
+ *
+ * Used by the opportunities challenge sidebar (Review Style bullet) and the Review app
+ * challenge header (Review Mode item).
+ *
+ * @param config AI review configuration for the challenge; absent means manual review.
+ * @returns label and explanation tooltip for the review mode.
  */
 export function getReviewStyleModeItem(config?: AiReviewConfigSummary): ReviewStyleListItem {
     if (!config) {
@@ -79,7 +85,13 @@ export function formatInstantReviewLabel(instantReview: boolean): string {
 }
 
 /**
- * Returns the sidebar instant-review bullet label and tooltip.
+ * Returns the member-facing instant-review label and tooltip.
+ *
+ * The opportunities challenge sidebar renders the label and tooltip; the Review app
+ * challenge header renders the tooltip beside its ON/OFF value.
+ *
+ * @param instantReview whether instant AI review is enabled for the challenge.
+ * @returns label and explanation tooltip for the instant review state.
  */
 export function getInstantReviewStyleItem(instantReview: boolean): ReviewStyleListItem {
     if (instantReview) {
