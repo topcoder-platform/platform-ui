@@ -303,6 +303,7 @@ jest.mock('../utils', () => ({
             || challenge?.taskIsTask === true
             || challenge?.legacy?.pureV5Task === true
     },
+    isTopgearChallenge: (): boolean => false,
     marathonDashboardIsEnabled: (challenge: {
         metadata?: { name: string; value: unknown }[]
         type?: string
