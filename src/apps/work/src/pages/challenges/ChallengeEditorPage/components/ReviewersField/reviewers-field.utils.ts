@@ -298,8 +298,8 @@ export function syncAiConfigReviewers(
  *
  * @param phases challenge phases from the editor form.
  * @returns `true` when an "AI Review" phase is present.
- * @remarks Used by `ReviewersField` to tell whether an active challenge's timeline still
- * matches its AI review mode after the mode switches between AI_ONLY and AI_GATING.
+ * @remarks Used by `ReviewersField` to restore the default timeline when a new or draft
+ * challenge leaves AI_ONLY and to keep an active challenge's timeline matched to its mode.
  */
 export function hasAiOnlyTimelinePhases(phases: ChallengePhase[] | undefined): boolean {
     return (Array.isArray(phases) ? phases : [])
