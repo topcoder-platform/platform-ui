@@ -109,6 +109,7 @@ const AddManagerForm: FC<AddManagerFormProps> = (props: AddManagerFormProps) => 
             </div>
             <Button
                 disabled={props.isAssigning || !selectedManager}
+                className={styles.addButton}
                 label={props.isAssigning ? 'Adding...' : 'Add Manager'}
                 primary
                 size='sm'
@@ -218,6 +219,7 @@ const EngagementManagers: FC<EngagementManagersProps> = (props: EngagementManage
                                                 handleRemove(manager)
                                             }}
                                             secondary
+                                            variant='danger'
                                             size='sm'
                                         />
                                     )}

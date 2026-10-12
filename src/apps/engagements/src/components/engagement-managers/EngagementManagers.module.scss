@@ -52,6 +52,17 @@
 .addFormField {
     flex: 1 1 260px;
     min-width: 220px;
+
+    // The shared picker's label is grey; here it reads as a field label like the rest of the modal.
+    label {
+        color: $black-100;
+    }
+}
+
+// Bottoms are aligned because the picker carries its label above the input; lift the button by half
+// the height difference so it sits centred on the 44px input instead.
+.addButton {
+    margin-bottom: calc((44px - #{$sp-6}) / 2);
 }
 
 .emptyState {
