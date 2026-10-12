@@ -701,6 +701,27 @@ describe('AdminTimesheetView', () => {
         expect(mockSave).not.toHaveBeenCalled()
     })
 
+    it('puts the totals above the actions, with the main action on the right', async () => {
+        const user = userEvent.setup()
+        renderView([entry({ id: 'e1' })])
+
+        await user.type(screen.getByLabelText('Remarks for 07-09-2026'), ' updated')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+
+        const totals = screen.getByText(/Total Selected Days/)
+        const actionLabels = screen.getAllByRole('button')
+            .filter(button => ['Audit history', 'Save', 'Submit on behalf (1)'].includes(
+                button.textContent ?? '',
+            ))
+        expect(actionLabels.map(button => button.textContent))
+            .toEqual(['Audit history', 'Save', 'Submit on behalf (1)'])
+        // The totals come first in the document, so they render above the button row.
+        const inDocumentOrder = [totals, ...actionLabels]
+        expect(Array.from(document.body.querySelectorAll('*'))
+            .filter(element => inDocumentOrder.includes(element as HTMLElement)))
+            .toEqual(inDocumentOrder)
+    })
+
     it('offers reopen only for approved rows and submit only for drafts', async () => {
         const user = userEvent.setup()
         renderView([entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED })])

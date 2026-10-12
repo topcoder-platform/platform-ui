@@ -251,27 +251,31 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
                     )}
 
                     {!isApprovedView && selectedRows.length > 0 && (
-                        <section className={styles.summary}>
-                            <span>
-                                Total Selected Days:
-                                {' '}
-                                <strong>{totals.days}</strong>
-                            </span>
-                            <span>
-                                Total Selected Hours:
-                                {' '}
-                                <strong>{formatHoursLabel(totals.hours)}</strong>
-                            </span>
-                            <Button
-                                disabled={isApproving}
-                                label={`Approve (${selectedRows.length})`}
-                                onClick={function onOpenConfirm() {
-                                    setActionError(undefined)
-                                    setIsConfirmOpen(true)
-                                }}
-                                primary
-                            />
-                        </section>
+                        <>
+                            <section className={styles.summary}>
+                                <span>
+                                    Total Selected Days:
+                                    {' '}
+                                    <strong>{totals.days}</strong>
+                                </span>
+                                <span>
+                                    Total Selected Hours:
+                                    {' '}
+                                    <strong>{formatHoursLabel(totals.hours)}</strong>
+                                </span>
+                            </section>
+                            <section className={styles.actions}>
+                                <Button
+                                    disabled={isApproving}
+                                    label={`Approve (${selectedRows.length})`}
+                                    onClick={function onOpenConfirm() {
+                                        setActionError(undefined)
+                                        setIsConfirmOpen(true)
+                                    }}
+                                    primary
+                                />
+                            </section>
+                        </>
                     )}
                 </>
             )}

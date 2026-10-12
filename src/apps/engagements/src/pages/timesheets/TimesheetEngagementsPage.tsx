@@ -1,11 +1,12 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
 import { ChangeEvent, FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { debounce } from 'lodash'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 import {
     Button,
     ContentLayout,
+    IconOutline,
     InputDatePicker,
     InputSelect,
     InputText,
@@ -98,7 +99,6 @@ const toPickerDate = (value: string): Date | undefined => {
  * roles - and because it comes back in the response meta, an empty list still knows which view it is.
  */
 const TimesheetEngagementsPage: FC = () => {
-    const navigate = useNavigate()
     // The default status has to be picked before the first request, which is before the API reports
     // `viewerRole` - so it comes from the caller's roles. Everything else still follows viewerRole.
     const authCtx: AuthCtx = useAuth()
@@ -122,12 +122,9 @@ const TimesheetEngagementsPage: FC = () => {
     // A manager reviews people rather than engagements, so their list leads with the assignee and
     // shows where each assignment stands instead of the rolled-up timesheet status.
     const isManagerList = !isAdministrator && !isTm
-    let columnCount = 3
-    if (isAdministrator) {
-        columnCount = 4
-    } else if (isManagerList) {
-        columnCount = 5
-    }
+    // Assignee, engagement, assignment status, and approval flag for a manager; engagement, assignee,
+    // and timesheet status for everyone else. The engagement title is the way into a timesheet.
+    const columnCount = isManagerList ? 4 : 3
 
     const emptyStateMessage = isAdministrator
         ? 'No timesheets match these filters.'
@@ -239,15 +236,21 @@ const TimesheetEngagementsPage: FC = () => {
 
     // Open the timesheet on the status the list was filtered by. Under "All" the row's own rollup is
     // the best guide to what the user came to look at.
-    const openTimesheet = useCallback((row: TimesheetEngagementRow) => {
+    const timesheetPath = useCallback((row: TimesheetEngagementRow): string => {
         const listStatus = appliedFilters.status || row.timesheetStatus
         const reviewStatus = listStatus === 'Approved'
             ? TimesheetEntryStatus.APPROVED
             : TimesheetEntryStatus.SUBMITTED
         const query = new URLSearchParams({ [TIMESHEET_REVIEW_STATUS_PARAM]: reviewStatus })
 
-        navigate(`${rootRoute}/${row.engagementId}/timesheets/${row.assignmentId}?${query.toString()}`)
-    }, [appliedFilters.status, navigate])
+        return `${rootRoute}/${row.engagementId}/timesheets/${row.assignmentId}?${query.toString()}`
+    }, [appliedFilters.status])
+
+    const renderEngagementLink = (row: TimesheetEngagementRow): JSX.Element => (
+        <Link className={styles.titleLink} to={timesheetPath(row)}>
+            {row.engagementTitle}
+        </Link>
+    )
 
     const assigneeLabel = useMemo(() => (row: TimesheetEngagementRow): string => (
         row.assigneeName ? `${row.assigneeName} (${row.assigneeHandle})` : row.assigneeHandle
@@ -349,7 +352,15 @@ const TimesheetEngagementsPage: FC = () => {
                         <p className={styles.error} role='alert'>{dateRangeError}</p>
                     )}
                     <div className={styles.filterActions}>
-                        <Button label='Clear Filters' onClick={handleClearFilters} secondary />
+                        <Button
+                            className={styles.resetButton}
+                            icon={IconOutline.XIcon}
+                            iconToLeft
+                            label='Reset Filters'
+                            onClick={handleClearFilters}
+                            secondary
+                            size='md'
+                        />
                     </div>
                 </section>
 
@@ -368,12 +379,11 @@ const TimesheetEngagementsPage: FC = () => {
                             <tbody>
                                 {skeletonRows.map(index => (
                                     <tr key={`timesheet-skeleton-${index}`}>
-                                        {Array.from({ length: columnCount - 1 }, (_, cell) => (
+                                        {Array.from({ length: columnCount }, (_, cell) => (
                                             <td key={`timesheet-skeleton-${index}-${cell}`}>
                                                 <div className={styles.skeletonCell} aria-label='loading cell' />
                                             </td>
                                         ))}
-                                        <td><div className={styles.skeletonAction} aria-label='loading cell' /></td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -401,14 +411,13 @@ const TimesheetEngagementsPage: FC = () => {
                                         <th scope='col'>Engagement</th>
                                         <th scope='col'>Assignment Status</th>
                                         <th scope='col' data-label='Approval Status Col' />
-                                        <th scope='col'>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {rows.map(row => (
                                         <tr key={row.assignmentId}>
                                             <td data-label='Assignee'>{assigneeLabel(row)}</td>
-                                            <td data-label='Engagement'>{row.engagementTitle}</td>
+                                            <td data-label='Engagement'>{renderEngagementLink(row)}</td>
                                             <td data-label='Assignment Status'>
                                                 <StatusBadge size='sm' status={row.assignmentStatus} />
                                             </td>
@@ -423,16 +432,6 @@ const TimesheetEngagementsPage: FC = () => {
                                                     )
                                                     : ''}
                                             </td>
-                                            <td data-label='Action'>
-                                                <Button
-                                                    label='View'
-                                                    onClick={function onView() {
-                                                        openTimesheet(row)
-                                                    }}
-                                                    secondary
-                                                    size='sm'
-                                                />
-                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -444,27 +443,18 @@ const TimesheetEngagementsPage: FC = () => {
                                         <th scope='col'>Engagement Title</th>
                                         <th scope='col'>Assignee</th>
                                         {(isAdministrator || isTm) && <th scope='col'>Timesheet Status</th>}
-                                        <th scope='col'>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {rows.map(row => (
                                         <tr key={row.assignmentId}>
-                                            <td data-label='Engagement Title'>{row.engagementTitle}</td>
+                                            <td data-label='Engagement Title'>{renderEngagementLink(row)}</td>
                                             <td data-label='Assignee'>{assigneeLabel(row)}</td>
                                             {(isAdministrator || isTm) && (
-                                                <td data-label='Timesheet Status'>{row.timesheetStatus}</td>
+                                                <td data-label='Timesheet Status'>
+                                                    <StatusBadge size='sm' status={row.timesheetStatus} />
+                                                </td>
                                             )}
-                                            <td data-label='Action'>
-                                                <Button
-                                                    label='View'
-                                                    onClick={function onView() {
-                                                        openTimesheet(row)
-                                                    }}
-                                                    secondary
-                                                    size='sm'
-                                                />
-                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>

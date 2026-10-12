@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import { BaseModal, Button, ContentLayout, LoadingSpinner } from '~/libs/ui'
 
@@ -7,6 +7,7 @@ import type { TimesheetView } from '../../lib/models'
 import { TimesheetViewerRole } from '../../lib/models'
 import { getTimesheet } from '../../lib/services'
 import { EngagementsTabs } from '../../components'
+import { rootRoute } from '../../engagements.routes'
 import { EngagementManagers } from '../../components/engagement-managers'
 import { AuthCtx, useAuth } from '../../lib/utils/auth'
 import {
@@ -141,8 +142,25 @@ const TimesheetsPage: FC = () => {
             .includes(timesheet.viewerRole) || authCtx.isTm)
     const canRenderContent = !isLoading && !error && timesheet
 
+    // Back to wherever this timesheet was opened from: a member comes from My Assignments, everyone
+    // else from the timesheets list. Shown once the API has said which of the two the caller is.
+    const navigate = useNavigate()
+    const isMemberView = timesheet?.viewerRole === TimesheetViewerRole.MEMBER
+    const backButtonConfig = timesheet
+        ? {
+            label: isMemberView ? 'Back to My Assignments' : 'Back to Timesheets',
+            onClick: function onBack() {
+                navigate(`${rootRoute}/${isMemberView ? 'assignments' : 'timesheets'}`)
+            },
+        }
+        : undefined
+
     return (
-        <ContentLayout title='Timesheets' contentClass={styles.pageContent}>
+        <ContentLayout
+            title='Timesheets'
+            contentClass={styles.pageContent}
+            secondaryButtonConfig={backButtonConfig}
+        >
             {isLoading && (
                 <LoadingSpinner />
             )}

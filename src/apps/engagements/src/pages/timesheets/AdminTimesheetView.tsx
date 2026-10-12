@@ -644,12 +644,50 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                 <p className={styles.partialResult} role='status'>{partialResult}</p>
             )}
 
-            <section className={styles.adminActions}>
+            {selectedRows.length > 0 && (
+                <section className={styles.summary}>
+                    <span>
+                        Total Selected Days:
+                        {' '}
+                        <strong>{totals.days}</strong>
+                    </span>
+                    <span>
+                        Total Selected Hours:
+                        {' '}
+                        <strong>{formatHoursLabel(totals.hours)}</strong>
+                    </span>
+                </section>
+            )}
+
+            {/* Secondary actions first; the one primary action - only one of submit or approve ever
+                applies to a selection - sits on the right. */}
+            <section className={styles.actions}>
+                {selectedRows.length === 1 && selectedRows[0].id && (
+                    <Button
+                        label='Audit history'
+                        onClick={function onViewAudit() {
+                            setAuditEntry(selectedRows[0])
+                        }}
+                        secondary
+                    />
+                )}
                 {hasSelectedRowChanges && (
                     <Button
                         disabled={isWorking}
                         label='Save'
                         onClick={handleSaveDrafts}
+                        secondary
+                    />
+                )}
+                {canReopen && (
+                    <Button
+                        disabled={isWorking}
+                        label={`Reopen (${selectedIds.length})`}
+                        onClick={async function onReopen() {
+                            if (await confirmDiscardingUnselectedEdits()) {
+                                setPendingOverride('reopen')
+                            }
+                        }}
                         secondary
                     />
                 )}
@@ -673,7 +711,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                                 setPendingOverride('submit')
                             }
                         }}
-                        secondary
+                        primary
                     />
                 )}
                 {canApprove && (
@@ -688,43 +726,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                         primary
                     />
                 )}
-                {canReopen && (
-                    <Button
-                        disabled={isWorking}
-                        label={`Reopen (${selectedIds.length})`}
-                        onClick={async function onReopen() {
-                            if (await confirmDiscardingUnselectedEdits()) {
-                                setPendingOverride('reopen')
-                            }
-                        }}
-                        secondary
-                    />
-                )}
-                {selectedRows.length === 1 && selectedRows[0].id && (
-                    <Button
-                        label='Audit history'
-                        onClick={function onViewAudit() {
-                            setAuditEntry(selectedRows[0])
-                        }}
-                        secondary
-                    />
-                )}
             </section>
-
-            {selectedRows.length > 0 && (
-                <section className={styles.summary}>
-                    <span>
-                        Total Selected Days:
-                        {' '}
-                        <strong>{totals.days}</strong>
-                    </span>
-                    <span>
-                        Total Selected Hours:
-                        {' '}
-                        <strong>{formatHoursLabel(totals.hours)}</strong>
-                    </span>
-                </section>
-            )}
 
             <TimesheetApproveModal
                 entryCount={selectedIds.length}

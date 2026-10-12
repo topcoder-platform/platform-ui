@@ -31,7 +31,7 @@
 .headerFacts {
     display: flex;
     flex-wrap: wrap;
-    gap: 24px;
+    gap: 16px 48px;
     margin: 0;
 }
 
@@ -183,11 +183,17 @@
     color: $turq-160;
 }
 
-.adminActions {
+/**
+ * The action row under a timesheet: right-aligned, secondary actions first and the primary one last,
+ * with room above it so it reads apart from the totals.
+ */
+.actions {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
     align-items: center;
+    justify-content: flex-end;
+    margin-top: 16px;
 }
 
 .filters {
@@ -235,6 +241,23 @@
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+}
+
+// Matches Work Manager's "Reset Filters" button.
+.resetButton {
+    @include font-roboto;
+    @include font-weight-bold;
+
+    font-size: 13px;
+    min-height: 32px;
+}
+
+.titleLink {
+    color: $link-blue-dark;
+
+    &:hover {
+        text-decoration: underline;
+    }
 }
 
 .loadingState {
