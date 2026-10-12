@@ -2,8 +2,9 @@
 import '@testing-library/jest-dom'
 
 import React from 'react'
-import { render, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 
+import { EngagementStatus } from '../../lib/models'
 import { getEngagements } from '../../lib/services'
 
 import EngagementListPage from './EngagementListPage'
@@ -87,11 +88,17 @@ describe('EngagementListPage', () => {
         jest.clearAllMocks()
     })
 
-    it('includes private engagements for privileged users', async () => {
+    it.each([
+        ['Administrator'],
+        ['Talent Manager'],
+        ['Topcoder Talent Manager'],
+        ['  TOPCODER TALENT MANAGER  '],
+        ['Topcoder Project Manager', 'Talent Manager'],
+    ])('includes private engagements for authorized roles: %j', async (...roles) => {
         mockUseProfileContext.mockReturnValue({
             isLoggedIn: true,
             profile: {
-                roles: ['Talent Manager'],
+                roles,
             },
         })
 
@@ -105,20 +112,76 @@ describe('EngagementListPage', () => {
         })
     })
 
-    it('keeps private engagements excluded for standard members', async () => {
+    it.each([
+        'Member',
+        'Project Manager',
+        'Topcoder Project Manager',
+        'Task Manager',
+        'Topcoder Task Manager',
+        '  TOPCODER PROJECT MANAGER  ',
+        'Connect Admin',
+        'Talent Manager Assistant',
+    ])('loads public opportunities without requesting private access for %s', async role => {
         mockUseProfileContext.mockReturnValue({
             isLoggedIn: true,
             profile: {
-                roles: ['Member'],
+                roles: [role],
             },
+        })
+        mockGetEngagements.mockImplementation(async params => {
+            if (params?.includePrivate) {
+                throw new Error('You are not authorized to include private engagements.')
+            }
+
+            return {
+                data: [{
+                    id: 'public-engagement',
+                    nanoId: 'public-opportunity',
+                    projectId: '123',
+                    title: 'Public opportunity',
+                    description: 'Open public engagement',
+                    duration: {},
+                    timeZones: [],
+                    countries: [],
+                    requiredSkills: [],
+                    status: EngagementStatus.OPEN,
+                    createdAt: '2026-10-09T00:00:00Z',
+                    updatedAt: '2026-10-09T00:00:00Z',
+                    createdBy: '123',
+                    isPrivate: false,
+                }],
+                page: 1,
+                perPage: 12,
+                total: 1,
+                totalPages: 1,
+            }
+        })
+
+        render(<EngagementListPage />)
+
+        expect(await screen.findByText('engagement-card'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Unable to load engagement opportunities. Please try again.'))
+            .not.toBeInTheDocument()
+        expect(mockGetEngagements)
+            .toHaveBeenCalledWith(expect.objectContaining({
+                includePrivate: false,
+                status: EngagementStatus.OPEN,
+            }))
+    })
+
+    it.each([undefined, {}])('keeps anonymous or missing-role profiles public: %j', async profile => {
+        mockUseProfileContext.mockReturnValue({
+            isLoggedIn: Boolean(profile),
+            profile,
         })
 
         render(<EngagementListPage />)
 
         await waitFor(() => {
             expect(mockGetEngagements)
-                .toHaveBeenCalledWith(expect.not.objectContaining({
-                    includePrivate: true,
+                .toHaveBeenCalledWith(expect.objectContaining({
+                    includePrivate: false,
                 }))
         })
     })
