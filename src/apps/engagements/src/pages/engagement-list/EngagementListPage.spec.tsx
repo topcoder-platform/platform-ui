@@ -90,6 +90,7 @@ describe('EngagementListPage', () => {
 
     it.each([
         ['Administrator'],
+        [' ADMINISTRATOR '],
         ['Talent Manager'],
         ['Topcoder Talent Manager'],
         ['  TOPCODER TALENT MANAGER  '],
@@ -120,6 +121,7 @@ describe('EngagementListPage', () => {
         'Topcoder Task Manager',
         '  TOPCODER PROJECT MANAGER  ',
         'Connect Admin',
+        'Group Administrator',
         'Talent Manager Assistant',
     ])('loads public opportunities without requesting private access for %s', async role => {
         mockUseProfileContext.mockReturnValue({
