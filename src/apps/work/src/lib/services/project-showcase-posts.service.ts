@@ -272,7 +272,7 @@ export async function fetchProjectShowcasePost(
 /**
  * Creates a showcase and saves its shared project metadata atomically.
  * @param projectId Project owning the showcase post.
- * @param payload Showcase fields, project metadata, and WIN opt-in.
+ * @param payload Showcase fields, project metadata, WIN opt-in, and optional publication status.
  * @returns The saved showcase post.
  * @throws A normalized API error when validation or saving fails.
  */
@@ -280,6 +280,7 @@ export async function createProjectShowcasePost(
     projectId: string,
     payload: ShowcaseMetadata & {
         title: string
+        status?: string
         content: string
         industryIds: string[]
         categoryIds: string[]

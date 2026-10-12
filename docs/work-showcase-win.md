@@ -46,6 +46,20 @@ availability to WIN. Validation and API failures keep the form open with an erro
 Unchecking removes the post from the WIN report after saving. Archived posts and
 posts belonging to deleted projects are excluded from the report.
 
+## Publishing stories (PM-6570)
+
+Create and edit forms include Publish for new stories and saved drafts. Publish
+uses the same validation and current form values as Create/Save, asks for the
+existing publish confirmation, and saves with `status: PUBLISHED` in one API
+request. Create/Save retain their existing status behavior.
+
+Previews include Cancel and, for drafts, Publish. Publishing a form preview saves
+its current edits; publishing a list preview publishes that saved post. Cancel
+returns to the form without losing edits, or closes a list preview. Validation
+or save errors return to the form for correction. Successful publication closes
+the form and preview and refreshes the showcase list. Published and archived
+stories do not offer Publish, matching the list's status rules.
+
 ## Deployment and verification
 
 Deploy the PM-6329 projects API migration and application before enabling this UI;
