@@ -18,6 +18,7 @@ import {
 import { ChallengeDetailsPage } from './ChallengeDetailsPage'
 
 jest.mock('~/config', () => ({
+    AppSubdomain: { topgear: 'topgear' },
     EnvironmentConfig: {
         REVIEW_APP_URL: 'https://review.topcoder-dev.com',
         TOPCODER_URL: 'https://www.topcoder-dev.com',

@@ -170,6 +170,7 @@ const TimesheetsPage: FC = () => {
                             : undefined}
                         // The history is for whoever can change managers - administrators and TMs.
                         // The API refuses anyone else, so the button follows the same rule.
+                        showAssignmentHours={timesheet.viewerRole !== TimesheetViewerRole.MEMBER}
                         onViewManagersAudit={canEditManagers
                             ? function onViewManagersAudit() {
                                 setIsManagersAuditOpen(true)

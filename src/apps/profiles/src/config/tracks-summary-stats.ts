@@ -15,6 +15,7 @@ export const designTrackSummaryStats: TrackSummaryStats = {
 export const developTrackSummaryStats: TrackSummaryStats = {
     fields: {
         challenges: true,
+        rating: true,
         submissions: true,
         wins: true,
     },

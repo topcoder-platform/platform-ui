@@ -33,6 +33,7 @@ import { showErrorToast } from '../../../../../lib/utils/toast.utils'
 import {
     getReviewContextLockReason,
     hasAiOnlyTimelinePhases,
+    hasStartedReviewPhase,
     isAiReviewer,
     syncAiConfigReviewers,
 } from './reviewers-field.utils'
@@ -80,7 +81,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     const humanTabRef = useRef<HTMLDivElement>(null)
     const aiTabRef = useRef<HTMLDivElement>(null)
     const contextTabRef = useRef<HTMLDivElement>(null)
-    const isRestoringScheduleRef = useRef<boolean>(false)
+    const isSyncingScheduleRef = useRef<boolean>(false)
 
     const fetchAiReviewConfigByChallenge = services.fetchAiReviewConfigByChallenge ?? (async () => undefined)
     const patchChallenge = services.patchChallenge ?? (async () => undefined)
@@ -221,6 +222,10 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
             && hasAiOnlyTimelinePhases(phases),
         [challengeStatus, phases],
     )
+    const hasReviewStarted = useMemo(
+        () => hasStartedReviewPhase(phases),
+        [phases],
+    )
     const reviewContextLockReason = useMemo(
         () => getReviewContextLockReason({
             hasSubmissions,
@@ -291,8 +296,8 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     )
 
     /**
-     * Loads the schedule persisted by challenge-api into the form, so the manual reviewer
-     * phase options follow the timeline template challenge-api selected.
+     * Loads the schedule persisted by challenge-api into the form, so the timeline and the
+     * manual reviewer phase options follow the timeline template challenge-api selected.
      *
      * @param savedChallenge challenge returned by the reviewer patch.
      */
@@ -312,19 +317,22 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
         })
     }, [formContext])
     /**
-     * Persists the reviewers so challenge-api moves the draft off the AI Only timeline
-     * template, then loads the restored schedule into the form. The regular save cannot do
-     * this because the manual reviewer requirement blocks it while only the AI Review and
-     * Approval phases are available. Failures are reported with an error toast.
+     * Persists reviewers to restore the default timeline when a new or draft challenge
+     * leaves AI_ONLY, or to switch an active challenge's timeline between AI_ONLY and
+     * AI_GATING before review starts. Loads the schedule returned by challenge-api into the
+     * form. The regular save cannot be used: leaving AI_ONLY requires a manual reviewer,
+     * which needs the Review phase first. Failures are reported with an error toast.
      *
-     * @param nextReviewers reviewers to persist with the schedule reset.
+     * @param nextReviewers reviewers to persist with the timeline switch.
+     * @returns Nothing; the persisted schedule is applied asynchronously.
+     * @throws No errors; patch failures are handled by the error toast.
      */
-    const restoreDefaultSchedule = useCallback((nextReviewers: Reviewer[]): void => {
-        if (!challengeId || isRestoringScheduleRef.current) {
+    const syncScheduleWithReviewMode = useCallback((nextReviewers: Reviewer[]): void => {
+        if (!challengeId || isSyncingScheduleRef.current) {
             return
         }
 
-        isRestoringScheduleRef.current = true
+        isSyncingScheduleRef.current = true
         patchChallenge(challengeId, {
             reviewers: nextReviewers,
         })
@@ -332,12 +340,13 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
             .catch((error: unknown) => {
                 showErrorToast(error instanceof Error
                     ? error.message
-                    : 'Failed to restore the default challenge timeline')
+                    : 'Failed to update the challenge timeline for the new AI review mode')
             })
             .finally(() => {
-                isRestoringScheduleRef.current = false
+                isSyncingScheduleRef.current = false
             })
     }, [applyPersistedSchedule, challengeId])
+
     const handleAiConfigPersisted = useCallback(
         (config: AiReviewConfig): void => {
             setAiReviewMode(config.mode)
@@ -361,11 +370,18 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                 })
             }
 
-            if (config.mode !== 'AI_ONLY' && hasDraftAiOnlySchedule) {
-                restoreDefaultSchedule(nextReviewers)
+            if (
+                (config.mode !== 'AI_ONLY' && hasDraftAiOnlySchedule)
+                || (
+                    challengeStatus === ChallengeStatus.Active
+                    && !hasReviewStarted
+                    && (config.mode === 'AI_ONLY') !== hasAiOnlyTimelinePhases(phases)
+                )
+            ) {
+                syncScheduleWithReviewMode(nextReviewers)
             }
         },
-        [formContext, hasDraftAiOnlySchedule, phases, restoreDefaultSchedule],
+        [challengeStatus, formContext, hasDraftAiOnlySchedule, hasReviewStarted, phases, syncScheduleWithReviewMode],
     )
     const handleAiConfigRemoved = useCallback(async (): Promise<void> => {
         setAiReviewMode(undefined)
@@ -555,6 +571,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                                 role='tabpanel'
                             >
                                 <AiReviewTab
+                                    canSwitchReviewMode={!hasReviewStarted}
                                     challengeId={challengeId}
                                     hasSubmissions={hasSubmissions}
                                     onConfigPersisted={handleAiConfigPersisted}

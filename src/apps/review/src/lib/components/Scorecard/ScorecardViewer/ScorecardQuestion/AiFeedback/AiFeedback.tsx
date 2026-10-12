@@ -1,4 +1,5 @@
 import { ChangeEvent, FC, useCallback, useMemo, useState } from 'react'
+import { toast } from 'react-toastify'
 import { mutate } from 'swr'
 
 import { IconAiReview } from '~/apps/review/src/lib/assets/icons'
@@ -258,6 +259,7 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
             }
 
             setIsEditingScore(false)
+            toast.success('Score updated successfully!')
         } catch (err) {
             handleError(err)
         } finally {

@@ -54,6 +54,22 @@ describe('StatsSummaryBlock', () => {
         },
     )
 
+    it('shows the Development track rating next to challenges, wins, and submissions', () => {
+        render(
+            <StatsSummaryBlock
+                challenges={44}
+                rating={1485}
+                submissions={44}
+                trackTitle='Development'
+                wins={3}
+            />,
+        )
+
+        expect(screen.getByText('rating')
+            .closest('div'))
+            .toHaveTextContent('1485')
+    })
+
     it('keeps volatility visible for tracks that support it', () => {
         render(
             <StatsSummaryBlock

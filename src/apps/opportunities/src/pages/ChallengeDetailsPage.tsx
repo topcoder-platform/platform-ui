@@ -94,6 +94,7 @@ import {
     formatMarathonScore,
     isMarathonMatchChallenge,
     isTaskChallenge,
+    isTopgearChallenge,
     marathonDashboardIsEnabled,
     marathonLeaderboardIsPublic,
     marathonSubmissionScores,
@@ -1019,6 +1020,7 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
 
 /**
  * Renders format-aware requirements and a Markdown-only table of contents.
+ * Omits the forum guidance notice for TopGear challenges, which do not use forums.
  *
  * @param props challenge containing authored requirements.
  * @returns requirements tab content.
@@ -1042,12 +1044,14 @@ const RequirementsTab: FC<{ challenge: ChallengeOpportunity }> = props => {
             {tournament && (
                 <p className={styles.tournamentNotice}>{`This match belongs to the ${tournament}.`}</p>
             )}
-            <div className={styles.notice}>
-                Please read the challenge requirements carefully and watch the forums for any questions or feedback
-                concerning this challenge. It is important that you monitor any updates provided by the copilot,
-                admins or the client in the forums. Please post any questions you might have for the client in the
-                forums.
-            </div>
+            {!isTopgearChallenge(props.challenge) && (
+                <div className={styles.notice}>
+                    Please read the challenge requirements carefully and watch the forums for any questions or feedback
+                    concerning this challenge. It is important that you monitor any updates provided by the copilot,
+                    admins or the client in the forums. Please post any questions you might have for the client in the
+                    forums.
+                </div>
+            )}
             {toc.length > 0 && (
                 <nav aria-label='Table of contents' className={styles.toc}>
                     <h2>Table of Contents</h2>

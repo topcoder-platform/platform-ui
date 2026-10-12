@@ -15,6 +15,7 @@ import h1 from '../assets/forums/0f9e6.svg'
 import h2 from '../assets/forums/b697d.svg'
 import h3 from '../assets/forums/90f38.svg'
 import image from '../assets/forums/94f98.svg'
+import info from '../assets/forums/3faa9.svg'
 import italic from '../assets/forums/7f1bc.svg'
 import left from '../assets/forums/381ef.svg'
 import link from '../assets/forums/42478.svg'
@@ -51,6 +52,7 @@ const icons = {
     h2,
     h3,
     image,
+    info,
     italic,
     left,
     link,

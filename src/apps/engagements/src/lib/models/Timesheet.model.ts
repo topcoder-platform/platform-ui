@@ -45,6 +45,11 @@ export interface TimesheetEntry {
 
 export interface TimesheetAssignment {
     endDate: string | null
+    /**
+     * Total hours minus hours on processed payments. Null when there is no total, on the member's own
+     * view, or when payments could not be read.
+     */
+    hoursLeft: number | null
     id: string
     memberHandle: string
     memberId: string
@@ -52,6 +57,8 @@ export interface TimesheetAssignment {
     standardHoursPerDay: number | null
     startDate: string | null
     status: string
+    /** Hours allocated to the assignment overall. */
+    totalHours: number | null
 }
 
 export interface TimesheetView {

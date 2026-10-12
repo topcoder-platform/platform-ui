@@ -8,6 +8,7 @@ import {
     RenderResult,
     screen,
     waitFor,
+    within,
 } from '@testing-library/react'
 
 import {
@@ -20,6 +21,7 @@ import {
 import {
     ChallengeForum,
     ForumTopicView,
+    ParticipantGroup,
     continueMarkdownList,
     flattenForumPosts,
     forumRatingClass,
@@ -39,6 +41,7 @@ const mockSetForumTopicWatching = jest.fn()
 const mockUseSWR = jest.fn()
 const mockUpdateForumPost = jest.fn()
 const mockUpdateForumTopic = jest.fn()
+const mockUploadForumAttachment = jest.fn()
 let listError: Error | undefined
 let memberProfiles: MemberProfileSummary[] | undefined
 let topicCollection: ForumTopicCollection | undefined
@@ -49,7 +52,9 @@ jest.mock('~/libs/core', () => ({
         .getRatingColor,
 }), { virtual: true })
 
-jest.mock('../services/forum-attachments.service', () => ({ uploadForumAttachment: jest.fn() }))
+jest.mock('../services/forum-attachments.service', () => ({
+    uploadForumAttachment: (...args: unknown[]) => mockUploadForumAttachment(...args),
+}))
 
 jest.mock('swr', () => ({
     __esModule: true,
@@ -512,6 +517,67 @@ describe('ChallengeForum', () => {
             .toBe(true)
     })
 
+    it('offers the Figma comment toolbar for size, alignment, files, tables, mentions and expand', async () => {
+        mockUploadForumAttachment.mockResolvedValue('[brief.pdf](<https://cdn.example/brief.pdf>)')
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+
+        const textarea = screen.getByPlaceholderText('Type here') as HTMLTextAreaElement
+        const toolbar = within(screen.getByRole('toolbar', { name: 'Markdown formatting' }))
+        const applyToDraft = (value: string, caret: number, apply: () => void): string => {
+            fireEvent.change(textarea, { target: { value } })
+            textarea.setSelectionRange(caret, value.length)
+            apply()
+            return textarea.value
+        }
+
+        const clickTool = (name: string) => (): void => {
+            fireEvent.click(toolbar.getByRole('button', { name }))
+        }
+
+        expect(applyToDraft('Big', 0, () => fireEvent.change(
+            toolbar.getByRole('combobox', { name: 'Text size' }),
+            { target: { value: '20' } },
+        )))
+            .toBe('<span data-forum-size="20">Big</span>')
+        expect(toolbar.getAllByRole('button', { name: /^Align (left|center|right)$/ }))
+            .toHaveLength(3)
+        expect(applyToDraft('Centered', 0, clickTool('Align center')))
+            .toBe('<p align="center">Centered</p>')
+        expect(applyToDraft('Results', 7, clickTool('Table')))
+            .toBe('Results\n| Column | Column |\n| --- | --- |\n|  |  |\n')
+        expect(applyToDraft('Thanks ', 7, clickTool('Mention member')))
+            .toBe('Thanks @')
+
+        const chooser = screen.getByLabelText('Choose attachment') as HTMLInputElement
+        const openChooser = jest.spyOn(chooser, 'click')
+            .mockImplementation(() => undefined)
+        clickTool('Attachment')()
+        expect(openChooser)
+            .toHaveBeenCalledTimes(1)
+        const file = new File(['brief'], 'brief.pdf', { type: 'application/pdf' })
+        await act(async () => fireEvent.change(chooser, { target: { files: [file] } }))
+        await waitFor(() => expect(textarea.value)
+            .toBe('Thanks @\n[brief.pdf](<https://cdn.example/brief.pdf>)'))
+        expect(mockUploadForumAttachment)
+            .toHaveBeenCalledWith(file)
+
+        const expand = toolbar.getByRole('button', { name: 'Expand editor' })
+        fireEvent.click(expand)
+        expect(expand)
+            .toHaveAttribute('aria-pressed', 'true')
+        expect(textarea.closest('.expandedEditor'))
+            .not.toBeNull()
+    })
+
+    it('groups the shared comment toolbar like the Figma editor outside the public forums app', () => {
+        const sharedStyles = forumStyles.split(':global(.forums-app)')[0]
+        expect(sharedStyles)
+            .toContain('button:nth-of-type(5), button:nth-of-type(11), button:nth-of-type(13), button:nth-of-type(20)')
+        expect(sharedStyles)
+            .toContain("url('../assets/forums/1e461.svg')")
+    })
+
     it('toggles topic watches through forums-api-v6', async () => {
         render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
         await act(async () => fireEvent.click(screen.getAllByRole('button', { name: 'Watched' })[0]))
@@ -668,6 +734,36 @@ describe('ChallengeForum', () => {
             .toContain('z-index: 2')
     })
 
+    it('shows unread new topics as the Figma red chip and read ones as a neutral chip', () => {
+        const { unmount }: RenderResult = render(
+            <ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />,
+        )
+
+        expect(screen.getByText('1 new topic'))
+            .toHaveClass('newCount', 'hasUnread')
+
+        unmount()
+        topicCollection = {
+            data: [{ ...announcement, unread: false }, discussion],
+            sourceTotalCount: 2,
+            truncated: false,
+        }
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+
+        expect(screen.getByText('0 new topics'))
+            .not.toHaveClass('hasUnread')
+
+        const unreadBlock = (forumStyles.match(/\.newCount\.hasUnread\s*\{[^}]*\}/) ?? [''])[0]
+        expect(unreadBlock)
+            .toContain('background: #c1294f;')
+        expect(unreadBlock)
+            .toContain('border: 1px solid #a21035;')
+        expect(unreadBlock)
+            .toContain('color: #fff;')
+        expect(forumStyles)
+            .not.toMatch(/\.newCount[^{]*::after/)
+    })
+
     it('matches the Figma desktop forum geometry and core tokens', () => {
         expect(forumStyles)
             .toContain('grid-template-columns: 281px minmax(0, 895px);')
@@ -681,6 +777,94 @@ describe('ChallengeForum', () => {
             .toContain('color: #f2c900;')
         expect(forumStyles)
             .not.toContain('#8d8d8d')
+    })
+
+    it('omits the empty tag row so an untagged title starts the card', () => {
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+
+        const taggedCard = screen.getByRole('button', { name: announcement.title })
+            .closest('article') as HTMLElement
+        const untaggedCard = screen.getByRole('button', { name: discussion.title })
+            .closest('article') as HTMLElement
+
+        expect(taggedCard.querySelector('.tags'))
+            .toBeInTheDocument()
+        expect(untaggedCard.querySelector('.tags'))
+            .not.toBeInTheDocument()
+        expect(untaggedCard.querySelector('.topicMain')?.firstElementChild)
+            .toHaveClass('topicTitle')
+        expect(forumStyles)
+            .not.toMatch(/\.tags \{[^}]*min-height/)
+    })
+
+    it('stacks earlier participant avatars above later ones', () => {
+        render(
+            <ParticipantGroup
+                participants={[
+                    { handle: 'DaraK', memberId: '1' },
+                    { handle: 'Yoki', memberId: '2' },
+                    { handle: 'PereViki', memberId: '3' },
+                ]}
+                profilesByMemberId={new Map()}
+                total={3}
+            />,
+        )
+
+        expect(screen.getAllByRole('link')
+            .map(link => [link.getAttribute('title'), Number(link.style.zIndex)]))
+            .toEqual([['DaraK', 4], ['Yoki', 3], ['PereViki', 2]])
+    })
+
+    it('renders Topic info with bold metric labels and Material icons', async () => {
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+
+        const topicInfo = screen.getByRole('heading', { name: 'Topic info' })
+            .closest('aside') as HTMLElement
+        const author = topicInfo.querySelector('.topicInfoAuthor') as HTMLElement
+
+        expect(['Posts:', 'Views:', 'Participants'].map(label => within(topicInfo)
+            .getByText(label).tagName))
+            .toEqual(['STRONG', 'STRONG', 'STRONG'])
+        expect(topicInfo.querySelector('h2 img'))
+            .toHaveAttribute('src', '3faa9.svg')
+        expect(author.querySelector('.authorBadge img'))
+            .toHaveAttribute('src', '1bd8b.svg')
+        expect(forumStyles)
+            .toMatch(/\.topicInfoAuthor \{[^}]*margin-top: 24px;/)
+    })
+
+    it('shows the reaction divider only when post actions follow it', () => {
+        const renderThread = (locked: boolean): RenderResult => render(
+            <ForumTopicView
+                canDeletePosts={false}
+                detail={{
+                    posts: [{ ...starterPost, authorMemberId: '9', replies: [] }],
+                    topic: { ...announcement, locked },
+                }}
+                memberId='10'
+                onBack={jest.fn()}
+                onChanged={jest.fn()}
+                profilesByMemberId={new Map()}
+            />,
+        )
+
+        const openThread = renderThread(false)
+        expect(openThread.container.querySelector('.postActionDivider'))
+            .toBeInTheDocument()
+        openThread.unmount()
+
+        expect(renderThread(true).container.querySelector('.postActionDivider'))
+            .not.toBeInTheDocument()
+    })
+
+    it('keeps thread tags readable and the left rail borderless', () => {
+        expect(forumStyles)
+            .toMatch(/> span\.newPost \{\s*background: #ffe5ec;\s*color: #c1294f;/)
+        expect(forumStyles)
+            .toMatch(/\.postIdentity \{[\s\S]*?> span:not\(\.member\) \{[^}]*color: #161616;/)
+        expect(forumStyles)
+            .toMatch(/\.overview,\s*\.filters,\s*\.discussionInfo,\s*\.topicInfo \{\s*border: 0;/)
     })
 })
 

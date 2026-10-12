@@ -298,12 +298,32 @@ export function syncAiConfigReviewers(
  *
  * @param phases challenge phases from the editor form.
  * @returns `true` when an "AI Review" phase is present.
- * @remarks Used by `ReviewersField` to restore the default timeline once the AI review mode
- * leaves AI_ONLY, so manual reviewers can be assigned to the regular review phases again.
+ * @remarks Used by `ReviewersField` to restore the default timeline when a new or draft
+ * challenge leaves AI_ONLY and to keep an active challenge's timeline matched to its mode.
  */
 export function hasAiOnlyTimelinePhases(phases: ChallengePhase[] | undefined): boolean {
     return (Array.isArray(phases) ? phases : [])
         .some(phase => normalizePhaseName(phase?.name) === normalizePhaseName(AI_REVIEW_PHASE_NAME))
+}
+
+/**
+ * Returns whether a review phase (AI Screening, AI Review, Review, Screening, ...) of the
+ * challenge is open or has already started.
+ *
+ * @param phases challenge phases from the editor form.
+ * @returns `true` when a phase whose name contains "review" or "screening" has started.
+ * @remarks `ReviewersField` uses it to stop AI_ONLY / AI_GATING switches once review starts,
+ * matching the review-api and challenge-api rules.
+ */
+export function hasStartedReviewPhase(phases: ChallengePhase[] | undefined): boolean {
+    return (Array.isArray(phases) ? phases : [])
+        .some(phase => {
+            const phaseName = normalizeReviewerText(phase?.name)
+                .toLowerCase()
+
+            return (phaseName.includes('review') || phaseName.includes('screening'))
+                && (phase.isOpen === true || !!normalizeReviewerText(phase.actualStartDate))
+        })
 }
 
 /**

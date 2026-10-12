@@ -21,6 +21,8 @@ interface TooltipProps {
     /** Set clickable=true to allows interactions with the tooltip */
     clickable?: boolean
     disableWrap?: boolean
+    /** Distance in px between the trigger and the tooltip; react-tooltip defaults to 10 */
+    offset?: number
     place?: 'top' | 'right' | 'bottom' | 'left'
     children?: ReactNode
     /** Use click-hover to support mouse hover, keyboard focus, and click/touch toggling. */
@@ -41,7 +43,7 @@ function wrapComponents(el: ReactNode, disableWrap?: boolean): ReactNode {
  * Use click-hover mode when a tooltip must support pointer hover, keyboard focus,
  * and click or touch toggling. This component does not throw.
  *
- * @param {TooltipProps} props - Tooltip content, triggers, placement, and interaction mode.
+ * @param {TooltipProps} props - Tooltip content, triggers, placement, offset, and interaction mode.
  * @returns {JSX.Element} Cloned triggers plus the configured react-tooltip overlay.
  */
 const Tooltip: FC<TooltipProps> = (props: TooltipProps) => {
@@ -87,6 +89,7 @@ const Tooltip: FC<TooltipProps> = (props: TooltipProps) => {
                         mouseout: true,
                     } : undefined}
                     clickable={props.clickable}
+                    offset={props.offset}
                     positionStrategy={props.strategy ?? 'absolute'}
                 >
                     {props.content}

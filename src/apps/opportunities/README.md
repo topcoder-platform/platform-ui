@@ -321,7 +321,9 @@ to their authored subtype icons and member-facing labels.
   TopGear terms (`topgearTermsUrl`, from `URLS.TOPGEAR_TERMS`) as "TopGear
   Challenges Explained". The Review Style and Challenge Terms sections are also
   omitted, so the challenge-information card only appears for TopGear challenges
-  that have design guidance or authored Challenge Links.
+  that have design guidance or authored Challenge Links. The Requirements tab
+  also omits the notice asking members to monitor and post in the forums, since
+  TopGear challenges do not use forums.
 
 ## Challenge detail timeline
 
@@ -867,4 +869,7 @@ post and Markdown editor components. `ForumTopicView` accepts optional
 login handoff. Topic detail may include API `permissions`; an explicit denied
 reply permission hides the composer. Existing challenge callers need no changes.
 The shared toolbar includes configured Filestack attachments through
-`uploadForumAttachment`, preserving Markdown links and rated @mentions.
+`uploadForumAttachment`, preserving Markdown links and rated @mentions. Its
+Figma grouping (dividers between formatting, heading, size, alignment, list,
+insert and expand controls, plus the size chevron) lives in the shared editor
+styles, so challenge discussion composers match the public forums.
