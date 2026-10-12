@@ -87,11 +87,16 @@ describe('EngagementListPage', () => {
         jest.clearAllMocks()
     })
 
-    it('includes private engagements for privileged users', async () => {
+    it.each([
+        'Administrator',
+        'Talent Manager',
+        'Topcoder Talent Manager',
+        ' ADMINISTRATOR ',
+    ])('includes private engagements for the %s role', async role => {
         mockUseProfileContext.mockReturnValue({
             isLoggedIn: true,
             profile: {
-                roles: ['Talent Manager'],
+                roles: [role],
             },
         })
 
@@ -105,11 +110,19 @@ describe('EngagementListPage', () => {
         })
     })
 
-    it('keeps private engagements excluded for standard members', async () => {
+    it.each([
+        'Member',
+        'Project Manager',
+        'Topcoder Project Manager',
+        'Task Manager',
+        'Topcoder Task Manager',
+        'Group Administrator',
+        'Talent Manager Assistant',
+    ])('keeps private engagements excluded for the %s role', async role => {
         mockUseProfileContext.mockReturnValue({
             isLoggedIn: true,
             profile: {
-                roles: ['Member'],
+                roles: [role],
             },
         })
 
@@ -117,9 +130,20 @@ describe('EngagementListPage', () => {
 
         await waitFor(() => {
             expect(mockGetEngagements)
-                .toHaveBeenCalledWith(expect.not.objectContaining({
-                    includePrivate: true,
+                .toHaveBeenCalledWith(expect.objectContaining({
+                    includePrivate: false,
                 }))
+        })
+    })
+
+    it('requests public engagements for anonymous visitors', async () => {
+        mockUseProfileContext.mockReturnValue({ isLoggedIn: false })
+
+        render(<EngagementListPage />)
+
+        await waitFor(() => {
+            expect(mockGetEngagements)
+                .toHaveBeenCalledWith(expect.objectContaining({ includePrivate: false }))
         })
     })
 })

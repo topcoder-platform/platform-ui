@@ -28,7 +28,7 @@ const DEFAULT_FILTERS: FilterState = {
 
 const PER_PAGE = 12
 const ANY_LOCATION = 'Any'
-const PRIVATE_ENGAGEMENT_ROLE_KEYWORDS = ['project manager', 'task manager', 'talent manager', 'admin']
+const PRIVATE_ENGAGEMENT_ROLES = ['administrator', 'topcoder talent manager', 'talent manager']
 
 type CountryMatch = {
     name?: string
@@ -114,13 +114,21 @@ const buildLocationFilters = (
     }
 }
 
+/**
+ * Matches the API roles allowed to include private engagement opportunities.
+ * The list page uses this check to keep other callers on the public feed.
+ *
+ * @param roles Optional profile roles, compared case-insensitively after trimming.
+ * @returns Whether an Administrator or Talent Manager role is present.
+ * @throws No exceptions are raised.
+ */
 const canIncludePrivateEngagements = (roles?: string[]): boolean => (
     (roles ?? [])
         .filter((role): role is string => typeof role === 'string')
         .map(role => role
             .trim()
             .toLowerCase())
-        .some(role => PRIVATE_ENGAGEMENT_ROLE_KEYWORDS.some(keyword => role.includes(keyword)))
+        .some(role => PRIVATE_ENGAGEMENT_ROLES.includes(role))
 )
 
 const EngagementListPage: FC = () => {
