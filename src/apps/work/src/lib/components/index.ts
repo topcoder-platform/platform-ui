@@ -1,6 +1,7 @@
 export * from './BillingAccountLineItemsModal'
 export * from './ChallengesFilter'
 export * from './ChallengesTable'
+export * from './EngagementAssignmentsTable'
 export * from './EngagementCard'
 export * from './EngagementManagersField'
 export * from './EngagementsFilter'
