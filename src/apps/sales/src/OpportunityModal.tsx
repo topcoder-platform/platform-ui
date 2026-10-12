@@ -25,7 +25,8 @@ type ModalState =
     | { status: 'ready'; opportunity: SalesOpportunity }
 
 /**
- * Shows the details of one Salesforce opportunity, starting with its description.
+ * Shows Salesforce opportunity details in an 860px-wide, viewport-constrained dialog,
+ * starting with its description.
  * When a billing account exists, also shows its ID/name, the Work challenges
  * link, and past accounts used by the project, excluding the current account.
  * @param props The opportunity to load, whether the popup is open, and the close handler.
@@ -75,6 +76,7 @@ export const OpportunityModal: FC<OpportunityModalProps> = props => {
             buttons={(
                 <Button noCaps onClick={props.onClose} secondary>Close</Button>
             )}
+            classNames={{ modal: styles.modal }}
             onClose={props.onClose}
             open={props.open}
             size='md'
