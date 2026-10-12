@@ -28,6 +28,8 @@ render the opportunity name as a button. Opening it shows a popup with the
 opportunity description first, followed by the customer, SMU, close date and
 stage when Salesforce provides them, plus a link to the record. The popup closes
 with its Close button or the X icon; obsolete lookups are aborted.
+The popup is 860px wide, capped at the viewport width minus 32px on smaller
+screens, with scrolling retained for long descriptions.
 
 When the opportunity has a local billing account, the popup also shows its
 current ID/name, a **View project … in Work** link to
