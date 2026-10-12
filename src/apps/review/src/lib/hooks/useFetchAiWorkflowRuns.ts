@@ -46,6 +46,7 @@ export interface AiWorkflow {
 export interface AiWorkflowRun {
     id: string;
     startedAt: string;
+    lastDispatchedAt?: string;
     completedAt: string;
     status: AiWorkflowRunStatusEnum;
     gitRunId?: string;
@@ -143,6 +144,32 @@ export const aiRunFailed = (aiRun: Pick<AiWorkflowRun, 'status'>): boolean => [
     AiWorkflowRunStatusEnum.TIMEOUT,
 ].includes(aiRun.status)
 
+/**
+ * Keeps only the most recent run of each AI workflow.
+ *
+ * A re-run creates a new run that has been dispatched but not started yet, so its
+ * `startedAt` is still empty. Its `lastDispatchedAt` is used instead, which makes the
+ * new run win over the previous (possibly score-edited) run as soon as the re-run is
+ * triggered. Used by `useFetchAiWorkflowsRuns` to feed the AI reviews table.
+ *
+ * @param runs - All runs returned for a submission, in any order.
+ * @returns The latest run per workflow id.
+ */
+export function getLatestAiWorkflowRuns(runs: AiWorkflowRun[]): AiWorkflowRun[] {
+    return uniqBy(
+        orderBy(
+            runs,
+            [
+                run => run.startedAt ?? run.lastDispatchedAt ?? '',
+                run => run.completedAt ?? '',
+            ],
+            ['desc', 'desc'],
+        ),
+        'workflow.id',
+    )
+        .reverse()
+}
+
 export function useFetchAiWorkflowsRuns(
     submissionId: string,
 ): AiWorkflowRunsResponse {
@@ -175,18 +202,7 @@ export function useFetchAiWorkflowsRuns(
         }
     }, [fetchError])
 
-    const uniqueRuns = uniqBy(
-        orderBy(
-            runs,
-            [
-                run => run.startedAt ?? '',
-                run => run.completedAt ?? '',
-            ],
-            ['desc', 'desc'],
-        ),
-        'workflow.id',
-    )
-        .reverse()
+    const uniqueRuns = getLatestAiWorkflowRuns(runs)
 
     return {
         isLoading,
