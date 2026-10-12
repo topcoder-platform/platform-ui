@@ -482,6 +482,96 @@ describe('getActiveTracks', () => {
         expect(activeTracks.map(track => track.name))
             .not.toContain('NO_RATING')
     })
+
+    it('uses the highest Development subtrack rating as the Development track rating', () => {
+        const activeTracks: MemberStatsTrack[] = getActiveTracks({
+            DATA_SCIENCE: {
+                'AI Engineering': {
+                    challenges: 2,
+                    rank: {
+                        rating: 1422,
+                    },
+                },
+            },
+            DEVELOP: {
+                subTracks: [
+                    {
+                        challenges: 3,
+                        name: 'First2Finish',
+                        submissions: {
+                            submissions: 3,
+                        },
+                        wins: 0,
+                    },
+                    {
+                        challenges: 17,
+                        name: 'Challenge',
+                        rank: {
+                            rating: 1485,
+                        },
+                        submissions: {
+                            submissions: 17,
+                        },
+                        wins: 2,
+                    },
+                    {
+                        challenges: 24,
+                        name: 'Code',
+                        rank: {
+                            rating: 1200,
+                        },
+                        submissions: {
+                            submissions: 24,
+                        },
+                        wins: 1,
+                    },
+                    {
+                        challenges: 0,
+                        name: 'Task',
+                        rank: {
+                            rating: 2000,
+                        },
+                        submissions: {
+                            submissions: 0,
+                        },
+                        wins: 0,
+                    },
+                ],
+            },
+        } as unknown as UserStats)
+        const developmentTrack: MemberStatsTrack | undefined = activeTracks
+            .find(track => track.name === 'Development')
+
+        expect(developmentTrack?.rating)
+            .toEqual(1485)
+    })
+
+    it('leaves the Development track rating empty when no Development subtrack is rated', () => {
+        const activeTracks: MemberStatsTrack[] = getActiveTracks({
+            DEVELOP: {
+                subTracks: [
+                    {
+                        challenges: 3,
+                        name: 'First2Finish',
+                        rank: {
+                            rating: 0,
+                        },
+                        submissions: {
+                            submissions: 3,
+                        },
+                        wins: 1,
+                    },
+                ],
+            },
+        } as unknown as UserStats)
+        const developmentTrack: MemberStatsTrack | undefined = activeTracks
+            .find(track => track.name === 'Development')
+
+        expect(developmentTrack?.isActive)
+            .toBe(true)
+        expect(developmentTrack?.rating)
+            .toBeUndefined()
+    })
 })
 
 describe('getSubTrackSummaryStats', () => {
