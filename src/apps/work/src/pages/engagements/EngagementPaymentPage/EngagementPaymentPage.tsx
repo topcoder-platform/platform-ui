@@ -906,8 +906,9 @@ export const EngagementPaymentPage: FC = () => {
     }, [assignmentIdsWithTotalHours, processedHoursReloadToken])
 
     const renderHoursLeft = useCallback((assignment: Assignment): string => {
+        // No total to count down from; shown as "-", like the other unset fields on the card.
         if (getAssignmentTotalHours(assignment) === undefined) {
-            return ''
+            return '-'
         }
 
         const processedHours = processedHoursByAssignmentId[String(assignment.id)]
@@ -921,7 +922,7 @@ export const EngagementPaymentPage: FC = () => {
         }
 
         const hoursLeft = calculateAssignmentHoursLeft(assignment, processedHours)
-        return hoursLeft === undefined ? '' : String(hoursLeft)
+        return hoursLeft === undefined ? '-' : String(hoursLeft)
     }, [processedHoursByAssignmentId])
 
     const pageTitle = engagementResult.engagement?.title

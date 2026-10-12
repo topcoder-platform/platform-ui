@@ -107,6 +107,23 @@ jest.mock('../../../lib/components', () => ({
             </button>
         </div>
     ),
+    EngagementAssignmentsTable: (props: {
+        backUrl: string
+        rows: Array<{
+            assignment: { id: number | string; memberHandle: string }
+            engagement: { title?: string }
+            projectId: string
+            projectName: string
+        }>
+    }) => (
+        <div data-testid='assignments-table' data-back-url={props.backUrl}>
+            {props.rows.map(row => (
+                <div key={row.assignment.id} data-testid='assignment-row'>
+                    {`${row.assignment.memberHandle} | ${row.engagement.title} | ${row.projectName}`}
+                </div>
+            ))}
+        </div>
+    ),
     EngagementsFilter: function MockEngagementsFilter(props: {
         filters: { memberHandle?: string; status?: string[]; title?: string }
         onFiltersChange: (nextFilters: { memberHandle?: string; status?: string[]; title?: string }) => void
@@ -654,6 +671,161 @@ describe('EngagementsListPage', () => {
                         enabled: true,
                     },
                 )
+        })
+    })
+
+    describe('assignments tab', () => {
+        const engagementWithAssignments = {
+            ...sampleEngagement,
+            assignments: [
+                {
+                    id: 'a1',
+                    memberHandle: 'first_member',
+                    status: 'ASSIGNED',
+                },
+                {
+                    id: 'a2',
+                    memberHandle: 'second_member',
+                    status: 'COMPLETED',
+                },
+            ],
+            projectName: 'Payment Testing',
+        }
+
+        it('shows the engagements tab by default on the all engagements page', () => {
+            mockedUseFetchEngagements.mockReturnValue({
+                engagements: [engagementWithAssignments],
+                error: undefined,
+                isLoading: false,
+                mutate: jest.fn(),
+            })
+
+            renderPage('/engagements', '/engagements')
+
+            expect(screen.getByRole('tab', { name: 'Engagements' })
+                .getAttribute('aria-selected'))
+                .toBe('true')
+            expect(screen.getByRole('tab', { name: 'Assignments' })
+                .getAttribute('aria-selected'))
+                .toBe('false')
+            expect(screen.queryByTestId('assignments-table'))
+                .toBeNull()
+            expect(screen.getByRole('heading', { name: 'All Engagements' }))
+                .toBeTruthy()
+        })
+
+        it('lists every assignment of every engagement when the assignments tab is selected', () => {
+            mockedUseFetchEngagements.mockReturnValue({
+                engagements: [
+                    engagementWithAssignments,
+                    {
+                        ...olderEngagement,
+                        assignments: [{
+                            id: 'a3',
+                            memberHandle: 'third_member',
+                            status: 'SELECTED',
+                        }],
+                        projectName: 'API Rollout',
+                    },
+                ],
+                error: undefined,
+                isLoading: false,
+                mutate: jest.fn(),
+            })
+
+            renderPage('/engagements', '/engagements')
+            fireEvent.click(screen.getByRole('tab', { name: 'Assignments' }))
+
+            expect(screen.getByRole('heading', { name: 'All Assignments' }))
+                .toBeTruthy()
+            expect(screen.getAllByTestId('assignment-row')
+                .map(row => row.textContent))
+                .toEqual([
+                    'first_member | Test private mar 25 | Payment Testing',
+                    'second_member | Test private mar 25 | Payment Testing',
+                    'third_member | Older engagement | API Rollout',
+                ])
+            expect(screen.getByTestId('assignments-table')
+                .getAttribute('data-back-url'))
+                .toBe('/work/engagements?tab=assignments')
+        })
+
+        it('opens the assignments tab from the url', () => {
+            mockedUseFetchEngagements.mockReturnValue({
+                engagements: [engagementWithAssignments],
+                error: undefined,
+                isLoading: false,
+                mutate: jest.fn(),
+            })
+
+            renderPage('/engagements?tab=assignments', '/engagements')
+
+            expect(screen.getByRole('tab', { name: 'Assignments' })
+                .getAttribute('aria-selected'))
+                .toBe('true')
+            expect(screen.getAllByTestId('assignment-row'))
+                .toHaveLength(2)
+        })
+
+        it('does not narrow assignments by the engagement status filter', async () => {
+            renderPage('/engagements', '/engagements')
+
+            fireEvent.click(screen.getByRole('button', { name: 'Apply status filter' }))
+            await waitFor(() => {
+                expect(mockedUseFetchEngagements.mock.lastCall?.[1])
+                    .toEqual(expect.objectContaining({ status: ['Open', 'Active'] }))
+            })
+
+            fireEvent.click(screen.getByRole('tab', { name: 'Assignments' }))
+
+            await waitFor(() => {
+                expect(mockedUseFetchEngagements.mock.lastCall?.[1])
+                    .toEqual(expect.objectContaining({ status: undefined }))
+            })
+        })
+
+        it('keeps talent managers scoped to their member projects', async () => {
+            mockedUseFetchProjects.mockReturnValue({
+                error: undefined,
+                isLoading: false,
+                isValidating: false,
+                projects: [{
+                    id: 200,
+                    name: 'Payment Testing',
+                }],
+            })
+
+            renderPage('/engagements?tab=assignments', '/engagements', talentManagerContextValue)
+
+            expect(screen.getByTestId('assignments-table'))
+                .toBeTruthy()
+            await waitFor(() => {
+                expect(mockedUseFetchEngagements)
+                    .toHaveBeenLastCalledWith(
+                        undefined,
+                        expect.objectContaining({
+                            includePrivate: true,
+                            projectIds: ['200'],
+                        }),
+                        {
+                            enabled: true,
+                        },
+                    )
+            })
+        })
+
+        it('does not offer the tabs on project engagement routes', () => {
+            renderPage(
+                '/projects/200/engagements?tab=assignments',
+                '/projects/:projectId/engagements',
+            )
+
+            expect(screen.queryByRole('tab', { name: 'Assignments' }))
+                .toBeNull()
+            expect(screen.queryByTestId('assignments-table'))
+                .toBeNull()
+            expect(screen.getByText('Project Tabs'))
+                .toBeTruthy()
         })
     })
 

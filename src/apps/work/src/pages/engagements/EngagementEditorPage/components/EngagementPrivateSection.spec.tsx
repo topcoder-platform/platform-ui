@@ -132,6 +132,7 @@ interface TestFormValues {
         ratePerHour: string
         standardHoursPerWeek: string
         startDate: string
+        totalHours?: string
     }>
     isPrivate: boolean
     requiredMemberCount: number | string
@@ -203,6 +204,21 @@ describe('EngagementPrivateSection', () => {
         expect(screen.getByRole('link', { name: 'Assignments' })
             .getAttribute('href'))
             .toBe('/projects/123/engagements/engagement-1/assignments')
+    })
+
+    it.each([
+        ['480', '480'],
+        [undefined, '-'],
+    ])('shows total hours %p in the assignment details summary as %p', (totalHours, shown) => {
+        renderPrivateSection({
+            assignedMemberHandles: ['assigned_member'],
+            assignmentDetails: [{ ...defaultAssignmentDetails, totalHours }],
+            isPrivate: true,
+            requiredMemberCount: 1,
+        })
+
+        expect(screen.getByText('Total Hours:').parentElement?.textContent)
+            .toBe(`Total Hours: ${shown},`)
     })
 
     it('reports the assignment dialog state so the editor can pause autosave', () => {

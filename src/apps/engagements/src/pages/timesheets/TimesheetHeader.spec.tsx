@@ -55,13 +55,13 @@ describe('TimesheetHeader', () => {
             .toBe('312.5')
     })
 
-    it('leaves hours left blank when the assignment has no total hours', () => {
+    it('shows a hyphen for hours left when the assignment has no total hours', () => {
         renderHeader(assignment(), true)
 
         expect(factValue('Total Hours'))
             .toBe('Not set')
         expect(factValue('Hours Left'))
-            .toBe('')
+            .toBe('-')
     })
 
     it('says hours left is unavailable when payments could not be read', () => {

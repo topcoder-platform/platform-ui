@@ -9,7 +9,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { PageWrapper } from '~/apps/review/src/lib'
@@ -44,6 +44,8 @@ import {
 } from '../../../lib/services'
 import {
     ConfirmationModal,
+    EngagementAssignmentRow,
+    EngagementAssignmentsTable,
     EngagementsFilter,
     EngagementsListFilters,
     ErrorMessage,
@@ -70,6 +72,11 @@ import {
 import styles from './EngagementsListPage.module.scss'
 
 type SortOrder = 'asc' | 'desc'
+
+type EngagementsPageTab = 'assignments' | 'engagements'
+
+const TAB_QUERY_PARAM = 'tab'
+const ASSIGNMENTS_TAB: EngagementsPageTab = 'assignments'
 
 type EngagementSortField =
     | 'createdAt'
@@ -422,6 +429,13 @@ export const EngagementsListPage: FC = () => {
     const params: Readonly<{ projectId?: string }> = useParams<'projectId'>()
     const projectId = params.projectId
     const isAllEngagementsPage = !projectId
+    const [searchParams, setSearchParams] = useSearchParams()
+    // The tab lives in the URL so the assignment pages can link straight back to it.
+    const activeTab: EngagementsPageTab = isAllEngagementsPage
+        && searchParams.get(TAB_QUERY_PARAM) === ASSIGNMENTS_TAB
+        ? 'assignments'
+        : 'engagements'
+    const isAssignmentsTab = activeTab === 'assignments'
 
     const workAppContext = useContext(WorkAppContext)
     const contextValue = workAppContext as WorkAppContextModel
@@ -479,12 +493,15 @@ export const EngagementsListPage: FC = () => {
         sortOrder: isAllEngagementsPage
             ? 'desc'
             : undefined,
-        status: filters.status,
+        // The engagement status filter belongs to the Engagements tab; assignments are filtered on
+        // their own status, so they are listed across engagements of every status.
+        status: isAssignmentsTab ? undefined : filters.status,
     }), [
         canViewEngagements,
         canManage,
         filters.status,
         isAllEngagementsPage,
+        isAssignmentsTab,
         isTalentManagerOnly,
         projectId,
         scopedProjectIds,
@@ -519,6 +536,30 @@ export const EngagementsListPage: FC = () => {
 
         return lookup
     }, [engagementsResult.engagements, projectId])
+
+    const assignmentRows = useMemo<EngagementAssignmentRow[]>(() => (
+        engagementsResult.engagements.flatMap(engagement => {
+            const engagementProjectId = getEngagementProjectId(engagement, projectId)
+            const projectName = getEngagementProjectName(
+                engagement,
+                projectNameLookup,
+                undefined,
+                projectId,
+            )
+
+            return (Array.isArray(engagement.assignments) ? engagement.assignments : [])
+                .map(assignment => ({
+                    assignment,
+                    engagement,
+                    projectId: engagementProjectId,
+                    projectName,
+                }))
+        })
+    ), [engagementsResult.engagements, projectId, projectNameLookup])
+
+    const handleTabChange = useCallback((tab: EngagementsPageTab): void => {
+        setSearchParams(tab === ASSIGNMENTS_TAB ? { [TAB_QUERY_PARAM]: ASSIGNMENTS_TAB } : {})
+    }, [setSearchParams])
 
     const filteredEngagements = useMemo(() => {
         const memberHandleFilter = (filters.memberHandle || '')
@@ -710,7 +751,7 @@ export const EngagementsListPage: FC = () => {
     }, [filteredEngagements.length, isAllEngagementsPage, page, perPage])
 
     const pageTitle = isAllEngagementsPage
-        ? 'All Engagements'
+        ? (isAssignmentsTab ? 'All Assignments' : 'All Engagements')
         : (
             projectResult.project?.name
                 ? projectResult.project.name
@@ -725,6 +766,7 @@ export const EngagementsListPage: FC = () => {
     const assignmentsBackUrl = isAllEngagementsPage
         ? `${rootRoute}/engagements`
         : `${rootRoute}/projects/${projectId}/engagements`
+    const assignmentsTabBackUrl = `${rootRoute}/engagements?${TAB_QUERY_PARAM}=${ASSIGNMENTS_TAB}`
     const isProjectActive = String(projectResult.project?.status || '')
         .trim()
         .toLowerCase() === PROJECT_STATUS.ACTIVE
@@ -777,9 +819,30 @@ export const EngagementsListPage: FC = () => {
         )
         : undefined
 
-    const projectTabs = !isAllEngagementsPage
+    const pageTabs = !isAllEngagementsPage
         ? <ProjectListTabs projectId={projectId as string} />
-        : undefined
+        : (
+            <div className={styles.tabs} role='tablist'>
+                <button
+                    aria-selected={!isAssignmentsTab}
+                    className={classNames(styles.tab, !isAssignmentsTab ? styles.activeTab : undefined)}
+                    onClick={() => handleTabChange('engagements')}
+                    role='tab'
+                    type='button'
+                >
+                    Engagements
+                </button>
+                <button
+                    aria-selected={isAssignmentsTab}
+                    className={classNames(styles.tab, isAssignmentsTab ? styles.activeTab : undefined)}
+                    onClick={() => handleTabChange('assignments')}
+                    role='tab'
+                    type='button'
+                >
+                    Assignments
+                </button>
+            </div>
+        )
     const billingAccountExpiredNotice = !isAllEngagementsPage && projectId
         ? (
             <ProjectBillingAccountExpiredNotice
@@ -806,7 +869,7 @@ export const EngagementsListPage: FC = () => {
                 titleAction={titleAction}
             >
                 {billingAccountExpiredNotice}
-                {projectTabs}
+                {pageTabs}
                 <ErrorMessage message={accessDeniedMessage} />
             </PageWrapper>
         )
@@ -827,7 +890,7 @@ export const EngagementsListPage: FC = () => {
                 titleAction={titleAction}
             >
                 {billingAccountExpiredNotice}
-                {projectTabs}
+                {pageTabs}
                 <LoadingSpinner />
             </PageWrapper>
         )
@@ -842,7 +905,7 @@ export const EngagementsListPage: FC = () => {
                 titleAction={titleAction}
             >
                 {billingAccountExpiredNotice}
-                {projectTabs}
+                {pageTabs}
                 <ErrorMessage
                     message={engagementsResult.error.message}
                     onRetry={() => {
@@ -862,107 +925,116 @@ export const EngagementsListPage: FC = () => {
             titleAction={titleAction}
         >
             {billingAccountExpiredNotice}
-            {projectTabs}
-            <div className={styles.container}>
-                <EngagementsFilter
-                    filters={filters}
-                    showMemberHandleFilter={contextValue.isAdmin && isAllEngagementsPage}
-                    showProjectNameFilter={isAllEngagementsPage}
-                    onFiltersChange={handleFiltersChange}
-                />
-
-                <div className={styles.tableWrap}>
-                    <table className={styles.table}>
-                        <thead>
-                            <tr>
-                                {columns.map(column => (
-                                    <th key={column.label}>
-                                        {column.sortable && column.fieldName
-                                            ? (
-                                                <button
-                                                    type='button'
-                                                    className={styles.sortButton}
-                                                    data-field-name={column.fieldName}
-                                                    onClick={handleSortButtonClick}
-                                                >
-                                                    {column.label}
-                                                    {filters.sortBy === column.fieldName
-                                                        ? getSortIndicator(
-                                                            filters.sortBy as (
-                                                                EngagementSortField | undefined
-                                                            ),
-                                                            (filters.sortOrder || 'asc') as SortOrder,
-                                                        )
-                                                        : ''}
-                                                </button>
-                                            )
-                                            : <span>{column.label}</span>}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {paginatedEngagements.length
-                                ? renderEngagementRows(
-                                    paginatedEngagements,
-                                    canEditEngagement,
-                                    canDelete,
-                                    setEngagementToDelete,
-                                    assignmentsBackUrl,
-                                    projectNameLookup,
-                                    projectId,
-                                    projectResult.project?.name || '',
-                                )
-                                : (
-                                    <tr>
-                                        <td colSpan={7} className={styles.emptyRow}>
-                                            No engagements found.
-                                        </td>
-                                    </tr>
-                                )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {isAllEngagementsPage && filteredEngagements.length > 0 && (
-                    <Pagination
-                        page={page}
-                        perPage={perPage}
-                        total={filteredEngagements.length}
-                        itemLabel='engagements'
-                        onPageChange={setPage}
-                        onPerPageChange={nextPerPage => {
-                            setPerPage(nextPerPage)
-                            setPage(1)
-                        }}
+            {pageTabs}
+            {isAssignmentsTab
+                ? (
+                    <EngagementAssignmentsTable
+                        backUrl={assignmentsTabBackUrl}
+                        rows={assignmentRows}
                     />
-                )}
-
-                {engagementToDelete
-                    ? (
-                        <ConfirmationModal
-                            confirmButtonDanger
-                            confirmDisabled={isDeletingEngagement}
-                            confirmText={
-                                isDeletingEngagement
-                                    ? 'Deleting...'
-                                    : 'Delete'
-                            }
-                            message={
-                                'Are you sure you want to delete '
-                                + `"${engagementToDelete.title || 'this engagement'}"? `
-                                + 'This action cannot be undone.'
-                            }
-                            onCancel={handleDeleteCancel}
-                            onConfirm={() => {
-                                handleDeleteConfirm()
-                                    .catch(() => undefined)
-                            }}
-                            title='Confirm Delete'
+                )
+                : (
+                    <div className={styles.container}>
+                        <EngagementsFilter
+                            filters={filters}
+                            showMemberHandleFilter={contextValue.isAdmin && isAllEngagementsPage}
+                            showProjectNameFilter={isAllEngagementsPage}
+                            onFiltersChange={handleFiltersChange}
                         />
-                    )
-                    : undefined}
-            </div>
+
+                        <div className={styles.tableWrap}>
+                            <table className={styles.table}>
+                                <thead>
+                                    <tr>
+                                        {columns.map(column => (
+                                            <th key={column.label}>
+                                                {column.sortable && column.fieldName
+                                                    ? (
+                                                        <button
+                                                            type='button'
+                                                            className={styles.sortButton}
+                                                            data-field-name={column.fieldName}
+                                                            onClick={handleSortButtonClick}
+                                                        >
+                                                            {column.label}
+                                                            {filters.sortBy === column.fieldName
+                                                                ? getSortIndicator(
+                                                                    filters.sortBy as (
+                                                                        EngagementSortField | undefined
+                                                                    ),
+                                                                    (filters.sortOrder || 'asc') as SortOrder,
+                                                                )
+                                                                : ''}
+                                                        </button>
+                                                    )
+                                                    : <span>{column.label}</span>}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {paginatedEngagements.length
+                                        ? renderEngagementRows(
+                                            paginatedEngagements,
+                                            canEditEngagement,
+                                            canDelete,
+                                            setEngagementToDelete,
+                                            assignmentsBackUrl,
+                                            projectNameLookup,
+                                            projectId,
+                                            projectResult.project?.name || '',
+                                        )
+                                        : (
+                                            <tr>
+                                                <td colSpan={7} className={styles.emptyRow}>
+                                                    No engagements found.
+                                                </td>
+                                            </tr>
+                                        )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {isAllEngagementsPage && filteredEngagements.length > 0 && (
+                            <Pagination
+                                page={page}
+                                perPage={perPage}
+                                total={filteredEngagements.length}
+                                itemLabel='engagements'
+                                onPageChange={setPage}
+                                onPerPageChange={nextPerPage => {
+                                    setPerPage(nextPerPage)
+                                    setPage(1)
+                                }}
+                            />
+                        )}
+
+                        {engagementToDelete
+                            ? (
+                                <ConfirmationModal
+                                    confirmButtonDanger
+                                    confirmDisabled={isDeletingEngagement}
+                                    confirmText={
+                                        isDeletingEngagement
+                                            ? 'Deleting...'
+                                            : 'Delete'
+                                    }
+                                    message={
+                                        'Are you sure you want to delete '
+                                        + `"${engagementToDelete.title || 'this engagement'}"? `
+                                        + 'This action cannot be undone.'
+                                    }
+                                    onCancel={handleDeleteCancel}
+                                    onConfirm={() => {
+                                        handleDeleteConfirm()
+                                            .catch(() => undefined)
+                                    }}
+                                    title='Confirm Delete'
+                                />
+                            )
+                            : undefined}
+                    </div>
+                )}
         </PageWrapper>
     )
 }

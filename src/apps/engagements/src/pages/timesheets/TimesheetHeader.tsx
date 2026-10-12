@@ -20,10 +20,10 @@ const withHandle = (name: string | null | undefined, handle: string): string => 
     name ? `${name} (${handle})` : handle
 )
 
-/** Blank without a total, as there is nothing to count down from; "Unavailable" if payments failed. */
+/** "-" without a total, as there is nothing to count down from; "Unavailable" if payments failed. */
 const formatHoursLeft = (assignment: TimesheetAssignment): string => {
     if (assignment.totalHours === null || assignment.totalHours === undefined) {
-        return ''
+        return '-'
     }
 
     return assignment.hoursLeft === null || assignment.hoursLeft === undefined
