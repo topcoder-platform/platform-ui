@@ -2,8 +2,9 @@
 import '@testing-library/jest-dom'
 
 import React from 'react'
-import { render, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 
+import { EngagementStatus } from '../../lib/models'
 import { getEngagements } from '../../lib/services'
 
 import EngagementListPage from './EngagementListPage'
@@ -88,15 +89,17 @@ describe('EngagementListPage', () => {
     })
 
     it.each([
-        'Administrator',
-        'Talent Manager',
-        'Topcoder Talent Manager',
-        ' ADMINISTRATOR ',
-    ])('includes private engagements for the %s role', async role => {
+        ['Administrator'],
+        [' ADMINISTRATOR '],
+        ['Talent Manager'],
+        ['Topcoder Talent Manager'],
+        ['  TOPCODER TALENT MANAGER  '],
+        ['Topcoder Project Manager', 'Talent Manager'],
+    ])('includes private engagements for authorized roles: %j', async (...roles) => {
         mockUseProfileContext.mockReturnValue({
             isLoggedIn: true,
             profile: {
-                roles: [role],
+                roles,
             },
         })
 
@@ -116,14 +119,63 @@ describe('EngagementListPage', () => {
         'Topcoder Project Manager',
         'Task Manager',
         'Topcoder Task Manager',
+        '  TOPCODER PROJECT MANAGER  ',
+        'Connect Admin',
         'Group Administrator',
         'Talent Manager Assistant',
-    ])('keeps private engagements excluded for the %s role', async role => {
+    ])('loads public opportunities without requesting private access for %s', async role => {
         mockUseProfileContext.mockReturnValue({
             isLoggedIn: true,
             profile: {
                 roles: [role],
             },
+        })
+        mockGetEngagements.mockImplementation(async params => {
+            if (params?.includePrivate) {
+                throw new Error('You are not authorized to include private engagements.')
+            }
+
+            return {
+                data: [{
+                    id: 'public-engagement',
+                    nanoId: 'public-opportunity',
+                    projectId: '123',
+                    title: 'Public opportunity',
+                    description: 'Open public engagement',
+                    duration: {},
+                    timeZones: [],
+                    countries: [],
+                    requiredSkills: [],
+                    status: EngagementStatus.OPEN,
+                    createdAt: '2026-10-09T00:00:00Z',
+                    updatedAt: '2026-10-09T00:00:00Z',
+                    createdBy: '123',
+                    isPrivate: false,
+                }],
+                page: 1,
+                perPage: 12,
+                total: 1,
+                totalPages: 1,
+            }
+        })
+
+        render(<EngagementListPage />)
+
+        expect(await screen.findByText('engagement-card'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Unable to load engagement opportunities. Please try again.'))
+            .not.toBeInTheDocument()
+        expect(mockGetEngagements)
+            .toHaveBeenCalledWith(expect.objectContaining({
+                includePrivate: false,
+                status: EngagementStatus.OPEN,
+            }))
+    })
+
+    it.each([undefined, {}])('keeps anonymous or missing-role profiles public: %j', async profile => {
+        mockUseProfileContext.mockReturnValue({
+            isLoggedIn: Boolean(profile),
+            profile,
         })
 
         render(<EngagementListPage />)
@@ -133,17 +185,6 @@ describe('EngagementListPage', () => {
                 .toHaveBeenCalledWith(expect.objectContaining({
                     includePrivate: false,
                 }))
-        })
-    })
-
-    it('requests public engagements for anonymous visitors', async () => {
-        mockUseProfileContext.mockReturnValue({ isLoggedIn: false })
-
-        render(<EngagementListPage />)
-
-        await waitFor(() => {
-            expect(mockGetEngagements)
-                .toHaveBeenCalledWith(expect.objectContaining({ includePrivate: false }))
         })
     })
 })
