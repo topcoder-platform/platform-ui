@@ -479,7 +479,7 @@ export const ApplicationsListPage: FC = () => {
                                 <th>Applicant Name</th>
                                 <th>Email</th>
                                 <th>Applied Date</th>
-                                <th>Years of Experience</th>
+                                <th>Expected Pay Rate</th>
                                 <th>Phone Number</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -523,7 +523,7 @@ export const ApplicationsListPage: FC = () => {
                                             <td>{application.name || '-'}</td>
                                             <td>{application.email || '-'}</td>
                                             <td>{formatDate(application.createdAt)}</td>
-                                            <td>{application.yearsOfExperience ?? '-'}</td>
+                                            <td>{application.expectedPayRate || '-'}</td>
                                             <td>{application.mobileNumber || '-'}</td>
                                             <td>
                                                 <span
