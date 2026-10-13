@@ -107,7 +107,7 @@ describe('ApplicationDetailModal', () => {
             />,
         )
 
-        expect(screen.getByText('Expected pay rate'))
+        expect(screen.getByText('Expected Pay Rate (USD/Hour)'))
             .toBeTruthy()
         expect(screen.getByText('$50/hour'))
             .toBeTruthy()

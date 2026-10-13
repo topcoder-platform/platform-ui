@@ -125,7 +125,7 @@ const ApplicationSection: FC<ApplicationSectionProps> = (
                     </span>
                 </div>
                 <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Expected pay rate</span>
+                    <span className={styles.metaLabel}>Expected Pay Rate (USD/Hour)</span>
                     <span className={styles.metaValue}>
                         {application.expectedPayRate || 'Not specified'}
                     </span>
