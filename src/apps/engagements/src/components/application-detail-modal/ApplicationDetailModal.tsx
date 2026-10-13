@@ -125,9 +125,21 @@ const ApplicationSection: FC<ApplicationSectionProps> = (
                     </span>
                 </div>
                 <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Years of experience</span>
+                    <span className={styles.metaLabel}>Expected pay rate</span>
                     <span className={styles.metaValue}>
-                        {application.yearsOfExperience ?? 'Not specified'}
+                        {application.expectedPayRate || 'Not specified'}
+                    </span>
+                </div>
+                {application.yearsOfExperience !== undefined && application.yearsOfExperience !== null && (
+                    <div className={styles.metaItem}>
+                        <span className={styles.metaLabel}>Years of experience</span>
+                        <span className={styles.metaValue}>{application.yearsOfExperience}</span>
+                    </div>
+                )}
+                <div className={styles.metaItem}>
+                    <span className={styles.metaLabel}>How you found this opportunity</span>
+                    <span className={styles.metaValue}>
+                        {application.referralSource || 'Not specified'}
                     </span>
                 </div>
                 <div className={styles.metaItem}>
@@ -179,9 +191,9 @@ const DocumentsSection: FC<DocumentsSectionProps> = (
                         <span className={styles.metaValue}>Not provided</span>
                     )}
                 </div>
-                <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Resume / Profile Link</span>
-                    {application.resumeUrl ? (
+                {application.resumeUrl && (
+                    <div className={styles.metaItem}>
+                        <span className={styles.metaLabel}>Resume / Profile Link</span>
                         <a
                             className={styles.link}
                             href={application.resumeUrl}
@@ -190,10 +202,8 @@ const DocumentsSection: FC<DocumentsSectionProps> = (
                         >
                             {application.resumeUrl}
                         </a>
-                    ) : (
-                        <span className={styles.metaValue}>Not provided</span>
-                    )}
-                </div>
+                    </div>
+                )}
                 <div className={styles.metaItem}>
                     <span className={styles.metaLabel}>Portfolio</span>
                     {hasPortfolioUrls ? (

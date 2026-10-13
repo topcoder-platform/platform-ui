@@ -25,6 +25,8 @@ export interface Application {
     portfolioUrls?: string[]
     yearsOfExperience?: number
     availability: string
+    expectedPayRate?: string
+    referralSource?: string
     status: ApplicationStatus
     createdAt: string
     updatedAt: string
@@ -45,12 +47,11 @@ export interface CreateApplicationRequest {
     email?: string
     address?: string
     coverLetter: string
-    /** Link to a resume or professional profile (LinkedIn, Google Drive CV, personal website). */
-    resumeUrl?: string
     /** URL of the CV file uploaded to S3 through Filestack. */
     cvFileUrl?: string
     portfolioUrls?: string[]
-    yearsOfExperience?: number
+    expectedPayRate?: string
+    referralSource?: string
     availability?: string
     mobileNumber?: string
 }

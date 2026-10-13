@@ -62,17 +62,22 @@ export interface Application {
     cvFileUrl?: string
     email: string
     engagementId: number | string
+    /** Pay rate the applicant expects, as entered by the applicant. */
+    expectedPayRate?: string
     handle: string
     id: number | string
     mobileNumber?: string
     name: string
     portfolioUrls?: string[]
+    /** How the applicant came to know of the opportunity. */
+    referralSource?: string
     /** Link to a resume or professional profile (LinkedIn, Google Drive CV, personal website). */
     resumeUrl?: string
     status: ApplicationStatus | string
     updatedAt?: string
     userId: number | string
-    yearsOfExperience: number
+    /** Only present on applications submitted before the field was removed from the form. */
+    yearsOfExperience?: number
 }
 
 /**

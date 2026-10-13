@@ -169,8 +169,8 @@ const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
                                 <span className={styles.value}>{formatDate(application.createdAt)}</span>
                             </div>
                             <div>
-                                <span className={styles.label}>Experience (years)</span>
-                                <span className={styles.value}>{application.yearsOfExperience ?? '-'}</span>
+                                <span className={styles.label}>Expected pay rate</span>
+                                <span className={styles.value}>{application.expectedPayRate || '-'}</span>
                             </div>
                             <div>
                                 <span className={styles.label}>Availability</span>
@@ -179,6 +179,10 @@ const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
                             <div>
                                 <span className={styles.label}>Address</span>
                                 <span className={styles.value}>{application.address || '-'}</span>
+                            </div>
+                            <div>
+                                <span className={styles.label}>How did you come to know of the opportunity?</span>
+                                <span className={styles.value}>{application.referralSource || '-'}</span>
                             </div>
                             <div>
                                 <span className={styles.label}>Status</span>
@@ -207,22 +211,6 @@ const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
                                                 target='_blank'
                                             >
                                                 View CV
-                                            </a>
-                                        )
-                                        : <span className={styles.value}>-</span>}
-                                </div>
-
-                                <div className={styles.linkRow}>
-                                    <span className={styles.linkLabel}>Resume / Profile Link</span>
-                                    {application.resumeUrl
-                                        ? (
-                                            <a
-                                                className={styles.link}
-                                                href={application.resumeUrl}
-                                                rel='noreferrer noopener'
-                                                target='_blank'
-                                            >
-                                                {application.resumeUrl}
                                             </a>
                                         )
                                         : <span className={styles.value}>-</span>}

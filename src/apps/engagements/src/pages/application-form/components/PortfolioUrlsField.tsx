@@ -68,6 +68,10 @@ const PortfolioUrlsField: FC<PortfolioUrlsFieldProps> = (props: PortfolioUrlsFie
     const fields = fieldArray.fields
     const append = fieldArray.append
     const remove = fieldArray.remove
+    const listErrorMessage = (
+        errors.portfolioUrls?.message
+        ?? errors.portfolioUrls?.root?.message
+    ) as string | undefined
 
     const handleAdd = useCallback(() => {
         if (fields.length >= MAX_URLS) {
@@ -87,8 +91,11 @@ const PortfolioUrlsField: FC<PortfolioUrlsFieldProps> = (props: PortfolioUrlsFie
     return (
         <div className={styles.fieldGroup}>
             <div>
-                <div className={styles.fieldLabel}>Portfolio URLs</div>
-                <div className={styles.fieldHint}>{`Add up to ${MAX_URLS} links.`}</div>
+                <div className={styles.fieldLabel}>
+                    Portfolio URLs
+                    <span className={styles.requiredIndicator} aria-hidden='true'>*</span>
+                </div>
+                <div className={styles.fieldHint}>{`Add at least one link, up to ${MAX_URLS}.`}</div>
             </div>
             <div className={styles.portfolioList}>
                 {fields.length === 0 && (
@@ -138,6 +145,11 @@ const PortfolioUrlsField: FC<PortfolioUrlsFieldProps> = (props: PortfolioUrlsFie
                     )
                 })}
             </div>
+            {listErrorMessage && (
+                <div className={styles.fieldError} id='portfolio-urls-error'>
+                    {listErrorMessage}
+                </div>
+            )}
             <button
                 type='button'
                 className={styles.addButton}

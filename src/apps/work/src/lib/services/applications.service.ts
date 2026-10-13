@@ -90,6 +90,7 @@ function normalizeApplication(application: Partial<Application>): Application {
             ? application.email
             : '',
         engagementId: application.engagementId || '',
+        expectedPayRate: toOptionalString(application.expectedPayRate),
         handle: typeof application.handle === 'string'
             ? application.handle
             : '',
@@ -101,13 +102,17 @@ function normalizeApplication(application: Partial<Application>): Application {
             ? application.name
             : '',
         portfolioUrls: normalizePortfolioUrls(application.portfolioUrls),
+        referralSource: toOptionalString(application.referralSource),
         resumeUrl: toOptionalString(application.resumeUrl),
         status: normalizeStatus(application.status || ''),
         updatedAt: typeof application.updatedAt === 'string'
             ? application.updatedAt
             : undefined,
         userId: application.userId || '',
-        yearsOfExperience: Number(application.yearsOfExperience) || 0,
+        yearsOfExperience: application.yearsOfExperience === undefined
+            || application.yearsOfExperience === null
+            ? undefined
+            : Number(application.yearsOfExperience),
     }
 }
 
