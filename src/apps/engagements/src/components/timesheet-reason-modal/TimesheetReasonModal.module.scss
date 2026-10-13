@@ -18,5 +18,12 @@
         border: 1px solid $black-40;
         border-radius: 6px;
         resize: vertical;
+
+        // The app's focus stroke, replacing the browser's default outline.
+        &:focus {
+            outline: none;
+            border-color: $turq-160;
+            box-shadow: 0 0 0 1px $turq-160;
+        }
     }
 }

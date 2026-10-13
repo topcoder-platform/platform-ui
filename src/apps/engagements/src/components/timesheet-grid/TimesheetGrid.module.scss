@@ -57,10 +57,20 @@
     padding: 6px 8px;
     border: 1px solid $black-40;
     border-radius: 6px;
+
+    // The app's focus stroke, replacing the browser's default outline.
+    &:focus {
+        outline: none;
+        border-color: $turq-160;
+        box-shadow: 0 0 0 1px $turq-160;
+    }
 }
 
-.inputError {
+// Stays red while focused, so the error is not hidden by the focus stroke.
+.inputError,
+.inputError:focus {
     border-color: $red-100;
+    box-shadow: none;
 }
 
 .error {

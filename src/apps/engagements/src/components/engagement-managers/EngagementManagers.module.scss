@@ -52,6 +52,13 @@
 .addFormField {
     flex: 1 1 260px;
     min-width: 220px;
+
+    // The shared picker focuses in blue for the Work App; in the Engagements app fields focus green.
+    // The doubled class outranks the picker's own rule.
+    :global(.challenge-select__control.challenge-select__control--is-focused) {
+        border-color: $turq-160;
+        box-shadow: 0 0 0 1px $turq-160;
+    }
 }
 
 .emptyState {
