@@ -169,7 +169,7 @@ const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
                                 <span className={styles.value}>{formatDate(application.createdAt)}</span>
                             </div>
                             <div>
-                                <span className={styles.label}>Expected pay rate</span>
+                                <span className={styles.label}>Expected Pay Rate (USD/Hour)</span>
                                 <span className={styles.value}>{application.expectedPayRate || '-'}</span>
                             </div>
                             <div>

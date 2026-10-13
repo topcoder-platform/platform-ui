@@ -444,7 +444,7 @@ const ApplicationFormPage: FC = () => {
                     errors.expectedPayRate && styles.inputError,
                 )}
                 maxLength={100}
-                placeholder='e.g. $50/hour'
+                placeholder='e.g. 50'
                 value={renderProps.field.value ?? ''}
                 onChange={handleTextInputChange(renderProps.field)}
                 disabled={isFormDisabled}
@@ -760,7 +760,7 @@ const ApplicationFormPage: FC = () => {
 
                     <div className={styles.fieldGroup}>
                         <label className={styles.fieldLabel} htmlFor='expected-pay-rate'>
-                            Expected Pay Rate
+                            Expected Pay Rate (USD/Hour)
                             <span className={styles.requiredIndicator} aria-hidden='true'>*</span>
                         </label>
                         <Controller
