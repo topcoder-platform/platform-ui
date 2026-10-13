@@ -1730,12 +1730,56 @@ export const ProjectShowcasePage: FC = () => {
                     handleClosePreviewModal()
                 }}
                 size='body'
+                buttons={(
+                    <footer className={styles.modalFooter}>
+                        <Button
+                            label='Cancel'
+                            onClick={function onClick() {
+                                setIsManageModalOpen(false)
+                                setFormError(undefined)
+                            }}
+                            secondary
+                            size='lg'
+                            type='button'
+                        />
+                        <Button
+                            label='Preview'
+                            onClick={function onClick() {
+                                handleOpenPreview()
+                                    .catch(() => undefined)
+                            }}
+                            secondary
+                            size='lg'
+                            type='button'
+                            disabled={isSaving || isLoadingPostDetails || isLoadingPreview}
+                        />
+                        <Button
+                            label={manageMode === 'create' ? 'Create' : 'Save'}
+                            primary
+                            size='lg'
+                            type='button'
+                            onClick={handleSavePost()}
+                            disabled={isSaving || isLoadingPostDetails}
+                        />
+                        {canPublishForm && (
+                            <Button
+                                label='Publish'
+                                onClick={handleSavePost(true)}
+                                primary
+                                size='lg'
+                                type='button'
+                                disabled={isSaving || isLoadingPostDetails}
+                            />
+                        )}
+                    </footer>
+                )}
             >
                 <FormProvider {...formMethods}>
                     <form
                         className={styles.modalForm}
                         onSubmit={handleSavePost()}
                     >
+                        <button type='submit' hidden>Save story</button>
                         <div className={styles.modalBody}>
                             {formError && (
                                 <div className={styles.modalError}>
@@ -1905,47 +1949,6 @@ export const ProjectShowcasePage: FC = () => {
                                 />
                             </div>
                         </div>
-
-                        <footer className={styles.modalFooter}>
-                            <Button
-                                label='Cancel'
-                                onClick={function onClick() {
-                                    setIsManageModalOpen(false)
-                                    setFormError(undefined)
-                                }}
-                                secondary
-                                size='lg'
-                                type='button'
-                            />
-                            <Button
-                                label='Preview'
-                                onClick={function onClick() {
-                                    handleOpenPreview()
-                                        .catch(() => undefined)
-                                }}
-                                secondary
-                                size='lg'
-                                type='button'
-                                disabled={isSaving || isLoadingPostDetails || isLoadingPreview}
-                            />
-                            <Button
-                                label={manageMode === 'create' ? 'Create' : 'Save'}
-                                primary
-                                size='lg'
-                                type='submit'
-                                disabled={isSaving || isLoadingPostDetails}
-                            />
-                            {canPublishForm && (
-                                <Button
-                                    label='Publish'
-                                    onClick={handleSavePost(true)}
-                                    primary
-                                    size='lg'
-                                    type='button'
-                                    disabled={isSaving || isLoadingPostDetails}
-                                />
-                            )}
-                        </footer>
                     </form>
                 </FormProvider>
             </BaseModal>
@@ -1955,6 +1958,34 @@ export const ProjectShowcasePage: FC = () => {
                 title='Preview'
                 onClose={handleClosePreviewModal}
                 size='body'
+                buttons={(
+                    <footer className={styles.modalFooter}>
+                        <Button
+                            label='Cancel'
+                            onClick={handleClosePreviewModal}
+                            secondary
+                            size='lg'
+                            type='button'
+                            disabled={isSaving || isPublishing}
+                        />
+                        {canPublishPreview && (
+                            <Button
+                                label='Publish'
+                                onClick={function onClick() {
+                                    if (previewPost) {
+                                        handlePublishPost(previewPost)
+                                    } else {
+                                        handleSavePost(true)()
+                                    }
+                                }}
+                                primary
+                                size='lg'
+                                type='button'
+                                disabled={isLoadingPreview || !previewData || isSaving || isPublishing}
+                            />
+                        )}
+                    </footer>
+                )}
                 bodyClassName={styles.previewModalBody}
                 classNames={{
                     modal: styles.previewModal,
@@ -1968,32 +1999,6 @@ export const ProjectShowcasePage: FC = () => {
                 {!isLoadingPreview && previewData && (
                     <ShowcasePostPreview data={previewData} />
                 )}
-                <footer className={styles.modalFooter}>
-                    <Button
-                        label='Cancel'
-                        onClick={handleClosePreviewModal}
-                        secondary
-                        size='lg'
-                        type='button'
-                        disabled={isSaving || isPublishing}
-                    />
-                    {canPublishPreview && (
-                        <Button
-                            label='Publish'
-                            onClick={function onClick() {
-                                if (previewPost) {
-                                    handlePublishPost(previewPost)
-                                } else {
-                                    handleSavePost(true)()
-                                }
-                            }}
-                            primary
-                            size='lg'
-                            type='button'
-                            disabled={isLoadingPreview || !previewData || isSaving || isPublishing}
-                        />
-                    )}
-                </footer>
             </BaseModal>
 
             {confirmation.modal}

@@ -232,7 +232,8 @@ describe('TimesheetGrid', () => {
 
         expect(screen.getByLabelText('Hours worked on 07-09-2026'))
             .toBeEnabled()
-        expect(screen.getByText('Submitted'))
+        // Submitted entries read as "Pending Approval", as the filters call them.
+        expect(screen.getByText('Pending Approval'))
             .toBeInTheDocument()
     })
 

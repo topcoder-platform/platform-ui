@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 import { useConfirmationModal } from '~/libs/ui'
 
@@ -24,7 +25,12 @@ jest.mock('filestack-js', () => ({ init: jest.fn() }))
 jest.mock('react-router-dom', () => ({ useParams: () => ({ projectId: '123' }) }))
 jest.mock('~/libs/ui', () => ({
     BaseModal: (props: any): JSX.Element => (props.open
-        ? <div role='dialog' aria-label={props.title}>{props.children}</div> : <></>),
+        ? (
+            <div role='dialog' aria-label={props.title}>
+                <div data-testid='modal-scroll-content'>{props.children}</div>
+                {props.buttons}
+            </div>
+        ) : <></>),
     Button: (props: any): JSX.Element => (
         <button
             type={props.type === 'submit' ? 'submit' : 'button'}
@@ -225,6 +231,32 @@ describe('Showcase creation and publishing', () => {
         })
         render(<ProjectShowcasePage />)
     }
+
+    it('still saves from Enter when the visible actions are outside the form', async () => {
+        fillPost()
+        await userEvent.type(screen.getByLabelText('Title'), '{enter}')
+        await waitFor(() => expect(createProjectShowcasePost)
+            .toHaveBeenCalledWith('123', expect.objectContaining({ title: 'Title' })))
+        expect(confirm).not.toHaveBeenCalled()
+    })
+
+    it('keeps create and preview publication actions outside the scrolling content', async () => {
+        fillPost()
+        const form = within(screen.getByRole('dialog', { name: 'Create Post' }))
+        expect(form.getByTestId('modal-scroll-content')
+            .contains(form.getByRole('button', { name: 'Publish' })))
+            .toBe(false)
+        fireEvent.click(form.getByRole('button', { name: 'Preview' }))
+        const preview = within(screen.getByRole('dialog', { name: 'Preview' }))
+        await waitFor(() => expect((preview.getByRole('button', { name: 'Publish' }) as HTMLButtonElement).disabled)
+            .toBe(false))
+        expect(preview.getByTestId('modal-scroll-content')
+            .contains(preview.getByRole('button', { name: 'Publish' })))
+            .toBe(false)
+        expect(preview.getByTestId('modal-scroll-content')
+            .contains(preview.getByRole('button', { name: 'Cancel' })))
+            .toBe(false)
+    })
 
     it('publishes a new story with current form values in a single create request', async () => {
         fillPost()

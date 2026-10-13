@@ -11,6 +11,7 @@ import {
     validateHours,
     validateRemarks,
 } from '../../lib/utils'
+import { StatusBadge } from '../status-badge'
 
 import ExpandableText from './ExpandableText'
 import styles from './TimesheetGrid.module.scss'
@@ -50,10 +51,14 @@ export interface TimesheetGridProps {
     fieldErrors?: TimesheetFieldErrors
 }
 
+/**
+ * A submitted entry is labelled "Pending Approval", the wording the filters and landing list use. The
+ * API keeps the SUBMITTED status; only the label changes. Drafts carry no status badge.
+ */
 const STATUS_LABELS: Record<TimesheetEntryStatus, string> = {
     [TimesheetEntryStatus.APPROVED]: 'Approved',
     [TimesheetEntryStatus.DRAFT]: '-',
-    [TimesheetEntryStatus.SUBMITTED]: 'Submitted',
+    [TimesheetEntryStatus.SUBMITTED]: 'Pending Approval',
 }
 
 const formatApprovalDate = (value?: string): string => {
@@ -268,7 +273,9 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                                     {isRowReopened(row) ? (
                                         <span className={styles.reopenedBadge}>Reopened</span>
                                     ) : (
-                                        <span className={styles.status}>{STATUS_LABELS[row.status]}</span>
+                                        row.status === TimesheetEntryStatus.DRAFT
+                                            ? <span className={styles.status}>{STATUS_LABELS[row.status]}</span>
+                                            : <StatusBadge size='sm' status={STATUS_LABELS[row.status]} />
                                     )}
                                     {row.status === TimesheetEntryStatus.APPROVED && (
                                         <span className={styles.approvalDetail}>

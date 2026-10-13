@@ -51,14 +51,22 @@ posts belonging to deleted projects are excluded from the report.
 Create and edit forms include Publish for new stories and saved drafts. Publish
 uses the same validation and current form values as Create/Save, asks for the
 existing publish confirmation, and saves with `status: PUBLISHED` in one API
-request. Create/Save retain their existing status behavior.
+request. Create/Save retain their existing status behavior. The actions live in the
+modal footer, outside its scrolling body, so Publish stays visible on long create
+and edit forms. The footer wraps buttons on narrow screens.
 
-Previews include Cancel and, for drafts, Publish. Publishing a form preview saves
+Previews include Cancel and, for drafts, Publish in the same fixed footer, even
+when the story is taller than the preview viewport. Publishing a form preview saves
 its current edits; publishing a list preview publishes that saved post. Cancel
 returns to the form without losing edits, or closes a list preview. Validation
 or save errors return to the form for correction. Successful publication closes
 the form and preview and refreshes the showcase list. Published and archived
 stories do not offer Publish, matching the list's status rules.
+
+The PM-6570 QA screenshots from October 12 show the earlier create footer without
+Publish. The current dev bundle includes the original publishing change; deploy
+the latest dev build before retesting. Verify the footer at both the top and bottom
+of a long form/preview, and on a narrow viewport.
 
 ## Deployment and verification
 

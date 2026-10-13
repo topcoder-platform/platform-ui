@@ -343,14 +343,6 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                     label='To Date'
                     onChange={handleToDateChange}
                 />
-                {isAssignmentActive && (
-                    <Button
-                        disabled={isSaving || !isDirty}
-                        label={isSaving ? 'Saving...' : 'Save'}
-                        onClick={handleSave}
-                        secondary
-                    />
-                )}
             </section>
 
             {!isAssignmentActive && (
@@ -399,7 +391,18 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                                     {' '}
                                     <strong>{formatHoursLabel(totals.hours)}</strong>
                                 </span>
-                                {!hasOnlyUnchangedSubmittedSelected && (
+                            </section>
+                        )}
+
+                        {isAssignmentActive && (
+                            <section className={styles.actions}>
+                                <Button
+                                    disabled={isSaving || !isDirty}
+                                    label={isSaving ? 'Saving...' : 'Save'}
+                                    onClick={handleSave}
+                                    secondary
+                                />
+                                {selectedRows.length > 0 && !hasOnlyUnchangedSubmittedSelected && (
                                     <Button
                                         disabled={isSubmitting}
                                         label={`Submit (${selectedRows.length})`}

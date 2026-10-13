@@ -11,10 +11,10 @@ import { getTimesheetEngagements } from '../../lib/services'
 
 import TimesheetEngagementsPage from './TimesheetEngagementsPage'
 
-const mockNavigate = jest.fn()
-
 jest.mock('react-router-dom', () => ({
-    useNavigate: () => mockNavigate,
+    Link: (props: { children: React.ReactNode, to: string }) => (
+        <a href={props.to}>{props.children}</a>
+    ),
 }))
 
 jest.mock('~/libs/ui', () => ({
@@ -34,6 +34,7 @@ jest.mock('~/libs/ui', () => ({
         </div>
     ),
     // Only a complete YYYY-MM-DD value reports a change, the way the real picker reports a whole date.
+    IconOutline: { XIcon: () => <></> },
     InputDatePicker: (props: {
         label: string
         onChange: (date: Date | null) => void
@@ -93,12 +94,14 @@ jest.mock('../../components', () => ({
     EngagementsTabs: (props: { activeTab: string }) => (
         <div data-testid='engagements-tabs' data-active-tab={props.activeTab} />
     ),
-    // Mirrors the real badge's label: an explicit label, or the status in title case.
+    // Mirrors the real badge's label: an explicit label, or each word of the status capitalised.
     StatusBadge: (props: { label?: string, status: string }) => (
         <span>
             {props.label
-                ?? `${props.status.charAt(0)}${props.status.slice(1)
-                    .toLowerCase()}`}
+                ?? props.status
+                    .replace(/[_-]+/g, ' ')
+                    .toLowerCase()
+                    .replace(/\b\w/g, character => character.toUpperCase())}
         </span>
     ),
 }), { virtual: true })
@@ -275,8 +278,10 @@ describe('TimesheetEngagementsPage', () => {
             .toBeInTheDocument()
         expect(screen.getByText('Jane Doe (janedoe)'))
             .toBeInTheDocument()
-        expect(screen.getAllByRole('button', { name: 'View' }))
+        // The engagement title is the way into each timesheet; there is no separate View button.
+        expect(screen.getAllByRole('link', { name: 'Senior Frontend Engineer' }))
             .toHaveLength(2)
+        expect(screen.queryByRole('button', { name: 'View' })).not.toBeInTheDocument()
     })
 
     it('hides the administrator filters and status column from a manager', async () => {
@@ -374,7 +379,7 @@ describe('TimesheetEngagementsPage', () => {
         expect(within(table)
             .getAllByRole('columnheader')
             .map(header => header.textContent))
-            .toEqual(['Assignee', 'Engagement', 'Assignment Status', 'Pending Approval', 'Action'])
+            .toEqual(['Assignee', 'Engagement', 'Assignment Status', ''])
 
         const [, assignedRow, completedRow] = within(table)
             .getAllByRole('row')
@@ -386,7 +391,6 @@ describe('TimesheetEngagementsPage', () => {
                 'Senior Frontend Engineer',
                 'Assigned',
                 'Pending approval',
-                'View',
             ])
         expect(within(completedRow)
             .getByText('Completed'))
@@ -409,19 +413,26 @@ describe('TimesheetEngagementsPage', () => {
         expect(within(table)
             .getAllByRole('columnheader')
             .map(header => header.textContent))
-            .toEqual(['Engagement Title', 'Assignee', 'Timesheet Status', 'Action'])
+            .toEqual(['Engagement Title', 'Assignee', 'Timesheet Status'])
     })
 
-    it('opens the nested timesheet route from View', async () => {
-        const user = userEvent.setup()
+    it('labels the reset button like Work Manager does', async () => {
         mockGetEngagements.mockResolvedValue(response([row()], TimesheetViewerRole.MANAGER))
 
         render(<TimesheetEngagementsPage />)
 
-        await user.click(await screen.findByRole('button', { name: 'View' }))
+        expect(await screen.findByRole('button', { name: 'Reset Filters' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Clear Filters' })).not.toBeInTheDocument()
+    })
 
-        expect(mockNavigate)
-            .toHaveBeenCalledWith('/engagements/eng-1/timesheets/asg-1?status=SUBMITTED')
+    it('links the engagement title to the nested timesheet route', async () => {
+        mockGetEngagements.mockResolvedValue(response([row()], TimesheetViewerRole.MANAGER))
+
+        render(<TimesheetEngagementsPage />)
+
+        expect(await screen.findByRole('link', { name: 'Senior Frontend Engineer' }))
+            .toHaveAttribute('href', '/engagements/eng-1/timesheets/asg-1?status=SUBMITTED')
     })
 
     it('opens the timesheet on Approved when the list was filtered to Approved', async () => {
@@ -438,10 +449,8 @@ describe('TimesheetEngagementsPage', () => {
             expect(mockGetEngagements)
                 .toHaveBeenLastCalledWith(expect.objectContaining({ status: 'Approved' }))
         })
-        await user.click(await screen.findByRole('button', { name: 'View' }))
-
-        expect(mockNavigate)
-            .toHaveBeenCalledWith('/engagements/eng-1/timesheets/asg-1?status=APPROVED')
+        expect(await screen.findByRole('link', { name: 'Senior Frontend Engineer' }))
+            .toHaveAttribute('href', '/engagements/eng-1/timesheets/asg-1?status=APPROVED')
     })
 
     it('follows the row status under All', async () => {
@@ -458,10 +467,8 @@ describe('TimesheetEngagementsPage', () => {
             expect(mockGetEngagements)
                 .toHaveBeenLastCalledWith(expect.objectContaining({ status: undefined }))
         })
-        await user.click(await screen.findByRole('button', { name: 'View' }))
-
-        expect(mockNavigate)
-            .toHaveBeenCalledWith('/engagements/eng-1/timesheets/asg-1?status=APPROVED')
+        expect(await screen.findByRole('link', { name: 'Senior Frontend Engineer' }))
+            .toHaveAttribute('href', '/engagements/eng-1/timesheets/asg-1?status=APPROVED')
     })
 
     it('tells a manager when nothing is pending approval', async () => {
