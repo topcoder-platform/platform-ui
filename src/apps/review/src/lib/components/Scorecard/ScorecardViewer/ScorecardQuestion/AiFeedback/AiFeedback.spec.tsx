@@ -215,4 +215,45 @@ describe('AiFeedback score editing in the Approval phase', () => {
         expect(screen.getByRole('combobox'))
             .toBeTruthy()
     })
+
+    it('lets privileged users edit deterministic workflow scores during the Review phase', async () => {
+        mockUseReviewsContext.mockReturnValue({
+            ...mockUseReviewsContext(),
+            challengeInfo: {
+                phases: [{ isOpen: true, name: 'Review' }],
+            },
+            workflowRun: {
+                id: 'run-1',
+                status: 'COMPLETED',
+                workflow: { reviewMethod: 'DETERMINISTIC' },
+            },
+        })
+        mockUpdateRunItemScore.mockResolvedValue(undefined)
+
+        await editAndSaveScore()
+
+        await waitFor(() => {
+            expect(mockToastSuccess)
+                .toHaveBeenCalledWith('Score updated successfully!')
+        })
+        expect(mockUpdateRunItemScore)
+            .toHaveBeenCalledWith('workflow-1', 'run-1', 'feedback-1', {
+                comment: 'changing the score',
+                questionScore: 3,
+            })
+    })
+
+    it('does not allow editing AI-assisted workflow scores during the Review phase', () => {
+        mockUseReviewsContext.mockReturnValue({
+            ...mockUseReviewsContext(),
+            challengeInfo: {
+                phases: [{ isOpen: true, name: 'Review' }],
+            },
+        })
+
+        render(<AiFeedback question={question} />)
+
+        expect(screen.queryByRole('button', { name: 'Edit' }))
+            .toBeNull()
+    })
 })
