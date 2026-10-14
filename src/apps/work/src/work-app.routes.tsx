@@ -55,7 +55,7 @@ import { WorkAppContextModel } from './lib/models'
 import { canViewAllEngagements } from './lib/utils'
 
 const WorkApp: LazyLoadedComponent = lazyLoad(() => import('./WorkApp'))
-const SalesPage: LazyLoadedComponent = lazyLoad(() => import('~/apps/sales/src/SalesPage'))
+const SalesPage: LazyLoadedComponent = lazyLoad(() => import('~/apps/sales/src/SalesReportsPage'))
 
 const ChallengesListPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/challenges/ChallengesListPage'),

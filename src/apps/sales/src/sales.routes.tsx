@@ -1,7 +1,7 @@
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
 import { lazyLoad, LazyLoadedComponent, PlatformRoute, UserRole } from '~/libs/core'
 
-const SalesPage: LazyLoadedComponent = lazyLoad(() => import('./SalesPage'))
+const SalesPage: LazyLoadedComponent = lazyLoad(() => import('./SalesReportsPage'))
 
 /** Dedicated Sales host and combined-host route; the API independently verifies these roles. */
 export const salesRoutes: ReadonlyArray<PlatformRoute> = [
