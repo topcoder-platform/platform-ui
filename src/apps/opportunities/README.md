@@ -421,22 +421,23 @@ white separator so neighbors that share a palette stay distinct.
 
 ## Challenge Markdown table of contents
 
-Challenge descriptions are safe Markdown. Authors create the generated table
-of contents with level-two and level-three ATX headings:
+Challenge descriptions authored in Work use Markdown. Only level-one (H1)
+ATX headings appear in the generated table of contents on the challenge page:
 
 ```markdown
-## Challenge Summary
+# Challenge Summary
 
 Summary content.
 
-### Required Deliverables
+## Required Deliverables
 
 Deliverable content.
 ```
 
-- `##` creates a top-level table-of-contents entry.
-- `###` creates a nested entry.
-- `#` is reserved for the page title and is not included.
+- `#` creates a table-of-contents entry.
+- `##`, `###`, and deeper headings still render in the description but do not
+  appear in the table of contents.
+- Descriptions without H1 headings do not display a table of contents.
 - Duplicate headings are supported; stable source-line suffixes keep their
   fragment links unique.
 - GFM tables and hard line breaks are supported. Raw HTML is not rendered.

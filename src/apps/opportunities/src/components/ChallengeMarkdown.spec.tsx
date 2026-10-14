@@ -3,6 +3,7 @@ import { render, RenderResult, screen } from '@testing-library/react'
 
 import {
     ChallengeDescription,
+    extractTableOfContents,
     isHtmlDescriptionFormat,
 } from './ChallengeMarkdown'
 
@@ -52,22 +53,25 @@ describe('ChallengeDescription', () => {
             .toBe('## Markdown requirements')
     })
 
-    it('gives fourth-level headings the same fragment as their table-of-contents link', () => {
-        render(<ChallengeDescription content='#### Detailed Steps' format='markdown' />)
+    it.each([1, 2, 3, 4])('preserves H%i headings and gives H1 a matching table-of-contents fragment', level => {
+        const markdown = `${'#'.repeat(level)} Detailed Steps`
+        render(<ChallengeDescription content={markdown} format='markdown' />)
 
-        const h4 = mockMarkdownProps[0].components as {
-            h4: (props: Record<string, unknown>) => JSX.Element
-        }
-        const heading = h4.h4({
+        const headings = mockMarkdownProps[0].components as Record<
+            string, (props: Record<string, unknown>) => JSX.Element
+        >
+        const heading = headings[`h${level}`]({
             children: 'Detailed Steps',
-            level: 4,
+            level,
             node: { position: { start: { line: 1 } } },
         })
 
         expect(heading.type)
-            .toBe('h4')
+            .toBe(`h${level}`)
         expect(heading.props.id)
             .toBe('detailed-steps-1')
+        expect(extractTableOfContents(markdown))
+            .toEqual(level === 1 ? [{ id: heading.props.id, label: 'Detailed Steps', level: 1 }] : [])
     })
 
     it('parses and sanitizes safe inline forum HTML such as underline markup', () => {
