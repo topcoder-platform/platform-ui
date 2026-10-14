@@ -3,18 +3,23 @@ import '@testing-library/jest-dom'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
+import { login } from '../../../../../libs/core/lib/auth/authentication-functions/authentication-url.config'
+
 import { TopgearAccessGate } from './TopgearAccessGate'
 import { hasTopgearAccess } from './topgear-access.service'
 
 let mockSubdomain = 'topgear'
 let mockInitialized = true
 let mockMemberId: number | undefined = 123
-const mockLogin = jest.fn<string, [string]>(() => 'https://accounts.example.com/login')
+const mockLogin = jest.fn(login)
 const mountedChild = jest.fn()
 
 jest.mock('~/config', () => ({
     AppSubdomain: { topgear: 'topgear' },
-    EnvironmentConfig: { get SUBDOMAIN(): string { return mockSubdomain } },
+    EnvironmentConfig: {
+        AUTH: { ACCOUNTS_APP_CONNECTOR: 'https://accounts-auth0.topcoder-dev.com' },
+        get SUBDOMAIN(): string { return mockSubdomain },
+    },
 }), { virtual: true })
 jest.mock('~/libs/core', () => ({
     authUrlLogin: (returnUrl: string) => mockLogin(returnUrl),
@@ -56,7 +61,7 @@ describe('Topgear access gate', () => {
     afterAll(() => Object.defineProperty(window, 'location', { configurable: true, value: originalLocation }))
     beforeEach(() => {
         jest.clearAllMocks()
-        mockLogin.mockReturnValue('https://accounts.example.com/login')
+        mockLogin.mockImplementation(login)
         mockSubdomain = 'topgear'
         mockInitialized = true
         mockMemberId = 123
@@ -72,13 +77,22 @@ describe('Topgear access gate', () => {
         expect(replace).not.toHaveBeenCalled()
     })
 
-    it('sends anonymous users to login with their full return URL before loading routes', () => {
+    it.each([
+        ['topgear.topcoder.com', '/opportunities'],
+        ['topgear.topcoder-dev.com', '/opportunities'],
+        ['topgear.topcoder-dev.com', '/opportunities/challenge/123'],
+        ['topgear.topcoder-dev.com', '/challenges'],
+    ])('sends anonymous visitors on %s%s to Wipro login before loading routes', (hostname, path) => {
         mockMemberId = undefined
-        renderGate('/challenges')
+        window.location.href = `https://${hostname}${path}?search=React#results`
+        const returnUrl = encodeURIComponent(window.location.href)
+        renderGate(path)
         expect(mockLogin)
             .toHaveBeenCalledWith(window.location.href)
         expect(replace)
-            .toHaveBeenCalledWith('https://accounts.example.com/login')
+            .toHaveBeenCalledWith(
+                `https://accounts-auth0.topcoder-dev.com?retUrl=${returnUrl}&utm_source=wipro`,
+            )
         expect(checkAccess).not.toHaveBeenCalled()
         expect(mountedChild).not.toHaveBeenCalled()
     })
@@ -136,13 +150,16 @@ describe('Topgear access gate', () => {
             .toBe(true)
     })
 
-    it('keeps non-Topgear hosts public without checking Wipro membership', async () => {
-        mockSubdomain = 'platform-ui'
-        mockMemberId = undefined
-        renderGate()
-        await waitFor(() => expect(screen.getByText('Private Topgear route'))
-            .toBeInTheDocument())
-        expect(checkAccess).not.toHaveBeenCalled()
-        expect(replace).not.toHaveBeenCalled()
-    })
+    it.each(['www', 'topcoder', 'platform-ui', 'opportunities', 'wipro'])(
+        'keeps the %s host public without checking Wipro membership',
+        async subdomain => {
+            mockSubdomain = subdomain
+            mockMemberId = undefined
+            renderGate('/opportunities')
+            await waitFor(() => expect(screen.getByText('Private Topgear route'))
+                .toBeInTheDocument())
+            expect(checkAccess).not.toHaveBeenCalled()
+            expect(replace).not.toHaveBeenCalled()
+        },
+    )
 })

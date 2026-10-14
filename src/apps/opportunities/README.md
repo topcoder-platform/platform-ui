@@ -90,9 +90,12 @@ first hostname label is `topgear`:
 - all Topgear routes require login and verified membership in **Wipro - All**.
   `TopgearAccessGate` withholds the entire route tree until the authenticated
   Groups API (`/v6/groups/memberGroups/:memberId?uuid=true`) confirms the active
-  membership. Anonymous users go to login with their full return URL; non-members
-  see an access-restricted page. Errors, missing configuration, and pending checks
-  never render the listing or request challenge data. Direct detail routes are
+  membership. Anonymous users go to the configured Accounts app with
+  `utm_source=wipro` and their full return URL, matching community-app's Wipro
+  login flow. This applies to `topgear.topcoder.com` and
+  `topgear.topcoder-dev.com`; other hosts retain their existing login behavior.
+  Non-members see an access-restricted page. Errors, missing configuration, and
+  pending checks never render the listing or request challenge data. Direct detail routes are
   gated too, and checks repeat when the member or route path changes;
 - the required group defaults to `b7f7c0f8-8ee8-409e-9e5c-33404983b635` and can be
   configured separately with `REACT_APP_TOPGEAR_ACCESS_GROUP_ID`. Changing the
