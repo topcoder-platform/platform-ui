@@ -15,6 +15,7 @@ import {
 import classNames from 'classnames'
 
 import { PageWrapper } from '~/apps/review/src/lib'
+import { EnvironmentConfig } from '~/config'
 import {
     Button,
     IconOutline,
@@ -30,7 +31,6 @@ import {
 import {
     CHALLENGE_APPROVAL_STATUS,
     CHALLENGE_STATUS,
-    COMMUNITY_APP_URL,
     IS_TEST_CHALLENGE_METADATA_FIELD,
     REVIEW_APP_URL,
 } from '../../../lib/constants'
@@ -1110,13 +1110,14 @@ function renderChallengeQuickLinks(
 
     const reviewLink = `${REVIEW_APP_URL}/active-challenges/${resolvedChallengeId}/challenge-details`
     const forumLink = props.challenge?.discussions?.find(discussion => !!discussion.url)?.url
-    const communityChallengeLink = `${COMMUNITY_APP_URL}/challenges/${resolvedChallengeId}`
+    const challengeLink
+        = `${EnvironmentConfig.PLATFORMUI_URL}/opportunities/challenge/${encodeURIComponent(resolvedChallengeId)}`
 
     return (
         <div className={styles.quickLinks}>
             <a
                 className={styles.quickLink}
-                href={communityChallengeLink}
+                href={challengeLink}
                 rel='noopener noreferrer'
                 target='_blank'
             >
