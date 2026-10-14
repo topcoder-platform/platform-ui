@@ -7,6 +7,10 @@ challenge details use `/opportunities/challenge/:challengeId`, review details
 use `/opportunities/review/:reviewOpportunityId`, and the member home uses
 `/opportunities/home`.
 
+The Work app links directly to challenge details from its editor `Challenge`
+button and challenge list `CA` action. Both use the environment-specific
+`EnvironmentConfig.PLATFORMUI_URL` host and open in a new tab.
+
 ## Member home
 
 `/opportunities/home` (`/home` on the `opportunities` subdomain, where the app
