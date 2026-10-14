@@ -4,7 +4,8 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { ButtonHTMLAttributes, ReactNode } from 'react'
 import { useProfileContext } from '~/libs/core'
 
-import SalesPage from './SalesPage'
+import SalesPage from './SalesReportsPage'
+import { fetchSalesProgression, SalesProgressionReport } from './sales-progression.service'
 import { fetchOpportunity } from './opportunity.service'
 import { SalesReport } from './sales.models'
 import { fetchSalesReport } from './sales.service'
@@ -14,6 +15,11 @@ jest.mock('~/libs/core', () => ({
     useProfileContext: jest.fn(),
     UserRole: { administrator: 'administrator' },
 }), { virtual: true })
+
+jest.mock('./sales-progression.service', () => ({
+    fetchSalesProgression: jest.fn(),
+    progressionErrorMessage: () => 'Unable to load complete progression data.',
+}))
 
 jest.mock('./salesforce-sync.service', () => ({
     salesforceSyncErrorMessage: () => 'Salesforce sync failed. Please try again.',
@@ -175,8 +181,34 @@ function clearButton(section: string): HTMLElement {
         .getByRole('button', { name: 'Clear' })
 }
 
+/** @param query Applied period/stages. @returns Summary-only history response. Does not throw. */
+function historyFixture(query: { dateFrom: string; dateTo: string }): SalesProgressionReport {
+    return {
+        ...query,
+        openStages: ['Qualification', 'Proposal'],
+        progressed: {
+            breakdown: [{ fromStage: 'Qualification', opportunities: 2, toStage: 'Proposal', transitions: 4 }],
+            opportunities: 2,
+            transitions: 4,
+        },
+        refreshAfterSeconds: 60,
+        refreshedAt: '2026-10-15T10:00:00Z',
+        stages: ['Qualification', 'Proposal', 'Won', 'Lost'],
+        timeZone: 'America/New_York',
+        won: {
+            breakdown: [{ fromStage: 'Proposal', opportunities: 1, toStage: 'Won', transitions: 2 }],
+            opportunities: 1,
+            transitions: 2,
+        },
+        wonStages: ['Won'],
+    }
+}
+
 describe('Sales page', () => {
     beforeEach(() => {
+        jest.mocked(fetchSalesProgression)
+            .mockReset()
+            .mockImplementation(query => Promise.resolve(historyFixture(query)))
         profileContext.mockReturnValue({ profile: { roles: ['administrator'] } } as never)
         syncData.mockReset()
             .mockResolvedValue({ billingAccounts: syncCounts, clients: syncCounts })
@@ -616,4 +648,105 @@ describe('Sales page', () => {
             .not
             .toBeInTheDocument()
     })
+    it('loads history only on its tab, supports keyboard switching, and aborts on tab exit', async () => {
+        render(<SalesPage />)
+        await screen.findByText('Example opportunity')
+        expect(fetchSalesProgression).not.toHaveBeenCalled()
+        fireEvent.keyDown(screen.getByRole('tab', { name: 'Pipeline' }), { key: 'ArrowRight' })
+        expect(screen.getByRole('tab', { name: 'Stage progression' }))
+            .toHaveFocus()
+        expect(await screen.findByRole('region', { name: 'Stage progression totals' }))
+            .toHaveTextContent('2')
+        expect(screen.getByRole('tab', { name: 'Stage progression' }))
+            .toHaveAttribute('aria-selected', 'true')
+        const signal = jest.mocked(fetchSalesProgression).mock.calls[0][1]
+        fireEvent.keyDown(screen.getByRole('tab', { name: 'Stage progression' }), { key: 'Home' })
+        expect(signal?.aborted)
+            .toBe(true)
+        await screen.findByText('Example opportunity')
+    })
+
+    it('sends period and stage filters and shows the won breakdown without summing row counts', async () => {
+        render(<SalesPage />)
+        fireEvent.click(screen.getByRole('tab', { name: 'Stage progression' }))
+        const totals = await screen.findByRole('region', { name: 'Stage progression totals' })
+        expect(within(totals)
+            .getByText('Opportunities progressed').nextElementSibling)
+            .toHaveTextContent('2')
+        expect(within(totals)
+            .getByText('Forward transitions').nextElementSibling)
+            .toHaveTextContent('4')
+        fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2026-10-01' } })
+        fireEvent.change(screen.getByLabelText('To date'), { target: { value: '2026-10-07' } })
+        fireEvent.change(screen.getByLabelText('From stage'), { target: { value: 'Proposal' } })
+        fireEvent.change(screen.getByLabelText('To stage'), { target: { value: 'Won' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
+        await waitFor(() => expect(fetchSalesProgression)
+            .toHaveBeenLastCalledWith({
+                dateFrom: '2026-10-01', dateTo: '2026-10-07', fromStage: 'Proposal', toStage: 'Won',
+            }, expect.any(AbortSignal)))
+        await screen.findByText(/Period: 2026-10-01 to 2026-10-07/)
+        fireEvent.change(screen.getByLabelText('Show'), { target: { value: 'won' } })
+        const table = screen.getByRole('table')
+        expect(within(table)
+            .getByText('Won'))
+            .toBeInTheDocument()
+        expect(within(table)
+            .queryByText('Qualification')).not.toBeInTheDocument()
+    })
+
+    it('validates the period, hides old totals after a filter change, and explains unavailable data', async () => {
+        render(<SalesPage />)
+        fireEvent.click(screen.getByRole('tab', { name: 'Stage progression' }))
+        await screen.findByRole('region', { name: 'Stage progression totals' })
+        fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2028-01-01' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
+        expect(screen.getByRole('alert'))
+            .toHaveTextContent('From on or before To')
+        expect(fetchSalesProgression)
+            .toHaveBeenCalledTimes(1)
+        jest.mocked(fetchSalesProgression)
+            .mockRejectedValue({ response: { status: 503 } })
+        fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2026-10-01' } })
+        fireEvent.change(screen.getByLabelText('To date'), { target: { value: '2026-10-15' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
+        expect(screen.queryByRole('region', { name: 'Stage progression totals' })).not.toBeInTheDocument()
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent('Unable to load complete progression data.')
+    })
+
+    it('labels failed refreshes as stale and removes history on authorization failure', async () => {
+        render(<SalesPage />)
+        fireEvent.click(screen.getByRole('tab', { name: 'Stage progression' }))
+        await screen.findByRole('region', { name: 'Stage progression totals' })
+        jest.mocked(fetchSalesProgression)
+            .mockRejectedValueOnce({ response: { status: 502 } })
+        fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent('Showing previously loaded data')
+        expect(screen.getByRole('region', { name: 'Stage progression totals' }))
+            .toBeInTheDocument()
+        jest.mocked(fetchSalesProgression)
+            .mockRejectedValueOnce({ response: { status: 403 } })
+        fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
+        await waitFor(() => expect(screen.queryByRole('region', { name: 'Stage progression totals' }))
+            .not.toBeInTheDocument())
+    })
+
+    it('renders complete empty history results as zero with an empty-state explanation', async () => {
+        jest.mocked(fetchSalesProgression)
+            .mockImplementation(query => Promise.resolve({
+                ...historyFixture(query),
+                progressed: { breakdown: [], opportunities: 0, transitions: 0 },
+                won: { breakdown: [], opportunities: 0, transitions: 0 },
+            }))
+        render(<SalesPage />)
+        fireEvent.click(screen.getByRole('tab', { name: 'Stage progression' }))
+        expect(await screen.findByText('No matching stage transitions in this period.'))
+            .toBeInTheDocument()
+        expect(within(screen.getByRole('region', { name: 'Stage progression totals' }))
+            .getAllByText('0'))
+            .toHaveLength(4)
+    })
+
 })
