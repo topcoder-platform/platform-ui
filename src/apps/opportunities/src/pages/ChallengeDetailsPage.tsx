@@ -1019,7 +1019,7 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
 }
 
 /**
- * Renders format-aware requirements and a Markdown-only table of contents.
+ * Renders format-aware requirements and a table of contents for Markdown H1 headings only.
  * Omits the forum guidance notice for TopGear challenges, which do not use forums.
  *
  * @param props challenge containing authored requirements.
@@ -1057,11 +1057,7 @@ const RequirementsTab: FC<{ challenge: ChallengeOpportunity }> = props => {
                     <h2>Table of Contents</h2>
                     <ol>
                         {toc.map((item: ChallengeTocItem) => (
-                            <li
-                                className={item.level === 4 ? styles.deeplyNestedToc
-                                    : item.level === 3 ? styles.nestedToc : undefined}
-                                key={item.id}
-                            >
+                            <li key={item.id}>
                                 <a href={`#${item.id}`}>{item.label}</a>
                             </li>
                         ))}
