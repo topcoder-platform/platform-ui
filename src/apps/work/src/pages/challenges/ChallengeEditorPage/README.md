@@ -97,6 +97,9 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ChallengeDescriptionField`: public markdown spec editor with a `Copy spec` action that copies
   the current Markdown in both edit and read-only view modes.
 - `ChallengePrivateDescriptionField`: optional private markdown spec editor.
+- Both specification fields use `FormMarkdownEditor` with Figtree H1/H2/H3
+  headings at 24px/32px, 20px/30px, and 18px/26px (font size/line height).
+  The same typography applies in edit, read-only, and Markdown preview modes.
 - `TermsField`: advanced-option multi-select for challenge terms. The create route seeds the standard Topcoder terms entry automatically once the terms list loads, including immediately after the first draft-creation step assigns a challenge id, so the editor matches legacy work-manager defaults while still allowing the NDA toggle to add or remove the NDA term separately. The seeded Standard Terms UUID can be set with `REACT_APP_DEFAULT_STANDARD_TERMS_UUID`, `DEFAULT_STANDARD_TERMS_UUID`, or `EnvironmentConfig.DEFAULT_STANDARD_TERMS_UUID`; legacy IDs and normalized titles are only fallback matching.
 - `ChallengeTagsField`: multi creatable tag picker excluding special challenge tags.
 - `ChallengeSkillsField`: async multi skills picker with billing-account-based required behavior.
