@@ -421,6 +421,11 @@ white separator so neighbors that share a palette stay distinct.
 
 ## Challenge Markdown table of contents
 
+Opportunity and challenge description headings use Figtree at 24px/32px for
+H1, 20px/30px for H2, and 18px/26px for H3 (font size/line height), matching
+the Work specification editor. This scale also applies to API-provided private
+descriptions and legacy HTML descriptions.
+
 Challenge descriptions authored in Work use Markdown. Only level-one (H1)
 ATX headings appear in the generated table of contents on the challenge page:
 
