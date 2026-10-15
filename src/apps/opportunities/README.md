@@ -9,7 +9,9 @@ use `/opportunities/review/:reviewOpportunityId`, and the member home uses
 
 The Work app links directly to challenge details from its editor `Challenge`
 button and challenge list `CA` action. Both use the environment-specific
-`EnvironmentConfig.PLATFORMUI_URL` host and open in a new tab.
+public website host from `EnvironmentConfig.TOPCODER_URL`
+(`https://www.topcoder-dev.com` in development and `https://www.topcoder.com`
+in production), preserve `/opportunities/challenge/:challengeId`, and open in a new tab.
 
 ## Member home
 
