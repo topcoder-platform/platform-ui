@@ -440,7 +440,7 @@ export const downloadReportAsCsv = (path: string): Promise<Blob> => (
  * Fetches all dashboard cards for the requested UTC range.
  *
  * @param query Optional inclusive start and exclusive end date filters.
- * @returns Aggregate dashboard data used by the Dashboards landing page.
+ * @returns Aggregate dashboard data for callers that need all previews together.
  * @throws Propagates authenticated reports-api request failures.
  */
 export const fetchDashboards = (
@@ -450,13 +450,13 @@ export const fetchDashboards = (
 )
 
 /**
- * Fetches one dashboard drill-down for the requested UTC range.
+ * Fetches one dashboard preview or drill-down for the requested UTC range.
  *
  * The generic slug maps the result to its exact dashboard response type.
  *
- * @param slug Dashboard route slug selected by the detail page.
+ * @param slug Dashboard route slug selected by a preview card or detail page.
  * @param query Optional inclusive start and exclusive end date filters.
- * @returns Typed detail dashboard data for the selected slug.
+ * @returns Typed dashboard data for the selected slug.
  * @throws Propagates authenticated reports-api request failures.
  */
 export function fetchDashboard<TSlug extends DashboardSlug>(
