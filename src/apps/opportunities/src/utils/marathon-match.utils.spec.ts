@@ -6,12 +6,66 @@ import {
     isMarathonMatchChallenge,
     marathonDashboardIsEnabled,
     marathonLeaderboardIsPublic,
+    marathonSubmissionRanks,
     marathonSubmissionScores,
     marathonSubmissionTestProgress,
     shouldShowFinalSubmissionScores,
 } from './marathon-match.utils'
 
 describe('Marathon Match challenge detail utilities', () => {
+    it('ranks scores globally with provisional time tie-breaks and shared final ranks', () => {
+        const submissions = [
+            { finalScore: 90, id: 'later', provisionalScore: 100, submittedDate: '2026-10-14T09:00:00Z' },
+            { finalScore: 80, id: 'earlier', provisionalScore: 100, submittedDate: '2026-10-14T08:00:00Z' },
+            { finalScore: 90, id: 'invalid-date', provisionalScore: 100, submittedDate: 'invalid' },
+            { finalScore: 0, id: 'zero', provisionalScore: 0 },
+            { finalScore: -1, id: 'failed', provisionalScore: -1 },
+            { finalScore: Number.NaN, id: 'missing', provisionalScore: Number.POSITIVE_INFINITY },
+        ]
+        expect(Array.from(marathonSubmissionRanks(submissions)))
+            .toEqual([
+                ['later', { finalRank: 1, provisionalRank: 2 }],
+                ['earlier', { finalRank: 3, provisionalRank: 1 }],
+                ['invalid-date', { finalRank: 1, provisionalRank: 3 }],
+                ['zero', { finalRank: 4, provisionalRank: 4 }],
+                ['failed', { finalRank: 5, provisionalRank: 5 }],
+                ['missing', {}],
+            ])
+        expect(submissions.map(submission => submission.id))
+            .toEqual(['later', 'earlier', 'invalid-date', 'zero', 'failed', 'missing'])
+    })
+
+    it('ranks resolved summations and leaves pending or cancelled attempts unranked', () => {
+        expect(Array.from(marathonSubmissionRanks([
+            {
+                finalScore: 999,
+                id: 'settled',
+                provisionalScore: 999,
+                reviewSummation: [
+                    { aggregateScore: 10, isProvisional: true },
+                    { aggregateScore: 20, isFinal: true },
+                ],
+            },
+            { finalScore: 30, id: 'higher', provisionalScore: 20 },
+            {
+                finalScore: 999,
+                id: 'pending',
+                provisionalScore: 999,
+                reviewSummation: [
+                    { aggregateScore: -1, isProvisional: true, metadata: { testStatus: 'IN_PROGRESS' } },
+                    { aggregateScore: -1, isFinal: true, metadata: { testStatus: 'CANCELLED' } },
+                ],
+            },
+        ])))
+            .toEqual([
+                ['settled', { finalRank: 2, provisionalRank: 2 }],
+                ['higher', { finalRank: 1, provisionalRank: 1 }],
+                ['pending', {}],
+            ])
+        expect(marathonSubmissionRanks([]).size)
+            .toBe(0)
+    })
+
     it.each(['CANCELLED', 'CANCELED'])('preserves %s and suppresses cancelled phase scores', testStatus => {
         const submission = {
             finalScore: 91,

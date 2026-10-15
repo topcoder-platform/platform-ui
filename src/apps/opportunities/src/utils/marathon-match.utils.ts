@@ -15,6 +15,11 @@ export interface MarathonSubmissionScores {
     provisionalScore?: number
 }
 
+export interface MarathonSubmissionRanks {
+    finalRank?: number
+    provisionalRank?: number
+}
+
 export interface MarathonTestProgress {
     process?: 'Example' | 'Provisional' | 'System'
     progress?: number
@@ -390,6 +395,51 @@ export function marathonSubmissionScores(
                 ?? finiteScore(submission.aiDecisionScore)
                 ?? averageReviewScore((submission.review ?? []).map(review => review.finalScore ?? review.score))
     return { finalScore, provisionalScore }
+}
+
+/**
+ * Ranks the complete latest-submission collection for the MM All Submissions table.
+ * Provisional ties favor earlier submissions; final ties share competition ranks
+ * (1, 1, 3), matching community-app. Missing or pending scores remain unranked.
+ *
+ * @param submissions All latest submissions, with review summations attached, before pagination.
+ * @returns Ranks keyed by submission ID; callers apply the final-score release gate.
+ * @throws Does not throw.
+ */
+export function marathonSubmissionRanks(
+    submissions: ChallengeSubmission[],
+): Map<string, MarathonSubmissionRanks> {
+    const ranks = new Map<string, MarathonSubmissionRanks>()
+    const entries = submissions.map(submission => {
+        const timestamp = Date.parse(submission.submittedDate ?? submission.createdAt ?? '')
+        ranks.set(submission.id, {})
+        return {
+            id: submission.id,
+            ...marathonSubmissionScores(submission),
+            timestamp: Number.isFinite(timestamp) ? timestamp : Number.POSITIVE_INFINITY,
+        }
+    })
+    entries.flatMap(entry => (entry.provisionalScore === undefined ? [] : [{
+        ...entry,
+        score: entry.provisionalScore,
+    }]))
+        .sort((first, second) => (
+            (second.score - first.score) || first.timestamp - second.timestamp
+        ))
+        .forEach((entry, index) => {
+            ranks.set(entry.id, { provisionalRank: index + 1 })
+        })
+
+    let previousScore: number | undefined
+    let finalRank = 0
+    entries.flatMap(entry => (entry.finalScore === undefined ? [] : [{ ...entry, score: entry.finalScore }]))
+        .sort((first, second) => second.score - first.score)
+        .forEach((entry, index) => {
+            if (entry.score !== previousScore) finalRank = index + 1
+            ranks.set(entry.id, { ...ranks.get(entry.id), finalRank })
+            previousScore = entry.score
+        })
+    return ranks
 }
 
 /**

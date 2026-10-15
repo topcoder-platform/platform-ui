@@ -376,8 +376,9 @@ noninteractive semantic label, avoiding a duplicate hidden keyboard stop.
 
 All Submissions and My Submissions use the same responsive record-card
 contract. Every track-specific field and action receives a visible mobile key,
-while Submission Date sorting stays above the card and continues to request
-owner-sorted pages.
+while Submission Date sorting stays above the card. Marathon Match All Submissions
+sorts the complete collection locally to retain global ranks; other date sorts
+continue to request owner-sorted pages.
 Marathon My Submissions uses compact column spacing so the complete scorer table
 fits within its desktop card. The Submission ID and Submission Date columns keep
 a wider share of that budget, and cells use 12px horizontal padding, so long
@@ -653,6 +654,14 @@ Passed, Failed, and Cancelled attempts show their terminal badge instead. If
 progress is unavailable, the status label or an em dash remains visible. The
 seven-column table fits the padded desktop card; narrower tablets retain
 horizontal scrolling and mobile uses the existing record cards.
+Marathon Match All Submissions also includes sortable Final Rank and Provisional
+Rank columns, including labeled values and sorting on mobile. Ranks are calculated
+from the complete latest-submission collection before pagination, even when sorted
+by submission date. Provisional ranks order scores high-to-low and break ties by
+earlier submission time. Equal final scores share competition ranks (1, 1, 3),
+matching community-app. Missing or pending scores remain unranked (`N/A`); final
+ranks use the same release gate as final scores. Other challenge types and My
+Submissions retain their existing columns.
 The Figma keeps separate Provisional Score and Final Score columns and uses
 `-` when a final value is not yet available. Winners use Review API's canonical
 `GET /v6/projectResult` member-and-placement result instead of inferring a

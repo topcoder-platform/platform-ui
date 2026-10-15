@@ -2082,6 +2082,8 @@ describe('ChallengeDetailsPage member flows', () => {
         ['Rating', ['Zulu', 'Beta', 'unknown']],
         ['Provisional Score', ['Zulu', 'Beta', 'unknown']],
         ['Final Score', ['Beta', 'Zulu', 'unknown']],
+        ['Provisional Rank', ['Beta', 'Zulu', 'unknown']],
+        ['Final Rank', ['Zulu', 'Beta', 'unknown']],
     ])('sorts %s in both directions using displayed values', (label, ascending) => {
         mockChallenge = { ...mockChallenge, phases: [], status: 'COMPLETED', type: 'Marathon Match' }
         mockSubmissions = [
@@ -2113,6 +2115,96 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveAttribute('aria-sort', 'none')
     })
 
+    it('shows global MM ranks across date-sorted pages and supports mobile rank sorting', () => {
+        mockChallenge = { ...mockChallenge, phases: [], status: 'COMPLETED', type: 'Marathon Match' }
+        mockSubmissions = Array.from({ length: 12 }, (_value, index) => ({
+            finalScore: 100 - index,
+            id: `submission-${index}`,
+            provisionalScore: index,
+            submittedDate: `2026-10-14T${String(index)
+                .padStart(2, '0')}:00:00Z`,
+            submitterHandle: `coder${index}`,
+        }))
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        expect(mockUseSWR)
+            .toHaveBeenCalledWith(
+                ['opportunities:submissions', 'challenge-id', undefined, 'all', 'all', 'desc'],
+                expect.any(Function),
+                expect.any(Object),
+            )
+        expect(screen.getAllByRole('columnheader')
+            .slice(0, 3)
+            .map(header => header.textContent))
+            .toEqual(['Final Rank', 'Provisional Rank', 'Handle'])
+        const firstRow = screen.getAllByRole('row')[1]
+        expect(within(firstRow)
+            .getAllByRole('cell')
+            .slice(0, 2)
+            .map(cell => cell.textContent))
+            .toEqual(['12', '1'])
+        expect(within(firstRow)
+            .getAllByRole('cell')[0])
+            .toHaveAttribute('data-mobile-label', 'Final Rank')
+        expect(within(firstRow)
+            .getAllByRole('cell')[1])
+            .toHaveAttribute('data-mobile-label', 'Provisional Rank')
+        fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+        expect(screen.getAllByRole('row'))
+            .toHaveLength(3)
+        expect(within(screen.getAllByRole('row')[1])
+            .getAllByRole('cell')
+            .slice(0, 2)
+            .map(cell => cell.textContent))
+            .toEqual(['2', '11'])
+        fireEvent.change(screen.getByRole('combobox', { name: 'Sort submissions by' }), {
+            target: { value: 'finalRank' },
+        })
+        expect(screen.getAllByRole('row'))
+            .toHaveLength(11)
+        expect(within(screen.getAllByRole('row')[1])
+            .getByRole('link', { name: 'coder0' }))
+            .toBeInTheDocument()
+    })
+
+    it('hides final ranks while Submission is open and marks missing scores unranked', () => {
+        mockChallenge = { ...mockChallenge, type: 'Marathon Match' }
+        mockSubmissions = [
+            { finalScore: 99, id: 'scored', provisionalScore: 80, submitterHandle: 'scored' },
+            { id: 'missing', submitterHandle: 'missing' },
+        ]
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        expect(screen.getAllByRole('row')
+            .slice(1)
+            .map(row => within(row)
+                .getAllByRole('cell')
+                .slice(0, 2)
+                .map(cell => cell.textContent)))
+            .toEqual([['N/A', '1'], ['N/A', 'N/A']])
+        fireEvent.click(screen.getByRole('button', { name: 'Final Rank' }))
+        expect(within(screen.getAllByRole('row')[1])
+            .getByRole('link', { name: 'scored' }))
+            .toBeInTheDocument()
+    })
+
+    it.each([
+        ['Development', 'Challenge'],
+        ['Development', 'First2Finish'],
+        ['Quality Assurance', 'Challenge'],
+        ['Design', 'Challenge'],
+    ])('omits MM ranks for %s %s challenges', (track, type) => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockChallenge = { ...mockChallenge, track, type }
+        mockSubmissions = [{ id: 'submission-1', submitterHandle: 'coder' }]
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        expect(screen.queryByRole('columnheader', { name: 'Final Rank' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('columnheader', { name: 'Provisional Rank' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('option', { name: 'Final Rank' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('option', { name: 'Provisional Rank' })).not.toBeInTheDocument()
+    })
+
     it('keeps My Submissions on date ordering after sorting the public table by handle', () => {
         mockProfile = { handle: 'coder', userId: 123 }
         mockRegistration = { id: 'resource-id' }
@@ -2122,6 +2214,8 @@ describe('ChallengeDetailsPage member flows', () => {
         fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
         fireEvent.click(screen.getByRole('button', { name: 'Handle' }))
         fireEvent.click(screen.getByRole('tab', { name: 'My Submissions' }))
+        expect(screen.queryByRole('columnheader', { name: 'Final Rank' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('columnheader', { name: 'Provisional Rank' })).not.toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Sort by Submission Date' }))
             .toBeInTheDocument()
         expect(screen.queryByRole('button', { name: 'Sort by Handle' }))

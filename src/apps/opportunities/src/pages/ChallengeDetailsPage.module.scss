@@ -412,6 +412,26 @@
     th:nth-child(6) { width: 160px; }
 }
 
+.marathonTableCard {
+    overflow-x: auto;
+}
+
+.marathonTable {
+    min-width: 1200px;
+
+    th,
+    td { padding-inline: 12px; }
+
+    th:first-child { width: 90px; }
+    th:nth-child(2) { width: 115px; }
+    th:nth-child(3) { width: 200px; }
+    th:nth-child(4) { width: 90px; }
+    th:nth-child(5) { width: 185px; }
+    th:nth-child(6),
+    th:nth-child(7) { width: 170px; }
+    th:nth-child(8) { width: 140px; }
+}
+
 .mySubmissionTable {
     th:first-child,
     th:nth-child(2),
