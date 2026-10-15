@@ -886,3 +886,15 @@ The shared toolbar includes configured Filestack attachments through
 Figma grouping (dividers between formatting, heading, size, alignment, list,
 insert and expand controls, plus the size chevron) lives in the shared editor
 styles, so challenge discussion composers match the public forums.
+
+### Challenge forum notifications
+
+The Challenge Forum overview includes a Watch forum / Unwatch forum control,
+including for empty forums. It reads the authenticated member's effective
+preference from `GET /v6/forums/challenges/:challengeId/watch` and saves choices
+with PUT or DELETE on that route. The Forums API defaults registrants and
+copilots to watching based on their challenge resource assignments and persists
+explicit opt-outs. Topic-specific watches remain independent. Loading and failed
+reads disable the control; failed saves preserve the displayed preference and
+show the API error. This requires the Forums API challenge-watch migration and
+endpoints to be deployed first.
