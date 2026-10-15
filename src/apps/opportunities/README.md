@@ -265,6 +265,9 @@ reopens or to `Approved` when the reviewer is selected.
 
 Long card titles expose their complete value in the authored dark tooltip only
 when the title is clipped and the pointer hovers the visible title text.
+Opportunity cards in list and grid views and forum topic cards use a 1px
+`#007D79` stroke on hover, without an outer shadow or movement. Hovering a forum
+title does not underline or recolor it; keyboard focus indicators are preserved.
 When a card has more skills than fit in its visible skill row, its `+n` control
 exposes the hidden skill names in the corresponding bullet-list tooltip. The
 Engagement role filter uses the authored four-row keyboard-accessible listbox
