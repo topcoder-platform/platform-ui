@@ -27,9 +27,19 @@ export const applicationFormSchema: yup.ObjectSchema<ApplicationFormData> = yup.
         .required(requiredMessage)
         .max(5000, 'Cover letter must be 5000 characters or less')
         .defined(),
+    cvFileUrl: yup
+        .string()
+        .url('Must be a valid URL')
+        .optional(),
     email: yup
         .string()
         .optional(),
+    expectedPayRate: yup
+        .string()
+        .trim()
+        .required(requiredMessage)
+        .max(100, 'Expected pay rate must be 100 characters or less')
+        .defined(),
     mobileNumber: yup
         .string()
         .required('Mobile Number must be defined')
@@ -63,14 +73,14 @@ export const applicationFormSchema: yup.ObjectSchema<ApplicationFormData> = yup.
                 .defined(),
         )
         .default([])
+        .test(
+            'has-portfolio-url',
+            'Add at least one portfolio URL',
+            entries => (entries ?? []).some(entry => !!entry.value?.trim()),
+        )
         .defined(),
-    resumeUrl: yup
+    referralSource: yup
         .string()
-        .url('Must be a valid URL')
-        .optional(),
-    yearsOfExperience: yup
-        .number()
-        .min(0, 'Must be 0 or greater')
-        .integer('Must be a whole number')
+        .max(500, 'Must be 500 characters or less')
         .optional(),
 })

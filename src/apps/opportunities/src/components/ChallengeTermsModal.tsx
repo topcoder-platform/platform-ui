@@ -29,6 +29,7 @@ import {
     getChallengeTermDocuSignUrl,
     getChallengeTermsDetails,
 } from '../services'
+import { buildDocuSignReturnUrl, DOCUSIGN_MESSAGE_TYPE } from '../utils/docusign-return.utils'
 
 import styles from './ChallengeTermsModal.module.scss'
 
@@ -77,18 +78,6 @@ export function resolveChallengeTermDocuSignTemplateId(
     return fallbackTemplateId && NDA_TITLE_PATTERN.test(term.title ?? '')
         ? fallbackTemplateId
         : undefined
-}
-
-/**
- * Builds the legacy iframe callback URL used by the Terms service.
- *
- * @returns the community-app endpoint that posts the DocuSign event to its parent frame.
- * @throws Does not throw.
- */
-function buildDocuSignReturnUrl(): string {
-    const communityAppUrl = EnvironmentConfig.COMMUNITY_APP_URL?.replace(/\/$/, '')
-        || window.location.origin
-    return `${communityAppUrl}/community-app-assets/iframe-break`
 }
 
 /**
@@ -641,7 +630,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         const handleDocuSignMessage = (event: MessageEvent): void => {
             const frameWindow = docuSignFrameRef.current?.contentWindow
             if (!frameWindow || event.source !== frameWindow || event.origin !== trustedOrigin) return
-            if (!event.data || event.data.type !== 'DocuSign') return
+            if (!event.data || event.data.type !== DOCUSIGN_MESSAGE_TYPE) return
 
             if (event.data.event === 'signing_complete' || event.data.event === 'viewing_complete') {
                 if (docuSignCallbackHandledRef.current) return

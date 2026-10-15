@@ -79,6 +79,24 @@ describe('engagementEditorSchema', () => {
             )
     })
 
+    it('accepts assignment details with or without total hours, but not a non-positive total', async () => {
+        const withDetails = (totalHours?: string): Promise<string[]> => getValidationMessages({
+            ...createValidFormValues(),
+            assignedMemberHandles: ['testaws1'],
+            assignmentDetails: [{ ...createAssignmentDetails('testaws1'), totalHours }],
+            isPrivate: true,
+            requiredMemberCount: 1,
+        })
+        const missingDetails = 'Assignment details are required for the assigned member.'
+
+        expect(await withDetails())
+            .not.toContain(missingDetails)
+        expect(await withDetails('480.5'))
+            .not.toContain(missingDetails)
+        expect(await withDetails('0'))
+            .toContain(missingDetails)
+    })
+
     it('accepts private engagements without public posting fields', async () => {
         await expect(engagementEditorSchema.validate({
             ...createValidFormValues(),

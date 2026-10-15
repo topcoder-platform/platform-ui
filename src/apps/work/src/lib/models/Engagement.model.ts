@@ -47,6 +47,8 @@ export interface Assignment {
     standardHoursPerWeek?: number | string
     status: AssignmentStatus | string
     terminationReason?: string
+    /** Hours allocated to the assignment overall; hours left are derived from it. Optional. */
+    totalHours?: number | string
     termsAccepted: boolean
     wiproIdEndDate?: string
 }
@@ -56,18 +58,26 @@ export interface Application {
     availability: string
     coverLetter?: string
     createdAt: string
+    /** URL of the CV file the applicant uploaded to S3 through Filestack. */
+    cvFileUrl?: string
     email: string
     engagementId: number | string
+    /** Pay rate the applicant expects, as entered by the applicant. */
+    expectedPayRate?: string
     handle: string
     id: number | string
     mobileNumber?: string
     name: string
     portfolioUrls?: string[]
+    /** How the applicant came to know of the opportunity. */
+    referralSource?: string
+    /** Link to a resume or professional profile (LinkedIn, Google Drive CV, personal website). */
     resumeUrl?: string
     status: ApplicationStatus | string
     updatedAt?: string
     userId: number | string
-    yearsOfExperience: number
+    /** Only present on applications submitted before the field was removed from the form. */
+    yearsOfExperience?: number
 }
 
 /**
@@ -138,9 +148,16 @@ export interface Engagement {
  */
 export interface TimesheetPaymentSummary {
     alreadyPaidEntryIds: string[]
+    /** Every approved hour in the period, paid or not. */
+    approvedHours: string
     entryIds: string[]
+    /** Standard hours for the period's weekdays inside the assignment; null when it cannot be derived. */
+    expectedHours: string | null
+    /** Hours in the period a payment already consumed. */
+    paidHours: string
     ratePerHour: string | null
     totalDays: number
+    /** Approved, unpaid hours - what this payment would cover. */
     totalHours: string
 }
 
@@ -191,6 +208,8 @@ export interface AssignmentPayment {
         grossAmount?: number
         hoursWorked?: number | string
         releaseDate?: string
+        /** Finance payment status of this installment, e.g. PAID or CANCELLED. */
+        status?: string
         totalAmount?: number
     }>
     hoursWorked?: number | string

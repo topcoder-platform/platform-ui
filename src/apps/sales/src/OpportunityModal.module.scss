@@ -1,5 +1,11 @@
 @import '@libs/ui/styles/2026/tokens';
 
+.modal {
+    width: 860px !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 32px) !important;
+}
+
 .body {
     display: block;
 }

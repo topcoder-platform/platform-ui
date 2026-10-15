@@ -48,4 +48,34 @@ describe('fetchApplications', () => {
                 }),
             ])
     })
+
+    it('maps the uploaded CV file URL and the resume/profile link separately', async () => {
+        const mockedGet = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+
+        mockedGet.mockResolvedValue([
+            {
+                cvFileUrl: ' https://cdn.filestackcontent.com/cv-handle ',
+                id: 'application-1',
+                resumeUrl: 'https://www.linkedin.com/in/testaws1',
+            },
+            {
+                cvFileUrl: '',
+                id: 'application-2',
+            },
+        ] as never)
+
+        await expect(fetchApplications('engagement-1'))
+            .resolves
+            .toEqual([
+                expect.objectContaining({
+                    cvFileUrl: 'https://cdn.filestackcontent.com/cv-handle',
+                    id: 'application-1',
+                    resumeUrl: 'https://www.linkedin.com/in/testaws1',
+                }),
+                expect.objectContaining({
+                    cvFileUrl: undefined,
+                    id: 'application-2',
+                }),
+            ])
+    })
 })

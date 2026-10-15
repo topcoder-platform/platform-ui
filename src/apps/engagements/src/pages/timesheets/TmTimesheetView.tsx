@@ -8,6 +8,7 @@ import { TimesheetGrid } from '../../components/timesheet-grid'
 import type { TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus } from '../../lib/models'
 import { approveTimesheetEntries, getTimesheet } from '../../lib/services'
+import type { TimesheetReviewStatus } from '../../lib/utils'
 import {
     buildRowsFromEntries,
     formatHoursLabel,
@@ -21,9 +22,11 @@ import styles from './TimesheetsPage.module.scss'
 interface TmTimesheetViewProps {
     timesheet: TimesheetView
     onTimesheetChange: (timesheet: TimesheetView) => void
+    /** Status filter to open on - the one the landing list was showing. Defaults to Pending Approval. */
+    initialStatus?: TimesheetReviewStatus
 }
 
-type StatusFilter = TimesheetEntryStatus.APPROVED | TimesheetEntryStatus.SUBMITTED
+type StatusFilter = TimesheetReviewStatus
 
 const STATUS_FILTER_OPTIONS = [
     {
@@ -62,7 +65,9 @@ const toPickerDate = (value: string): Date | undefined => {
  * Talent Managers can approve submitted rows, but may not edit, submit, or reopen entries.
  */
 const TmTimesheetView: FC<TmTimesheetViewProps> = (props: TmTimesheetViewProps) => {
-    const [statusFilter, setStatusFilter] = useState<StatusFilter>(TimesheetEntryStatus.SUBMITTED)
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>(
+        props.initialStatus ?? TimesheetEntryStatus.SUBMITTED,
+    )
     const [fromDate, setFromDate] = useState<string>('')
     const [toDate, setToDate] = useState<string>('')
     const [selectedDates, setSelectedDates] = useState<string[]>([])
@@ -234,27 +239,31 @@ const TmTimesheetView: FC<TmTimesheetViewProps> = (props: TmTimesheetViewProps) 
             )}
 
             {isPendingApprovalView && selectedRows.length > 0 && (
-                <section className={styles.summary}>
-                    <span>
-                        Total Selected Days:
-                        {' '}
-                        <strong>{totals.days}</strong>
-                    </span>
-                    <span>
-                        Total Selected Hours:
-                        {' '}
-                        <strong>{formatHoursLabel(totals.hours)}</strong>
-                    </span>
-                    <Button
-                        disabled={isApproving}
-                        label={`Approve (${selectedRows.length})`}
-                        onClick={function onOpenConfirm() {
-                            setActionError(undefined)
-                            setIsConfirmOpen(true)
-                        }}
-                        primary
-                    />
-                </section>
+                <>
+                    <section className={styles.summary}>
+                        <span>
+                            Total Selected Days:
+                            {' '}
+                            <strong>{totals.days}</strong>
+                        </span>
+                        <span>
+                            Total Selected Hours:
+                            {' '}
+                            <strong>{formatHoursLabel(totals.hours)}</strong>
+                        </span>
+                    </section>
+                    <section className={styles.actions}>
+                        <Button
+                            disabled={isApproving}
+                            label={`Approve (${selectedRows.length})`}
+                            onClick={function onOpenConfirm() {
+                                setActionError(undefined)
+                                setIsConfirmOpen(true)
+                            }}
+                            primary
+                        />
+                    </section>
+                </>
             )}
 
             <TimesheetApproveModal

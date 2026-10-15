@@ -42,21 +42,23 @@ jest.mock('../services', () => ({
 }))
 
 describe('opportunity presentation utilities', () => {
-    it('creates stable Markdown table-of-contents fragments including duplicate headings', () => {
+    it('includes only H1 headings with stable, unique table-of-contents fragments', () => {
         const markdown = [
-            '# Challenge',
-            '## [Getting Started](https://topcoder.com)',
+            '# [Getting Started](https://topcoder.com)',
+            '## Requirements',
             'Body',
-            '### Getting Started',
+            '### Subsection',
             '#### Detailed Steps',
+            '# **Getting Started**',
         ].join('\n')
 
         expect(extractTableOfContents(markdown))
             .toEqual([
-                { id: 'getting-started-2', label: 'Getting Started', level: 2 },
-                { id: 'getting-started-4', label: 'Getting Started', level: 3 },
-                { id: 'detailed-steps-5', label: 'Detailed Steps', level: 4 },
+                { id: 'getting-started-1', label: 'Getting Started', level: 1 },
+                { id: 'getting-started-6', label: 'Getting Started', level: 1 },
             ])
+        expect(extractTableOfContents('## Requirements\n### Subsection\n#### Detailed Steps'))
+            .toEqual([])
         expect(headingSlug('API & UI Requirements!'))
             .toBe('api-ui-requirements')
         expect(headingSlug('<script>alert(1)</script>'))

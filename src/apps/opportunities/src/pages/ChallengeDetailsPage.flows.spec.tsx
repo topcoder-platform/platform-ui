@@ -303,6 +303,7 @@ jest.mock('../utils', () => ({
             || challenge?.taskIsTask === true
             || challenge?.legacy?.pureV5Task === true
     },
+    isTopgearChallenge: (): boolean => false,
     marathonDashboardIsEnabled: (challenge: {
         metadata?: { name: string; value: unknown }[]
         type?: string
@@ -1928,6 +1929,11 @@ describe('ChallengeDetailsPage member flows', () => {
 
         const deleteButton = screen.getByRole('button', { name: 'Delete submission submission-1' })
         fireEvent.click(deleteButton)
+        expect(screen.getByRole('dialog', { name: 'Delete submission?' }))
+            .toHaveTextContent('Delete submission submission-1? This action cannot be undone.')
+        expect(window.confirm).not.toHaveBeenCalled()
+        expect(mockDeleteSubmission).not.toHaveBeenCalled()
+        fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
 
         await waitFor(() => expect(mockDeleteSubmission)
             .toHaveBeenCalledWith('submission-1'))

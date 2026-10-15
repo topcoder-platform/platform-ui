@@ -830,6 +830,57 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toEqual(['Launch', 'Registration', 'Checkpoint Submission', 'Winners'])
     })
 
+    it.each(['scheduled', 'actual'])(
+        'places Submission before concurrent F2F Iterative Review with %s dates',
+        dateSource => {
+            const sharedStart = '2026-10-02T05:53:00.000Z'
+            const challengeEnd = '2026-11-01T05:52:00.000Z'
+            render(
+                <MemoryRouter>
+                    <ChallengeDetailHeader
+                        busy={false}
+                        challenge={challengeFixture({
+                            endDate: challengeEnd,
+                            phases: [
+                                {
+                                    [`${dateSource}EndDate`]: '2026-10-03T05:52:00.000Z',
+                                    [`${dateSource}StartDate`]: sharedStart,
+                                    id: 'iterative-review',
+                                    name: 'Iterative Review',
+                                },
+                                {
+                                    [`${dateSource}EndDate`]: challengeEnd,
+                                    [`${dateSource}StartDate`]: sharedStart,
+                                    id: 'submission',
+                                    name: 'Submission',
+                                },
+                                {
+                                    [`${dateSource}EndDate`]: challengeEnd,
+                                    [`${dateSource}StartDate`]: sharedStart,
+                                    id: 'registration',
+                                    name: 'Registration',
+                                },
+                            ],
+                            startDate: sharedStart,
+                            type: { name: 'First2Finish' },
+                        })}
+                        isRegistered={false}
+                        onRegister={jest.fn()}
+                        onSubmit={jest.fn()}
+                        onUnregister={jest.fn()}
+                    />
+                </MemoryRouter>,
+            )
+
+            fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+            const itemLabels = within(screen.getByRole('region', { name: 'Challenge timeline' }))
+                .getAllByRole('listitem')
+                .map(item => item.querySelector('strong')?.textContent)
+            expect(itemLabels)
+                .toEqual(['Launch', 'Registration', 'Submission', 'Iterative Review', 'Winners'])
+        },
+    )
+
     it('omits an ended Task review and keeps Registration before Submission', () => {
         const { container }: RenderResult = render(
             <MemoryRouter>

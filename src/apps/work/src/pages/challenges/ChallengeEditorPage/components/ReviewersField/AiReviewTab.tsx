@@ -53,6 +53,11 @@ export interface AiReviewConfigSaveController {
 }
 
 interface AiReviewTabProps {
+    /**
+     * Keeps the review mode (AI_GATING / AI_ONLY) editable while `hasSubmissions` locks the
+     * rest of the configuration. The parent sets it until the challenge's review phase starts.
+     */
+    canSwitchReviewMode?: boolean
     challengeId?: string
     hasSubmissions?: boolean
     onConfigRemoved?: () => Promise<void> | void
@@ -89,6 +94,8 @@ interface ManualWorkflowEditorProps {
 }
 
 interface ReviewSettingsProps {
+    /** Keeps the review mode select enabled when `readOnly` locks the other settings. */
+    canChangeMode?: boolean
     configuration: AiReviewConfigurationDraft
     onUpdate: <K extends keyof AiReviewConfigurationDraft>(
         field: K,
@@ -418,7 +425,7 @@ const ReviewSettings: FC<ReviewSettingsProps> = (
                 <label className={styles.fieldGroup}>
                     <span>Review Mode</span>
                     <select
-                        disabled={props.readOnly}
+                        disabled={props.readOnly && props.canChangeMode !== true}
                         onChange={handleModeChange}
                         value={mode}
                     >
@@ -494,6 +501,9 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
     const normalizedChallengeId = normalizeReviewerText(props.challengeId)
     const onConfigRemoved = props.onConfigRemoved
     const readOnly = props.hasSubmissions === true
+    // A locked configuration can still switch its review mode until the review phase starts.
+    const canSwitchReviewModeOnly = readOnly && props.canSwitchReviewMode === true
+    const isAutosaveLocked = readOnly && !canSwitchReviewModeOnly
     const onConfigPersisted = props.onConfigPersisted
     const onConfigSaveControllerReady = props.onConfigSaveControllerReady
     const onSelectedModeChange = props.onSelectedModeChange
@@ -1041,7 +1051,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
     }, [configurationMode, selectedTrackName, selectedTypeName])
 
     const persistConfiguration = useCallback(async (): Promise<void> => {
-        if (!normalizedConfiguration || readOnly || validationErrors.length > 0) {
+        if (!normalizedConfiguration || isAutosaveLocked || validationErrors.length > 0) {
             return
         }
 
@@ -1075,7 +1085,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
                 configSavePromiseRef.current = undefined
             }
         }
-    }, [configId, normalizedConfiguration, readOnly, validationErrors])
+    }, [configId, isAutosaveLocked, normalizedConfiguration, validationErrors])
 
     const flushPendingSave = useCallback(async (): Promise<void> => {
         if (configSavePromiseRef.current) {
@@ -1122,7 +1132,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
     }, [flushPendingSave, onConfigSaveControllerReady])
 
     useEffect(() => {
-        if (!normalizedChallengeId || !configurationMode || !normalizedConfiguration || readOnly) {
+        if (!normalizedChallengeId || !configurationMode || !normalizedConfiguration || isAutosaveLocked) {
             return undefined
         }
 
@@ -1150,9 +1160,9 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
     }, [
         configId,
         configurationMode,
+        isAutosaveLocked,
         normalizedChallengeId,
         normalizedConfiguration,
-        readOnly,
         validationErrors,
     ])
 
@@ -1182,6 +1192,10 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
                 ? (
                     <div className={styles.infoBanner}>
                         AI review configuration is locked because this challenge already has submissions.
+                        {canSwitchReviewModeOnly
+                            ? ' You can still switch the review mode between AI_GATING and AI_ONLY '
+                                + 'until the review phase starts.'
+                            : undefined}
                     </div>
                 )
                 : undefined}
@@ -1295,6 +1309,17 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
                                 : undefined}
                         </section>
 
+                        {canSwitchReviewModeOnly
+                            ? (
+                                <ReviewSettings
+                                    canChangeMode
+                                    configuration={configuration}
+                                    onUpdate={updateConfiguration}
+                                    readOnly
+                                />
+                            )
+                            : undefined}
+
                         <section className={styles.sectionCard}>
                             <div className={styles.sectionHeader}>
                                 <h3>Template Workflows</h3>
@@ -1332,6 +1357,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
                         </div>
 
                         <ReviewSettings
+                            canChangeMode={canSwitchReviewModeOnly}
                             configuration={configuration}
                             onUpdate={updateConfiguration}
                             readOnly={readOnly}

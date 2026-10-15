@@ -55,6 +55,36 @@
     border-color: $black-20;
 }
 
+.status-pending_approval {
+    background: $orange-25;
+    color: $orange-140;
+    border-color: $orange-100;
+}
+
+.status-assigned {
+    background: $teal-25;
+    color: $teal-140;
+    border-color: $teal-100;
+}
+
+.status-completed {
+    background: $black-5;
+    color: $black-60;
+    border-color: $black-20;
+}
+
+.status-approved {
+    background: $green-25;
+    color: $green-1;
+    border-color: $green-120;
+}
+
+.status-not_submitted {
+    background: $black-5;
+    color: $black-60;
+    border-color: $black-20;
+}
+
 .status-generic {
     background: $black-5;
     color: $black-80;

@@ -79,6 +79,7 @@ jest.mock('../utils', () => ({
     formatMarathonScore: (): string => '—',
     isMarathonMatchChallenge: (): boolean => false,
     isTaskChallenge: (): boolean => false,
+    isTopgearChallenge: (): boolean => false,
     marathonDashboardIsEnabled: (): boolean => false,
     marathonLeaderboardIsPublic: (): boolean => false,
     marathonSubmissionScores: (): Record<string, never> => ({}),

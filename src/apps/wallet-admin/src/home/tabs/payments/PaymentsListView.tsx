@@ -59,6 +59,7 @@ type PaymentListingTab = 'topcoder' | 'topgear' | 'taas'
 const TOPCODER_PAYMENT_CATEGORIES: ReadonlyArray<string> = [
     'TASK_PAYMENT',
     'CONTEST_PAYMENT',
+    'CONTEST_CHECKPOINT_PAYMENT',
     'COPILOT_PAYMENT',
     'REVIEW_BOARD_PAYMENT',
     'ENGAGEMENT_PAYMENT',
@@ -80,6 +81,7 @@ const ALL_STATUS_FILTER_VALUES: ReadonlyArray<string> = STATUS_FILTER_OPTIONS.ma
 const TOPCODER_TYPE_FILTER_OPTIONS: { label: string, value: string }[] = [
     { label: 'Task Payment', value: 'Task' },
     { label: 'Contest Payment', value: 'Contest' },
+    { label: 'Contest Checkpoint Payment', value: 'Contest Checkpoint' },
     { label: 'Copilot Payment', value: 'Copilot' },
     { label: 'Review Board Payment', value: 'Review Board' },
     { label: 'Engagement Payment', value: 'Engagement' },
@@ -465,11 +467,17 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
 
     const hasActiveFilters = React.useMemo(() => {
         const approverDefaultDates = isApproverView ? getApproverDefaultDateRange() : undefined
+        const defaultTypeCategories = isApproverView ? approverAllowedCategories : TOPCODER_PAYMENT_CATEGORIES
 
         return Object.entries(appliedFilters)
             .some(([key, value]) => {
-                if (key === 'category' || key === 'categories') {
+                if (key === 'category') {
                     return false
+                }
+
+                // `categories` falls back to every type in the view, so only a narrowed Type selection is a filter.
+                if (key === 'categories') {
+                    return defaultTypeCategories.some(category => !value.includes(category))
                 }
 
                 if (approverDefaultDates && key === 'dateFrom' && value[0] === approverDefaultDates.dateFrom) {

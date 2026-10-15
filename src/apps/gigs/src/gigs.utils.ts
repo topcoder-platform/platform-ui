@@ -3,7 +3,8 @@ import { EnvironmentConfig } from '~/config'
 import { ApplicationErrors, ApplicationValues, Candidate, Gig } from './models'
 
 export const GIGS_PER_PAGE = 10
-export const MAX_RESUME_BYTES = 8000000
+/** Resume size accepted by the website API, whose multipart body must fit Lambda's 6 MB request limit. */
+export const MAX_RESUME_BYTES = 4000000
 export const GIGS_PATH = '/gigs'
 
 /** Reads a named Recruit field from a job; returns display text or the supplied fallback. Does not throw. */
@@ -76,7 +77,7 @@ export function filterGigs(jobs: Gig[], search: string, location: string, sort: 
 
 /**
  * Validates application values against the legacy contract, including its field-specific validation copy,
- * and the server's 8,000,000-byte upload limit.
+ * and the website API's 4,000,000-byte resume limit.
  */
 export function validateApplication(values: ApplicationValues, candidate?: Candidate): ApplicationErrors {
     const errors: ApplicationErrors = {}
@@ -114,7 +115,7 @@ export function validateApplication(values: ApplicationValues, candidate?: Candi
         errors.resume = 'Only PDF and DOCX files are allowed.'
     }
 
-    if (values.resume && values.resume.size > MAX_RESUME_BYTES) errors.resume = 'The maximum file size is 8 MB.'
+    if (values.resume && values.resume.size > MAX_RESUME_BYTES) errors.resume = 'The maximum file size is 4 MB.'
     return errors
 }
 

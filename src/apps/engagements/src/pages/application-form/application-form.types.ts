@@ -7,9 +7,13 @@ export interface ApplicationFormData {
     email?: string
     address?: string
     coverLetter: string
-    resumeUrl?: string
+    /** URL of the CV file uploaded to S3 through Filestack. */
+    cvFileUrl?: string
     portfolioUrls: PortfolioUrlEntry[]
-    yearsOfExperience?: number
+    /** Pay rate the applicant expects, as free text (e.g. "$50/hour"). */
+    expectedPayRate: string
+    /** How the applicant came to know of the opportunity. */
+    referralSource?: string
     availability?: string
     mobileNumber?: string
 }

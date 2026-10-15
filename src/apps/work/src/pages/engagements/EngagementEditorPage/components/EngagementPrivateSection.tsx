@@ -143,6 +143,7 @@ function createEmptyAssignmentDetails(): AssignmentDetailsFormValue {
         standardHoursPerDay: '',
         standardHoursPerWeek: '',
         startDate: '',
+        totalHours: undefined,
         wiproIdEndDate: undefined,
     }
 }
@@ -330,6 +331,12 @@ export const EngagementPrivateSection: FC<EngagementPrivateSectionProps> = (
                                                                         <span className={styles.detailLabel}>Hours/Day:</span>
                                                                         {' '}
                                                                         {getAssignmentStandardHoursPerDay(assignmentDetail) || '-'}
+                                                                        ,
+                                                                    </span>
+                                                                    <span>
+                                                                        <span className={styles.detailLabel}>Total Hours:</span>
+                                                                        {' '}
+                                                                        {assignmentDetail.totalHours || '-'}
                                                                         ,
                                                                     </span>
                                                                     <span>

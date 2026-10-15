@@ -52,6 +52,23 @@
 .addFormField {
     flex: 1 1 260px;
     min-width: 220px;
+
+    // The shared picker focuses in blue for the Work App; in the Engagements app fields focus green.
+    // The doubled class outranks the picker's own rule.
+    :global(.challenge-select__control.challenge-select__control--is-focused) {
+        border-color: $turq-160;
+        box-shadow: 0 0 0 1px $turq-160;
+    }
+    // The shared picker's label is grey; here it reads as a field label like the rest of the modal.
+    label {
+        color: $black-100;
+    }
+}
+
+// Bottoms are aligned because the picker carries its label above the input; lift the button by half
+// the height difference so it sits centred on the 44px input instead.
+.addButton {
+    margin-bottom: calc((44px - #{$sp-6}) / 2);
 }
 
 .emptyState {

@@ -44,6 +44,7 @@ export interface AcceptApplicationFormData {
     startDate: string
     standardHoursPerDay: number
     standardHoursPerWeek: number
+    totalHours?: number
     wiproIdEndDate?: string
 }
 
@@ -61,6 +62,7 @@ interface ValidationErrors {
     ratePerHour?: string
     startDate?: string
     standardHoursPerDay?: string
+    totalHours?: string
 }
 
 const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
@@ -75,6 +77,7 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
     const [source, setSource] = useState<string>('')
     const [startDate, setStartDate] = useState<Date | undefined>()
     const [standardHoursPerDay, setStandardHoursPerDay] = useState<string>('')
+    const [totalHours, setTotalHours] = useState<string>('')
     const [wiproIdEndDate, setWiproIdEndDate] = useState<Date | undefined>()
 
     const isSubmitting = props.isSubmitting === true
@@ -105,6 +108,7 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
         setSource('')
         setStartDate(undefined)
         setStandardHoursPerDay('')
+        setTotalHours('')
         setWiproIdEndDate(undefined)
     }, [])
 
@@ -124,9 +128,17 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
         const normalizedPaymentCycle = String(paymentCycle || 'WEEKLY')
             .trim()
             .toUpperCase()
+        // Optional: blank means no total is tracked, so hours left stays blank too.
+        const parsedTotalHours = totalHours.trim()
+            ? toPositiveNumberWithMaxDecimalPlaces(totalHours, 2)
+            : undefined
 
         if (!startDate) {
             nextErrors.startDate = 'Billing start date is required.'
+        }
+
+        if (totalHours.trim() && parsedTotalHours === undefined) {
+            nextErrors.totalHours = 'Total hours must be a positive number with up to 2 decimal places.'
         }
 
         if (parsedDurationMonths === undefined) {
@@ -171,6 +183,7 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
             standardHoursPerDay: parsedStandardHoursPerDay,
             standardHoursPerWeek: Number((parsedStandardHoursPerDay * 5).toFixed(2)),
             startDate: serializeTentativeAssignmentDate(startDate),
+            totalHours: parsedTotalHours,
             wiproIdEndDate: wiproIdEndDate
                 ? serializeTentativeAssignmentDate(wiproIdEndDate)
                 : undefined,
@@ -189,6 +202,7 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
         source,
         standardHoursPerDay,
         startDate,
+        totalHours,
         wiproIdEndDate,
     ])
 
@@ -313,6 +327,30 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
                     />
                     {errors.standardHoursPerDay
                         ? <p className={styles.error}>{errors.standardHoursPerDay}</p>
+                        : undefined}
+                </div>
+
+                <div className={styles.fieldRow}>
+                    <label className={styles.label} htmlFor='accept-application-total-hours'>
+                        Total hours
+                    </label>
+                    <input
+                        id='accept-application-total-hours'
+                        className={styles.input}
+                        inputMode='decimal'
+                        onChange={event => {
+                            setTotalHours(sanitizePositiveNumericInput(event.target.value, 2))
+                            setErrors(previous => ({
+                                ...previous,
+                                totalHours: undefined,
+                            }))
+                        }}
+                        pattern='[0-9.]*'
+                        type='text'
+                        value={totalHours}
+                    />
+                    {errors.totalHours
+                        ? <p className={styles.error}>{errors.totalHours}</p>
                         : undefined}
                 </div>
 

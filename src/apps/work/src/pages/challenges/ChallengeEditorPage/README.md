@@ -10,8 +10,9 @@
   The read-only `Review` section also renders a configuration summary before the human/AI tabs so AI
   gating details remain visible even though the surrounding form fieldset is disabled.
 - `ChallengeEditorPage.tsx` also renders challenge quick links in the right header action group for
-  existing challenges (`Challenge`, `Review`, and `Forum` when present). In view mode it adds
-  an `Edit` action only when the challenge is not completed.
+  existing challenges (`Challenge`, `Review`, and `Forum` when present). `Challenge` opens the
+  Opportunities detail page at `EnvironmentConfig.PLATFORMUI_URL/opportunities/challenge/:challengeId`
+  in a new tab. In view mode it adds an `Edit` action only when the challenge is not completed.
 - `components/ChallengeEditorForm.tsx`: React Hook Form container with autosave and manual save.
   In view mode it renders the existing challenge data in a disabled fieldset and omits save/launch
   footer actions. Manual saves from an existing `/edit` route, including trailing-slash variants,
@@ -50,7 +51,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `skills`: required unless billing account is listed in `SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS`.
 - `reviewer`: optional for task challenges.
 - `reviewers`: when using `Save as Draft` from `NEW` status, non-task/non-marathon challenges must include reviewer coverage for configured review phases. If required phases are configured, each phase must have at least one member reviewer with a scorecard. The Screening and Checkpoint Screening configurations and scorecards remain required, but their Screener member assignments may be left empty until after launch. Design `Challenge` reviewers additionally leave the Checkpoint Review, Review, and Approval member assignments optional because the selected copilot is assigned to those private phases during save; other closed manual reviewer assignments remain required.
-- `AI review configuration`: templates and manual configs autosave separately once valid, switching a template-backed config to manual mode keeps its copied settings but clears the template link on save, and the AI tab becomes read-only after the challenge has submissions.
+- `AI review configuration`: templates and manual configs autosave separately once valid, switching a template-backed config to manual mode keeps its copied settings but clears the template link on save, and the AI tab becomes read-only after the challenge has submissions. The only exception is the review mode: it can still switch between AI_GATING and AI_ONLY (for manual and template configs) until a review phase (AI Screening, AI Review, Review, ...) starts. When an active challenge's mode no longer matches its timeline, the editor saves the reviewers right away so challenge-api moves the challenge to the matching timeline (AI Review and Approval for AI_ONLY, AI Screening and the review phases for AI_GATING), then loads the new phases into Timeline & Schedule. For NEW and DRAFT challenges still using the AI-only timeline, switching away from AI_ONLY or removing the AI config likewise applies the default schedule returned by the reviewer save, making human review phases available before the manual-review requirement can block saving.
 
 ## Autosave Behavior
 
@@ -97,6 +98,9 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ChallengeDescriptionField`: public markdown spec editor with a `Copy spec` action that copies
   the current Markdown in both edit and read-only view modes.
 - `ChallengePrivateDescriptionField`: optional private markdown spec editor.
+- Both specification fields use `FormMarkdownEditor` with Figtree H1/H2/H3
+  headings at 24px/32px, 20px/30px, and 18px/26px (font size/line height).
+  The same typography applies in edit, read-only, and Markdown preview modes.
 - `TermsField`: advanced-option multi-select for challenge terms. The create route seeds the standard Topcoder terms entry automatically once the terms list loads, including immediately after the first draft-creation step assigns a challenge id, so the editor matches legacy work-manager defaults while still allowing the NDA toggle to add or remove the NDA term separately. The seeded Standard Terms UUID can be set with `REACT_APP_DEFAULT_STANDARD_TERMS_UUID`, `DEFAULT_STANDARD_TERMS_UUID`, or `EnvironmentConfig.DEFAULT_STANDARD_TERMS_UUID`; legacy IDs and normalized titles are only fallback matching.
 - `ChallengeTagsField`: multi creatable tag picker excluding special challenge tags.
 - `ChallengeSkillsField`: async multi skills picker with billing-account-based required behavior.

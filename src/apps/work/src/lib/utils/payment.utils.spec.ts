@@ -3,7 +3,10 @@ import type {
     AssignmentPayment,
 } from '../models'
 import {
+    calculateAssignmentHoursLeft,
     calculatePaymentChallengeFee,
+    getAssignmentTotalHours,
+    sumProcessedPaymentHours,
     getPaymentAmount,
     getPaymentBillingAccountId,
     getPaymentBillingAccountName,
@@ -88,5 +91,58 @@ describe('payment.utils', () => {
             .toBe('80001063')
         expect(getPaymentBillingAccountName(payment))
             .toBe('BA For Marios')
+    })
+
+    describe('hours left', () => {
+        const payment = (hoursWorked: number, status?: string): AssignmentPayment => ({
+            attributes: { hoursWorked },
+            details: [{ status }],
+        })
+
+        it('counts paid, processing, owed, and on-hold payments as processed', () => {
+            expect(sumProcessedPaymentHours([
+                payment(40, 'PAID'),
+                payment(8.5, 'PROCESSING'),
+                payment(10, 'OWED'),
+                payment(2, 'ON_HOLD_ADMIN'),
+            ]))
+                .toBe(60.5)
+        })
+
+        it('leaves out cancelled, failed, returned, and credited payments', () => {
+            expect(sumProcessedPaymentHours([
+                payment(40, 'PAID'),
+                payment(8, 'CANCELLED'),
+                payment(8, 'FAILED'),
+                payment(8, 'RETURNED'),
+                payment(8, 'CREDITED'),
+            ]))
+                .toBe(40)
+        })
+
+        it('falls back to the payment status when there are no installment details', () => {
+            expect(sumProcessedPaymentHours([
+                { hoursWorked: 5, status: 'PAID' },
+                { hoursWorked: 5, status: 'CANCELLED' },
+            ]))
+                .toBe(5)
+        })
+
+        it('is total hours minus processed hours', () => {
+            expect(calculateAssignmentHoursLeft({ totalHours: '480' }, 60.5))
+                .toBe(419.5)
+        })
+
+        it('can go negative when more was paid than allocated', () => {
+            expect(calculateAssignmentHoursLeft({ totalHours: 40 }, 48))
+                .toBe(-8)
+        })
+
+        it('is blank without total hours', () => {
+            expect(calculateAssignmentHoursLeft({}, 40))
+                .toBeUndefined()
+            expect(getAssignmentTotalHours({ totalHours: '' }))
+                .toBeUndefined()
+        })
     })
 })

@@ -1,10 +1,89 @@
 # Opportunities
 
 The Opportunities app replaces the legacy community-app challenge discovery,
-challenge detail, and reviewer-opportunity detail experiences. The main route
-is `/opportunities`; domain tabs use `/opportunities/:kind`, challenge details
-use `/opportunities/challenge/:challengeId`, and review details use
-`/opportunities/review/:reviewOpportunityId`.
+challenge detail, reviewer-opportunity detail, and member home experiences. The
+main route is `/opportunities`; domain tabs use `/opportunities/:kind`,
+challenge details use `/opportunities/challenge/:challengeId`, review details
+use `/opportunities/review/:reviewOpportunityId`, and the member home uses
+`/opportunities/home`.
+
+The Work app links directly to challenge details from its editor `Challenge`
+button and challenge list `CA` action. Both use the environment-specific
+`EnvironmentConfig.PLATFORMUI_URL` host and open in a new tab.
+
+## Member home
+
+`/opportunities/home` (`/home` on the `opportunities` subdomain, where the app
+is mounted at the host root) replaces community-app's `/home` dashboard and its
+`/my-dashboard` alias. Community-app's `/home` route is not redirected here yet.
+The `home` child route is declared ahead of the `:kind` category catch-all.
+
+Like community-app, the page is for signed-in members only: the route sets
+`authRequired`, so an anonymous visitor is sent to login with the page as the
+return URL. The TopGear host has no member home (community-app's Wipro
+community had none), so `HomePage` redirects it to the TopGear challenge listing.
+
+| Community-app widget | Data source | Platform UI |
+| --- | --- | --- |
+| Topcoder Time (`TCTime`) | Browser clock, `America/New_York` | `HomeTopcoderTime` / `useTopcoderTime`; formatted with `Intl` (for example `Oct 8th, 07:31 UTC-4`) and refreshed at each minute boundary |
+| Center viewport (banner slider) | CMS `default` space viewport `IYMEHgYwk6S0S9tx5SsHd` (dev) / `1BK50OyMT29IOavUC7wSEB` (prod) | `HomeCmsViewport` (`banner`) with `HomeBannerSlider` |
+| Opportunities feed (`ChallengesFeed`) | `GET /v6/challenges` | `HomeChallengesFeed` / `useHomeChallengeFeed` / `getHomeChallengeFeed` |
+| Right viewport ("Join us on Discord") | CMS viewport `2qVJTorSdRVNlfRqoQocUH` (dev) / `SSwOFPT8l0WpGhqCBRISG` (prod) | `HomeCmsViewport` (`sidebar`) |
+| Left viewport | CMS viewport `2tq6jtu9GzPab7lAb7swlT` (dev) / `6sjlJHboX3aG3mFS5FnZND` (prod); currently one empty content block | `HomeCmsViewport` (`sidebar`); renders nothing while empty |
+
+Desktop keeps community-app's three columns (time and left slot; banner and
+feed; right slot). At 1100px and below the widgets stack in community-app's
+mobile order: time, banner, feed, right slot, left slot.
+
+The feed requests `page=1&perPage=20&types[]=CH&types[]=F2F&types[]=MM&status=ACTIVE&currentPhaseName=Registration&sortBy=updated&sortOrder=desc&isLightweight=true`,
+removes challenges tagged `Innovation Challenge` (Challenge API has no tag
+exclusion filter), and shows the first five as list-view competition cards (the
+Browse default, which stacks on narrow screens).
+The request goes through the shared XHR client, so a signed-in member's token is
+sent and group challenges the member can see may appear; community-app's
+feed request was anonymous. The member's Submitter registrations reuse the
+Browse Competitions registration request and SWR key to mark Registered cards.
+"View all" and card skill chips open Browse Competitions
+(`<rootRoute>/competitions`, with `?search=` for a skill). Unlike community-app,
+which hid the feed when it had no items, the feed shows loading, empty, and
+retryable error states.
+
+CMS slots read the retained viewport entries from the Payload `default` space
+through `PayloadCmsClient` (`include=10`), so they need
+`REACT_APP_PAYLOAD_CMS_DEFAULT_ACCESS_TOKEN` (see `src/libs/cms`). Development
+domains (`-dev`) use the `[DEV ENV]` entries and every other domain uses the
+production entries, as community-app did. `collectHomeCmsBlocks` flattens
+nested `viewport`, `contentBlock`, and `contentSlider` entries; other content
+types are skipped, as are blocks hidden with `extraStylesForContainer.display:
+none` (the legacy slider CSS carriers) and blocks that are empty once their
+`<style>` elements are removed. Markdown renders through `CmsMarkdown`, so
+authored inline styles are dropped: banner images fill the center column and
+links in the side slots render as teal call-to-action buttons. Sliders honor
+`autoStart` and `duration` (default 5 seconds), pause on hover or focus, and do
+not auto-advance when reduced motion is requested; on pointer devices the
+previous/next arrows appear on hover or keyboard focus so they do not cover the
+banner artwork. A slot whose request fails, including when the access token is
+missing, renders nothing; the rest of the page still works.
+
+`src/libs/cms` currently reads only `cms.topcoder-dev.com` and renders images
+only from `assets.topcoder-dev.com` in every environment. The production
+viewport entries also exist in that CMS with `assets.topcoder-dev.com` images,
+so production builds render them; if the shared client later moves production
+to `cms.topcoder.com`/`assets.topcoder.com`, this page follows it unchanged.
+
+Community-app dashboard pieces that are intentionally not ported:
+
+- `GigsFeed` (Recruit CRM gigs through community-app's `/api/recruit` proxy) and
+  `NewsFeed` (Vanilla forum "Topcoder News & Updates" through
+  `/api/cdn/public/forums/discussions`) were already commented out of the
+  dashboard (CORE-346 and TOP-1390) and depend on community-app server proxies.
+- `BlogFeed` (`/api/blog` RSS proxy) and `ThriveArticlesFeed` containers live
+  under `containers/Dashboard` but were only used by community-app's
+  `/examples` pages, never by `/home`.
+- The `page.dashboard` show/hide state (announcement, earnings, challenge
+  filter, tab selection) has no consumer in the current dashboard, and the
+  `/sandbox/cms/dashboard/announcements` preview is a CMS authoring sandbox,
+  not part of `/home`.
 
 ## TopGear community host
 
@@ -15,9 +94,12 @@ first hostname label is `topgear`:
 - all Topgear routes require login and verified membership in **Wipro - All**.
   `TopgearAccessGate` withholds the entire route tree until the authenticated
   Groups API (`/v6/groups/memberGroups/:memberId?uuid=true`) confirms the active
-  membership. Anonymous users go to login with their full return URL; non-members
-  see an access-restricted page. Errors, missing configuration, and pending checks
-  never render the listing or request challenge data. Direct detail routes are
+  membership. Anonymous users go to the configured Accounts app with
+  `utm_source=wipro` and their full return URL, matching community-app's Wipro
+  login flow. This applies to `topgear.topcoder.com` and
+  `topgear.topcoder-dev.com`; other hosts retain their existing login behavior.
+  Non-members see an access-restricted page. Errors, missing configuration, and
+  pending checks never render the listing or request challenge data. Direct detail routes are
   gated too, and checks repeat when the member or route path changes;
 - the required group defaults to `b7f7c0f8-8ee8-409e-9e5c-33404983b635` and can be
   configured separately with `REACT_APP_TOPGEAR_ACCESS_GROUP_ID`. Changing the
@@ -239,6 +321,16 @@ to their authored subtype icons and member-facing labels.
   Design challenges use screening and review score copy for the Review App,
   title case educational links with more space between them, and a white arrow
   in the program banner.
+- TopGear (Wipro) challenges, detected on the `topgear` host or through the
+  configured TopGear group (`isTopgearChallenge`), follow community-app's Wipro
+  rail: the Review App card, the Topcoder Thrive article, the AI reviewer guide,
+  and Usable Code Rules are omitted, and Educational Materials links to the
+  TopGear terms (`topgearTermsUrl`, from `URLS.TOPGEAR_TERMS`) as "TopGear
+  Challenges Explained". The Review Style and Challenge Terms sections are also
+  omitted, so the challenge-information card only appears for TopGear challenges
+  that have design guidance or authored Challenge Links. The Requirements tab
+  also omits the notice asking members to monitor and post in the forums, since
+  TopGear challenges do not use forums.
 
 ## Challenge detail timeline
 
@@ -249,7 +341,10 @@ separate rows, and Winners uses the top-level challenge end. Only responses
 without a valid challenge end fall back to the latest valid phase end. When
 Registration and another phase share the same valid start, Registration is
 shown first so overlapping Checkpoint Submission schedules match the authored
-challenge flow rather than being ordered by their different end dates.
+challenge flow rather than being ordered by their different end dates. Submission
+also precedes other phases with the same valid start (after Registration), so an
+overlapping F2F Iterative Review never moves ahead of Submission just because its
+deadline is earlier.
 
 Open phase flags, `currentPhase`, and `currentPhaseNames` can mark overlapping
 phases current. Ended phases and boundaries render complete, future milestones
@@ -330,22 +425,28 @@ white separator so neighbors that share a palette stay distinct.
 
 ## Challenge Markdown table of contents
 
-Challenge descriptions are safe Markdown. Authors create the generated table
-of contents with level-two and level-three ATX headings:
+Opportunity and challenge description headings use Figtree at 24px/32px for
+H1, 20px/30px for H2, and 18px/26px for H3 (font size/line height), matching
+the Work specification editor. This scale also applies to API-provided private
+descriptions and legacy HTML descriptions.
+
+Challenge descriptions authored in Work use Markdown. Only level-one (H1)
+ATX headings appear in the generated table of contents on the challenge page:
 
 ```markdown
-## Challenge Summary
+# Challenge Summary
 
 Summary content.
 
-### Required Deliverables
+## Required Deliverables
 
 Deliverable content.
 ```
 
-- `##` creates a top-level table-of-contents entry.
-- `###` creates a nested entry.
-- `#` is reserved for the page title and is not included.
+- `#` creates a table-of-contents entry.
+- `##`, `###`, and deeper headings still render in the description but do not
+  appear in the table of contents.
+- Descriptions without H1 headings do not display a table of contents.
 - Duplicate headings are supported; stable source-line suffixes keep their
   fragment links unique.
 - GFM tables and hard line breaks are supported. Raw HTML is not rendered.
@@ -452,8 +553,13 @@ The compact Important Reminder uses the Figma teal action buttons and rounded
 checkmark asset without a footer separator.
 DocuSign-template terms, plus NDA-titled terms that use the environment's
 legacy DocuSign template fallback, replace placeholder Terms API text with the
-embedded recipient view in both registration and passive review. The frame
-returns through community-app's iframe callback, and registration remains
+embedded recipient view in both registration and passive review. DocuSign
+returns the frame to this app's own `terms/docusign-return` route
+(`/opportunities/terms/docusign-return`, or `/terms/docusign-return` on the
+opportunities subdomain), which replaced community-app's
+`/community-app-assets/iframe-break` callback. That page posts the DocuSign query
+(`event`, `envelopeId`, …) with `type: 'DocuSign'` to its same-origin parent,
+and the modal accepts only messages from that frame and origin. Registration remains
 blocked while Opportunities polls authenticated outstanding terms until the
 service confirms the signature. Confirmation reads bypass HTTP caches and use
 a bounded 91-second backoff window, including retries for transient Terms API
@@ -471,7 +577,8 @@ Registrants table immediately instead of waiting for a page reload. Once a
 registered member has submitted, Unregister stays disabled; a pending or failed
 submission-count check also fails closed so a transient read cannot expose a
 destructive action. Registrant and submission rating cells use the same public
-member rating bands as their handles.
+member rating bands as their handles. Handles without a usable rating use the
+canonical unrated dark gray (`#2a2a2a`) across challenge detail tables and cards.
 
 Design challenges with `submissionsViewable=true` use the private-submission
 gallery from the Figma flow. Authenticated members receive the protected
@@ -669,7 +776,11 @@ the API's complete submission count in parentheses when available. Artifact
 controls retain the ownership, staff, and completed-contestant access described
 above; viewing history does not grant permission to download artifacts.
 Design submissions can be deleted only while Submission or Checkpoint
-Submission is open. Successful deletion updates both the challenge and member
+Submission is open. The delete action opens the shared in-app confirmation modal
+with the selected submission ID and an irreversible-action warning. Cancel or
+dismissal leaves the submission untouched. While deletion is pending, confirmation
+and dismissal are disabled; a failure keeps the dialog available for retry.
+Successful deletion closes the dialog and updates both the challenge and member
 submission counts as well as the current list. Replacing a Design submission
 without reloading therefore preserves accurate totals, and deleting the
 member's last submission clears the submission-based Unregister restriction.
@@ -761,3 +872,17 @@ disabled presentation. Fun-challenge prize copy is centered and wraps inside
 the prize card at every supported width. The prize summary uses the light
 second- and third-place card illustrations, while Winners continues to use the
 dark podium medals.
+
+
+### Shared public forums
+
+The [Forums app](../forums/README.md) reuses the challenge forum member, topic,
+post and Markdown editor components. `ForumTopicView` accepts optional
+`contentOnly`, `onSignIn` and `onWatch` props for the public page layout and guest
+login handoff. Topic detail may include API `permissions`; an explicit denied
+reply permission hides the composer. Existing challenge callers need no changes.
+The shared toolbar includes configured Filestack attachments through
+`uploadForumAttachment`, preserving Markdown links and rated @mentions. Its
+Figma grouping (dividers between formatting, heading, size, alignment, list,
+insert and expand controls, plus the size chevron) lives in the shared editor
+styles, so challenge discussion composers match the public forums.

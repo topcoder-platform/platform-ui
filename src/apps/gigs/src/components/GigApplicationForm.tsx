@@ -281,7 +281,7 @@ const GigApplicationForm: FC<{ job: Gig; slug: string; profile: UserProfile; can
                             aria-describedby={errors.resume ? 'gig-resume-error' : 'gig-resume-hint'}
                             onChange={event => update('resume', event.target.files?.[0])}
                         />
-                        <p id='gig-resume-hint'>PDF or DOCX, up to 8 MB</p>
+                        <p id='gig-resume-hint'>PDF or DOCX, up to 4 MB</p>
                         {values.resume && (
                             <Button
                                 secondary

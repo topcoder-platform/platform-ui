@@ -14,14 +14,14 @@ export interface CampusUniversity {
 }
 
 export const CAMPUS_UNIVERSITIES: ReadonlyArray<CampusUniversity> = [
-    {
-        groupId: '41b00495-659d-4610-ba8e-62543d6c8168',
-        groupName: 'mecw',
-        logoUrl: 'https://assets.topcoder-dev.com/media/contentful/images.ctfassets.net/'
-            + '96/96c272a3d61609101d2aec2bad4dd3e397bd3202d7454eb410c3824d0f18badf/'
-            + 'Logo_lockup__1_-96c272a3d61609101d2aec2bad4dd3e397bd3202d7454eb410c3824d0f18badf.svg',
-        name: 'Mahendra Engineering College for Women',
-    },
+    // {
+    //     groupId: '41b00495-659d-4610-ba8e-62543d6c8168',
+    //     groupName: 'mecw',
+    //     logoUrl: 'https://assets.topcoder-dev.com/media/contentful/images.ctfassets.net/'
+    //         + '96/96c272a3d61609101d2aec2bad4dd3e397bd3202d7454eb410c3824d0f18badf/'
+    //         + 'Logo_lockup__1_-96c272a3d61609101d2aec2bad4dd3e397bd3202d7454eb410c3824d0f18badf.svg',
+    //     name: 'Mahendra Engineering College for Women',
+    // },
     {
         groupId: '0f241463-8f48-4248-85a1-ba0fae4ac226',
         groupName: 'mahendra',
@@ -58,17 +58,17 @@ export const CAMPUS_UNIVERSITIES: ReadonlyArray<CampusUniversity> = [
         logoUrl: 'https://assets.topcoder-dev.com/media/kl%20-%20logos.svg',
         name: 'K L University',
     },
-    {
-        groupId: 'da3a64f6-4478-47dc-b051-75d33a0ac759',
-        groupName: 'lpu',
-        logoUrl: 'https://assets.topcoder-dev.com/media/contentful/images.ctfassets.net/6e/'
-            + '6e12c8c6d43382a9bd4b17104c0124452ec6b734d46cc6c4e4004224b0823476/'
-            + 'image_1-6e12c8c6d43382a9bd4b17104c0124452ec6b734d46cc6c4e4004224b0823476.svg',
-        name: 'LPU',
-    },
-    {
-        groupId: '8e071d83-d2a5-49c2-8e3f-fa2a42881168',
-        groupName: 'brown-university',
-        name: 'Brown University',
-    },
+    // {
+    //     groupId: 'da3a64f6-4478-47dc-b051-75d33a0ac759',
+    //     groupName: 'lpu',
+    //     logoUrl: 'https://assets.topcoder-dev.com/media/contentful/images.ctfassets.net/6e/'
+    //         + '6e12c8c6d43382a9bd4b17104c0124452ec6b734d46cc6c4e4004224b0823476/'
+    //         + 'image_1-6e12c8c6d43382a9bd4b17104c0124452ec6b734d46cc6c4e4004224b0823476.svg',
+    //     name: 'LPU',
+    // },
+    // {
+    //     groupId: '8e071d83-d2a5-49c2-8e3f-fa2a42881168',
+    //     groupName: 'brown-university',
+    //     name: 'Brown University',
+    // },
 ]

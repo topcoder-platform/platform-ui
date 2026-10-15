@@ -513,6 +513,9 @@ function normalizeAssignment(
         ) || undefined,
         termsAccepted: assignment.termsAccepted === true
             || assignment.terms_accepted === true,
+        totalHours: toOptionalNumberishValue(
+            assignment.totalHours ?? assignment.total_hours,
+        ),
         wiproIdEndDate: toIsoString(
             assignment.wiproIdEndDate
             ?? assignment.wipro_id_end_date,

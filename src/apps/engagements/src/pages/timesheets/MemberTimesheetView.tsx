@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/control-has-associated-label */
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 
@@ -9,16 +10,19 @@ import {
     saveTimesheetEntries,
     submitTimesheetEntries,
 } from '../../lib/services'
-import type { TimesheetRow } from '../../lib/utils'
+import type { TimesheetFieldErrors, TimesheetRow } from '../../lib/utils'
 import {
     buildTimesheetRows,
+    clearTimesheetFieldErrors,
+    findMissingRemarksErrors,
     formatHoursLabel,
     hasEnteredHours,
+    hasRowValidationError,
     isRowReadOnly,
+    parseTimesheetSaveError,
     sumSelectedTotals,
     toWorkDateString,
-    validateDateRange,
-    validateHours,
+    validateEntryRange,
 } from '../../lib/utils'
 import { TimesheetGrid } from '../../components/timesheet-grid'
 import { TimesheetSubmitModal } from '../../components/timesheet-submit-modal'
@@ -31,15 +35,6 @@ interface MemberTimesheetViewProps {
     onTimesheetChange: (timesheet: TimesheetView) => void
     /** Reports whether the view holds unsaved edits, so the page can guard navigation. */
     onDirtyChange: (isDirty: boolean) => void
-}
-
-const extractErrorMessage = (error: unknown, fallback: string): string => {
-    const typedError = error as {
-        message?: string
-        response?: { data?: { message?: string } }
-    }
-
-    return typedError?.response?.data?.message || typedError?.message || fallback
 }
 
 const normalizeRemarks = (remarks: string | null | undefined): string => (
@@ -60,6 +55,15 @@ const getDefaultRange = (): { fromDate: string, toDate: string } => {
         toDate: toWorkDateString(friday),
     }
 }
+
+/**
+ * Only an active assignee may enter or submit hours. Once the assignment is completed or terminated the
+ * member can still review what they logged; the API refuses the write either way, so this only keeps
+ * the page from offering controls that would fail.
+ */
+const ACTIVE_ASSIGNMENT_STATUS = 'ASSIGNED'
+
+const isRowNeverSelectable = (): boolean => false
 
 const toPickerDate = (value: string): Date | undefined => {
     if (!value) {
@@ -93,9 +97,11 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
     const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false)
     const [actionError, setActionError] = useState<string | undefined>()
+    const [fieldErrors, setFieldErrors] = useState<TimesheetFieldErrors>({})
 
-    const rangeError = validateDateRange(fromDate, toDate)
+    const rangeError = validateEntryRange(fromDate, toDate)
     const standardHoursPerDay = props.timesheet.assignment.standardHoursPerDay
+    const isAssignmentActive = props.timesheet.assignment.status === ACTIVE_ASSIGNMENT_STATUS
 
     // Regenerate the grid whenever the range or the saved entries change, merging saved values in so
     // the member sees their own hours rather than a blank duplicate.
@@ -107,6 +113,9 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
         setRows(buildTimesheetRows(fromDate, toDate, props.timesheet.entries))
         setSelectedDates([])
         setIsDirty(false)
+        // A new range or a fresh copy of the entries makes any earlier error stale.
+        setActionError(undefined)
+        setFieldErrors({})
     }, [fromDate, props.timesheet.entries, rangeError, toDate])
 
     useEffect(() => {
@@ -121,21 +130,23 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
         () => new Map(props.timesheet.entries.map(entry => [entry.workDate, entry])),
         [props.timesheet.entries],
     )
+    /** A submitted row nobody touched stays submitted, so submit skips it. */
+    const isUnchangedSubmitted = useCallback((row: TimesheetRow): boolean => {
+        if (row.status !== TimesheetEntryStatus.SUBMITTED) {
+            return false
+        }
+
+        const saved = savedByDate.get(row.workDate)
+        if (!saved) {
+            return false
+        }
+
+        return row.hoursWorked.trim() === saved.hoursWorked
+            && normalizeRemarks(row.remarks) === normalizeRemarks(saved.remarks)
+    }, [savedByDate])
     const hasOnlyUnchangedSubmittedSelected = useMemo(
-        () => selectedRows.length > 0 && selectedRows.every(row => {
-            if (row.status !== TimesheetEntryStatus.SUBMITTED) {
-                return false
-            }
-
-            const saved = savedByDate.get(row.workDate)
-            if (!saved) {
-                return false
-            }
-
-            return row.hoursWorked.trim() === saved.hoursWorked
-                && normalizeRemarks(row.remarks) === normalizeRemarks(saved.remarks)
-        }),
-        [savedByDate, selectedRows],
+        () => selectedRows.length > 0 && selectedRows.every(isUnchangedSubmitted),
+        [isUnchangedSubmitted, selectedRows],
     )
     const totals = useMemo(() => sumSelectedTotals(selectedRows), [selectedRows])
 
@@ -145,6 +156,35 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
         )))
         setIsDirty(true)
         setActionError(undefined)
+        setFieldErrors(current => clearTimesheetFieldErrors(current, workDate, Object.keys(changes)))
+    }, [])
+
+    const handleSelectionChange = useCallback((workDates: string[]) => {
+        setSelectedDates(workDates)
+        setActionError(undefined)
+    }, [])
+
+    /** Changing the range rebuilds the grid, which clears errors along with it. */
+    const handleFromDateChange = useCallback((date: Date | null) => {
+        setFromDate(date ? toWorkDateString(date) : '')
+        setActionError(undefined)
+    }, [])
+
+    const handleToDateChange = useCallback((date: Date | null) => {
+        setToDate(date ? toWorkDateString(date) : '')
+        setActionError(undefined)
+    }, [])
+
+    /** Places the API's per-entry validation messages on their rows; the rest goes to the banner. */
+    const showSaveError = useCallback((
+        error: unknown,
+        entries: Array<{ workDate: string }>,
+        fallback: string,
+    ) => {
+        const parsed = parseTimesheetSaveError(error, entries, fallback)
+
+        setFieldErrors(parsed.fieldErrors)
+        setActionError(parsed.message)
     }, [])
 
     /** Saves every row the member has filled in, not only the selected ones. */
@@ -152,7 +192,7 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
         rows
             .filter(row => !isRowReadOnly(row))
             .filter(row => hasEnteredHours(row) || Boolean(row.id))
-            .filter(row => !validateHours(row.hoursWorked, standardHoursPerDay).error)
+            .filter(row => !hasRowValidationError(row, standardHoursPerDay))
             .filter(row => hasEnteredHours(row))
             .map(row => ({
                 hoursWorked: row.hoursWorked.trim(),
@@ -164,14 +204,14 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
     const invalidRows = useMemo(
         () => rows.filter(row => (
             !isRowReadOnly(row)
-            && Boolean(validateHours(row.hoursWorked, standardHoursPerDay).error)
+            && hasRowValidationError(row, standardHoursPerDay)
         )),
         [rows, standardHoursPerDay],
     )
 
     const handleSave = useCallback(async () => {
         if (invalidRows.length) {
-            setActionError('Fix the highlighted hours before saving.')
+            setActionError('Fix the highlighted fields before saving.')
             return
         }
 
@@ -182,6 +222,7 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
         }
 
         setActionError(undefined)
+        setFieldErrors({})
         setIsSaving(true)
 
         try {
@@ -194,20 +235,22 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
             setIsDirty(false)
             toast.success('Timesheet saved.')
         } catch (error) {
-            setActionError(extractErrorMessage(error, 'Failed to save the timesheet.'))
+            showSaveError(error, entries, 'Failed to save the timesheet.')
         } finally {
             setIsSaving(false)
         }
-    }, [buildSavePayload, invalidRows.length, props])
+    }, [buildSavePayload, invalidRows.length, props, showSaveError])
 
     const handleSubmit = useCallback(async () => {
         setActionError(undefined)
+        setFieldErrors({})
         setIsSubmitting(true)
 
+        // Save first: a selected row may hold edits, or may never have been saved at all, and the
+        // submit endpoint works on entry ids.
+        const entries = buildSavePayload()
+
         try {
-            // Save first: a selected row may hold edits, or may never have been saved at all, and the
-            // submit endpoint works on entry ids.
-            const entries = buildSavePayload()
             let current = props.timesheet
 
             if (entries.length) {
@@ -242,16 +285,16 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                 `Submitted ${entryIds.length} ${entryIds.length === 1 ? 'entry' : 'entries'} for approval.`,
             )
         } catch (error) {
-            setActionError(extractErrorMessage(error, 'Failed to submit the timesheet.'))
+            showSaveError(error, entries, 'Failed to submit the timesheet.')
             setIsConfirmOpen(false)
         } finally {
             setIsSubmitting(false)
         }
-    }, [buildSavePayload, props, selectedDates])
+    }, [buildSavePayload, props, selectedDates, showSaveError])
 
     const handleOpenConfirm = useCallback(() => {
         if (invalidRows.length) {
-            setActionError('Fix the highlighted hours before submitting.')
+            setActionError('Fix the highlighted fields before submitting.')
             return
         }
 
@@ -268,9 +311,18 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
             return
         }
 
+        const missingRemarks = findMissingRemarksErrors(
+            selectedRows.filter(row => !isUnchangedSubmitted(row)),
+        )
+        if (Object.keys(missingRemarks).length) {
+            setFieldErrors(missingRemarks)
+            setActionError('Enter remarks for the highlighted days before submitting.')
+            return
+        }
+
         setActionError(undefined)
         setIsConfirmOpen(true)
-    }, [hasOnlyUnchangedSubmittedSelected, invalidRows.length, selectedRows])
+    }, [hasOnlyUnchangedSubmittedSelected, invalidRows.length, isUnchangedSubmitted, selectedRows])
 
     return (
         <div className={styles.view}>
@@ -281,9 +333,7 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                     date={toPickerDate(fromDate)}
                     disabled={false}
                     label='From Date'
-                    onChange={function onFromChange(date: Date | null) {
-                        setFromDate(date ? toWorkDateString(date) : '')
-                    }}
+                    onChange={handleFromDateChange}
                 />
                 <InputDatePicker
                     className={styles.dateFilter}
@@ -291,17 +341,23 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                     date={toPickerDate(toDate)}
                     disabled={false}
                     label='To Date'
-                    onChange={function onToChange(date: Date | null) {
-                        setToDate(date ? toWorkDateString(date) : '')
-                    }}
-                />
-                <Button
-                    disabled={isSaving || !isDirty}
-                    label={isSaving ? 'Saving...' : 'Save'}
-                    onClick={handleSave}
-                    secondary
+                    onChange={handleToDateChange}
                 />
             </section>
+
+            {!isAssignmentActive && (
+                <p className={styles.pending} role='status'>
+                    This assignment is no longer active, so its timesheet is read-only.
+                </p>
+            )}
+
+            {/* The range opens on the current week, which hides any earlier day the member missed. */}
+            {isAssignmentActive && (
+                <p className={styles.notice} role='note'>
+                    This page shows the current week. Make sure you have entered hours for all the days
+                    you worked - use From Date and To Date to check earlier weeks and add ALL missing days.
+                </p>
+            )}
 
             {rangeError
                 ? <p className={styles.error} role='alert'>{rangeError}</p>
@@ -309,8 +365,11 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                     <>
                         <TimesheetGrid
                             emptyMessage='Pick a date range to start entering hours.'
-                            onRowChange={handleRowChange}
-                            onSelectionChange={setSelectedDates}
+                            fieldErrors={fieldErrors}
+                            isRowSelectable={isAssignmentActive ? undefined : isRowNeverSelectable}
+                            onRowChange={isAssignmentActive ? handleRowChange : undefined}
+                            onSelectionChange={handleSelectionChange}
+                            readOnly={!isAssignmentActive}
                             rows={rows}
                             selectedDates={selectedDates}
                             standardHoursPerDay={standardHoursPerDay}
@@ -320,7 +379,7 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                             <p className={styles.error} role='alert'>{actionError}</p>
                         )}
 
-                        {selectedRows.length > 0 && (
+                        {isAssignmentActive && selectedRows.length > 0 && (
                             <section className={styles.summary}>
                                 <span>
                                     Total Days:
@@ -332,7 +391,18 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                                     {' '}
                                     <strong>{formatHoursLabel(totals.hours)}</strong>
                                 </span>
-                                {!hasOnlyUnchangedSubmittedSelected && (
+                            </section>
+                        )}
+
+                        {isAssignmentActive && (
+                            <section className={styles.actions}>
+                                <Button
+                                    disabled={isSaving || !isDirty}
+                                    label={isSaving ? 'Saving...' : 'Save'}
+                                    onClick={handleSave}
+                                    secondary
+                                />
+                                {selectedRows.length > 0 && !hasOnlyUnchangedSubmittedSelected && (
                                     <Button
                                         disabled={isSubmitting}
                                         label={`Submit (${selectedRows.length})`}

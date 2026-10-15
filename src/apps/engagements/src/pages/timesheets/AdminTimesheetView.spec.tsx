@@ -5,6 +5,7 @@ import '@testing-library/jest-dom'
 import React from 'react'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { toast } from 'react-toastify'
 
 import type { TimesheetEntry, TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus, TimesheetViewerRole } from '../../lib/models'
@@ -108,6 +109,54 @@ jest.mock('~/libs/ui', () => ({
         </label>
     ),
     LoadingSpinner: () => <div>loading</div>,
+    // A working stand-in for the shared confirmation hook: confirm() opens a dialog and resolves with
+    // the button pressed.
+    useConfirmationModal: () => {
+        // jest.mock factories cannot close over imports, so React is required here.
+        // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+        const mockReact: typeof import('react') = require('react')
+
+        const [pending, setPending] = mockReact.useState<{
+            content: string
+            resolve:(confirmed: boolean) => void
+            title: string
+        } | undefined>()
+
+        return {
+            confirm: (props: { content: string, title: string }) => new Promise<boolean>(resolve => {
+                setPending({ ...props, resolve })
+            }),
+            modal: pending && (
+                <div role='alertdialog'>
+                    <h2>{pending.title}</h2>
+                    <p>{pending.content}</p>
+                    <button
+                        onClick={function onContinue() {
+                            setPending(undefined)
+                            pending.resolve(true)
+                        }}
+                        type='button'
+                    >
+                        Continue
+                    </button>
+                    <button
+                        onClick={function onCancel() {
+                            setPending(undefined)
+                            pending.resolve(false)
+                        }}
+                        type='button'
+                    >
+                        Cancel
+                    </button>
+                </div>
+            ),
+        }
+    },
+}), { virtual: true })
+
+// The audit modal links handles to profiles; jest has no path alias for `~/config`.
+jest.mock('~/config', () => ({
+    EnvironmentConfig: { URLS: { USER_PROFILE: 'https://profiles.example' } },
 }), { virtual: true })
 
 jest.mock('../../lib/services', () => ({
@@ -146,6 +195,7 @@ const entry = (overrides: Partial<TimesheetEntry> = {}): TimesheetEntry => ({
 const timesheet = (entries: TimesheetEntry[]): TimesheetView => ({
     assignment: {
         endDate: '2026-09-30',
+        hoursLeft: null,
         id: 'asg-1',
         memberHandle: 'johnsmith',
         memberId: '1001',
@@ -153,6 +203,7 @@ const timesheet = (entries: TimesheetEntry[]): TimesheetView => ({
         standardHoursPerDay: 8,
         startDate: '2026-09-01',
         status: 'ASSIGNED',
+        totalHours: null,
     },
     engagementId: 'eng-1',
     engagementTitle: 'Senior Frontend Engineer',
@@ -213,6 +264,31 @@ describe('AdminTimesheetView', () => {
                     overrideReason: undefined,
                 })
         })
+        expect(toast.success)
+            .toHaveBeenCalledWith('Timesheet saved.')
+    })
+
+    it('offers Save only once an edited row is selected', async () => {
+        const user = userEvent.setup()
+        renderView([
+            entry(),
+            entry({ id: 'entry-2', workDate: '2026-09-08' }),
+        ])
+
+        const hoursInput = screen.getByLabelText('Hours worked on 07-09-2026')
+        await user.clear(hoursInput)
+        await user.type(hoursInput, '9')
+
+        expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
+
+        // Selecting an unedited row still leaves nothing to save.
+        await user.click(screen.getByLabelText('Select 08-09-2026'))
+        expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        expect(screen.getByRole('button', { name: 'Save' }))
+            .toBeInTheDocument()
+        expect(toast.success).not.toHaveBeenCalled()
     })
 
     it('lets an administrator add a date range and save those entries on behalf of the member', async () => {
@@ -301,6 +377,19 @@ describe('AdminTimesheetView', () => {
                     overrideReason: 'Payroll correction',
                 }))
         })
+    })
+
+    it('requires remarks before submitting on the member’s behalf', async () => {
+        const user = userEvent.setup()
+        renderView([entry({ id: 'e1', remarks: null })])
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Submit on behalf (1)' }))
+
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+        expect(screen.getByText('Remarks are required before submitting.'))
+            .toBeInTheDocument()
+        expect(mockSubmit).not.toHaveBeenCalled()
     })
 
     it('requires a reason before submitting on the member’s behalf', async () => {
@@ -477,6 +566,160 @@ describe('AdminTimesheetView', () => {
                     overrideReason: 'Manager on leave',
                 })
         })
+        // The correction is saved with the same reason, so its audit record explains it.
+        expect(mockSave.mock.calls[0][2])
+            .toEqual(expect.objectContaining({ overrideReason: 'Manager on leave' }))
+    })
+
+    it('sends only the selected rows when approving, leaving other edits unsent', async () => {
+        const user = userEvent.setup()
+        const submitted = [
+            entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED }),
+            entry({ id: 'e2', status: TimesheetEntryStatus.SUBMITTED, workDate: '2026-09-08' }),
+        ]
+        mockSave.mockResolvedValue(timesheet(submitted))
+        mockApprove.mockResolvedValue({ approved: ['e1'], skipped: [] })
+        renderView(submitted)
+
+        // Both rows are edited, but only the first is selected.
+        await user.type(screen.getByLabelText('Remarks for 07-09-2026'), ' updated')
+        await user.type(screen.getByLabelText('Remarks for 08-09-2026'), ' not this one')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
+        // The unselected edit is about to be dropped; accept that.
+        await user.click(within(await screen.findByRole('alertdialog'))
+            .getByRole('button', { name: 'Continue' }))
+
+        const dialog = await screen.findByRole('dialog')
+        await user.type(within(dialog)
+            .getByLabelText('Approval comment'), 'Approved for week 37')
+        await user.type(within(dialog)
+            .getByLabelText(/Override reason/), 'Manager on leave')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Approve' }))
+
+        await waitFor(() => {
+            expect(mockApprove)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', expect.objectContaining({ entryIds: ['e1'] }))
+        })
+        expect(mockSave)
+            .toHaveBeenCalledTimes(1)
+        expect(mockSave.mock.calls[0][2].entries)
+            .toEqual([
+                { hoursWorked: '8.50', remarks: 'Sprint planning updated', workDate: '2026-09-07' },
+            ])
+    })
+
+    it('warns before an action when unselected rows have unsaved edits, and stops on cancel', async () => {
+        const user = userEvent.setup()
+        renderView([
+            entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED }),
+            entry({ id: 'e2', status: TimesheetEntryStatus.SUBMITTED, workDate: '2026-09-08' }),
+        ])
+
+        await user.type(screen.getByLabelText('Remarks for 08-09-2026'), ' not this one')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
+
+        const warning = await screen.findByRole('alertdialog')
+        expect(within(warning)
+            .getByText(/1 row that is not selected has unsaved edits/))
+            .toBeInTheDocument()
+
+        await user.click(within(warning)
+            .getByRole('button', { name: 'Cancel' }))
+
+        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+        // Cancelling leaves the approval dialog closed and nothing sent.
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+        expect(mockApprove).not.toHaveBeenCalled()
+    })
+
+    it('goes on with the action once the warning is accepted', async () => {
+        const user = userEvent.setup()
+        renderView([
+            entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED }),
+            entry({ id: 'e2', status: TimesheetEntryStatus.SUBMITTED, workDate: '2026-09-08' }),
+        ])
+
+        await user.type(screen.getByLabelText('Remarks for 08-09-2026'), ' not this one')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
+        await user.click(within(await screen.findByRole('alertdialog'))
+            .getByRole('button', { name: 'Continue' }))
+
+        expect(await screen.findByRole('dialog'))
+            .toBeInTheDocument()
+        expect(screen.getByLabelText('Approval comment'))
+            .toBeInTheDocument()
+    })
+
+    it('does not warn when every edited row is selected', async () => {
+        const user = userEvent.setup()
+        renderView([
+            entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED }),
+            entry({ id: 'e2', status: TimesheetEntryStatus.SUBMITTED, workDate: '2026-09-08' }),
+        ])
+
+        await user.type(screen.getByLabelText('Remarks for 07-09-2026'), ' updated')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
+
+        expect(await screen.findByRole('dialog'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    })
+
+    it('does not save anything before approving when the selected rows are unedited', async () => {
+        const user = userEvent.setup()
+        const submitted = [
+            entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED }),
+            entry({ id: 'e2', status: TimesheetEntryStatus.SUBMITTED, workDate: '2026-09-08' }),
+        ]
+        mockApprove.mockResolvedValue({ approved: ['e1'], skipped: [] })
+        renderView(submitted)
+
+        await user.type(screen.getByLabelText('Remarks for 08-09-2026'), ' not this one')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Approve on behalf (1)' }))
+        // The unselected edit is about to be dropped; accept that.
+        await user.click(within(await screen.findByRole('alertdialog'))
+            .getByRole('button', { name: 'Continue' }))
+
+        const dialog = await screen.findByRole('dialog')
+        await user.type(within(dialog)
+            .getByLabelText('Approval comment'), 'Approved for week 37')
+        await user.type(within(dialog)
+            .getByLabelText(/Override reason/), 'Manager on leave')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Approve' }))
+
+        await waitFor(() => {
+            expect(mockApprove)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', expect.objectContaining({ entryIds: ['e1'] }))
+        })
+        expect(mockSave).not.toHaveBeenCalled()
+    })
+
+    it('puts the totals above the actions, with the main action on the right', async () => {
+        const user = userEvent.setup()
+        renderView([entry({ id: 'e1' })])
+
+        await user.type(screen.getByLabelText('Remarks for 07-09-2026'), ' updated')
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+
+        const totals = screen.getByText(/Total Selected Days/)
+        const actionLabels = screen.getAllByRole('button')
+            .filter(button => ['Audit history', 'Save', 'Submit on behalf (1)'].includes(
+                button.textContent ?? '',
+            ))
+        expect(actionLabels.map(button => button.textContent))
+            .toEqual(['Audit history', 'Save', 'Submit on behalf (1)'])
+        // The totals come first in the document, so they render above the button row.
+        const inDocumentOrder = [totals, ...actionLabels]
+        expect(Array.from(document.body.querySelectorAll('*'))
+            .filter(element => inDocumentOrder.includes(element as HTMLElement)))
+            .toEqual(inDocumentOrder)
     })
 
     it('offers reopen only for approved rows and submit only for drafts', async () => {

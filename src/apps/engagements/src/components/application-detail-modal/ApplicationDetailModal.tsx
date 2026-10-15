@@ -125,9 +125,21 @@ const ApplicationSection: FC<ApplicationSectionProps> = (
                     </span>
                 </div>
                 <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Years of experience</span>
+                    <span className={styles.metaLabel}>Expected Pay Rate (USD/Hour)</span>
                     <span className={styles.metaValue}>
-                        {application.yearsOfExperience ?? 'Not specified'}
+                        {application.expectedPayRate || 'Not specified'}
+                    </span>
+                </div>
+                {application.yearsOfExperience !== undefined && application.yearsOfExperience !== null && (
+                    <div className={styles.metaItem}>
+                        <span className={styles.metaLabel}>Years of experience</span>
+                        <span className={styles.metaValue}>{application.yearsOfExperience}</span>
+                    </div>
+                )}
+                <div className={styles.metaItem}>
+                    <span className={styles.metaLabel}>How you found this opportunity</span>
+                    <span className={styles.metaValue}>
+                        {application.referralSource || 'Not specified'}
                     </span>
                 </div>
                 <div className={styles.metaItem}>
@@ -165,8 +177,23 @@ const DocumentsSection: FC<DocumentsSectionProps> = (
             <h4>Documents</h4>
             <div className={styles.metaGrid}>
                 <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Resume</span>
-                    {application.resumeUrl ? (
+                    <span className={styles.metaLabel}>CV</span>
+                    {application.cvFileUrl ? (
+                        <a
+                            className={styles.link}
+                            href={application.cvFileUrl}
+                            target='_blank'
+                            rel='noreferrer noopener'
+                        >
+                            View CV
+                        </a>
+                    ) : (
+                        <span className={styles.metaValue}>Not provided</span>
+                    )}
+                </div>
+                {application.resumeUrl && (
+                    <div className={styles.metaItem}>
+                        <span className={styles.metaLabel}>Resume / Profile Link</span>
                         <a
                             className={styles.link}
                             href={application.resumeUrl}
@@ -175,10 +202,8 @@ const DocumentsSection: FC<DocumentsSectionProps> = (
                         >
                             {application.resumeUrl}
                         </a>
-                    ) : (
-                        <span className={styles.metaValue}>Not provided</span>
-                    )}
-                </div>
+                    </div>
+                )}
                 <div className={styles.metaItem}>
                     <span className={styles.metaLabel}>Portfolio</span>
                     {hasPortfolioUrls ? (

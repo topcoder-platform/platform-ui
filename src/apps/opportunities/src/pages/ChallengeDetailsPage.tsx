@@ -94,6 +94,7 @@ import {
     formatMarathonScore,
     isMarathonMatchChallenge,
     isTaskChallenge,
+    isTopgearChallenge,
     marathonDashboardIsEnabled,
     marathonLeaderboardIsPublic,
     marathonSubmissionScores,
@@ -1018,7 +1019,8 @@ const ChallengeTabContent: FC<ChallengeTabContentProps> = props => {
 }
 
 /**
- * Renders format-aware requirements and a Markdown-only table of contents.
+ * Renders format-aware requirements and a table of contents for Markdown H1 headings only.
+ * Omits the forum guidance notice for TopGear challenges, which do not use forums.
  *
  * @param props challenge containing authored requirements.
  * @returns requirements tab content.
@@ -1042,22 +1044,20 @@ const RequirementsTab: FC<{ challenge: ChallengeOpportunity }> = props => {
             {tournament && (
                 <p className={styles.tournamentNotice}>{`This match belongs to the ${tournament}.`}</p>
             )}
-            <div className={styles.notice}>
-                Please read the challenge requirements carefully and watch the forums for any questions or feedback
-                concerning this challenge. It is important that you monitor any updates provided by the copilot,
-                admins or the client in the forums. Please post any questions you might have for the client in the
-                forums.
-            </div>
+            {!isTopgearChallenge(props.challenge) && (
+                <div className={styles.notice}>
+                    Please read the challenge requirements carefully and watch the forums for any questions or feedback
+                    concerning this challenge. It is important that you monitor any updates provided by the copilot,
+                    admins or the client in the forums. Please post any questions you might have for the client in the
+                    forums.
+                </div>
+            )}
             {toc.length > 0 && (
                 <nav aria-label='Table of contents' className={styles.toc}>
                     <h2>Table of Contents</h2>
                     <ol>
                         {toc.map((item: ChallengeTocItem) => (
-                            <li
-                                className={item.level === 4 ? styles.deeplyNestedToc
-                                    : item.level === 3 ? styles.nestedToc : undefined}
-                                key={item.id}
-                            >
+                            <li key={item.id}>
                                 <a href={`#${item.id}`}>{item.label}</a>
                             </li>
                         ))}
@@ -1311,6 +1311,8 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     const [aiSubmissionExpansionOverrides, setAiSubmissionExpansionOverrides]
         = useState<Record<string, boolean>>({})
     const [deletingSubmissionId, setDeletingSubmissionId] = useState<string | undefined>()
+    const [submissionToDelete, setSubmissionToDelete] = useState<ChallengeSubmission | undefined>()
+    const submissionDeletionPending = useRef(false)
     const [downloadingSubmissionId, setDownloadingSubmissionId] = useState<string | undefined>()
     const trackKey = challengeCatalogKey(props.challenge.track)
     const isDesign = trackKey === 'design'
@@ -1546,24 +1548,36 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     }
 
     /**
-     * Deletes an owned Design submission after explicit member confirmation.
+     * Dismisses deletion confirmation unless its request is active, including stale modal keyboard callbacks.
      *
-     * @param submission selected authored submission.
-     * @returns void after updating page-level counters and refreshing the submission list, or reporting an error.
-     * @throws Does not throw; deletion failures are reported through a toast.
+     * @returns void after clearing the selected submission when dismissal is allowed.
+     * @throws Does not throw.
      */
-    const removeSubmission = async (submission: ChallengeSubmission): Promise<void> => {
-        // eslint-disable-next-line no-alert
-        if (!window.confirm(`Delete submission ${submission.id}? This action cannot be undone.`)) return
+    const closeSubmissionDeletion = (): void => {
+        if (!submissionDeletionPending.current) setSubmissionToDelete(undefined)
+    }
+
+    /**
+     * Deletes the owned Design submission selected in the in-app confirmation modal.
+     *
+     * @returns void after updating page-level counters and refreshing the submission list, or reporting an error.
+     * @throws Does not throw; deletion failures are reported through a toast and leave confirmation retryable.
+     */
+    const removeSubmission = async (): Promise<void> => {
+        const submission = submissionToDelete
+        if (!submission || submissionDeletionPending.current) return
+        submissionDeletionPending.current = true
         setDeletingSubmissionId(submission.id)
         try {
             await deleteChallengeSubmission(submission.id)
+            setSubmissionToDelete(undefined)
             await props.onDeleted?.()
             await response.mutate()
             toast.success('Submission deleted.')
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Unable to delete this submission.')
         } finally {
+            submissionDeletionPending.current = false
             setDeletingSubmissionId(undefined)
         }
     }
@@ -1849,8 +1863,8 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                         <button
                                                             aria-label={`Delete submission ${submission.id}`}
                                                             disabled={!designDeletionAllowed
-                                                            || deletingSubmissionId === submission.id}
-                                                            onClick={() => removeSubmission(submission)}
+                                                            || !!deletingSubmissionId}
+                                                            onClick={() => setSubmissionToDelete(submission)}
                                                             title={designDeletionAllowed
                                                                 ? 'Delete'
                                                                 : 'Submission deletion is closed'}
@@ -2049,6 +2063,22 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                 </p>
             )}
             <div className={styles.tablePagination}>{pagination}</div>
+            {submissionToDelete && (
+                <ConfirmModal
+                    action='Delete'
+                    ariaLabelledby='delete-submission-confirmation'
+                    isLoading={!!deletingSubmissionId}
+                    isProcessing={!!deletingSubmissionId}
+                    onClose={closeSubmissionDeletion}
+                    onConfirm={removeSubmission}
+                    open
+                    title='Delete submission?'
+                >
+                    <p id='delete-submission-confirmation'>
+                        {`Delete submission ${submissionToDelete.id}? This action cannot be undone.`}
+                    </p>
+                </ConfirmModal>
+            )}
             <SubmissionArtifactsModal
                 allowInternalArtifacts={allowInternalArtifacts}
                 onClose={() => setArtifactsSubmissionId(undefined)}

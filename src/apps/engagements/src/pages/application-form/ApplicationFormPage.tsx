@@ -22,6 +22,7 @@ import { rootRoute } from '../../engagements.routes'
 import type { ApplicationFormData, PrePopulatedUserData } from './application-form.types'
 import { applicationFormSchema } from './application-form.schema'
 import CharacterCounter from './components/CharacterCounter'
+import CvUploadField from './components/CvUploadField'
 import PortfolioUrlsField from './components/PortfolioUrlsField'
 import styles from './ApplicationFormPage.module.scss'
 
@@ -31,12 +32,14 @@ interface SubmitDisabledParams {
     hasSubmitted: boolean
     isFormDisabled: boolean
     isLoading: boolean
+    isUploadingCv: boolean
     isValid: boolean
 }
 
 const getIsSubmitDisabled = (params: SubmitDisabledParams): boolean => (
     params.isFormDisabled
     || params.isLoading
+    || params.isUploadingCv
     || params.hasApplied
     || Boolean(params.applicationError)
     || (params.hasSubmitted && !params.isValid)
@@ -56,18 +59,20 @@ const ApplicationFormPage: FC = () => {
     const [checkingApplication, setCheckingApplication] = useState<boolean>(false)
     const [applicationError, setApplicationError] = useState<string | undefined>(undefined)
     const [submitting, setSubmitting] = useState<boolean>(false)
+    const [uploadingCv, setUploadingCv] = useState<boolean>(false)
 
     const form = useForm<ApplicationFormData>({
         defaultValues: {
             address: '',
             availability: '',
             coverLetter: '',
+            cvFileUrl: undefined,
             email: '',
+            expectedPayRate: '',
             mobileNumber: '',
             name: '',
-            portfolioUrls: [],
-            resumeUrl: undefined,
-            yearsOfExperience: undefined,
+            portfolioUrls: [{ value: undefined }],
+            referralSource: '',
         },
         mode: 'all',
         resolver: yupResolver(applicationFormSchema),
@@ -234,6 +239,8 @@ const ApplicationFormPage: FC = () => {
             const trimmedAddress = values.address?.trim()
             const trimmedAvailability = values.availability?.trim()
             const trimmedCoverLetter = values.coverLetter?.trim() || ''
+            const trimmedExpectedPayRate = values.expectedPayRate?.trim() || ''
+            const trimmedReferralSource = values.referralSource?.trim()
             const portfolioUrls = values.portfolioUrls
                 .map(entry => entry.value)
                 .filter((url): url is string => !!url)
@@ -242,12 +249,13 @@ const ApplicationFormPage: FC = () => {
                 address: trimmedAddress || undefined,
                 availability: trimmedAvailability || undefined,
                 coverLetter: trimmedCoverLetter,
+                cvFileUrl: values.cvFileUrl || undefined,
                 email: trimmedEmail || undefined,
+                expectedPayRate: trimmedExpectedPayRate,
                 mobileNumber: values.mobileNumber?.trim() || undefined,
                 name: trimmedName || undefined,
                 portfolioUrls: portfolioUrls.length ? portfolioUrls : undefined,
-                resumeUrl: values.resumeUrl || undefined,
-                yearsOfExperience: values.yearsOfExperience,
+                referralSource: trimmedReferralSource || undefined,
             }
         },
         [],
@@ -333,22 +341,14 @@ const ApplicationFormPage: FC = () => {
         [],
     )
 
-    const handleResumeUrlChange = useCallback(
-        (field: ControllerRenderProps<ApplicationFormData, 'resumeUrl'>) => (
+    const handleTextInputChange = useCallback(
+        (
+            field:
+                | ControllerRenderProps<ApplicationFormData, 'expectedPayRate'>
+                | ControllerRenderProps<ApplicationFormData, 'referralSource'>,
+        ) => (
             (event: ChangeEvent<HTMLInputElement>): void => {
-                const nextValue = event.target.value
-                field.onChange(nextValue || undefined)
-            }
-        ),
-        [],
-    )
-
-    const handleYearsOfExperienceChange = useCallback(
-        (field: ControllerRenderProps<ApplicationFormData, 'yearsOfExperience'>) => (
-            (event: ChangeEvent<HTMLInputElement>): void => {
-                const nextValue = event.target.value
-                const parsedValue = nextValue === '' ? undefined : Number(nextValue)
-                field.onChange(Number.isNaN(parsedValue) ? undefined : parsedValue)
+                field.onChange(event.target.value)
             }
         ),
         [],
@@ -395,6 +395,7 @@ const ApplicationFormPage: FC = () => {
         hasSubmitted,
         isFormDisabled,
         isLoading,
+        isUploadingCv: uploadingCv,
         isValid,
     })
 
@@ -419,49 +420,60 @@ const ApplicationFormPage: FC = () => {
         [errors.coverLetter, handleCoverLetterChange, isFormDisabled],
     )
 
-    const renderResumeUrlField = useCallback(
-        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'resumeUrl'> }): JSX.Element => (
-            <input
-                id='resume-url'
-                type='url'
-                className={classNames(
-                    styles.inputField,
-                    errors.resumeUrl && styles.inputError,
-                )}
-                placeholder='https://'
-                value={renderProps.field.value ?? ''}
-                onChange={handleResumeUrlChange(renderProps.field)}
+    const renderCvFileField = useCallback(
+        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'cvFileUrl'> }): JSX.Element => (
+            <CvUploadField
+                engagementId={engagement?.id}
+                value={renderProps.field.value}
+                onChange={renderProps.field.onChange}
+                onUploadingChange={setUploadingCv}
                 disabled={isFormDisabled}
-                aria-invalid={!!errors.resumeUrl}
-                aria-describedby={errors.resumeUrl ? 'resume-url-error' : undefined}
+                errorMessage={errors.cvFileUrl?.message}
             />
         ),
-        [errors.resumeUrl, handleResumeUrlChange, isFormDisabled],
+        [engagement?.id, errors.cvFileUrl?.message, isFormDisabled],
     )
 
-    const renderYearsOfExperienceField = useCallback(
-        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'yearsOfExperience'> }): JSX.Element => (
+    const renderExpectedPayRateField = useCallback(
+        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'expectedPayRate'> }): JSX.Element => (
             <input
-                id='years-of-experience'
-                type='number'
-                min={0}
-                step={1}
+                id='expected-pay-rate'
+                type='text'
                 className={classNames(
                     styles.inputField,
-                    errors.yearsOfExperience && styles.inputError,
+                    errors.expectedPayRate && styles.inputError,
                 )}
+                maxLength={100}
+                placeholder='e.g. 50'
                 value={renderProps.field.value ?? ''}
-                onChange={handleYearsOfExperienceChange(renderProps.field)}
+                onChange={handleTextInputChange(renderProps.field)}
                 disabled={isFormDisabled}
-                aria-invalid={!!errors.yearsOfExperience}
-                aria-describedby={
-                    errors.yearsOfExperience
-                        ? 'years-of-experience-error'
-                        : undefined
-                }
+                aria-invalid={!!errors.expectedPayRate}
+                aria-describedby={errors.expectedPayRate ? 'expected-pay-rate-error' : undefined}
             />
         ),
-        [errors.yearsOfExperience, handleYearsOfExperienceChange, isFormDisabled],
+        [errors.expectedPayRate, handleTextInputChange, isFormDisabled],
+    )
+
+    const renderReferralSourceField = useCallback(
+        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'referralSource'> }): JSX.Element => (
+            <input
+                id='referral-source'
+                type='text'
+                className={classNames(
+                    styles.inputField,
+                    errors.referralSource && styles.inputError,
+                )}
+                maxLength={500}
+                placeholder='e.g. Topcoder newsletter, LinkedIn, a friend'
+                value={renderProps.field.value ?? ''}
+                onChange={handleTextInputChange(renderProps.field)}
+                disabled={isFormDisabled}
+                aria-invalid={!!errors.referralSource}
+                aria-describedby={errors.referralSource ? 'referral-source-error' : undefined}
+            />
+        ),
+        [errors.referralSource, handleTextInputChange, isFormDisabled],
     )
 
     const renderAvailabilityField = useCallback(
@@ -738,31 +750,27 @@ const ApplicationFormPage: FC = () => {
                     </div>
 
                     <div className={styles.fieldGroup}>
-                        <label className={styles.fieldLabel} htmlFor='resume-url'>Resume URL</label>
+                        <label className={styles.fieldLabel} htmlFor='cv-file'>CV / Resume File</label>
                         <Controller
-                            name='resumeUrl'
+                            name='cvFileUrl'
                             control={control}
-                            render={renderResumeUrlField}
+                            render={renderCvFileField}
                         />
-                        {errors.resumeUrl && (
-                            <div className={styles.fieldError} id='resume-url-error'>
-                                {errors.resumeUrl.message}
-                            </div>
-                        )}
                     </div>
 
                     <div className={styles.fieldGroup}>
-                        <label className={styles.fieldLabel} htmlFor='years-of-experience'>
-                            Years of Experience
+                        <label className={styles.fieldLabel} htmlFor='expected-pay-rate'>
+                            Expected Pay Rate (USD/Hour)
+                            <span className={styles.requiredIndicator} aria-hidden='true'>*</span>
                         </label>
                         <Controller
-                            name='yearsOfExperience'
+                            name='expectedPayRate'
                             control={control}
-                            render={renderYearsOfExperienceField}
+                            render={renderExpectedPayRateField}
                         />
-                        {errors.yearsOfExperience && (
-                            <div className={styles.fieldError} id='years-of-experience-error'>
-                                {errors.yearsOfExperience.message}
+                        {errors.expectedPayRate && (
+                            <div className={styles.fieldError} id='expected-pay-rate-error'>
+                                {errors.expectedPayRate.message}
                             </div>
                         )}
                     </div>
@@ -783,6 +791,22 @@ const ApplicationFormPage: FC = () => {
                         {errors.availability && (
                             <div className={styles.fieldError} id='availability-error'>
                                 {errors.availability.message}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className={styles.fieldGroup}>
+                        <label className={styles.fieldLabel} htmlFor='referral-source'>
+                            How did you come to know of the opportunity?
+                        </label>
+                        <Controller
+                            name='referralSource'
+                            control={control}
+                            render={renderReferralSourceField}
+                        />
+                        {errors.referralSource && (
+                            <div className={styles.fieldError} id='referral-source-error'>
+                                {errors.referralSource.message}
                             </div>
                         )}
                     </div>

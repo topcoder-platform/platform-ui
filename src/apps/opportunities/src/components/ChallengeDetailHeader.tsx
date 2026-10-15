@@ -330,7 +330,7 @@ function challengeTimelineEnd(challenge: ChallengeOpportunity): string | undefin
 
 /**
  * Builds the Figma timeline sequence from Challenge API boundaries and phases.
- * Authored phases stay chronological, with Registration first when valid starts match.
+ * Authored phases stay chronological, with Registration then Submission first when valid starts match.
  * Task timelines omit Iterative Review because that phase is not member-facing for Tasks.
  * Every timeline omits Post-Mortem, which Autopilot opens for the copilot after a
  * cancellation and which community-app never showed to members.
@@ -376,6 +376,13 @@ function challengeTimelineItems(
             if (leftStart !== rightStart) return leftStart - rightStart
             if (leftStartTimestamp !== undefined && leftIsRegistration !== rightIsRegistration) {
                 return leftIsRegistration ? -1 : 1
+            }
+
+            // F2F review overlaps Submission and may end earlier, but follows it in the member workflow.
+            const leftIsSubmission = leftKey === 'submission'
+            const rightIsSubmission = rightKey === 'submission'
+            if (leftStartTimestamp !== undefined && leftIsSubmission !== rightIsSubmission) {
+                return leftIsSubmission ? -1 : 1
             }
 
             const leftEnd = timelineTimestamp(

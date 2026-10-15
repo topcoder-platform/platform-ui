@@ -1,0 +1,137 @@
+.slider {
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+.track {
+    display: grid;
+}
+
+.slide {
+    grid-area: 1 / 1;
+    opacity: 0;
+    transition: opacity .4s ease, visibility 0s linear .4s;
+    visibility: hidden;
+}
+
+.activeSlide {
+    opacity: 1;
+    transition: opacity .4s ease, visibility 0s linear 0s;
+    visibility: visible;
+}
+
+.arrow {
+    align-items: center;
+    background: rgba(255, 255, 255, .88);
+    border: 1px solid #e0e0e0;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 30, 46, .09);
+    color: #161616;
+    cursor: pointer;
+    display: inline-flex;
+    height: 36px;
+    justify-content: center;
+    padding: 0;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+
+    svg {
+        height: 20px;
+        width: 20px;
+    }
+
+    &:hover {
+        background: #fff;
+        border-color: #007d79;
+        color: #007d79;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #0f62fe;
+        outline-offset: 2px;
+    }
+}
+
+.previous {
+    left: 12px;
+}
+
+.next {
+    right: 12px;
+}
+
+.dots {
+    bottom: 10px;
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    left: 50%;
+    position: absolute;
+    transform: translateX(-50%);
+}
+
+.dot {
+    background: rgba(255, 255, 255, .7);
+    border: 1px solid rgba(22, 22, 22, .25);
+    border-radius: 50%;
+    cursor: pointer;
+    height: 10px;
+    padding: 0;
+    width: 10px;
+
+    &:focus-visible {
+        outline: 2px solid #0f62fe;
+        outline-offset: 2px;
+    }
+}
+
+.activeDot {
+    background: #007d79;
+    border-color: #007d79;
+}
+
+// Pointer devices reveal the arrows on hover or keyboard focus so they do not
+// cover banner artwork; touch devices keep them visible.
+@media (hover: hover) {
+    .arrow {
+        opacity: 0;
+        transition: opacity .2s ease;
+    }
+
+    .slider:hover .arrow,
+    .slider:focus-within .arrow {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .slide,
+    .activeSlide,
+    .arrow {
+        transition: none;
+    }
+}
+
+@media (max-width: 520px) {
+    .arrow {
+        height: 28px;
+        width: 28px;
+
+        svg {
+            height: 16px;
+            width: 16px;
+        }
+    }
+
+    .previous {
+        left: 6px;
+    }
+
+    .next {
+        right: 6px;
+    }
+}

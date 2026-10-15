@@ -36,10 +36,12 @@
     box-sizing: border-box;
 }
 
+/* Left-rail cards are borderless in the Figma design; content cards keep their outline. */
 .overview,
 .filters,
 .discussionInfo,
 .topicInfo {
+    border: 0;
     padding: 24px;
 }
 
@@ -76,24 +78,15 @@
     }
 
     /*
-     * Unread activity is teal with a red dot, matching the challenge tab rail.
-     * The dot appears only while topics are actually unread.
+     * The new-topics pill is the Figma solid red chip with a darker red border.
+     * It turns red only while topics are actually unread; otherwise it keeps the
+     * neutral chip. The 1px border replaces 1px of padding to keep chip height.
      */
-    .newCount {
-        background: #d9fbfb;
-        color: #007d79;
-        position: relative;
-    }
-
-    .newCount.hasUnread::after {
+    .newCount.hasUnread {
         background: #c1294f;
-        border-radius: 50%;
-        content: '';
-        height: 6px;
-        position: absolute;
-        right: -3px;
-        top: -3px;
-        width: 6px;
+        border: 1px solid #a21035;
+        color: #fff;
+        padding: 3px;
     }
 }
 
@@ -360,7 +353,7 @@
 
 .discussionInfo > .member,
 .topicInfo > .member {
-    margin-top: 16px;
+    margin-top: 24px;
 }
 
 .discussionInfo dl,
@@ -388,6 +381,7 @@
 
     dd {
         margin: 0;
+        text-align: right;
     }
 }
 
@@ -478,7 +472,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    min-height: 20px;
+    margin-bottom: 4px;
 
     span {
         border-radius: 2px;
@@ -516,7 +510,7 @@
     font-size: 24px;
     font-weight: 700;
     line-height: 38px;
-    margin: 4px 0 0;
+    margin: 0;
     padding: 0;
     position: relative;
     text-align: left;
@@ -620,7 +614,10 @@
         display: inline-flex;
         height: 32px;
 
-        /* Stays above the topic card overlay so the profile link still works. */
+        /*
+         * Stays above the topic card overlay so the profile link still works.
+         * ParticipantGroup sets descending z-indexes so earlier avatars overlap later ones.
+         */
         position: relative;
         text-decoration: none;
         width: 32px;
@@ -638,6 +635,13 @@
     a .avatar {
         border: 1px solid #fff;
     }
+}
+
+.participantMetric {
+    font-size: 14px;
+    line-height: 20px;
+    margin-top: 16px;
+    > strong { font-weight: 700; }
 }
 
 .fallback,
@@ -717,11 +721,20 @@
     grid-template-columns: 281px minmax(0, 895px);
 }
 
+/* The Author badge stays on the handle's line; long handles truncate instead of wrapping. */
 .topicInfoAuthor {
     align-items: center;
     display: flex;
-    flex-wrap: wrap;
     gap: 8px;
+    margin-top: 24px;
+
+    .member > a {
+        white-space: nowrap;
+    }
+
+    > .authorBadge {
+        flex: 0 0 auto;
+    }
 }
 
 .authorBadge,
@@ -765,8 +778,13 @@
         }
     }
 
+    p strong {
+        font-weight: 700;
+    }
+
     > strong {
         font-size: 14px;
+        font-weight: 700;
         line-height: 20px;
         margin-top: 12px;
     }
@@ -798,6 +816,12 @@
             font-weight: 600;
             line-height: 12px;
             padding: 4px;
+        }
+
+        // Keep the unread marker in its Figma pink; the type selector outranks the muted meta style.
+        > span.newPost {
+            background: #ffe5ec;
+            color: #c1294f;
         }
 
         > time {
@@ -1083,9 +1107,9 @@
     flex-direction: column;
     gap: 16px;
 
+    // Borderless like the other left-rail cards.
     section {
         background: #fff;
-        border: 1px solid #e0e0e0;
         border-radius: 8px;
         padding: 24px;
     }
@@ -1455,7 +1479,7 @@
     > span:not(.member) {
         background: #f4f4f4;
         border-radius: 2px;
-        color: #6f6f6f;
+        color: #161616;
         font-size: 11px;
         font-weight: 600;
         line-height: 12px;
@@ -1593,4 +1617,73 @@
 .topicExcerpt a {
     position: relative;
     z-index: 2;
+}
+
+/* Public forum pages supply the shared thread header/sidebar at page level. */
+.publicDetailLayout {
+    display: block;
+    min-width: 0;
+}
+
+// Shared Figma editor controls retain intrinsic SVG dimensions.
+.editorToolbar {
+    min-height: 38px;
+    padding: 0;
+    button { border-right: 0; height: 38px; min-width: 38px; padding: 7px; }
+    select { appearance: none; background: #fff url('../assets/forums/1e461.svg') no-repeat right 4px center;
+        border: 0; border-left: 1px solid #e0e0e0; border-right: 1px solid #e0e0e0; color: #6f6f6f;
+        font: 14px/20px 'Nunito Sans', sans-serif; height: 38px; padding: 0 32px 0 12px; width: 80px; }
+    // Figma groups: B I U S | H1-H3 | size | alignment | lists | insert tools | expand.
+    button:nth-of-type(5), button:nth-of-type(11), button:nth-of-type(13), button:nth-of-type(20) {
+        border-left: 1px solid #e0e0e0; margin-left: 4px; padding-left: 11px; width: 43px;
+    }
+    button:nth-of-type(4), button:nth-of-type(10), button:nth-of-type(12), button:nth-of-type(19) { margin-right: 4px; }
+}
+.expandedEditor { background: white; inset: 24px; overflow: auto; padding: 24px; position: fixed; z-index: 1000;
+    textarea { min-height: 65vh; }
+}
+.publicDetailLayout {
+    .replyPost { margin-left: 40px; }
+    .post > header, .replyPost > header { margin-bottom: 24px; }
+    .editorShell { border-color: #e0e0e0; border-radius: 2px; }
+    .markdownField > label { display: none; }
+    .postActions { gap: 24px; }
+    .postActions button { gap: 4px; }
+}
+
+// Public card geometry and typography from the Forums Figma frames.
+:global(.forums-app) {
+    .topicCard, .announcementCard { min-height: 0; }
+    .topicTitle { font-size: 20px; line-height: 30px; }
+    .topicFooter { margin-top: 16px; padding-top: 0; }
+    .topicActions button { min-height: 38px; padding: 8px 4px; line-height: 22px; }
+    .topicMetrics { gap: 16px; justify-content: center; padding: 0 24px; }
+    .topicMetrics p + p, .participantMetric { margin-top: 0; }
+    .topicMetrics p strong, .participantMetric > strong { font-weight: 400; }
+    .tags:empty { display: none; }
+    .postContent { min-height: 0; }
+    .postIdentity { gap: 16px; }
+    .postMeta strong { font-weight: 700; }
+    .postIdentity > span:not(.member):not(.authorBadge):not(.copilotBadge) {
+        align-items: center; background: #e9ecef; color: #161616; display: inline-flex; height: 20px;
+    }
+    .postIdentity > .authorBadge, .postIdentity > .copilotBadge {
+        background: #f5f7fa; color: #161616; font-size: 14px; font-weight: 400; height: 24px;
+        line-height: 20px; padding: 0 4px;
+    }
+    .postActions { gap: 16px; margin-top: 16px; padding-top: 16px; }
+    .postActions button { line-height: 22px; min-height: 38px; padding: 8px 4px; }
+    @media (max-width: 767px) {
+        .topicCard, .post, .replyPost, .commentForm { padding: 16px; }
+        .topicMetrics { padding: 24px 0 0; }
+    }
+}
+
+// Separates the reactions from the post actions; outranks the `.postActions > span` reset.
+.postActions > .postActionDivider {
+    align-self: center;
+    background: #e0e0e0;
+    display: block;
+    flex: 0 0 1px;
+    height: 24px;
 }

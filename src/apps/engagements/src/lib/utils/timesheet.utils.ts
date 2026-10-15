@@ -1,4 +1,8 @@
-import { TIMESHEET_MAX_HOURS_PER_DAY, TIMESHEET_MAX_RANGE_DAYS } from '../../config/constants'
+import {
+    TIMESHEET_MAX_HOURS_PER_DAY,
+    TIMESHEET_MAX_RANGE_DAYS,
+    TIMESHEET_MAX_REMARKS_LENGTH,
+} from '../../config/constants'
 import type { TimesheetEntry } from '../models'
 import { TimesheetEntryStatus } from '../models'
 
@@ -131,9 +135,10 @@ export const countRangeDays = (fromDate: string, toDate: string): number => {
 }
 
 /**
- * Validates a picked range.
+ * Validates a picked range: both dates readable and in order. No length cap, so manager, TM, and
+ * administrator filters can look back as far as they need.
  *
- * @returns An error message to show the member, or undefined when the range is usable.
+ * @returns An error message to show, or undefined when the range is usable.
  */
 export const validateDateRange = (fromDate?: string, toDate?: string): string | undefined => {
     if (!fromDate || !toDate) {
@@ -149,6 +154,21 @@ export const validateDateRange = (fromDate?: string, toDate?: string): string | 
 
     if (end.getTime() < start.getTime()) {
         return 'The to date cannot be earlier than the from date.'
+    }
+
+    return undefined
+}
+
+/**
+ * Validates a range hours will be entered for. Capped at {@link TIMESHEET_MAX_RANGE_DAYS} - a
+ * timesheet is filled in about a month at a time, and the API refuses a larger save. Filters that only
+ * read entries use {@link validateDateRange}, which has no cap.
+ */
+export const validateEntryRange = (fromDate?: string, toDate?: string): string | undefined => {
+    const rangeError = validateDateRange(fromDate, toDate)
+
+    if (rangeError || !fromDate || !toDate) {
+        return rangeError
     }
 
     if (countRangeDays(fromDate, toDate) > TIMESHEET_MAX_RANGE_DAYS) {
@@ -251,6 +271,25 @@ export const validateHours = (
     return {}
 }
 
+/**
+ * Checks a remark against the API's length cap. Measured on the trimmed value, because that is what
+ * gets sent.
+ */
+export const validateRemarks = (value: string): { error?: string } => (
+    value.trim().length > TIMESHEET_MAX_REMARKS_LENGTH
+        ? { error: `Remarks cannot be longer than ${TIMESHEET_MAX_REMARKS_LENGTH} characters.` }
+        : {}
+)
+
+/** True when the row holds a value the API would refuse, so the views can block saving it. */
+export const hasRowValidationError = (
+    row: Pick<TimesheetRow, 'hoursWorked' | 'remarks'>,
+    standardHoursPerDay?: number | null,
+): boolean => Boolean(
+    validateHours(row.hoursWorked, standardHoursPerDay).error
+    || validateRemarks(row.remarks).error,
+)
+
 /** True when the row holds hours that could be saved. */
 export const hasEnteredHours = (row: TimesheetRow): boolean => {
     const trimmed = row.hoursWorked.trim()
@@ -280,3 +319,20 @@ export const formatHoursLabel = (hours: string): string => {
     const value = Number(hours)
     return Number.isFinite(value) ? String(value) : hours
 }
+
+/** Entry statuses the manager, TM, and administrator timesheet views can be filtered to. */
+export type TimesheetReviewStatus = TimesheetEntryStatus.APPROVED | TimesheetEntryStatus.SUBMITTED
+
+/**
+ * Query parameter carrying the review status from the landing list into an assignee's timesheet, so
+ * the timesheet opens on what the list was showing. A URL parameter rather than router state, so a
+ * refresh or a shared link keeps it.
+ */
+export const TIMESHEET_REVIEW_STATUS_PARAM = 'status'
+
+/** Reads the review status from the URL. Anything unrecognised falls back to Pending Approval. */
+export const parseTimesheetReviewStatus = (value?: string | null): TimesheetReviewStatus => (
+    value === TimesheetEntryStatus.APPROVED
+        ? TimesheetEntryStatus.APPROVED
+        : TimesheetEntryStatus.SUBMITTED
+)

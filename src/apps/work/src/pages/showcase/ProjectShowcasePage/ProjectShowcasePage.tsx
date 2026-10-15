@@ -759,6 +759,7 @@ export const ProjectShowcasePage: FC = () => {
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false)
     const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false)
     const [previewData, setPreviewData] = useState<ShowcasePostPreviewData | undefined>(undefined)
+    const [previewPost, setPreviewPost] = useState<ProjectShowcasePost | undefined>(undefined)
     const confirmation = useConfirmationModal()
     // const projectResult = useFetchProject(projectId || undefined)
 
@@ -778,25 +779,34 @@ export const ProjectShowcasePage: FC = () => {
     const handleClosePreviewModal = useCallback(() => {
         setIsPreviewModalOpen(false)
         setPreviewData(undefined)
+        setPreviewPost(undefined)
         setIsLoadingPreview(false)
     }, [])
+
+    /**
+     * Shares the publish confirmation between the list, form and preview actions.
+     * @param title Title of the story being published.
+     * @returns Whether the user confirmed publication.
+     * @throws Does not throw.
+     */
+    const confirmPublishPost = useCallback((title: string) => confirmation.confirm({
+        content: (
+            <p>
+                Are you sure you want to publish the post
+                {' '}
+                <strong>{title}</strong>
+                ?
+            </p>
+        ),
+        title: 'Publish Post',
+    }), [confirmation])
 
     const handlePublishPost = useCallback(async (post: ProjectShowcasePost) => {
         if (!projectId) {
             return
         }
 
-        const confirmed = await confirmation.confirm({
-            content: (
-                <p>
-                    Are you sure you want to publish the post
-                    {' '}
-                    <strong>{post.title}</strong>
-                    ?
-                </p>
-            ),
-            title: 'Publish Post',
-        })
+        const confirmed = await confirmPublishPost(post.title)
 
         if (!confirmed) {
             return
@@ -809,13 +819,17 @@ export const ProjectShowcasePage: FC = () => {
                 status: 'PUBLISHED',
             })
             await postsResult.mutate()
+            if (previewPost?.id === post.id) {
+                handleClosePreviewModal()
+            }
+
             showSuccessToast('Post published successfully')
         } catch (err) {
             showErrorToast(err instanceof Error ? err.message : 'Unable to publish post.')
         } finally {
             setIsPublishing(false)
         }
-    }, [confirmation, postsResult, projectId])
+    }, [confirmPublishPost, handleClosePreviewModal, postsResult, previewPost, projectId])
 
     const handleUnpublishPost = useCallback(async (post: ProjectShowcasePost) => {
         if (!projectId) {
@@ -938,6 +952,7 @@ export const ProjectShowcasePage: FC = () => {
             return
         }
 
+        setPreviewPost(undefined)
         setIsLoadingPreview(true)
         setIsPreviewModalOpen(true)
 
@@ -998,6 +1013,7 @@ export const ProjectShowcasePage: FC = () => {
                 projectId,
                 projectTitle: postDetails.projectTitle || projectResult.project?.name || 'Project',
             })
+            setPreviewPost(postDetails)
             setPreviewData(builtPreview)
         } catch (err) {
             showErrorToast(err instanceof Error ? err.message : 'Unable to load post preview.')
@@ -1411,6 +1427,85 @@ export const ProjectShowcasePage: FC = () => {
         setValue,
     ])
 
+    /**
+     * Creates the validated submit handler used by Save/Create and Publish in the form or preview.
+     * @param publish Whether to confirm publication and save the current values as PUBLISHED.
+     * @returns A form event handler that saves the story and refreshes the project and showcase list.
+     * @throws API errors are displayed in the form; invalid preview submissions return to the form.
+     */
+    function handleSavePost(publish: boolean = false): ReturnType<typeof handleSubmit> {
+        return handleSubmit(async data => {
+            if (!projectId || isSaving) {
+                return
+            }
+
+            if (publish && !await confirmPublishPost(data.title)) {
+                return
+            }
+
+            setFormError(undefined)
+            setIsSaving(true)
+
+            try {
+                const resolvedIndustryIds = await resolveTaxonomyIds(
+                    data.industryIds,
+                    industryOptions,
+                    createProjectShowcasePostIndustry,
+                )
+                const resolvedCategoryIds = await resolveTaxonomyIds(
+                    data.categoryIds,
+                    categoryOptions,
+                    createProjectShowcasePostCategory,
+                )
+                const payload = {
+                    ...getShowcaseMetadata(data),
+                    categoryIds: resolvedCategoryIds,
+                    challengeIds: data.challengeIds,
+                    content: data.content.trim(),
+                    industryIds: resolvedIndustryIds,
+                    media: data.media.map(m => ({
+                        ...m,
+                        url: toStoredMediaUrl(m.url),
+                    })),
+                    ...(publish ? { status: 'PUBLISHED' } : {}),
+                    title: data.title.trim(),
+                }
+
+                if (manageMode === 'create') {
+                    await createProjectShowcasePost(projectId, payload)
+                } else if (selectedPostId) {
+                    await updateProjectShowcasePost(projectId, selectedPostId, payload)
+                } else {
+                    return
+                }
+
+                handleClosePreviewModal()
+                setIsManageModalOpen(false)
+                await Promise.all([
+                    projectResult.mutate(),
+                    postsResult.mutate(),
+                    industriesResult.mutate(),
+                    categoriesResult.mutate(),
+                ])
+                const action = publish ? 'published' : manageMode === 'create' ? 'created' : 'updated'
+                showSuccessToast(data.sendToWin
+                    ? `Post ${action} successfully and made available to WIN`
+                    : `Post ${action} successfully`)
+            } catch (err) {
+                handleClosePreviewModal()
+                setFormError(err instanceof Error ? err.message : 'Unable to save post.')
+            } finally {
+                setIsSaving(false)
+            }
+        }, handleClosePreviewModal)
+    }
+
+    const canPublishForm = canManageProjectShowcasePosts
+        && (manageMode === 'create' || editingPostDetails?.status === 'DRAFT')
+    const canPublishPreview = previewPost
+        ? canManageProjectShowcasePosts && previewPost.status === 'DRAFT'
+        : canPublishForm
+
     if (!hasProjectId) {
         return (
             <ProjectPageWrapper
@@ -1635,87 +1730,56 @@ export const ProjectShowcasePage: FC = () => {
                     handleClosePreviewModal()
                 }}
                 size='body'
+                buttons={(
+                    <footer className={styles.modalFooter}>
+                        <Button
+                            label='Cancel'
+                            onClick={function onClick() {
+                                setIsManageModalOpen(false)
+                                setFormError(undefined)
+                            }}
+                            secondary
+                            size='lg'
+                            type='button'
+                        />
+                        <Button
+                            label='Preview'
+                            onClick={function onClick() {
+                                handleOpenPreview()
+                                    .catch(() => undefined)
+                            }}
+                            secondary
+                            size='lg'
+                            type='button'
+                            disabled={isSaving || isLoadingPostDetails || isLoadingPreview}
+                        />
+                        <Button
+                            label={manageMode === 'create' ? 'Create' : 'Save'}
+                            primary
+                            size='lg'
+                            type='button'
+                            onClick={handleSavePost()}
+                            disabled={isSaving || isLoadingPostDetails}
+                        />
+                        {canPublishForm && (
+                            <Button
+                                label='Publish'
+                                onClick={handleSavePost(true)}
+                                primary
+                                size='lg'
+                                type='button'
+                                disabled={isSaving || isLoadingPostDetails}
+                            />
+                        )}
+                    </footer>
+                )}
             >
                 <FormProvider {...formMethods}>
                     <form
                         className={styles.modalForm}
-                        onSubmit={handleSubmit(async data => {
-                            if (!projectId) {
-                                return
-                            }
-
-                            setFormError(undefined)
-                            setIsSaving(true)
-
-                            try {
-                                const resolvedIndustryIds = await resolveTaxonomyIds(
-                                    data.industryIds,
-                                    industryOptions,
-                                    createProjectShowcasePostIndustry,
-                                )
-                                const resolvedCategoryIds = await resolveTaxonomyIds(
-                                    data.categoryIds,
-                                    categoryOptions,
-                                    createProjectShowcasePostCategory,
-                                )
-
-                                if (manageMode === 'create') {
-                                    await createProjectShowcasePost(projectId, {
-                                        ...getShowcaseMetadata(data),
-                                        categoryIds: resolvedCategoryIds,
-                                        challengeIds: data.challengeIds,
-                                        content: data.content.trim(),
-                                        industryIds: resolvedIndustryIds,
-                                        media: data.media.map(m => ({
-                                            ...m,
-                                            url: toStoredMediaUrl(m.url),
-                                        })),
-                                        title: data.title.trim(),
-                                    })
-                                    setIsManageModalOpen(false)
-                                    await Promise.all([
-                                        projectResult.mutate(),
-                                        postsResult.mutate(),
-                                        industriesResult.mutate(),
-                                        categoriesResult.mutate(),
-                                    ])
-                                    showSuccessToast(data.sendToWin
-                                        ? 'Post created successfully and made available to WIN'
-                                        : 'Post created successfully')
-                                } else if (selectedPostId) {
-                                    await updateProjectShowcasePost(projectId, selectedPostId, {
-                                        ...getShowcaseMetadata(data),
-                                        categoryIds: resolvedCategoryIds,
-                                        challengeIds: data.challengeIds,
-                                        content: data.content.trim(),
-                                        industryIds: resolvedIndustryIds,
-                                        media: data.media.map(m => ({
-                                            ...m,
-                                            url: toStoredMediaUrl(m.url),
-                                        })),
-                                        title: data.title.trim(),
-                                    })
-                                    setIsManageModalOpen(false)
-                                    await Promise.all([
-                                        projectResult.mutate(),
-                                        postsResult.mutate(),
-                                        industriesResult.mutate(),
-                                        categoriesResult.mutate(),
-                                    ])
-                                    showSuccessToast(data.sendToWin
-                                        ? 'Post updated successfully and made available to WIN'
-                                        : 'Post updated successfully')
-                                }
-                            } catch (err) {
-                                const message = err instanceof Error
-                                    ? err.message
-                                    : 'Unable to save post.'
-                                setFormError(message)
-                            } finally {
-                                setIsSaving(false)
-                            }
-                        })}
+                        onSubmit={handleSavePost()}
                     >
+                        <button type='submit' hidden>Save story</button>
                         <div className={styles.modalBody}>
                             {formError && (
                                 <div className={styles.modalError}>
@@ -1885,37 +1949,6 @@ export const ProjectShowcasePage: FC = () => {
                                 />
                             </div>
                         </div>
-
-                        <footer className={styles.modalFooter}>
-                            <Button
-                                label='Cancel'
-                                onClick={function onClick() {
-                                    setIsManageModalOpen(false)
-                                    setFormError(undefined)
-                                }}
-                                secondary
-                                size='lg'
-                                type='button'
-                            />
-                            <Button
-                                label='Preview'
-                                onClick={function onClick() {
-                                    handleOpenPreview()
-                                        .catch(() => undefined)
-                                }}
-                                secondary
-                                size='lg'
-                                type='button'
-                                disabled={isSaving || isLoadingPostDetails || isLoadingPreview}
-                            />
-                            <Button
-                                label={manageMode === 'create' ? 'Create' : 'Save'}
-                                primary
-                                size='lg'
-                                type='submit'
-                                disabled={isSaving || isLoadingPostDetails}
-                            />
-                        </footer>
                     </form>
                 </FormProvider>
             </BaseModal>
@@ -1925,6 +1958,34 @@ export const ProjectShowcasePage: FC = () => {
                 title='Preview'
                 onClose={handleClosePreviewModal}
                 size='body'
+                buttons={(
+                    <footer className={styles.modalFooter}>
+                        <Button
+                            label='Cancel'
+                            onClick={handleClosePreviewModal}
+                            secondary
+                            size='lg'
+                            type='button'
+                            disabled={isSaving || isPublishing}
+                        />
+                        {canPublishPreview && (
+                            <Button
+                                label='Publish'
+                                onClick={function onClick() {
+                                    if (previewPost) {
+                                        handlePublishPost(previewPost)
+                                    } else {
+                                        handleSavePost(true)()
+                                    }
+                                }}
+                                primary
+                                size='lg'
+                                type='button'
+                                disabled={isLoadingPreview || !previewData || isSaving || isPublishing}
+                            />
+                        )}
+                    </footer>
+                )}
                 bodyClassName={styles.previewModalBody}
                 classNames={{
                     modal: styles.previewModal,

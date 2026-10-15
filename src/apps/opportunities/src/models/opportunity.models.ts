@@ -130,6 +130,7 @@ export interface ChallengeOpportunity {
     events?: Array<{ key?: string; name?: string }>
     forumId?: number
     funChallenge?: boolean
+    groups?: string[]
     id: string
     legacyId?: number
     legacy?: ChallengeLegacy

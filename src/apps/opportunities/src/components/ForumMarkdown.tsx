@@ -38,6 +38,16 @@ const FORUM_COMPONENTS: Components = {
             ? <ForumMention handle={handle} />
             : <a href={props.href} title={props.title}>{props.children}</a>
     },
+    p: props => (
+        <p style={{ textAlign: props.node.properties?.align as 'left' | 'center' | 'right' }}>
+            {props.children}
+        </p>
+    ),
+    span: props => (
+        <span style={{ fontSize: `${props.node.properties?.dataForumSize ?? 16}px` }}>
+            {props.children}
+        </span>
+    ),
 }
 
 /**

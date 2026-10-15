@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import { BaseModal, Button, ContentLayout, LoadingSpinner } from '~/libs/ui'
 
@@ -7,8 +7,13 @@ import type { TimesheetView } from '../../lib/models'
 import { TimesheetViewerRole } from '../../lib/models'
 import { getTimesheet } from '../../lib/services'
 import { EngagementsTabs } from '../../components'
+import { rootRoute } from '../../engagements.routes'
 import { EngagementManagers } from '../../components/engagement-managers'
 import { AuthCtx, useAuth } from '../../lib/utils/auth'
+import {
+    parseTimesheetReviewStatus,
+    TIMESHEET_REVIEW_STATUS_PARAM,
+} from '../../lib/utils'
 
 import AdminTimesheetView from './AdminTimesheetView'
 import ManagerTimesheetView from './ManagerTimesheetView'
@@ -46,6 +51,9 @@ const TimesheetsPage: FC = () => {
         assignmentId?: string
         engagementId?: string
     } = useParams<{ assignmentId: string, engagementId: string }>()
+    const [searchParams] = useSearchParams()
+    // The status the landing list was filtered by, so the review views open on the same thing.
+    const initialStatus = parseTimesheetReviewStatus(searchParams.get(TIMESHEET_REVIEW_STATUS_PARAM))
 
     const [timesheet, setTimesheet] = useState<TimesheetView | undefined>()
     const [isLoading, setIsLoading] = useState<boolean>(true)
@@ -134,8 +142,25 @@ const TimesheetsPage: FC = () => {
             .includes(timesheet.viewerRole) || authCtx.isTm)
     const canRenderContent = !isLoading && !error && timesheet
 
+    // Back to wherever this timesheet was opened from: a member comes from My Assignments, everyone
+    // else from the timesheets list. Shown once the API has said which of the two the caller is.
+    const navigate = useNavigate()
+    const isMemberView = timesheet?.viewerRole === TimesheetViewerRole.MEMBER
+    const backButtonConfig = timesheet
+        ? {
+            label: isMemberView ? 'Back to My Assignments' : 'Back to Timesheets',
+            onClick: function onBack() {
+                navigate(`${rootRoute}/${isMemberView ? 'assignments' : 'timesheets'}`)
+            },
+        }
+        : undefined
+
     return (
-        <ContentLayout title='Timesheets' contentClass={styles.pageContent}>
+        <ContentLayout
+            title='Timesheets'
+            contentClass={styles.pageContent}
+            secondaryButtonConfig={backButtonConfig}
+        >
             {isLoading && (
                 <LoadingSpinner />
             )}
@@ -161,9 +186,14 @@ const TimesheetsPage: FC = () => {
                                 setIsManagersModalOpen(true)
                             }
                             : undefined}
-                        onViewManagersAudit={function onViewManagersAudit() {
-                            setIsManagersAuditOpen(true)
-                        }}
+                        // The history is for whoever can change managers - administrators and TMs.
+                        // The API refuses anyone else, so the button follows the same rule.
+                        showAssignmentHours={timesheet.viewerRole !== TimesheetViewerRole.MEMBER}
+                        onViewManagersAudit={canEditManagers
+                            ? function onViewManagersAudit() {
+                                setIsManagersAuditOpen(true)
+                            }
+                            : undefined}
                     />
 
                     {timesheet.viewerRole === TimesheetViewerRole.MEMBER && (
@@ -176,6 +206,7 @@ const TimesheetsPage: FC = () => {
 
                     {timesheet.viewerRole === TimesheetViewerRole.MANAGER && (
                         <ManagerTimesheetView
+                            initialStatus={initialStatus}
                             onTimesheetChange={setTimesheet}
                             timesheet={timesheet}
                         />
@@ -183,6 +214,7 @@ const TimesheetsPage: FC = () => {
 
                     {timesheet.viewerRole === TimesheetViewerRole.TM && (
                         <TmTimesheetView
+                            initialStatus={initialStatus}
                             onTimesheetChange={setTimesheet}
                             timesheet={timesheet}
                         />
@@ -190,6 +222,7 @@ const TimesheetsPage: FC = () => {
 
                     {timesheet.viewerRole === TimesheetViewerRole.ADMINISTRATOR && (
                         <AdminTimesheetView
+                            initialStatus={initialStatus}
                             onTimesheetChange={setTimesheet}
                             timesheet={timesheet}
                         />

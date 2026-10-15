@@ -315,6 +315,65 @@ describe('EngagementPaymentPage', () => {
         })
     })
 
+    it('offers View Timesheet for assigned, completed, and terminated members only', () => {
+        const otherAssignment = (status: string): Assignment => ({
+            ...assignment,
+            id: `assignment-${status.toLowerCase()}`,
+            memberHandle: `${status.toLowerCase()}_member`,
+            memberId: `member-${status.toLowerCase()}`,
+            status,
+        })
+
+        mockedUseFetchEngagement.mockReturnValue({
+            engagement: {
+                assignments: [
+                    assignment,
+                    otherAssignment('COMPLETED'),
+                    otherAssignment('TERMINATED'),
+                    otherAssignment('SELECTED'),
+                    otherAssignment('OFFER_REJECTED'),
+                ],
+                title: 'Test Engagement',
+            },
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+        } as unknown as ReturnType<typeof useFetchEngagement>)
+
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+            project: {
+                billingAccountId: 'billing-account-1',
+                name: 'Test Project',
+            },
+        } as unknown as ReturnType<typeof useFetchProject>)
+
+        render(
+            <MemoryRouter initialEntries={['/projects/project-1/engagements/engagement-1/assignments']}>
+                <Routes>
+                    <Route
+                        element={<EngagementPaymentPage />}
+                        path='/projects/:projectId/engagements/:engagementId/assignments'
+                    />
+                </Routes>
+            </MemoryRouter>,
+        )
+
+        const timesheetLinks = screen.getAllByRole('button', { name: 'View Timesheet' })
+            .map(button => button.closest('a')
+                ?.getAttribute('href'))
+
+        expect(timesheetLinks)
+            .toEqual([
+                expect.stringContaining('/engagement-1/timesheets/assignment-1'),
+                expect.stringContaining('/engagement-1/timesheets/assignment-completed'),
+                expect.stringContaining('/engagement-1/timesheets/assignment-terminated'),
+            ])
+    })
+
     it('updates active assignment details without resubmitting terminal assignment history', async () => {
         const mutateEngagement = jest.fn()
             .mockResolvedValue(undefined)

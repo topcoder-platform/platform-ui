@@ -13,8 +13,6 @@ interface Props {
     data: Submission
     isDownloading: IsRemovingType
     downloadSubmission: () => void
-    isDoingAvScan: IsRemovingType
-    doPostBusEventAvScan: () => void
     canReprocessSubmission?: boolean
     isReprocessingSubmission: IsRemovingType
     doReprocessSubmission: () => void
@@ -31,17 +29,6 @@ export const SubmissionTableActionsNonMM: FC<Props> = (props: Props) => (
         >
             Download
         </Button>
-        {props.data.isTheLatestSubmission && (
-            <Button
-                onClick={function onClick() {
-                    props.doPostBusEventAvScan()
-                }}
-                primary
-                disabled={props.isDoingAvScan[props.data.id]}
-            >
-                AV Rescan
-            </Button>
-        )}
         {props.canReprocessSubmission && (
             <Button
                 onClick={function onClick() {

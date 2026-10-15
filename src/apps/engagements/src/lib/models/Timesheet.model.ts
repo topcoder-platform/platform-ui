@@ -45,6 +45,11 @@ export interface TimesheetEntry {
 
 export interface TimesheetAssignment {
     endDate: string | null
+    /**
+     * Total hours minus hours on processed payments. Null when there is no total, on the member's own
+     * view, or when payments could not be read.
+     */
+    hoursLeft: number | null
     id: string
     memberHandle: string
     memberId: string
@@ -52,6 +57,8 @@ export interface TimesheetAssignment {
     standardHoursPerDay: number | null
     startDate: string | null
     status: string
+    /** Hours allocated to the assignment overall. */
+    totalHours: number | null
 }
 
 export interface TimesheetView {
@@ -111,16 +118,24 @@ export interface TimesheetQuery {
     toDate?: string
 }
 
-/** Rolled-up per-assignee status on the manager and administrator landing lists. */
-export type TimesheetRollupStatus = 'Approved' | 'Pending Approval'
+/**
+ * Rolled-up per-assignee status on the manager and administrator landing lists. `Not Submitted` means
+ * nothing is awaiting approval and nothing has been approved yet; it is a display value only, not a
+ * filter option.
+ */
+export type TimesheetRollupStatus = 'Approved' | 'Not Submitted' | 'Pending Approval'
 
 export interface TimesheetEngagementRow {
     assigneeHandle: string
     assigneeId: string
     assigneeName: string | null
     assignmentId: string
+    /** The assignment's own status. A manager's list only carries `ASSIGNED` and `COMPLETED`. */
+    assignmentStatus: string
     engagementId: string
     engagementTitle: string
+    /** True when at least one entry is submitted and awaiting approval. */
+    hasPendingApproval: boolean
     timesheetStatus: TimesheetRollupStatus
     viewerRole: TimesheetViewerRole
 }

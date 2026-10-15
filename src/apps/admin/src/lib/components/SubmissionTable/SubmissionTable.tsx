@@ -68,8 +68,6 @@ interface Props {
     isMM: boolean
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
-    isDoingAvScan: IsRemovingType
-    doPostBusEventAvScan: (submission: Submission) => void
     isReprocessingSubmission: IsRemovingType
     doReprocessSubmission: (submission: Submission) => void
     canReprocessSubmission?: boolean
@@ -207,8 +205,6 @@ export const SubmissionTable: FC<Props> = (props: Props) => {
                                 }
                                 isDownloading={props.isDownloading}
                                 downloadSubmission={props.downloadSubmission}
-                                isDoingAvScan={props.isDoingAvScan}
-                                doPostBusEventAvScan={props.doPostBusEventAvScan}
                                 setShowConfirmDeleteSubmissionDialog={
                                     setShowConfirmDeleteSubmissionDialog
                                 }
@@ -276,10 +272,6 @@ export const SubmissionTable: FC<Props> = (props: Props) => {
                     renderer: (data: Submission) => (
                         <div className={styles.rowActions}>
                             <SubmissionTableActionsNonMM
-                                isDoingAvScan={props.isDoingAvScan}
-                                doPostBusEventAvScan={function doPostBusEventAvScan() {
-                                    props.doPostBusEventAvScan(data)
-                                }}
                                 canReprocessSubmission={
                                     props.canReprocessSubmission
                                 }
@@ -316,8 +308,6 @@ export const SubmissionTable: FC<Props> = (props: Props) => {
             props.showSubmissionHistory,
             props.isDownloading,
             props.downloadSubmission,
-            props.isDoingAvScan,
-            props.doPostBusEventAvScan,
             props.isReprocessingSubmission,
             props.doReprocessSubmission,
             props.canReprocessSubmission,

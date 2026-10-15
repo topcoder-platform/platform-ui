@@ -70,6 +70,31 @@
     gap: 0;
 }
 
+.infoButton {
+    align-items: center;
+    background: none;
+    border: 0;
+    color: var(--FontColor);
+    cursor: pointer;
+    display: inline-flex;
+    flex-shrink: 0;
+    height: 20px;
+    justify-content: center;
+    margin-left: $sp-2;
+    padding: 0;
+    width: 20px;
+
+    svg {
+        height: 20px;
+        width: 20px;
+    }
+}
+
+.infoTooltip {
+    max-width: 248px;
+    text-align: center;
+}
+
 .textInfo {
     span {
         align-items: center;

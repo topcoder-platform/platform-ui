@@ -102,16 +102,21 @@ const entry = (overrides: Partial<TimesheetEntry> = {}): TimesheetEntry => ({
     ...overrides,
 } as TimesheetEntry)
 
-const timesheet = (entries: TimesheetEntry[] = []): TimesheetView => ({
+const timesheet = (
+    entries: TimesheetEntry[] = [],
+    assignmentStatus: string = 'ASSIGNED',
+): TimesheetView => ({
     assignment: {
         endDate: '2026-09-30',
+        hoursLeft: null,
         id: 'asg-1',
         memberHandle: 'johnsmith',
         memberId: '1001',
         memberName: 'John Smith',
         standardHoursPerDay: 8,
         startDate: '2026-09-01',
-        status: 'ASSIGNED',
+        status: assignmentStatus,
+        totalHours: null,
     },
     engagementId: 'eng-1',
     engagementTitle: 'Senior Frontend Engineer',
@@ -120,7 +125,7 @@ const timesheet = (entries: TimesheetEntry[] = []): TimesheetView => ({
     viewerRole: TimesheetViewerRole.MEMBER,
 })
 
-const renderView = (entries: TimesheetEntry[] = []): {
+const renderView = (entries?: TimesheetEntry[], assignmentStatus?: string): {
     onTimesheetChange: jest.Mock
 } & ReturnType<typeof render> => {
     const onTimesheetChange = jest.fn()
@@ -128,7 +133,7 @@ const renderView = (entries: TimesheetEntry[] = []): {
         <MemberTimesheetView
             onDirtyChange={jest.fn()}
             onTimesheetChange={onTimesheetChange}
-            timesheet={timesheet(entries)}
+            timesheet={timesheet(entries, assignmentStatus)}
         />,
     )
 
@@ -341,6 +346,47 @@ describe('MemberTimesheetView', () => {
             .toHaveTextContent('Some selected rows have no hours entered.')
     })
 
+    it('requires remarks before submitting and flags the row', async () => {
+        const user = userEvent.setup()
+        renderView([entry({ hoursWorked: '8', remarks: null, workDate: '2026-09-07' })])
+
+        await pickRange('2026-09-07', '2026-09-07')
+        await user.click(await screen.findByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Submit (1)' }))
+
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+        expect(screen.getByText('Remarks are required before submitting.'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Enter remarks for the highlighted days before submitting.'))
+            .toBeInTheDocument()
+        expect(mockSave).not.toHaveBeenCalled()
+
+        // Typing a remark clears the row error, and submit goes on to the confirmation.
+        await user.type(screen.getByLabelText('Remarks for 07-09-2026'), 'Sprint planning')
+        expect(screen.queryByText('Remarks are required before submitting.')).not.toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'Submit (1)' }))
+        expect(await screen.findByRole('dialog'))
+            .toBeInTheDocument()
+    })
+
+    it('saves a draft without remarks', async () => {
+        const user = userEvent.setup()
+        mockSave.mockResolvedValue(timesheet([entry({ hoursWorked: '8.00', remarks: null })]))
+        renderView()
+
+        await pickRange('2026-09-07', '2026-09-07')
+        await user.type(await screen.findByLabelText('Hours worked on 07-09-2026'), '8')
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+
+        await waitFor(() => {
+            expect(mockSave)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    entries: [{ hoursWorked: '8', remarks: undefined, workDate: '2026-09-07' }],
+                })
+        })
+    })
+
     it('refuses to save while a row holds invalid hours', async () => {
         const user = userEvent.setup()
         renderView([entry({ hoursWorked: '8', workDate: '2026-09-07' })])
@@ -357,7 +403,7 @@ describe('MemberTimesheetView', () => {
         await user.click(screen.getByRole('button', { name: 'Save' }))
 
         expect(mockSave).not.toHaveBeenCalled()
-        expect(screen.getByText('Fix the highlighted hours before saving.'))
+        expect(screen.getByText('Fix the highlighted fields before saving.'))
             .toBeInTheDocument()
     })
 
@@ -429,6 +475,97 @@ describe('MemberTimesheetView', () => {
             .toHaveTextContent('Hours worked cannot exceed 24 for a single day.')
     })
 
+    it('shows API validation errors under the input on the row they belong to', async () => {
+        const user = userEvent.setup()
+        mockSave.mockRejectedValue({
+            message: 'Request failed with status code 400',
+            response: {
+                data: {
+                    message: ['entries.0.remarks must be shorter than or equal to 2000 characters'],
+                },
+            },
+        })
+        renderView()
+
+        await pickRange('2026-09-07', '2026-09-08')
+        await waitFor(() => {
+            expect(screen.getByLabelText('Hours worked on 08-09-2026'))
+                .toBeInTheDocument()
+        })
+
+        // Only the second day is filled in, so it is entries[0] in the payload but row 2 on screen.
+        await user.type(screen.getByLabelText('Hours worked on 08-09-2026'), '8')
+        await user.type(screen.getByLabelText('Remarks for 08-09-2026'), 'Long remarks')
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+
+        const rowsOnScreen = await screen.findAllByRole('row')
+        const secondDayRow = rowsOnScreen.find(row => within(row)
+            .queryByText('08-09-2026'))
+        const firstDayRow = rowsOnScreen.find(row => within(row)
+            .queryByText('07-09-2026'))
+
+        expect(await within(secondDayRow as HTMLElement)
+            .findByText('Remarks must be shorter than or equal to 2000 characters'))
+            .toBeInTheDocument()
+        expect(within(firstDayRow as HTMLElement)
+            .queryByRole('alert')).not.toBeInTheDocument()
+        expect(screen.queryByText(/entries\.0\.remarks/)).not.toBeInTheDocument()
+        expect(screen.getByText('Fix the highlighted fields and try again.'))
+            .toBeInTheDocument()
+
+        // Editing the field clears both the row error and the banner.
+        await user.type(screen.getByLabelText('Remarks for 08-09-2026'), '!')
+
+        expect(screen.queryByText('Remarks must be shorter than or equal to 2000 characters'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('Fix the highlighted fields and try again.'))
+            .not.toBeInTheDocument()
+    })
+
+    it('blocks saving a remark longer than 2000 characters and flags it on the row', async () => {
+        renderView()
+
+        await pickRange('2026-09-07', '2026-09-07')
+        const user = userEvent.setup()
+        await user.type(await screen.findByLabelText('Hours worked on 07-09-2026'), '8')
+        // Pasting stands in for typing 2001 characters, which userEvent would do one key at a time.
+        fireEvent.change(screen.getByLabelText('Remarks for 07-09-2026'), {
+            target: { value: 'a'.repeat(2001) },
+        })
+
+        expect(screen.getByText('Remarks cannot be longer than 2000 characters.'))
+            .toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+
+        expect(screen.getByText('Fix the highlighted fields before saving.'))
+            .toBeInTheDocument()
+        expect(mockSave).not.toHaveBeenCalled()
+
+        fireEvent.change(screen.getByLabelText('Remarks for 07-09-2026'), {
+            target: { value: 'a'.repeat(2000) },
+        })
+
+        expect(screen.queryByText('Remarks cannot be longer than 2000 characters.'))
+            .not.toBeInTheDocument()
+    })
+
+    it('clears a save error when the date range changes', async () => {
+        const user = userEvent.setup()
+        mockSave.mockRejectedValue({ response: { data: { message: 'Something went wrong.' } } })
+        renderView()
+
+        await pickRange('2026-09-07', '2026-09-07')
+        await user.type(await screen.findByLabelText('Hours worked on 07-09-2026'), '8')
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+        expect(await screen.findByText('Something went wrong.'))
+            .toBeInTheDocument()
+
+        await pickRange('2026-09-07', '2026-09-08')
+
+        expect(screen.queryByText('Something went wrong.')).not.toBeInTheDocument()
+    })
+
     it('leaves approved rows read-only', async () => {
         renderView([
             entry({
@@ -450,4 +587,30 @@ describe('MemberTimesheetView', () => {
         expect(screen.getByLabelText('Select 07-09-2026'))
             .toBeDisabled()
     })
+
+    it('reminds an active member to add all the days they missed, not just this week', () => {
+        renderView()
+
+        expect(screen.getByRole('note'))
+            .toHaveTextContent('add ALL missing days')
+    })
+
+    it.each(['COMPLETED', 'TERMINATED'])(
+        'makes the timesheet read-only once the assignment is %s',
+        async (assignmentStatus: string) => {
+            renderView([entry({ workDate: '2026-09-07' })], assignmentStatus)
+
+            await pickRange('2026-09-07', '2026-09-07')
+
+            expect(await screen.findByRole('status'))
+                .toHaveTextContent('no longer active')
+            // Nothing can be added any more, so there is nothing to remind them about.
+            expect(screen.queryByRole('note')).not.toBeInTheDocument()
+            expect(screen.queryByLabelText('Hours worked on 07-09-2026')).not.toBeInTheDocument()
+            expect(screen.getByLabelText('Select 07-09-2026'))
+                .toBeDisabled()
+            expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
+            expect(screen.queryByRole('button', { name: /Submit/ })).not.toBeInTheDocument()
+        },
+    )
 })

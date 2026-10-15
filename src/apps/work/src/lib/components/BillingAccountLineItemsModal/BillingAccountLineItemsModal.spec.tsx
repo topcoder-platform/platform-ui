@@ -13,9 +13,13 @@ import { fetchAssignmentPaymentSplits } from '../../services/payments.service'
 
 import BillingAccountLineItemsModal from './BillingAccountLineItemsModal'
 
+type BillingDetailLookup = (value: string) => Promise<unknown>
+
+const mockLoadBillingDetails = jest.fn()
+
 jest.mock('./billing-detail-requests', () => ({
-    loadBillingDetails: (values: string[], lookup: (value: string) => Promise<unknown>) => (
-        Promise.all(values.map(lookup))
+    loadBillingDetails: (values: string[], lookup: BillingDetailLookup) => (
+        mockLoadBillingDetails(values, lookup)
     ),
 }))
 
@@ -109,6 +113,10 @@ function renderModal(
 describe('BillingAccountLineItemsModal', () => {
     beforeEach(() => {
         challengeMarkupById = new Map<string, number>()
+        mockLoadBillingDetails.mockReset()
+        mockLoadBillingDetails.mockImplementation((values: string[], lookup: BillingDetailLookup) => (
+            Promise.all(values.map(lookup))
+        ))
         mockedFetchChallenge.mockReset()
         mockedFetchChallenge.mockImplementation(async (challengeId: string): Promise<Challenge> => ({
             billing: {
@@ -158,6 +166,68 @@ describe('BillingAccountLineItemsModal', () => {
 
         expect(challengeLink.getAttribute('href'))
             .toBe('/work/challenges/challenge%20%2F%20100')
+    })
+
+    it('opens challenge links in a new tab without bursting challenge lookups (PM-5363)', async () => {
+        const actualRequests = jest.requireActual('./billing-detail-requests')
+        const challengeIds = ['pm-5363-challenge-1', 'pm-5363-challenge-2', 'pm-5363-challenge-3']
+        let activeChallengeRequests = 0
+        let peakChallengeRequests = 0
+
+        mockLoadBillingDetails.mockImplementation(actualRequests.loadBillingDetails)
+        mockedFetchChallenge.mockImplementation(async (challengeId: string): Promise<Challenge> => {
+            activeChallengeRequests += 1
+            peakChallengeRequests = Math.max(peakChallengeRequests, activeChallengeRequests)
+            await Promise.resolve()
+            activeChallengeRequests -= 1
+
+            return {
+                billing: {
+                    markup: 0.33,
+                },
+                id: challengeId,
+                name: `Challenge ${challengeId}`,
+                status: 'ACTIVE',
+            }
+        })
+
+        renderModal({
+            ...baseBillingAccountDetails,
+            lockedAmounts: challengeIds.map(challengeId => ({
+                amount: '10.00',
+                date: '2026-06-15T00:00:00.000Z',
+                externalId: challengeId,
+                externalName: `Row ${challengeId}`,
+                externalType: 'CHALLENGE' as const,
+            })),
+            lockedBudget: 30,
+            totalBudgetRemaining: 970,
+        })
+
+        const challengeLink = screen.getByRole('link', {
+            name: 'Row pm-5363-challenge-1',
+        })
+
+        expect(challengeLink.getAttribute('href'))
+            .toBe('/work/challenges/pm-5363-challenge-1')
+        expect(challengeLink.getAttribute('target'))
+            .toBe('_blank')
+        expect(challengeLink.getAttribute('rel'))
+            .toContain('noopener')
+
+        await waitFor(() => {
+            expect(mockedFetchChallenge)
+                .toHaveBeenCalledTimes(challengeIds.length)
+        }, {
+            timeout: 3000,
+        })
+        await waitFor(() => {
+            expect(activeChallengeRequests)
+                .toBe(0)
+        })
+
+        expect(peakChallengeRequests)
+            .toBe(1)
     })
 
     it('shows challenge member payments without removing markup from the stored subtotal', async () => {

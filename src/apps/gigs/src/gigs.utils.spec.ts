@@ -124,10 +124,10 @@ describe('Gigs discovery and application contracts', () => {
                 }),
             )
         const oversized = new File(['x'], 'cv.pdf')
-        Object.defineProperty(oversized, 'size', { value: 8000001 })
+        Object.defineProperty(oversized, 'size', { value: 4000001 })
         expect(validateApplication({ ...valid, resume: oversized }).resume)
             .toBe(
-                'The maximum file size is 8 MB.',
+                'The maximum file size is 4 MB.',
             )
     })
     it('matches the legacy required, minimum and maximum copy for phone and city', () => {

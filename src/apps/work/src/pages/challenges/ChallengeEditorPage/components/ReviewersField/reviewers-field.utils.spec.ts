@@ -2,6 +2,8 @@ import {
     aiReviewConfigHasChanges,
     getAiReviewerPhaseId,
     getReviewContextLockReason,
+    hasAiOnlyTimelinePhases,
+    hasStartedReviewPhase,
     normalizeTrackForAiTemplates,
     syncAiConfigReviewers,
     validateAiReviewConfiguration,
@@ -200,6 +202,49 @@ describe('reviewers-field utils ai reviewer syncing', () => {
             },
         ]))
             .toBe('screening-phase-id')
+    })
+})
+
+describe('reviewers-field utils AI review mode timelines', () => {
+    it('detects schedules built from the AI Only timeline template', () => {
+        expect(hasAiOnlyTimelinePhases([
+            { name: 'Registration' },
+            { name: 'Submission' },
+            { name: ' ai review ' },
+            { name: 'Approval' },
+        ]))
+            .toBe(true)
+        expect(hasAiOnlyTimelinePhases([
+            { name: 'Registration' },
+            { name: 'Submission' },
+            { name: 'AI Screening' },
+            { name: 'Review' },
+        ]))
+            .toBe(false)
+        expect(hasAiOnlyTimelinePhases(undefined))
+            .toBe(false)
+    })
+
+    it('reports a review phase as started once it is open or has an actual start date', () => {
+        const submissionOpen = [
+            { actualStartDate: '2026-10-01T00:00:00.000Z', isOpen: true, name: 'Submission' },
+            { isOpen: false, name: 'AI Screening' },
+            { isOpen: false, name: 'Review' },
+        ]
+
+        expect(hasStartedReviewPhase(submissionOpen))
+            .toBe(false)
+        expect(hasStartedReviewPhase([
+            ...submissionOpen.slice(0, 1),
+            { isOpen: true, name: 'AI Screening' },
+        ]))
+            .toBe(true)
+        expect(hasStartedReviewPhase([
+            { actualStartDate: '2026-10-06T00:00:00.000Z', isOpen: false, name: 'AI Review' },
+        ]))
+            .toBe(true)
+        expect(hasStartedReviewPhase(undefined))
+            .toBe(false)
     })
 })
 

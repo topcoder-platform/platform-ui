@@ -1,0 +1,31 @@
+@import '@libs/ui/styles/2026/tokens';
+
+.navigation { max-width: 1800px; margin: 0 auto; padding: 0 32px; }
+
+.tabs {
+    display: flex;
+    gap: 24px;
+    margin: 24px 0;
+    border-bottom: 1px solid $tc-2026-border;
+
+    button {
+        padding: 12px 0;
+        border: 0;
+        border-bottom: 3px solid transparent;
+        background: transparent;
+        color: $tc-2026-muted;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    button[aria-selected='true'] { color: $tc-2026-teal; border-bottom-color: $tc-2026-teal; }
+    button:focus-visible { outline: 2px solid $tc-2026-teal; outline-offset: 4px; }
+}
+
+.filters { margin-bottom: 20px; }
+.table th { padding: 12px; }
+.hint { margin: 16px 0; color: $tc-2026-muted; font-size: 14px; line-height: 22px; }
+.empty { padding: 32px 20px; color: $tc-2026-muted; }
+.view { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.view select { padding: 6px 10px; background: $tc-2026-surface; border: 1px solid $tc-2026-border-strong; }

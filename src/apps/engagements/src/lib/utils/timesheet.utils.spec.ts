@@ -12,11 +12,15 @@ import {
     generateWorkDates,
     getDayLabel,
     hasEnteredHours,
+    hasRowValidationError,
     isRowReadOnly,
     isRowReopened,
+    parseTimesheetReviewStatus,
     sumSelectedTotals,
     validateDateRange,
+    validateEntryRange,
     validateHours,
+    validateRemarks,
 } from './timesheet.utils'
 import type { TimesheetRow } from './timesheet.utils'
 
@@ -120,13 +124,8 @@ describe('timesheet.utils', () => {
     })
 
     describe('validateDateRange', () => {
-        it('accepts a range within the cap', () => {
-            expect(validateDateRange('2026-09-07', '2026-09-11'))
-                .toBeUndefined()
-        })
-
-        it('accepts exactly 31 days', () => {
-            expect(validateDateRange('2026-09-01', '2026-10-01'))
+        it('accepts a filter range of any length', () => {
+            expect(validateDateRange('2026-01-01', '2026-12-31'))
                 .toBeUndefined()
         })
 
@@ -135,14 +134,31 @@ describe('timesheet.utils', () => {
                 .toBe('The to date cannot be earlier than the from date.')
         })
 
-        it('blocks a range over 31 days', () => {
-            expect(validateDateRange('2026-09-01', '2026-10-02'))
-                .toBe('A timesheet range cannot span more than 31 days.')
-        })
-
         it('says nothing until both dates are picked', () => {
             expect(validateDateRange('2026-09-07', undefined))
                 .toBeUndefined()
+        })
+    })
+
+    describe('validateEntryRange', () => {
+        it('accepts a range within the cap', () => {
+            expect(validateEntryRange('2026-09-07', '2026-09-11'))
+                .toBeUndefined()
+        })
+
+        it('accepts exactly 31 days', () => {
+            expect(validateEntryRange('2026-09-01', '2026-10-01'))
+                .toBeUndefined()
+        })
+
+        it('blocks an inverted range', () => {
+            expect(validateEntryRange('2026-09-11', '2026-09-07'))
+                .toBe('The to date cannot be earlier than the from date.')
+        })
+
+        it('blocks a range over 31 days', () => {
+            expect(validateEntryRange('2026-09-01', '2026-10-02'))
+                .toBe('A timesheet range cannot span more than 31 days.')
         })
     })
 
@@ -356,5 +372,48 @@ describe('timesheet.utils', () => {
             expect(formatHoursLabel('8.00'))
                 .toBe('8')
         })
+    })
+
+    describe('validateRemarks', () => {
+        it('accepts a remark at the 2000 character limit', () => {
+            expect(validateRemarks('a'.repeat(2000)))
+                .toEqual({})
+        })
+
+        it('measures the trimmed value, which is what gets sent', () => {
+            expect(validateRemarks(`  ${'a'.repeat(2000)}  `))
+                .toEqual({})
+        })
+
+        it('refuses a remark over the limit', () => {
+            expect(validateRemarks('a'.repeat(2001)).error)
+                .toBe('Remarks cannot be longer than 2000 characters.')
+        })
+    })
+
+    describe('hasRowValidationError', () => {
+        it('flags a row with invalid hours or an over-long remark', () => {
+            expect(hasRowValidationError({ hoursWorked: '25', remarks: '' }))
+                .toBe(true)
+            expect(hasRowValidationError({ hoursWorked: '8', remarks: 'a'.repeat(2001) }))
+                .toBe(true)
+            expect(hasRowValidationError({ hoursWorked: '8', remarks: 'Sprint planning' }))
+                .toBe(false)
+        })
+    })
+
+    describe('parseTimesheetReviewStatus', () => {
+        it('reads Approved from the URL', () => {
+            expect(parseTimesheetReviewStatus('APPROVED'))
+                .toBe(TimesheetEntryStatus.APPROVED)
+        })
+
+        it.each([null, undefined, '', 'SUBMITTED', 'DRAFT', 'nonsense'])(
+            'falls back to Pending Approval for %p',
+            value => {
+                expect(parseTimesheetReviewStatus(value))
+                    .toBe(TimesheetEntryStatus.SUBMITTED)
+            },
+        )
     })
 })

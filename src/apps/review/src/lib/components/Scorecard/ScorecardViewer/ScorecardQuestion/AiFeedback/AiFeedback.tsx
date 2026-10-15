@@ -1,4 +1,5 @@
 import { ChangeEvent, FC, useCallback, useMemo, useState } from 'react'
+import { toast } from 'react-toastify'
 import { mutate } from 'swr'
 
 import { IconAiReview } from '~/apps/review/src/lib/assets/icons'
@@ -172,12 +173,14 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
     const [isEditingScore, setIsEditingScore] = useState(false)
     const [editedScore, setEditedScore] = useState<string>('')
 
-    const isApprovalPhaseOpen = useMemo(
-        () => (challengeInfo?.phases ?? []).some(
-            p => (p.name || '').toLowerCase() === 'approval' && Boolean(p.isOpen),
-        ),
-        [challengeInfo?.phases],
-    )
+    // Deterministic workflow scores can also be edited during Review, since
+    // challenges using them don't necessarily have an Approval phase.
+    const isScoreEditPhaseOpen = useMemo(() => {
+        const editablePhases = isDeterministicWorkflow ? ['approval', 'review'] : ['approval']
+        return (challengeInfo?.phases ?? []).some(
+            p => editablePhases.includes((p.name || '').toLowerCase()) && Boolean(p.isOpen),
+        )
+    }, [challengeInfo?.phases, isDeterministicWorkflow])
 
     const commentsArr: any[] = (feedback?.comments) || []
 
@@ -202,7 +205,7 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
         && !!workflowId
         && !!workflowRun?.id
         && !!feedback?.id
-        && isApprovalPhaseOpen
+        && isScoreEditPhaseOpen
 
     const scoreOptions = useMemo(() => getScoreResponseOptions(props.question), [props.question])
 
@@ -258,6 +261,7 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
             }
 
             setIsEditingScore(false)
+            toast.success('Score updated successfully!')
         } catch (err) {
             handleError(err)
         } finally {

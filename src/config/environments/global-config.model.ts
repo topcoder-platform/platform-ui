@@ -26,6 +26,7 @@ export interface GlobalConfig {
     CHALLENGE_API_VERSION?: string
     WORK_CREATE_CHALLENGE_TYPES_BY_TRACK: ChallengeTypeNamesByTrackConfig
     COMMUNITY_APP_URL?: string
+    WEBSITE_API_URL?: string
     REVIEW_APP_URL?: string
     DIRECT_PROJECT_URL?: string
     API: {

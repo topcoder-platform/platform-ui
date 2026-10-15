@@ -138,6 +138,7 @@ type SerializedAssignmentDetailsPayload = {
     standardHoursPerDay?: number
     standardHoursPerWeek?: number
     startDate: string
+    totalHours?: number
     wiproIdEndDate?: string
 }
 
@@ -268,6 +269,9 @@ function serializeAssignmentDetails(
                         ? Number(detail.standardHoursPerWeek)
                         : undefined,
                     startDate: detail.startDate || '',
+                    totalHours: detail.totalHours
+                        ? Number(detail.totalHours)
+                        : undefined,
                     wiproIdEndDate: detail.wiproIdEndDate || undefined,
                 }
             })
@@ -310,6 +314,9 @@ function toAssignmentDetailsValue(assignment: EngagementAssignment): AssignmentD
                 ? String(assignment.standardHoursPerWeek)
                 : '',
         startDate: assignment.startDate || '',
+        totalHours: assignment.totalHours !== undefined && assignment.totalHours !== null
+            ? String(assignment.totalHours)
+            : undefined,
         wiproIdEndDate: assignment.wiproIdEndDate || undefined,
     }
 }

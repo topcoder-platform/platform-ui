@@ -21,7 +21,7 @@ const Markdown = ReactMarkdown as unknown as FC<ReactMarkdownOptions>
 export interface ChallengeTocItem {
     id: string
     label: string
-    level: 2 | 3 | 4
+    level: 1
 }
 
 interface ChallengeMarkdownProps {
@@ -65,7 +65,7 @@ export function headingSlug(value: string): string {
 }
 
 /**
- * Extracts second-, third-, and fourth-level Markdown headings for the challenge table of contents.
+ * Extracts only first-level Markdown headings for the challenge table of contents.
  * Source line numbers keep duplicate heading fragments stable and unique.
  *
  * @param markdown challenge specification Markdown.
@@ -76,7 +76,7 @@ export function extractTableOfContents(markdown: string): ChallengeTocItem[] {
     return markdown.split('\n')
         .map((line, index) => ({
             line: index + 1,
-            match: /^(#{2,4})\s+(.+?)\s*#*$/.exec(line.trim()),
+            match: /^(#)\s+(.+?)\s*#*$/.exec(line.trim()),
         }))
         .filter((entry): entry is { line: number, match: RegExpExecArray } => !!entry.match)
         .map(entry => {
@@ -87,7 +87,7 @@ export function extractTableOfContents(markdown: string): ChallengeTocItem[] {
             return {
                 id: `${headingSlug(label)}-${entry.line}`,
                 label,
-                level: entry.match[1].length as 2 | 3 | 4,
+                level: 1,
             }
         })
 }
@@ -117,18 +117,20 @@ export function markdownHeadingText(children: ReactNode): string {
  * Renders a Markdown heading whose stable fragment matches the generated TOC.
  *
  * @param props heading level, source location, and rendered children from React Markdown.
- * @returns an H2, H3, or H4 with a stable source-line fragment identifier.
+ * @returns an H1, H2, H3, or H4 with a stable source-line fragment identifier.
  * @throws Does not throw.
  */
 const MarkdownHeading: FC<HeadingProps> = props => {
     const label = markdownHeadingText(props.children)
     const line = props.node?.position?.start.line ?? 0
     const id = `${headingSlug(label)}-${line}`
+    if (props.level === 1) return <h1 id={id}>{props.children}</h1>
     if (props.level === 4) return <h4 id={id}>{props.children}</h4>
     return props.level === 3 ? <h3 id={id}>{props.children}</h3> : <h2 id={id}>{props.children}</h2>
 }
 
 const MARKDOWN_COMPONENTS: Components = {
+    h1: MarkdownHeading,
     h2: MarkdownHeading,
     h3: MarkdownHeading,
     h4: MarkdownHeading,
@@ -136,6 +138,11 @@ const MARKDOWN_COMPONENTS: Components = {
 
 const MARKDOWN_SANITIZE_SCHEMA = {
     ...defaultSchema,
+    attributes: {
+        ...defaultSchema.attributes,
+        p: [...(defaultSchema.attributes?.p ?? []), ['align', 'left', 'center', 'right']],
+        span: [...(defaultSchema.attributes?.span ?? []), ['dataForumSize', '12', '14', '16', '18', '20', '24']],
+    },
     tagNames: [...(defaultSchema.tagNames ?? []), 'u'],
 }
 

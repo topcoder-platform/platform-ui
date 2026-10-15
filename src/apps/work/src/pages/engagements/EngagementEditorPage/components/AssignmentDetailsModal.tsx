@@ -44,6 +44,7 @@ export interface AssignmentDetailsFormValue {
     startDate: string
     standardHoursPerDay: string
     standardHoursPerWeek: string
+    totalHours?: string
     wiproIdEndDate?: string
 }
 
@@ -61,6 +62,7 @@ interface ValidationErrors {
     ratePerHour?: string
     startDate?: string
     standardHoursPerDay?: string
+    totalHours?: string
 }
 
 export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
@@ -81,6 +83,7 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
     const [standardHoursPerDay, setStandardHoursPerDay] = useState<string>(
         props.initialValue?.standardHoursPerDay || '',
     )
+    const [totalHours, setTotalHours] = useState<string>(props.initialValue?.totalHours || '')
     const [wiproIdEndDate, setWiproIdEndDate] = useState<Date | undefined>(
         deserializeTentativeAssignmentDate(props.initialValue?.wiproIdEndDate),
     )
@@ -113,6 +116,7 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
         setSource(props.initialValue?.source || '')
         setStartDate(deserializeTentativeAssignmentDate(props.initialValue?.startDate))
         setStandardHoursPerDay(props.initialValue?.standardHoursPerDay || '')
+        setTotalHours(props.initialValue?.totalHours || '')
         setWiproIdEndDate(deserializeTentativeAssignmentDate(props.initialValue?.wiproIdEndDate))
         setOtherRemarks(props.initialValue?.otherRemarks || '')
         setErrors({})
@@ -129,9 +133,17 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
         const normalizedPaymentCycle = String(paymentCycle || 'WEEKLY')
             .trim()
             .toUpperCase()
+        // Optional: blank means no total is tracked, so hours left stays blank too.
+        const parsedTotalHours = totalHours.trim()
+            ? toPositiveNumberWithMaxDecimalPlaces(totalHours, 2)
+            : undefined
 
         if (!startDate) {
             nextErrors.startDate = 'Billing start date is required.'
+        }
+
+        if (totalHours.trim() && parsedTotalHours === undefined) {
+            nextErrors.totalHours = 'Total hours must be a positive number with up to 2 decimal places.'
         }
 
         if (parsedDurationMonths === undefined) {
@@ -177,6 +189,7 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
             standardHoursPerDay: String(parsedStandardHoursPerDay),
             standardHoursPerWeek: String(Number((parsedStandardHoursPerDay * 5).toFixed(2))),
             startDate: serializeTentativeAssignmentDate(startDate),
+            totalHours: parsedTotalHours === undefined ? undefined : String(parsedTotalHours),
             wiproIdEndDate: wiproIdEndDate
                 ? serializeTentativeAssignmentDate(wiproIdEndDate)
                 : undefined,
@@ -192,6 +205,7 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
         source,
         standardHoursPerDay,
         startDate,
+        totalHours,
         wiproIdEndDate,
     ])
 
@@ -313,6 +327,30 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
                     />
                     {errors.standardHoursPerDay
                         ? <p className={styles.error}>{errors.standardHoursPerDay}</p>
+                        : undefined}
+                </div>
+
+                <div className={styles.fieldRow}>
+                    <label className={styles.label} htmlFor='assignment-total-hours'>
+                        Total hours
+                    </label>
+                    <input
+                        id='assignment-total-hours'
+                        className={styles.input}
+                        inputMode='decimal'
+                        onChange={event => {
+                            setTotalHours(sanitizePositiveNumericInput(event.target.value, 2))
+                            setErrors(previous => ({
+                                ...previous,
+                                totalHours: undefined,
+                            }))
+                        }}
+                        pattern='[0-9.]*'
+                        type='text'
+                        value={totalHours}
+                    />
+                    {errors.totalHours
+                        ? <p className={styles.error}>{errors.totalHours}</p>
                         : undefined}
                 </div>
 

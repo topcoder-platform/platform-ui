@@ -71,4 +71,65 @@ describe('ApplicationDetailModal', () => {
         expect(screen.getByText('Address121, Osaka'))
             .toBeTruthy()
     })
+
+    it('links to the uploaded CV without showing the legacy resume/profile link', () => {
+        render(
+            <ApplicationDetailModal
+                application={{
+                    ...application,
+                    cvFileUrl: 'https://cdn.filestackcontent.com/cv-handle',
+                    resumeUrl: 'https://www.linkedin.com/in/testaws1',
+                }}
+                onClose={jest.fn()}
+                open
+            />,
+        )
+
+        expect(screen.getByRole('link', { name: 'View CV' })
+            .getAttribute('href'))
+            .toBe('https://cdn.filestackcontent.com/cv-handle')
+        expect(screen.queryByText('Resume / Profile Link'))
+            .toBeNull()
+        expect(screen.queryByRole('link', { name: 'https://www.linkedin.com/in/testaws1' }))
+            .toBeNull()
+    })
+
+    it('shows the expected pay rate and referral source instead of years of experience', () => {
+        render(
+            <ApplicationDetailModal
+                application={{
+                    ...application,
+                    expectedPayRate: '$50/hour',
+                    referralSource: 'Topcoder newsletter',
+                }}
+                onClose={jest.fn()}
+                open
+            />,
+        )
+
+        expect(screen.getByText('Expected Pay Rate (USD/Hour)'))
+            .toBeTruthy()
+        expect(screen.getByText('$50/hour'))
+            .toBeTruthy()
+        expect(screen.getByText('How did you come to know of the opportunity?'))
+            .toBeTruthy()
+        expect(screen.getByText('Topcoder newsletter'))
+            .toBeTruthy()
+        expect(screen.queryByText('Experience (years)'))
+            .toBeNull()
+    })
+
+    it('shows a dash when no referral source was entered', () => {
+        render(
+            <ApplicationDetailModal
+                application={application}
+                onClose={jest.fn()}
+                open
+            />,
+        )
+
+        const label = screen.getByText('How did you come to know of the opportunity?')
+        expect(label.nextElementSibling?.textContent)
+            .toBe('-')
+    })
 })

@@ -139,6 +139,15 @@ export const COMMUNITY_APP_URL: string = getReactEnv<string>(
     'COMMUNITY_APP_URL',
     TOPCODER_URL,
 )
+/**
+ * Base URL of the Topcoder website runtime API (`/__api`). It owns the Recruit CRM and published
+ * CMS proxies used by the Gigs app; the Gigs app is served on the website host, so the default
+ * keeps those requests same-origin.
+ */
+export const WEBSITE_API_URL: string = getReactEnv<string>(
+    'WEBSITE_API_URL',
+    `${TOPCODER_URL}/__api`,
+)
 export const REVIEW_APP_URL: string = getReactEnv<string>(
     'REVIEW_APP_URL',
     `https://review.${TC_DOMAIN}`,

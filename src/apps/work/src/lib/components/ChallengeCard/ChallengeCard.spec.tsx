@@ -10,12 +10,17 @@ import { ChallengeCard } from './ChallengeCard'
 
 const mockNavigate = jest.fn()
 
+jest.mock('~/config', () => ({
+    EnvironmentConfig: {
+        PLATFORMUI_URL: 'https://platform-ui.topcoder-dev.com',
+    },
+}), { virtual: true })
+
 jest.mock('react-router-dom', () => ({
     useNavigate: () => mockNavigate,
 }))
 
 jest.mock('../../constants', () => ({
-    COMMUNITY_APP_URL: 'https://example.com/community',
     REVIEW_APP_URL: 'https://example.com/review',
 }))
 
@@ -83,8 +88,9 @@ describe('ChallengeCard', () => {
             .toBeNull()
         expect(screen.getByRole('link', { name: 'Review' }))
             .toBeTruthy()
-        expect(screen.getByRole('link', { name: 'CA' }))
-            .toBeTruthy()
+        expect(screen.getByRole('link', { name: 'CA' })
+            .getAttribute('href'))
+            .toBe('https://platform-ui.topcoder-dev.com/opportunities/challenge/challenge-1')
         expect(screen.getByRole('link', { name: 'Forum' }))
             .toBeTruthy()
     })
@@ -99,8 +105,9 @@ describe('ChallengeCard', () => {
             .toBeNull()
         expect(screen.getByRole('link', { name: 'Review' }))
             .toBeTruthy()
-        expect(screen.getByRole('link', { name: 'CA' }))
-            .toBeTruthy()
+        expect(screen.getByRole('link', { name: 'CA' })
+            .getAttribute('href'))
+            .toBe('https://platform-ui.topcoder-dev.com/opportunities/challenge/challenge-1')
         expect(screen.getByRole('link', { name: 'Forum' }))
             .toBeTruthy()
     })

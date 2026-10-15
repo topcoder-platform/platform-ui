@@ -28,6 +28,8 @@ render the opportunity name as a button. Opening it shows a popup with the
 opportunity description first, followed by the customer, SMU, close date and
 stage when Salesforce provides them, plus a link to the record. The popup closes
 with its Close button or the X icon; obsolete lookups are aborted.
+The popup is 860px wide, capped at the viewport width minus 32px on smaller
+screens, with scrolling retained for long descriptions.
 
 When the opportunity has a local billing account, the popup also shows its
 current ID/name, a **View project … in Work** link to
@@ -170,3 +172,48 @@ limits them exactly as it limits the record count.
 
 Run `nvm use` in platform-ui before `yarn lint`, `LOGICAL_ENV=dev yarn run build`,
 and `CI=true yarn test:no-watch --runInBand --watch=false sales`.
+
+
+## Stage progression (CORE-2658)
+
+The Sales page has **Pipeline** and **Stage progression** tabs on both the Sales
+and Work hosts. The pipeline behavior is unchanged. Tab selection supports arrow,
+Home and End keys; switching tabs cancels the inactive report request. Returning
+to a tab starts its default view.
+
+Stage progression calls `GET {REPORTS_API}/sales/progression` using the signed-in
+user's token, with required inclusive `dateFrom`/`dateTo` calendar dates and
+optional exact `fromStage`/`toStage` filters. It starts with this month through
+today. **Apply filters** submits the pending dates/stages together, with a maximum
+of 366 inclusive days. Dates refer to the history event, in the reporting timezone
+displayed by the API, not the opportunity's current close or creation date.
+
+Four cards show distinct opportunities progressed, forward transitions, distinct
+opportunities won, and entries into won. The **Show** selector switches the table
+between forward movement and entering won; it does not change the summary cards.
+All cards and rows respect the applied period and stage filters. Distinct counts
+come from Salesforce's grand totals: one opportunity moving several times counts
+once in a card, but can appear in several stage-pair rows. The two opportunity
+metrics can overlap.
+
+Forward movement follows the API's explicitly configured open-stage order,
+including entry from an open stage into any configured won stage. Regressions,
+reopenings, transitions into lost/other stages, unknown open stages, and initial
+stage assignments do not count as forward movement. A win is a transition from
+an existing non-won stage into a won stage. Moving between won stages is not a
+new win; reopening and winning again adds an event but not another distinct
+opportunity within the selected period. The configured order is shown below the
+cards so the interpretation is visible.
+
+The history endpoint returns complete summaries without downloading individual
+opportunity history. Refresh reuses the API's one-minute response cache. Failed
+refreshes explicitly label previous data as stale; changing filters clears old
+results, obsolete responses are ignored, and 401/403 clears protected results.
+Empty complete responses show zero totals. Missing setup and incomplete/upstream
+responses show recoverable errors rather than misleading zero or partial counts.
+
+Deploy the Reports API change first and configure the separate Salesforce
+Opportunity History report and `SALESFORCE_SALES_HISTORY_CONFIG` as documented in
+`reports-api-v6/SALES.md`. No database migration or stored opportunity snapshots
+are required. The history tab remains unavailable until that setup is complete;
+the pipeline remains independently available.

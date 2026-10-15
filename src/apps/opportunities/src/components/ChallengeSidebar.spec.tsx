@@ -33,11 +33,14 @@ const qaBugHuntLearningUrl
     = 'https://www.topcoder.example/thrive/articles/How%20To%20Compete%20in%20a%20Bug%20Hunt%20Challenge'
 const qaCompetitionTypesUrl
     = 'https://www.topcoder.example/thrive/articles/QA%20Competition%20Types'
+const topgearChallengesExplainedUrl
+    = 'https://topgear.topcoder.example/challenges/terms/detail/topgear-terms-id'
 
 const mockUseSWR = jest.fn()
 const mockChallengeAllowsStockArt = jest.fn()
 const mockChallengeFileTypes = jest.fn()
 const mockChallengeSidebarLinks = jest.fn()
+const mockIsTopgearChallenge = jest.fn()
 
 jest.mock('swr', () => ({
     __esModule: true,
@@ -67,6 +70,8 @@ jest.mock('../utils', () => ({
     challengeSidebarLinks: (...args: unknown[]) => mockChallengeSidebarLinks(...args),
     challengeSubmissionLimit: (): undefined => undefined,
     isMarathonMatchChallenge: (value: ChallengeOpportunity): boolean => value.type === 'Marathon Match',
+    isTopgearChallenge: (...args: unknown[]) => mockIsTopgearChallenge(...args),
+    topgearTermsUrl: (): string => topgearChallengesExplainedUrl,
 }))
 jest.mock('../services', () => ({
     getChallengeTermsDetails: jest.fn(),
@@ -132,6 +137,7 @@ describe('ChallengeSidebar Review Style', () => {
         mockUseSWR.mockReturnValue({ data: undefined })
         mockChallengeAllowsStockArt.mockReturnValue(false)
         mockChallengeFileTypes.mockReturnValue([])
+        mockIsTopgearChallenge.mockReturnValue(false)
         mockChallengeSidebarLinks.mockReturnValue({
             attachments: [],
             challengeLinks: [],
@@ -262,6 +268,71 @@ describe('ChallengeSidebar Review Style', () => {
                 'https://review.topcoder-dev.com/active-challenges/challenge-id/challenge-details',
             )
         expect(screen.queryByRole('heading', { name: 'Review Style' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('replaces Review App and Topcoder guidance with the TopGear terms for TopGear challenges', () => {
+        mockIsTopgearChallenge.mockReturnValue(true)
+
+        renderSidebar(undefined, developmentChallenge)
+
+        expect(mockIsTopgearChallenge)
+            .toHaveBeenCalledWith(developmentChallenge)
+        expect(screen.queryByRole('heading', { name: 'Review App' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'View Review App' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Educational Materials' }))
+            .toBeInTheDocument()
+        expect(screen.getByText('Read how TopGear challenges work.'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Read educational material on Topcoder Thrive.'))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'TopGear Challenges Explained' }))
+            .toHaveAttribute('href', topgearChallengesExplainedUrl)
+        expect(screen.getByRole('link', { name: 'TopGear Challenges Explained' }).className)
+            .toContain('learningLink')
+        expect(screen.queryByRole('link', { name: 'Topcoder Challenges Explained' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'AI Reviewers - Member Help Guide' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'Usable Code Rules' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: 'Review Style' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: 'Challenge Terms' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Standard Terms 2026' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Review challenge terms' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Need help?' }))
+            .toBeInTheDocument()
+    })
+
+    it('keeps design submission guidance without terms for TopGear design challenges', () => {
+        mockIsTopgearChallenge.mockReturnValue(true)
+
+        renderSidebar(undefined, designChallenge)
+
+        expect(screen.getByRole('heading', { name: 'Submission Format' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Source files' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: 'Challenge Terms' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('keeps track-specific guides for TopGear challenges', () => {
+        mockIsTopgearChallenge.mockReturnValue(true)
+
+        renderSidebar(undefined, marathonChallenge)
+
+        expect(screen.getByRole('link', { name: 'TopGear Challenges Explained' }))
+            .toHaveAttribute('href', topgearChallengesExplainedUrl)
+        expect(screen.getByRole('link', { name: 'How to Compete in a Marathon Match' }))
+            .toHaveAttribute('href', marathonMatchLearningUrl)
+        expect(screen.queryByRole('link', { name: 'View Review App' }))
             .not.toBeInTheDocument()
     })
 

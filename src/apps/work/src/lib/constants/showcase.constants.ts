@@ -1,16 +1,17 @@
 /**
  * SMU options displayed in project and showcase forms.
  */
-export const SMU_VALUES = ['AMPE', 'EURP', 'AMR1', 'AM2', 'Others']
+export const SMU_VALUES = ['AMPE', 'EURP', 'AMR1', 'AMR2', 'Others']
 
 /**
- * SMU labels used before the Salesforce naming alignment, mapped to their
- * current option so existing projects keep rendering a valid selection.
+ * SMU labels saved by earlier releases (including the interim `AM2` label),
+ * mapped to their current option so existing projects keep rendering a valid
+ * selection.
  */
 export const LEGACY_SMU_VALUES: Readonly<{ [legacyValue: string]: string }> = {
+    AM2: 'AMR2',
     Americas1: 'AMR1',
-    Americas2: 'AM2',
-    AMR2: 'AM2',
+    Americas2: 'AMR2',
     APME: 'AMPE',
     APMEA: 'AMPE',
     Europe: 'EURP',

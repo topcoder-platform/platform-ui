@@ -1,10 +1,9 @@
 import { FC, MouseEvent, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import {
-    COMMUNITY_APP_URL,
-    REVIEW_APP_URL,
-} from '../../constants'
+import { EnvironmentConfig } from '~/config'
+
+import { REVIEW_APP_URL } from '../../constants'
 import {
     Challenge,
     ChallengeType,
@@ -51,7 +50,8 @@ export const ChallengeCard: FC<ChallengeCardProps> = (props: ChallengeCardProps)
     const canEditChallenge = !isChallengeCompletedOrCancelled(challenge.status)
 
     const reviewLink = `${REVIEW_APP_URL}/active-challenges/${challenge.id}/challenge-details`
-    const communityLink = `${COMMUNITY_APP_URL}/challenges/${challenge.id}`
+    const challengeLink
+        = `${EnvironmentConfig.PLATFORMUI_URL}/opportunities/challenge/${encodeURIComponent(challenge.id)}`
 
     function handleChallengeNameClick(event: MouseEvent<HTMLButtonElement>): void {
         event.preventDefault()
@@ -114,7 +114,7 @@ export const ChallengeCard: FC<ChallengeCardProps> = (props: ChallengeCardProps)
                         Review
                     </a>
                     <a
-                        href={communityLink}
+                        href={challengeLink}
                         target='_blank'
                         rel='noreferrer'
                         className={styles.actionLink}

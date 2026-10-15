@@ -40,6 +40,12 @@ import { ChallengeEditorPage } from './ChallengeEditorPage'
 
 var mockWorkAppContext: Context<WorkAppContextModel>
 
+jest.mock('~/config', () => ({
+    EnvironmentConfig: {
+        PLATFORMUI_URL: 'https://platform-ui.topcoder-dev.com',
+    },
+}), { virtual: true })
+
 jest.mock('@topcoder-platform/tc-auth-lib', () => ({
     decodeToken: jest.fn(),
 }))
@@ -142,7 +148,6 @@ jest.mock('../../../lib/constants', () => ({
         DRAFT: 'DRAFT',
         NEW: 'NEW',
     },
-    COMMUNITY_APP_URL: 'https://example.com/community',
     IS_TEST_CHALLENGE_METADATA_FIELD: 'is_test_challenge',
     PROJECT_ROLES: {
         COPILOT: 'copilot',
@@ -429,7 +434,7 @@ describe('ChallengeEditorPage', () => {
         expect(within(rightHeader)
             .getByRole('link', { name: 'Challenge' })
             .getAttribute('href'))
-            .toBe('https://example.com/community/challenges/456')
+            .toBe('https://platform-ui.topcoder-dev.com/opportunities/challenge/456')
         expect(within(rightHeader)
             .getByRole('link', { name: 'Review' })
             .getAttribute('href'))
@@ -532,6 +537,9 @@ describe('ChallengeEditorPage', () => {
             name: 'Challenge footer actions',
         }))
 
+        expect(headerActions.getByRole('link', { name: 'Challenge' })
+            .getAttribute('href'))
+            .toBe('https://platform-ui.topcoder-dev.com/opportunities/challenge/456')
         expect(headerActions.getByRole('button', { name: 'Cancel' }))
             .toBeTruthy()
         expect(headerActions.getByRole('button', { name: 'Launch' }))

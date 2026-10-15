@@ -5,8 +5,10 @@ website aliases use the same website CloudFront distribution. This additive
 CloudFormation change preserves the site's apex-to-www redirect, including encoded
 and repeated query parameters. On the canonical host, it serves the platform-ui
 S3 `gigs/index.html` with a signed origin request. The browser retains its path and query, so React handles listing,
-details, and applications. Other routes, particularly `/api/recruit/*` and the
-Payload compatibility API, retain their existing origins. The website's existing
+details, and applications. Other routes retain their existing origins; the Gigs
+data comes from the website runtime API's `/__api/recruit/*` and `/__api/cms/*`
+routes, which replaced the community-app `/api/recruit/*` and Payload compatibility
+proxies. The website's existing
 `/static/*`, `/global.css`, and manifest handoffs serve the platform assets.
 
 `route-template.py` transforms the **current** website stack template instead of
@@ -67,7 +69,7 @@ subsequent UI releases. Keep the dedicated shell when pruning old build files.
    Verify HTTPS apex and `www` `/gigs`, `/gigs/`, a real job, its `/apply` URL, and
    a search query. Check that the shell and its referenced JS/CSS all return 200
    with the expected content types (an HTML fallback is not a valid JS response),
-   browser routing works, a fulfilled gig is not applicable, and `/api/recruit/jobs`
+   browser routing works, a fulfilled gig is not applicable, and `/__api/recruit/jobs`
    still returns JSON. Check an unrelated website page and `/opportunities`.
 
 The website stack is the infrastructure owner. Apply this same transform to its
