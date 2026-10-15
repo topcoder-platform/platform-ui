@@ -20,6 +20,7 @@ import { toast } from 'react-toastify'
 
 import { ChallengeDetailsPage } from './ChallengeDetailsPage'
 import { submissionAiWorkflowRunResult } from '../components/SubmissionAiReviewDetails'
+import { getChallengeSubmissions } from '../services'
 
 const mockUseSWR = jest.fn()
 const mockDeleteSubmission = jest.fn()
@@ -196,18 +197,7 @@ jest.mock('../components', () => ({
     extractTableOfContents: (): [] => [],
     isHtmlDescriptionFormat: (): boolean => false,
     MarathonDashboard: (): JSX.Element => <div>Challenge Activity</div>,
-    OpportunityPagination: (props: {
-        onPageChange: (page: number) => void
-        page: number
-        totalPages: number
-    }): JSX.Element => (
-        <div>
-            Pagination
-            {props.page < props.totalPages && (
-                <button onClick={() => props.onPageChange(props.page + 1)} type='button'>Next page</button>
-            )}
-        </div>
-    ),
+    OpportunityPagination: jest.requireActual('../components/OpportunityPagination').OpportunityPagination,
     ReportIssueModal: (): JSX.Element => <></>,
     SubmissionArtifactsModal: (props: {
         open: boolean
@@ -423,13 +413,27 @@ function renderPage(
     )
 }
 
-function submissionPage(items: Record<string, unknown>[]): Record<string, unknown> {
+/**
+ * Builds submission responses for the page fixtures, including full-collection sorts.
+ * @param items complete fixture collection.
+ * @param page requested page, or 'all' when sorting client-side.
+ * @param perPage requested page size, or 'all' when sorting client-side.
+ * @returns matching rows and pagination metadata for the mocked SWR response.
+ * @throws Does not throw.
+ */
+function submissionPage(
+    items: Record<string, unknown>[],
+    page: number | 'all' = 1,
+    perPage: number | 'all' = 10,
+): Record<string, unknown> {
+    const currentPage = page === 'all' ? 1 : page
+    const pageSize = perPage === 'all' ? Math.max(1, items.length) : perPage
     return {
-        items,
-        page: 1,
-        perPage: 10,
+        items: items.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+        page: currentPage,
+        perPage: pageSize,
         total: items.length,
-        totalPages: 1,
+        totalPages: Math.ceil(items.length / pageSize),
     }
 }
 
@@ -510,7 +514,7 @@ describe('ChallengeDetailsPage member flows', () => {
             if (Array.isArray(key) && key[0] === 'opportunities:submissions') {
                 return {
                     ...swrResponse(mockSubmissionsLoaded
-                        ? submissionPage(mockSubmissions)
+                        ? submissionPage(mockSubmissions, key[3], key[4])
                         : undefined),
                     error: mockSubmissionsError,
                     mutate: mockSubmissionsMutate,
@@ -615,6 +619,43 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.queryByRole('heading', { name: /Sign in/ }))
             .not.toBeInTheDocument()
+    })
+
+    it.each([
+        ['Marathon Match', false, 200],
+        ['Marathon Match', true, 200],
+        ['Challenge', false, 10],
+        ['Challenge', true, 10],
+        ['First2Finish', false, 10],
+    ])('defaults %s submissions (mine: %s) to %s rows per page', (type, mine, perPage) => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        mockChallenge = { ...mockChallenge, type }
+        mockSubmissions = Array.from({ length: 12 }, (_value, index) => ({
+            id: `submission-${index}`,
+            memberId: '123',
+            submitterHandle: `coder${index}`,
+        }))
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: mine ? /^My Submissions/ : /^Submissions/ }))
+
+        const selector = screen.getByRole('combobox', { name: 'Items per page:' })
+        expect(selector)
+            .toHaveValue(String(perPage))
+        expect(within(selector)
+            .getAllByRole('option')
+            .map(option => option.textContent))
+            .toEqual(type === 'Marathon Match' ? ['10', '20', '50', '200'] : ['10', '20', '50'])
+        expect(screen.getAllByRole('row'))
+            .toHaveLength(type === 'Marathon Match' ? 13 : 11)
+
+        const submissionRequest = mockUseSWR.mock.calls.filter(([key]) => (
+            Array.isArray(key) && key[0] === 'opportunities:submissions'
+        ))
+            .at(-1)
+        submissionRequest?.[1]()
+        expect(getChallengeSubmissions)
+            .toHaveBeenLastCalledWith('challenge-id', 1, perPage, mine ? '123' : undefined, !mine, 'desc')
     })
 
     it.each([false, true])('shows the full history count for a Marathon viewer signed in: %s', signedIn => {
@@ -2130,29 +2171,44 @@ describe('ChallengeDetailsPage member flows', () => {
 
     it('sorts across the whole collection before pagination and resets the page for a different field', () => {
         mockChallenge = { ...mockChallenge, type: 'Marathon Match' }
-        mockSubmissions = Array.from({ length: 12 }, (_value, index) => ({
+        mockSubmissions = Array.from({ length: 202 }, (_value, index) => ({
             id: `submission-${index}`,
             rating: index,
-            submitterHandle: `coder${String(11 - index)
-                .padStart(2, '0')}`,
+            submitterHandle: `coder${String(201 - index)
+                .padStart(3, '0')}`,
         }))
         renderPage()
         fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
         fireEvent.click(screen.getByRole('button', { name: 'Handle' }))
         expect(screen.getAllByRole('row'))
-            .toHaveLength(11)
-        expect(screen.getByRole('link', { name: 'coder00' }))
+            .toHaveLength(201)
+        expect(screen.getByText('1 - 200 of 202 items'))
             .toBeInTheDocument()
-        expect(screen.queryByRole('link', { name: 'coder11' })).not.toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'coder000' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'coder201' })).not.toBeInTheDocument()
         fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
         expect(screen.getAllByRole('row'))
             .toHaveLength(3)
-        expect(screen.getByRole('link', { name: 'coder11' }))
+        expect(screen.getByText('201 - 202 of 202 items'))
             .toBeInTheDocument()
-        fireEvent.click(screen.getByRole('button', { name: 'Rating' }))
+        expect(screen.getByRole('link', { name: 'coder201' }))
+            .toBeInTheDocument()
+        fireEvent.change(screen.getByRole('combobox', { name: 'Items per page:' }), { target: { value: '10' } })
         expect(screen.getAllByRole('row'))
             .toHaveLength(11)
-        expect(screen.getByRole('link', { name: 'coder11' }))
+        expect(screen.getByText('1 - 10 of 202 items'))
+            .toBeInTheDocument()
+        fireEvent.change(screen.getByRole('combobox', { name: 'Items per page:' }), { target: { value: '200' } })
+        expect(screen.getAllByRole('row'))
+            .toHaveLength(201)
+        fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Rating' }))
+        expect(screen.getAllByRole('row'))
+            .toHaveLength(201)
+        expect(screen.getByText('1 - 200 of 202 items'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'coder201' }))
             .toBeInTheDocument()
     })
 

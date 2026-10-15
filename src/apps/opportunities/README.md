@@ -618,7 +618,10 @@ and authored actions. Registrants and standard submission tables order newest
 dates first and expose accessible date headers that toggle the owning API's
 ascending or descending ordering.
 Marathon Match Submissions always use the Figma table with provisional and
-final score columns. The score graph is rendered only in the separate Dashboard
+final score columns. Marathon Match Submissions and My Submissions default to
+200 entries per page, with 10, 20, 50, and 200 available in the page-size selector.
+Other challenge types retain the 10-entry default and 10, 20, and 50 options.
+The score graph is rendered only in the separate Dashboard
 tab, and that tab exists only when Work Manager enables its challenge metadata.
 Review API submissions and Marathon Match review summations own provisional
 and final scores. In My Submissions, an `ACTIVE` submission shows Completed
