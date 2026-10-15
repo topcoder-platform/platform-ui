@@ -18,6 +18,13 @@ sudo yarn start
 
 - Configuration files are under src/apps/review/src/config
 
+### AI feedback score editing:
+
+- The scorecard's Edit action uses a borderless text control with the 2026 design
+  system's link color and control font. It retains native button semantics and a
+  visible keyboard focus indicator; Enter or Space opens the existing score editor.
+- Score-edit permissions, phase restrictions, and save behavior are unchanged.
+
 ### Marathon Match artifacts (PM-6242):
 
 - Submissions and submission history expose an artifact action for the selected
