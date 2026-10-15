@@ -330,7 +330,8 @@ function challengeTimelineEnd(challenge: ChallengeOpportunity): string | undefin
 
 /**
  * Builds the Figma timeline sequence from Challenge API boundaries and phases.
- * Authored phases stay chronological, with Registration then Submission first when valid starts match.
+ * Registration comes first for every challenge type; remaining phases stay chronological,
+ * with Submission first when valid starts match.
  * Task timelines omit Iterative Review because that phase is not member-facing for Tasks.
  * Every timeline omits Post-Mortem, which Autopilot opens for the copilot after a
  * cancellation and which community-app never showed to members.
@@ -361,9 +362,7 @@ function challengeTimelineItems(
             const rightKey = challengeCatalogKey(right.item.name)
             const leftIsRegistration = leftKey.includes('registration')
             const rightIsRegistration = rightKey.includes('registration')
-            if (taskChallenge) {
-                if (leftIsRegistration !== rightIsRegistration) return leftIsRegistration ? -1 : 1
-            }
+            if (leftIsRegistration !== rightIsRegistration) return leftIsRegistration ? -1 : 1
 
             const leftStartTimestamp = timelineTimestamp(
                 left.item.actualStartDate ?? left.item.scheduledStartDate,
@@ -374,10 +373,6 @@ function challengeTimelineItems(
             const leftStart = leftStartTimestamp ?? Number.MAX_SAFE_INTEGER
             const rightStart = rightStartTimestamp ?? Number.MAX_SAFE_INTEGER
             if (leftStart !== rightStart) return leftStart - rightStart
-            if (leftStartTimestamp !== undefined && leftIsRegistration !== rightIsRegistration) {
-                return leftIsRegistration ? -1 : 1
-            }
-
             // F2F review overlaps Submission and may end earlier, but follows it in the member workflow.
             const leftIsSubmission = leftKey === 'submission'
             const rightIsSubmission = rightKey === 'submission'
