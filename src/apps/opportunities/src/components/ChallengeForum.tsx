@@ -111,7 +111,7 @@ export function continueMarkdownList(
 
 type MemberProfilesById = ReadonlyMap<string, MemberProfileSummary>
 
-const COMMENT_CHARACTER_LIMIT = 500
+const COMMENT_CHARACTER_LIMIT = 10000
 const TOPIC_CHARACTER_LIMIT = 16000
 
 /**
