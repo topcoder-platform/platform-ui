@@ -437,9 +437,8 @@
     padding: 24px;
     position: relative;
 
-    &:has(.topicOverlay:hover) .topicTitle {
-        color: #007d79;
-        text-decoration: underline;
+    &:hover {
+        border-color: #007d79;
     }
 }
 
@@ -516,7 +515,6 @@
     text-align: left;
     z-index: 2;
 
-    &:hover,
     &:focus-visible {
         color: #007d79;
         text-decoration: underline;

@@ -1298,14 +1298,16 @@ interface SubmissionsTabProps {
  * Derived-column sorts use the full latest-submission collection before pagination;
  * Marathon Match ranks also use that collection, including when sorting by date.
  * Other submission-date sorting remains server-paginated.
+ * Marathon Match tables default to 200 rows per page; other challenge types default to 10.
  *
  * @param props challenge, registration/management rights, viewer identity, My Submissions flag, and callbacks.
  * @returns submission table/gallery, lifecycle-aware empty state, or request state.
  * @throws Does not throw; request failures render a retry action.
  */
 const SubmissionsTab: FC<SubmissionsTabProps> = props => {
+    const isMarathonMatch = isMarathonMatchChallenge(props.challenge)
     const [page, setPage] = useState(1)
-    const [perPage, setPerPage] = useState(10)
+    const [perPage, setPerPage] = useState(isMarathonMatch ? 200 : 10)
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
     const [allSubmissionsSortBy, setSortBy] = useState<SubmissionSortField>('submittedDate')
     const sortBy = props.mine ? 'submittedDate' : allSubmissionsSortBy
@@ -1320,7 +1322,6 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     const trackKey = challengeCatalogKey(props.challenge.track)
     const isDesign = trackKey === 'design'
     const isQa = trackKey === 'qualityassurance'
-    const isMarathonMatch = isMarathonMatchChallenge(props.challenge)
     const completedMarathon = isMarathonMatch && props.challenge.status?.toUpperCase() === 'COMPLETED'
     const allowInternalArtifacts = !!props.canManageArtifacts || completedMarathon
 
@@ -1644,6 +1645,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
             }}
             page={clientSort ? page : response.data.page}
             perPage={clientSort ? perPage : response.data.perPage}
+            perPageOptions={isMarathonMatch ? [10, 20, 50, 200] : undefined}
             total={response.data.total}
             totalPages={clientSort ? Math.ceil(response.data.total / perPage) : response.data.totalPages}
         />

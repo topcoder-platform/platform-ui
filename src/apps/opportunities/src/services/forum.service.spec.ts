@@ -5,8 +5,10 @@ import {
     deleteForumPost,
     deleteForumTopic,
     getChallengeForumTopics,
+    getChallengeForumWatch,
     getForumTopicDetail,
     markForumTopicRead,
+    setChallengeForumWatching,
     setForumPostReaction,
     setForumTopicWatching,
     updateForumPost,
@@ -33,6 +35,19 @@ jest.mock('~/libs/core', () => ({
 
 describe('forum service', () => {
     beforeEach(() => jest.clearAllMocks())
+
+    it('reads and persists challenge-wide watch choices without impersonation fields', async () => {
+        await getChallengeForumWatch('challenge/id')
+        await setChallengeForumWatching('challenge/id', true)
+        await setChallengeForumWatching('challenge/id', false)
+        const url = 'https://api.example/v6/forums/challenges/challenge%2Fid/watch'
+        expect(mockXhrGetAsync)
+            .toHaveBeenCalledWith(url)
+        expect(mockXhrPutAsync)
+            .toHaveBeenCalledWith(url, {})
+        expect(mockXhrDeleteAsync)
+            .toHaveBeenCalledWith(url)
+    })
 
     it('builds an encoded, bounded challenge topic page URL', () => {
         expect(challengeForumTopicsUrl('challenge/id', 0, 0))

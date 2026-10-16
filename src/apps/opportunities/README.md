@@ -9,7 +9,9 @@ use `/opportunities/review/:reviewOpportunityId`, and the member home uses
 
 The Work app links directly to challenge details from its editor `Challenge`
 button and challenge list `CA` action. Both use the environment-specific
-`EnvironmentConfig.PLATFORMUI_URL` host and open in a new tab.
+public website host from `EnvironmentConfig.TOPCODER_URL`
+(`https://www.topcoder-dev.com` in development and `https://www.topcoder.com`
+in production), preserve `/opportunities/challenge/:challengeId`, and open in a new tab.
 
 ## Member home
 
@@ -265,6 +267,9 @@ reopens or to `Approved` when the reviewer is selected.
 
 Long card titles expose their complete value in the authored dark tooltip only
 when the title is clipped and the pointer hovers the visible title text.
+Opportunity cards in list and grid views and forum topic cards use a 1px
+`#007D79` stroke on hover, without an outer shadow or movement. Hovering a forum
+title does not underline or recolor it; keyboard focus indicators are preserved.
 When a card has more skills than fit in its visible skill row, its `+n` control
 exposes the hidden skill names in the corresponding bullet-list tooltip. The
 Engagement role filter uses the authored four-row keyboard-accessible listbox
@@ -334,14 +339,13 @@ to their authored subtype icons and member-facing labels.
 
 ## Challenge detail timeline
 
-The expanded challenge timeline follows chronological phase order between the
-synthetic Launch and Winners boundaries. Launch uses the challenge start, each
-authored phase displays its actual (then scheduled fallback) start and end on
-separate rows, and Winners uses the top-level challenge end. Only responses
-without a valid challenge end fall back to the latest valid phase end. When
-Registration and another phase share the same valid start, Registration is
-shown first so overlapping Checkpoint Submission schedules match the authored
-challenge flow rather than being ordered by their different end dates. Submission
+The expanded challenge timeline places Registration immediately after Launch
+for every challenge type, even when its actual or scheduled start is later than
+Submission's. The remaining phases follow chronological order before Winners.
+Launch uses the challenge start, each authored phase displays its actual (then
+scheduled fallback) start and end on separate rows, and Winners uses the top-level
+challenge end. Only responses without a valid challenge end fall back to the
+latest valid phase end. Submission
 also precedes other phases with the same valid start (after Registration), so an
 overlapping F2F Iterative Review never moves ahead of Submission just because its
 deadline is earlier.
@@ -619,7 +623,10 @@ and authored actions. Registrants and standard submission tables order newest
 dates first and expose accessible date headers that toggle the owning API's
 ascending or descending ordering.
 Marathon Match Submissions always use the Figma table with provisional and
-final score columns. The score graph is rendered only in the separate Dashboard
+final score columns. Marathon Match Submissions and My Submissions default to
+200 entries per page, with 10, 20, 50, and 200 available in the page-size selector.
+Other challenge types retain the 10-entry default and 10, 20, and 50 options.
+The score graph is rendered only in the separate Dashboard
 tab, and that tab exists only when Work Manager enables its challenge metadata.
 Review API submissions and Marathon Match review summations own provisional
 and final scores. In My Submissions, an `ACTIVE` submission shows Completed
@@ -801,7 +808,9 @@ Challenge Discussion reads and writes use the authenticated
 administrator topic deletes, and authored comment deletes use in-app dialogs
 rather than browser prompts; per-member
 thumbs-up/thumbs-down reactions, watch state, and read state remain inside the
-challenge detail page. The Markdown editor continues ordered and unordered
+challenge detail page. Comments and nested replies allow up to 10,000 characters,
+including when editing existing posts. Topic bodies allow up to 16,000 characters.
+The Markdown editor continues ordered and unordered
 lists on Enter; safe Markdown styling is retained in topic excerpts and full
 posts. Forum Markdown resolves `@handle`, `@{handle}`, and straight/curly quoted
 mentions to profile links colored by the member's public maximum rating; literal
@@ -895,3 +904,15 @@ The shared toolbar includes configured Filestack attachments through
 Figma grouping (dividers between formatting, heading, size, alignment, list,
 insert and expand controls, plus the size chevron) lives in the shared editor
 styles, so challenge discussion composers match the public forums.
+
+### Challenge forum notifications
+
+The Challenge Forum overview includes a Watch forum / Unwatch forum control,
+including for empty forums. It reads the authenticated member's effective
+preference from `GET /v6/forums/challenges/:challengeId/watch` and saves choices
+with PUT or DELETE on that route. The Forums API defaults registrants and
+copilots to watching based on their challenge resource assignments and persists
+explicit opt-outs. Topic-specific watches remain independent. Loading and failed
+reads disable the control; failed saves preserve the displayed preference and
+show the API error. This requires the Forums API challenge-watch migration and
+endpoints to be deployed first.

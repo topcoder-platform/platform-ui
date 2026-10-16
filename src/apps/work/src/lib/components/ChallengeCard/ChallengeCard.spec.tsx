@@ -4,6 +4,8 @@ import {
     screen,
 } from '@testing-library/react'
 
+import { EnvironmentConfig } from '~/config'
+
 import type { Challenge } from '../../models'
 
 import { ChallengeCard } from './ChallengeCard'
@@ -13,6 +15,7 @@ const mockNavigate = jest.fn()
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
         PLATFORMUI_URL: 'https://platform-ui.topcoder-dev.com',
+        TOPCODER_URL: 'https://www.topcoder-dev.com',
     },
 }), { virtual: true })
 
@@ -69,6 +72,21 @@ describe('ChallengeCard', () => {
 
     beforeEach(() => {
         jest.clearAllMocks()
+        EnvironmentConfig.TOPCODER_URL = 'https://www.topcoder-dev.com'
+    })
+
+    it.each([
+        'https://www.topcoder-dev.com',
+        'https://www.topcoder.com',
+    ])('opens the encoded challenge on the public website at %s', topcoderUrl => {
+        EnvironmentConfig.TOPCODER_URL = topcoderUrl
+        renderCard({ ...baseChallenge, id: 'challenge / id' })
+
+        const challengeLink = screen.getByRole('link', { name: 'CA' })
+        expect(challengeLink.getAttribute('href'))
+            .toBe(`${topcoderUrl}/opportunities/challenge/challenge%20%2F%20id`)
+        expect(challengeLink.getAttribute('target'))
+            .toBe('_blank')
     })
 
     it('renders edit for non-completed challenges', () => {
@@ -90,7 +108,7 @@ describe('ChallengeCard', () => {
             .toBeTruthy()
         expect(screen.getByRole('link', { name: 'CA' })
             .getAttribute('href'))
-            .toBe('https://platform-ui.topcoder-dev.com/opportunities/challenge/challenge-1')
+            .toBe('https://www.topcoder-dev.com/opportunities/challenge/challenge-1')
         expect(screen.getByRole('link', { name: 'Forum' }))
             .toBeTruthy()
     })
@@ -107,7 +125,7 @@ describe('ChallengeCard', () => {
             .toBeTruthy()
         expect(screen.getByRole('link', { name: 'CA' })
             .getAttribute('href'))
-            .toBe('https://platform-ui.topcoder-dev.com/opportunities/challenge/challenge-1')
+            .toBe('https://www.topcoder-dev.com/opportunities/challenge/challenge-1')
         expect(screen.getByRole('link', { name: 'Forum' }))
             .toBeTruthy()
     })

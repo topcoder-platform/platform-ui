@@ -11,7 +11,7 @@
   gating details remain visible even though the surrounding form fieldset is disabled.
 - `ChallengeEditorPage.tsx` also renders challenge quick links in the right header action group for
   existing challenges (`Challenge`, `Review`, and `Forum` when present). `Challenge` opens the
-  Opportunities detail page at `EnvironmentConfig.PLATFORMUI_URL/opportunities/challenge/:challengeId`
+  Opportunities detail page on the public website at `EnvironmentConfig.TOPCODER_URL/opportunities/challenge/:challengeId`
   in a new tab. In view mode it adds an `Edit` action only when the challenge is not completed.
 - `components/ChallengeEditorForm.tsx`: React Hook Form container with autosave and manual save.
   In view mode it renders the existing challenge data in a disabled fieldset and omits save/launch

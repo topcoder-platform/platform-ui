@@ -38,6 +38,10 @@ const mockGetForumTopicDetail = jest.fn()
 const mockMarkForumTopicRead = jest.fn()
 const mockSetForumPostReaction = jest.fn()
 const mockSetForumTopicWatching = jest.fn()
+const mockSetChallengeForumWatching = jest.fn()
+const mockMutateForumWatch = jest.fn()
+let forumWatching: boolean | undefined
+let watchError: Error | undefined
 const mockUseSWR = jest.fn()
 const mockUpdateForumPost = jest.fn()
 const mockUpdateForumTopic = jest.fn()
@@ -101,9 +105,11 @@ jest.mock('../services', () => ({
     deleteForumPost: (...args: unknown[]) => mockDeleteForumPost(...args),
     deleteForumTopic: (...args: unknown[]) => mockDeleteForumTopic(...args),
     getChallengeForumTopics: jest.fn(),
+    getChallengeForumWatch: jest.fn(),
     getForumTopicDetail: (...args: unknown[]) => mockGetForumTopicDetail(...args),
     getMemberProfilesByUserIds: jest.fn(),
     markForumTopicRead: (...args: unknown[]) => mockMarkForumTopicRead(...args),
+    setChallengeForumWatching: (...args: unknown[]) => mockSetChallengeForumWatching(...args),
     setForumPostReaction: (...args: unknown[]) => mockSetForumPostReaction(...args),
     setForumTopicWatching: (...args: unknown[]) => mockSetForumTopicWatching(...args),
     updateForumPost: (...args: unknown[]) => mockUpdateForumPost(...args),
@@ -202,6 +208,20 @@ const starterPost: ForumPost = {
 const forumStyles = readFileSync(`${__dirname}/ChallengeForum.module.scss`, 'utf8')
 
 describe('ChallengeForum', () => {
+    it('highlights hovered topic cards without underlining the title or adding a shadow', () => {
+        const cardStyles = forumStyles.match(/\.topicCard \{[\s\S]*?\n\}/)?.[0]
+        const titleStyles = forumStyles.match(/\.topicTitle \{[\s\S]*?\n\}/)?.[0]
+
+        expect(cardStyles)
+            .toMatch(/&:hover\s*\{\s*border-color: #007d79;\s*\}/)
+        expect(cardStyles)
+            .not.toMatch(/text-decoration|box-shadow/)
+        expect(titleStyles)
+            .not.toContain('&:hover')
+        expect(titleStyles)
+            .toMatch(/&:focus-visible\s*\{[^}]*text-decoration: underline;/)
+    })
+
     beforeEach(() => {
         jest.clearAllMocks()
         mockCreateForumPost.mockResolvedValue({ id: 'post-3' })
@@ -231,7 +251,22 @@ describe('ChallengeForum', () => {
         }
         topicDetail = { posts: [starterPost], topic: announcement }
         mockGetForumTopicDetail.mockResolvedValue(topicDetail)
+        forumWatching = true
+        watchError = undefined
+        mockSetChallengeForumWatching.mockReset()
+        mockMutateForumWatch.mockReset()
         mockUseSWR.mockImplementation((key: unknown) => {
+            if (Array.isArray(key) && key[0] === 'opportunities:forum-watch') {
+                return {
+                    data: forumWatching === undefined ? undefined : {
+                        challengeId: 'challenge-id', memberId: '10', watching: forumWatching,
+                    },
+                    error: watchError,
+                    isValidating: false,
+                    mutate: mockMutateForumWatch,
+                }
+            }
+
             if (Array.isArray(key) && key[0] === 'opportunities:forum-topics') {
                 return {
                     data: topicCollection,
@@ -313,6 +348,52 @@ describe('ChallengeForum', () => {
             .toBeInTheDocument()
         expect(screen.queryByRole('button', { name: discussion.title }))
             .not.toBeInTheDocument()
+    })
+
+    it('unwatches an empty forum and displays the saved preference', async () => {
+        topicCollection = { data: [], sourceTotalCount: 0, truncated: false }
+        const saved = { challengeId: 'challenge-id', memberId: '10', watching: false }
+        mockSetChallengeForumWatching.mockResolvedValue(saved)
+        const view = render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        const button = screen.getByRole('button', { name: 'Unwatch forum' })
+        expect(button)
+            .toHaveAttribute('aria-pressed', 'true')
+        fireEvent.click(button)
+        await waitFor(() => expect(mockMutateForumWatch)
+            .toHaveBeenCalledWith(saved, false))
+        expect(mockSetChallengeForumWatching)
+            .toHaveBeenCalledWith('challenge-id', false)
+        forumWatching = false
+        view.rerender(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        expect(screen.getByRole('button', { name: 'Watch forum' }))
+            .toHaveAttribute('aria-pressed', 'false')
+        fireEvent.click(screen.getByRole('button', { name: 'Watch forum' }))
+        await waitFor(() => expect(mockSetChallengeForumWatching)
+            .toHaveBeenCalledWith('challenge-id', true))
+    })
+
+    it('preserves the watch preference when saving fails', async () => {
+        mockSetChallengeForumWatching.mockRejectedValue(new Error('Unable to save preference'))
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        fireEvent.click(screen.getByRole('button', { name: 'Unwatch forum' }))
+        await screen.findByText('Unable to save preference')
+        expect(mockMutateForumWatch).not.toHaveBeenCalled()
+        expect(screen.getByRole('button', { name: 'Unwatch forum' }))
+            .toBeEnabled()
+    })
+
+    it('disables the watch control while its preference is loading or unavailable', () => {
+        forumWatching = undefined
+        const view = render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        expect(screen.getByRole('button', { name: 'Watch forum' }))
+            .toBeDisabled()
+        watchError = new Error('Unavailable')
+        view.rerender(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        expect(screen.getByRole('button', { name: 'Watch forum' }))
+            .toBeDisabled()
+        fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+        expect(mockMutateForumWatch)
+            .toHaveBeenCalled()
     })
 
     it('uses the API source total for topic counters', () => {
