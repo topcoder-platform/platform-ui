@@ -13,6 +13,7 @@ import {
 } from './challenge-detail.utils'
 
 jest.mock('~/config', () => ({
+    AppSubdomain: { topgear: 'topgear' },
     EnvironmentConfig: {
         ADMIN: { ONLINE_REVIEW_URL: 'https://software.topcoder-dev.com/review' },
         REVIEW_APP_URL: 'https://review.topcoder-dev.com',
