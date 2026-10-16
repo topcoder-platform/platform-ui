@@ -1111,7 +1111,7 @@ function renderChallengeQuickLinks(
     const reviewLink = `${REVIEW_APP_URL}/active-challenges/${resolvedChallengeId}/challenge-details`
     const forumLink = props.challenge?.discussions?.find(discussion => !!discussion.url)?.url
     const challengeLink
-        = `${EnvironmentConfig.PLATFORMUI_URL}/opportunities/challenge/${encodeURIComponent(resolvedChallengeId)}`
+        = `${EnvironmentConfig.TOPCODER_URL}/opportunities/challenge/${encodeURIComponent(resolvedChallengeId)}`
 
     return (
         <div className={styles.quickLinks}>

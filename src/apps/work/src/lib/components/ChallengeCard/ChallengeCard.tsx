@@ -51,7 +51,7 @@ export const ChallengeCard: FC<ChallengeCardProps> = (props: ChallengeCardProps)
 
     const reviewLink = `${REVIEW_APP_URL}/active-challenges/${challenge.id}/challenge-details`
     const challengeLink
-        = `${EnvironmentConfig.PLATFORMUI_URL}/opportunities/challenge/${encodeURIComponent(challenge.id)}`
+        = `${EnvironmentConfig.TOPCODER_URL}/opportunities/challenge/${encodeURIComponent(challenge.id)}`
 
     function handleChallengeNameClick(event: MouseEvent<HTMLButtonElement>): void {
         event.preventDefault()
