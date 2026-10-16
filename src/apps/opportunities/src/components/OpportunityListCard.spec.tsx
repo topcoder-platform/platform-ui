@@ -105,6 +105,22 @@ function competitionFixture(overrides: Partial<ChallengeOpportunity> = {}): Chal
 }
 
 describe('OpportunityListCard competition presentation', () => {
+    it('uses a teal hover stroke without a shadow or movement in list and grid views', () => {
+        const cardStyles = opportunityListCardStyles.match(/\.card \{[\s\S]*?\n\}/)?.[0]
+        const hoverStyles = cardStyles?.match(/&:hover\s*\{([^}]*)\}/)?.[1]
+        const gridHoverStyles = opportunityListCardStyles
+            .match(/\.gridCard:not\(\.competitionCard\) \{[\s\S]*?&:hover\s*\{([^}]*)\}/)?.[1]
+
+        expect(hoverStyles)
+            .toContain('border-color: #007d79;')
+        expect(hoverStyles)
+            .not.toMatch(/box-shadow|transform/)
+        expect(gridHoverStyles?.trim())
+            .toBe('box-shadow: inset 0 0 0 1px #007d79;')
+        expect(cardStyles)
+            .toMatch(/&:focus-visible\s*\{[^}]*box-shadow: 0 0 0 3px rgba\(0, 125, 121, .28\);/)
+    })
+
     beforeEach(() => {
         jest.spyOn(Date, 'now')
             .mockReturnValue(Date.parse('2026-08-14T00:30:00.000Z'))

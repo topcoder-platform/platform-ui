@@ -208,6 +208,20 @@ const starterPost: ForumPost = {
 const forumStyles = readFileSync(`${__dirname}/ChallengeForum.module.scss`, 'utf8')
 
 describe('ChallengeForum', () => {
+    it('highlights hovered topic cards without underlining the title or adding a shadow', () => {
+        const cardStyles = forumStyles.match(/\.topicCard \{[\s\S]*?\n\}/)?.[0]
+        const titleStyles = forumStyles.match(/\.topicTitle \{[\s\S]*?\n\}/)?.[0]
+
+        expect(cardStyles)
+            .toMatch(/&:hover\s*\{\s*border-color: #007d79;\s*\}/)
+        expect(cardStyles)
+            .not.toMatch(/text-decoration|box-shadow/)
+        expect(titleStyles)
+            .not.toContain('&:hover')
+        expect(titleStyles)
+            .toMatch(/&:focus-visible\s*\{[^}]*text-decoration: underline;/)
+    })
+
     beforeEach(() => {
         jest.clearAllMocks()
         mockCreateForumPost.mockResolvedValue({ id: 'post-3' })
