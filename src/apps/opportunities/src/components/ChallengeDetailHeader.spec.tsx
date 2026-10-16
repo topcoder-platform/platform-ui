@@ -830,6 +830,75 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toEqual(['Launch', 'Registration', 'Checkpoint Submission', 'Winners'])
     })
 
+    it.each([
+        { dateSource: 'actual', type: 'Challenge' },
+        { dateSource: 'actual', type: 'First2Finish' },
+        { dateSource: 'actual', type: 'Marathon Match' },
+        { dateSource: 'actual', type: 'Task' },
+        { dateSource: 'scheduled', type: 'Challenge' },
+    ])('places Registration first for $type with staggered $dateSource starts', ({
+        dateSource,
+        type,
+    }: { dateSource: string, type: string }) => {
+        const submissionStart = '2026-10-15T04:07:00.000Z'
+        const registrationStart = '2026-10-15T04:07:00.001Z'
+        const submissionEnd = '2026-10-22T04:04:00.000Z'
+        const reviewEnd = '2026-10-23T04:04:00.000Z'
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        endDate: reviewEnd,
+                        phases: [
+                            {
+                                id: 'review',
+                                name: 'Review',
+                                scheduledEndDate: reviewEnd,
+                                scheduledStartDate: submissionEnd,
+                            },
+                            {
+                                [`${dateSource}StartDate`]: submissionStart,
+                                id: 'submission',
+                                isOpen: true,
+                                name: 'Submission',
+                                scheduledEndDate: submissionEnd,
+                            },
+                            {
+                                [`${dateSource}StartDate`]: registrationStart,
+                                id: 'registration',
+                                isOpen: true,
+                                name: 'Registration',
+                                scheduledEndDate: submissionEnd,
+                            },
+                        ],
+                        startDate: submissionStart,
+                        type: { name: type },
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show full timeline' }))
+        const timeline = screen.getByRole('region', { name: 'Challenge timeline' })
+        const items = within(timeline)
+            .getAllByRole('listitem')
+        expect(items.map(item => item.querySelector('strong')?.textContent))
+            .toEqual(['Launch', 'Registration', 'Submission', 'Review', 'Winners'])
+        expect(items[1].querySelector('time'))
+            .toHaveAttribute('datetime', registrationStart)
+        expect(items[2].querySelector('time'))
+            .toHaveAttribute('datetime', submissionStart)
+        expect(items[1])
+            .toHaveAttribute('data-state', 'current')
+        expect(items[2])
+            .toHaveAttribute('data-state', 'current')
+    })
+
     it.each(['scheduled', 'actual'])(
         'places Submission before concurrent F2F Iterative Review with %s dates',
         dateSource => {
