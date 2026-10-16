@@ -27,6 +27,19 @@ The app uses CircleCI for CI/CD.
 
 The `dev` branch is auto-deployed to the dev environment: https://platform-mvp.topcoder-dev.com.
 
+The development build job uses CircleCI's `xlarge` Docker resource class (16 GB RAM)
+and `NODE_OPTIONS=--max-old-space-size=8192` to allow an 8 GB Node heap. The optimized
+build can exceed Node's default heap limit; the remaining container memory is
+reserved for build workers and other process overhead. Keep the container memory
+and heap limit sized together when changing these settings in `.circleci/config.yml`.
+
+To run the same development environment build locally on a machine with sufficient memory:
+
+```bash
+nvm use
+NODE_OPTIONS=--max-old-space-size=8192 LOGICAL_ENV=dev yarn build
+```
+
 The `master` branch is auto-deployed to the production environment: https://platform-ui.topcoder.com.
 
 ## Pull Requests
