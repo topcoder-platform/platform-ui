@@ -792,7 +792,9 @@ Challenge Discussion reads and writes use the authenticated
 administrator topic deletes, and authored comment deletes use in-app dialogs
 rather than browser prompts; per-member
 thumbs-up/thumbs-down reactions, watch state, and read state remain inside the
-challenge detail page. The Markdown editor continues ordered and unordered
+challenge detail page. Comments and nested replies allow up to 10,000 characters,
+including when editing existing posts. Topic bodies allow up to 16,000 characters.
+The Markdown editor continues ordered and unordered
 lists on Enter; safe Markdown styling is retained in topic excerpts and full
 posts. Forum Markdown resolves `@handle`, `@{handle}`, and straight/curly quoted
 mentions to profile links colored by the member's public maximum rating; literal
