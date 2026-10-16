@@ -1,5 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+import { act } from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 import type { ScorecardQuestion } from '../../../../../models'
 
@@ -68,10 +70,6 @@ jest.mock('~/config', () => ({
 }), { virtual: true })
 
 jest.mock('~/libs/ui', () => ({
-    Button: (props: { label: string, onClick: () => void }) => (
-        <button type='button' onClick={props.onClick}>{props.label}</button>
-    ),
-    IconOutline: {},
     Tooltip: (props: { children: JSX.Element }) => props.children,
 }), { virtual: true })
 
@@ -178,6 +176,29 @@ describe('AiFeedback score editing in the Approval phase', () => {
             }],
             scoreMap: new Map([['question-1', 80]]),
         })
+    })
+
+    it.each(['{Enter}', ' '])('opens score editing from the text action using %p', async key => {
+        const user = userEvent.setup()
+        render(<AiFeedback question={question} />)
+
+        const editButton = screen.getByRole('button', { name: 'Edit' })
+        expect(editButton.classList.contains('editScoreLink'))
+            .toBe(true)
+        expect(editButton.getAttribute('type'))
+            .toBe('button')
+
+        await user.tab()
+        expect(document.activeElement)
+            .toBe(editButton)
+        await act(async () => {
+            await user.keyboard(key)
+        })
+
+        expect((screen.getByRole('combobox') as HTMLSelectElement).value)
+            .toBe('4')
+        expect(screen.queryByRole('button', { name: 'Edit' }))
+            .toBeNull()
     })
 
     it('shows a success message after the edited score is saved', async () => {

@@ -10,7 +10,7 @@ import { AiWorkflowReviewMethod, getAiWorkflowRunsCacheKey } from '~/apps/review
 import { useReviewsContext } from '~/apps/review/src/pages/reviews/ReviewsContext'
 import { getScoreResponseOptions } from '~/apps/review/src/lib/utils'
 import { EnvironmentConfig } from '~/config'
-import { Button, IconOutline, Tooltip } from '~/libs/ui'
+import { Tooltip } from '~/libs/ui'
 import { useRole } from '~/apps/review/src/lib/hooks'
 import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
@@ -113,13 +113,13 @@ const renderAiFeedbackContent = (
 
             {hasQuestionScoreEditAccess && !isEditingScore && (
                 <div className={styles.editActions}>
-                    <Button
-                        secondary
-                        size='sm'
+                    <button
+                        type='button'
+                        className={styles.editScoreLink}
                         onClick={handleStartEditing}
-                        label='Edit'
-                        icon={IconOutline.PencilIcon}
-                    />
+                    >
+                        Edit
+                    </button>
                 </div>
             )}
         </div>

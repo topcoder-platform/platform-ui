@@ -1,4 +1,5 @@
 @import '@libs/ui/styles/includes';
+@import '@libs/ui/styles/2026/tokens';
 
 .wrap {
     p {
@@ -67,6 +68,27 @@
     display: flex;
     align-items: center;
     gap: $sp-2;
+}
+
+.editScoreLink {
+    @include resetBtnStyle;
+
+    padding: 0;
+    color: $tc-2026-link;
+    font-family: $tc-2026-font-body;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+    cursor: pointer;
+
+    &:hover {
+        text-decoration: underline;
+    }
+
+    &:focus-visible {
+        outline: 1px solid $tc-2026-teal;
+        outline-offset: 2px;
+    }
 }
 
 .scoreEditSelect {
