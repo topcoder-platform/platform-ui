@@ -138,3 +138,10 @@ export interface ForumWatchMutationResponse {
     topicId: string
     watching?: boolean
 }
+
+/** Effective current-member watch state for an entire challenge forum. */
+export interface ChallengeForumWatchState {
+    challengeId: string
+    memberId: string
+    watching: boolean
+}
