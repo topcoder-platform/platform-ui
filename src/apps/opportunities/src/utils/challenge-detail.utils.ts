@@ -6,12 +6,14 @@ import {
     ChallengeOpportunity,
 } from '../models'
 
+import { isTopgearChallenge } from './topgear.utils'
+
 export interface ChallengeSidebarLink {
     label: string
     url: string
 }
 
-/** Submission experiences selected by Work Manager challenge metadata. */
+/** Submission experiences selected by TopGear context or Work Manager metadata. */
 export type ChallengeSubmissionMode = 'url' | 'zip'
 
 /**
@@ -93,15 +95,17 @@ export function challengeMetadataValue(
 /**
  * Resolves whether a challenge accepts a URL or the standard ZIP archive.
  *
- * Work Manager persists this choice as `submission_type` metadata. URL mode
- * is deliberately opt-in: missing, malformed, and unsupported values retain
- * the established ZIP flow.
+ * TopGear challenges always use the URL flow, identified by the community host
+ * or configured challenge group. Other challenges opt in through Work Manager's
+ * `submission_type=url` metadata; all other values retain the ZIP flow.
  *
  * @param challenge raw Challenge API detail response.
- * @returns `url` only for an exact case-insensitive metadata value; otherwise `zip`.
+ * @returns `url` for TopGear or an exact case-insensitive metadata value; otherwise `zip`.
  * @throws Does not throw.
  */
 export function challengeSubmissionMode(challenge: ChallengeOpportunity): ChallengeSubmissionMode {
+    if (isTopgearChallenge(challenge)) return 'url'
+
     const value = challengeMetadataValue(challenge.metadata, 'submission_type')
     return typeof value === 'string' && value.trim()
         .toLowerCase() === 'url'

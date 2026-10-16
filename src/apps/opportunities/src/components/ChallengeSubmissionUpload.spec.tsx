@@ -25,6 +25,7 @@ import {
 const mockRecordAnalyticsEvent = jest.fn()
 
 jest.mock('~/config', () => ({
+    AppSubdomain: { topgear: 'topgear' },
     EnvironmentConfig: {
         TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS: [
             'wipro365.sharepoint.com',
