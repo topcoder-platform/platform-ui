@@ -10,6 +10,7 @@ interface OpportunityPaginationProps {
     onPerPageChange: (perPage: number) => void
     page: number
     perPage: number
+    perPageOptions?: number[]
     total: number
     totalPages: number
 }
@@ -35,7 +36,7 @@ export function paginationWindow(page: number, totalPages: number): number[] {
 /**
  * Renders list page-size, range, and navigation controls.
  *
- * @param props current pagination metadata and change callbacks.
+ * @param props current pagination metadata, change callbacks, and optional page sizes (default: 10, 20, 50).
  * @returns accessible pagination controls.
  * @throws Does not throw.
  */
@@ -56,7 +57,9 @@ export const OpportunityPagination: FC<OpportunityPaginationProps> = props => {
                     Items per page:
                     <span className={styles.perPageSelect}>
                         <select onChange={handlePerPage} value={props.perPage}>
-                            {[10, 20, 50].map(value => <option key={value} value={value}>{value}</option>)}
+                            {(props.perPageOptions ?? [10, 20, 50]).map(value => (
+                                <option key={value} value={value}>{value}</option>
+                            ))}
                         </select>
                         <ChevronDownIcon aria-hidden='true' />
                     </span>
