@@ -97,6 +97,7 @@ import {
     isTopgearChallenge,
     marathonDashboardIsEnabled,
     marathonLeaderboardIsPublic,
+    marathonSubmissionRanks,
     marathonSubmissionScores,
     marathonSubmissionTestProgress,
     memberProfileUrl,
@@ -157,6 +158,7 @@ export function challengeAllowsDesignSubmissionDeletion(
 }
 
 type SubmissionSortField = 'handle' | 'rating' | 'submittedDate' | 'provisionalScore' | 'finalScore'
+    | 'provisionalRank' | 'finalRank'
 
 interface SortableColumnHeaderProps {
     label: string
@@ -1294,7 +1296,8 @@ interface SubmissionsTabProps {
 /**
  * Loads and paginates submissions only after a submission tab is selected.
  * Derived-column sorts use the full latest-submission collection before pagination;
- * submission-date sorting remains server-paginated.
+ * Marathon Match ranks also use that collection, including when sorting by date.
+ * Other submission-date sorting remains server-paginated.
  * Marathon Match tables default to 200 rows per page; other challenge types default to 10.
  *
  * @param props challenge, registration/management rights, viewer identity, My Submissions flag, and callbacks.
@@ -1364,7 +1367,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         && challengeMetadataFlag(props.challenge, 'submissionsViewable')
     const usePublicPreviewPage = privatePreviewGallery && !props.viewerMemberId
     const clientSort = !props.mine && !privatePreviewGallery && !privateDesignSubmissions
-        && sortBy !== 'submittedDate'
+        && (isMarathonMatch || sortBy !== 'submittedDate')
     const response: SWRResponse<OpportunityPage<ChallengeSubmission>, Error> = useSWR(
         privateDesignSubmissions ? undefined : [
             usePublicPreviewPage ? 'opportunities:submission-previews' : 'opportunities:submissions',
@@ -1442,15 +1445,28 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         props.challenge,
         loadedSubmissions,
     )
+    const submissionRanks = useMemo(
+        () => marathonSubmissionRanks(isMarathonMatch && !props.mine ? loadedSubmissions : []),
+        [isMarathonMatch, props.mine, loadedSubmissions],
+    )
     const submissions = useMemo(() => {
         if (!clientSort) return loadedSubmissions
 
         /**
          * Resolves a displayed value for whole-collection sorting.
          * @param submission Submission being compared, with any hydrated profile.
-         * @returns Visible handle, rating, or released score; undefined for missing values.
+         * @returns Visible handle, rating, date, rank, or released score; undefined for missing values.
+         * @throws Does not throw.
          */
         const valueFor = (submission: ChallengeSubmission): string | number | undefined => {
+            if (sortBy === 'submittedDate') {
+                const timestamp = Date.parse(submission.submittedDate ?? submission.createdAt ?? '')
+                return Number.isFinite(timestamp) ? timestamp : undefined
+            }
+
+            const ranks = submissionRanks.get(submission.id)
+            if (sortBy === 'provisionalRank') return ranks?.provisionalRank
+            if (sortBy === 'finalRank') return showAllSubmissionFinalScores ? ranks?.finalRank : undefined
             const profile = profilesById.get(challengeSubmissionMemberId(submission) ?? '')
             if (sortBy === 'handle') return profile?.handle ?? submissionHandle(submission)
             if (sortBy === 'rating') {
@@ -1480,7 +1496,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         })
             .slice((page - 1) * perPage, page * perPage)
     }, [clientSort, isMarathonMatch, loadedSubmissions, page, perPage, profilesById,
-        showAllSubmissionFinalScores, sortBy, sortOrder])
+        showAllSubmissionFinalScores, sortBy, sortOrder, submissionRanks])
 
     /**
      * Selects a sortable data field or reverses its current direction.
@@ -1660,6 +1676,12 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                         onChange={event => selectSort(event.target.value as typeof sortBy)}
                         value={sortBy}
                     >
+                        {isMarathonMatch && (
+                            <>
+                                <option value='finalRank'>Final Rank</option>
+                                <option value='provisionalRank'>Provisional Rank</option>
+                            </>
+                        )}
                         <option value='handle'>Handle</option>
                         {!isDesign && <option value='rating'>Rating</option>}
                         <option value='submittedDate'>Submission Date</option>
@@ -1677,8 +1699,10 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
             {!privatePreviewGallery && (
                 <MobileTableSort
                     label={{
+                        finalRank: 'Final Rank',
                         finalScore: 'Final Score',
                         handle: 'Handle',
+                        provisionalRank: 'Provisional Rank',
                         provisionalScore: isQa ? 'Initial Score' : 'Provisional Score',
                         rating: 'Rating',
                         submittedDate: 'Submission Date',
@@ -1946,7 +1970,11 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                     </table>
                 </div>
             ) : (
-                <div className={`${styles.tableCard} ${styles.mobileRecordCard}`}>
+                <div
+                    className={`${styles.tableCard} ${styles.mobileRecordCard} ${isMarathonMatch
+                        ? styles.marathonTableCard
+                        : ''}`}
+                >
                     <table className={`${isMarathonMatch
                         ? styles.marathonTable
                         : isQa
@@ -1957,6 +1985,8 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                     >
                         <thead>
                             <tr>
+                                {isMarathonMatch && sortHeader('finalRank', 'Final Rank')}
+                                {isMarathonMatch && sortHeader('provisionalRank', 'Provisional Rank')}
                                 {sortHeader('handle', 'Handle')}
                                 {!isDesign && sortHeader('rating', 'Rating')}
                                 {sortHeader('submittedDate', 'Submission Date')}
@@ -1976,6 +2006,18 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                     ?? undefined
                                 return (
                                     <tr key={submission.id}>
+                                        {isMarathonMatch && (
+                                            <>
+                                                <td data-mobile-label='Final Rank'>
+                                                    {(showAllSubmissionFinalScores
+                                                        ? submissionRanks.get(submission.id)?.finalRank
+                                                        : undefined) ?? 'N/A'}
+                                                </td>
+                                                <td data-mobile-label='Provisional Rank'>
+                                                    {submissionRanks.get(submission.id)?.provisionalRank ?? 'N/A'}
+                                                </td>
+                                            </>
+                                        )}
                                         <td data-mobile-label='Handle'>
                                             <MemberHandle
                                                 handle={submissionHandle(submission)}
