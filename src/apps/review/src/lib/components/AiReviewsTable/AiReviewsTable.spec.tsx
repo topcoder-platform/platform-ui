@@ -9,6 +9,13 @@ import type { AiReviewDecision, ChallengeDetailContextModel } from '../../models
 
 import AiReviewsTable from './AiReviewsTable'
 
+const mockRolePermissions = {
+    hasCopilotRole: false,
+    hasSubmitterRole: false,
+    isAdmin: false,
+    isProjectManager: false,
+}
+
 jest.mock('../../contexts', () => {
     const React: typeof import('react') = jest.requireActual('react')
 
@@ -40,10 +47,14 @@ jest.mock('~/libs/shared', () => ({
 }), { virtual: true })
 
 jest.mock('~/libs/ui', () => {
-    const Icon = (): JSX.Element => <span />
+    const icons: Record<string, () => JSX.Element> = {}
+    const getIcon = (name: string): (() => JSX.Element) => {
+        icons[name] ??= () => <span data-testid={`icon-${name}`} />
+        return icons[name]
+    }
 
     return {
-        IconOutline: new Proxy({}, { get: () => Icon }),
+        IconOutline: new Proxy({}, { get: (target, name) => getIcon(String(name)) }),
         Tooltip: (props: PropsWithChildren<unknown>) => <>{props.children}</>,
     }
 }, { virtual: true })
@@ -59,12 +70,7 @@ jest.mock('swr', () => ({
 jest.mock('../../hooks', () => ({
     ...jest.requireActual('../../hooks/useFetchAiWorkflowRuns'),
     useFetchAiWorkflowsRuns: jest.fn(),
-    useRolePermissions: () => ({
-        hasCopilotRole: false,
-        hasSubmitterRole: false,
-        isAdmin: false,
-        isProjectManager: false,
-    }),
+    useRolePermissions: () => mockRolePermissions,
 }))
 
 jest.mock('../../assets/icons', () => ({
@@ -80,7 +86,12 @@ jest.mock('../../services/aiReview.service', () => ({
 }))
 
 jest.mock('./AiWorkflowRunStatus', () => ({
-    AiWorkflowRunStatus: (props: { status?: string }) => <span>{`status:${props.status}`}</span>,
+    AiWorkflowRunStatus: (props: { action?: JSX.Element, status?: string }) => (
+        <span>
+            {`status:${props.status}`}
+            {props.action}
+        </span>
+    ),
 }))
 
 const mockedUseFetchAiWorkflowsRuns = useFetchAiWorkflowsRuns as jest.Mock
@@ -164,6 +175,24 @@ const renderWorkflowRow = (run: AiWorkflowRun): HTMLElement => {
 describe('AiReviewsTable', () => {
     afterEach(() => {
         mockedUseFetchAiWorkflowsRuns.mockReset()
+        mockRolePermissions.hasCopilotRole = false
+        mockRolePermissions.isAdmin = false
+    })
+
+    it('hides the re-run action from users that are neither admin nor copilot', () => {
+        const row = within(renderWorkflowRow(buildRun({})))
+
+        expect(row.queryByTestId('icon-RefreshIcon'))
+            .toBeNull()
+    })
+
+    it('lets the challenge copilot re-run a workflow', () => {
+        mockRolePermissions.hasCopilotRole = true
+
+        const row = within(renderWorkflowRow(buildRun({})))
+
+        expect(row.getByTestId('icon-RefreshIcon'))
+            .toBeTruthy()
     })
 
     it('shows the edited score of a finished run', () => {

@@ -352,6 +352,11 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
      */
     const canSeeAuthor = isAdmin || hasCopilotRole || isProjectManager
 
+    /**
+     * Admins and the challenge copilot can manually queue / re-run the AI workflows.
+     */
+    const canTriggerWorkflows = isAdmin || hasCopilotRole
+
     const handleRerun = useCallback(async (runId?: string): Promise<void> => {
         if (!runId || runId === '-1') return
 
@@ -391,11 +396,6 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         }
     }, [mutate, props.submission.id])
 
-    /**
-     * Admin only action rendered next to the run result:
-     * - a workflow with no run at all can be queued manually
-     * - an existing (finished) run can be re-run
-     */
     const handleRebuildDecision = useCallback(async (): Promise<void> => {
         if (!isAdmin || !props.submission.id) {
             return
@@ -418,8 +418,13 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         }
     }, [aiReviewConfig?.id, isAdmin, mutate, props.submission.id])
 
+    /**
+     * Admin & copilot action rendered next to the run result:
+     * - a workflow with no run at all can be queued manually
+     * - an existing (finished) run can be re-run
+     */
     const buildRowAction = useCallback((row: AiReviewerRow): ReactNode => {
-        if (!isAdmin || row.run?.id === '-1') {
+        if (!canTriggerWorkflows || row.run?.id === '-1') {
             return undefined
         }
 
@@ -448,7 +453,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 />
             </Tooltip>
         )
-    }, [handleQueueMissingRuns, handleRerun, isAdmin, props.submission.virusScan, queueingRuns])
+    }, [canTriggerWorkflows, handleQueueMissingRuns, handleRerun, props.submission.virusScan, queueingRuns])
 
     const failedGatingReviewers = useMemo(
         () => reviewerRows
