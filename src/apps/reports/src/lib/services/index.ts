@@ -19,6 +19,9 @@ export {
 } from './reports.service'
 
 export type {
+    ActiveMemberActivity,
+    ActiveMembersDashboard,
+    ActiveMembersMonth,
     BillingAccountDetail,
     BillingAccountProfileResponse,
     BillingAccountsViewData,
