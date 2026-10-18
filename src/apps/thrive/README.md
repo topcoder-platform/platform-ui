@@ -24,6 +24,18 @@ Octana hosts are never exposed; unsafe card targets fall back to the local
 article route, while a direct unsafe external-article route fails closed with
 an in-page unavailable state.
 
+## Article rendering
+
+Articles pass their stored content directly to `CmsMarkdown`. Its Markdown and HTML parsers decode
+entities in text, and React escapes that text once. For example, the Marathon Match local tester
+article's HTML `<code>javac &lt;TesterClassName&gt;.java</code>` displays `javac <TesterClassName>.java`.
+Intentionally escaped entity names and Markdown code remain literal; escaped HTML examples remain
+text, and authored HTML still passes through the sanitizer.
+
+The CMS renderer tests use the actual Markdown plugins, including the article's javac/jar commands
+and checks for single escaping and inactive HTML examples. Run them with `nvm use` followed by
+`yarn test:no-watch --runInBand --runTestsByPath src/libs/cms/CmsMarkdown.spec.tsx`.
+
 ## Voting
 
 Article pages show like/dislike buttons (`ThriveVoteButtons`) in place of the former read-only totals.
