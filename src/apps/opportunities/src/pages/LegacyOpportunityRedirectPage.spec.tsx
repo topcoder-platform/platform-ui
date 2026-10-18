@@ -18,6 +18,19 @@ const Destination = (): JSX.Element => {
 }
 
 describe('legacy Topgear challenge redirects', () => {
+    it('preserves direct terms links after the host moves to Platform UI', () => {
+        render(
+            <MemoryRouter initialEntries={['/challenges/terms/detail/20713?source=email#agreement']}>
+                <Routes>
+                    <Route path='/challenges/terms/detail/:termId' element={<LegacyOpportunityRedirectPage terms />} />
+                    <Route path='/opportunities/terms/detail/:termId' element={<Destination />} />
+                </Routes>
+            </MemoryRouter>,
+        )
+        expect(screen.getByTestId('destination'))
+            .toHaveTextContent('/opportunities/terms/detail/20713?source=email#agreement')
+    })
+
     it.each([
         [true, '/opportunities/challenge'],
         [false, '/opportunities/competitions'],

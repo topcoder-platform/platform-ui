@@ -53,7 +53,9 @@ describe('Opportunities application routes', () => {
         expect(routes.topgearRoutes[0].element.props)
             .toEqual({ replace: true, to: '/opportunities/challenge' })
         expect(routes.legacyOpportunityRoutes.map(route => route.route))
-            .toEqual(expect.arrayContaining(['/challenges', '/challenges/:challengeId']))
+            .toEqual(expect.arrayContaining([
+                '/challenges', '/challenges/:challengeId', '/challenges/terms/detail/:termId',
+            ]))
     })
 
     it('serves the login-only member home ahead of the category catch-all on every host', () => {
@@ -75,6 +77,16 @@ describe('Opportunities application routes', () => {
             expect(children[homeIndex])
                 .toMatchObject({ authRequired: true, id: 'Opportunities member home', title: 'Home' })
         })
+    })
+
+    it.each(['platform-ui', 'opportunities', 'topgear'])('serves public direct terms links on %s', host => {
+        const children = loadRoutes(host).opportunitiesRoutes[0].children ?? []
+        const index = children.findIndex(route => route.route === 'terms/detail/:termId')
+        expect(index)
+            .toBeGreaterThanOrEqual(0)
+        expect(index)
+            .toBeLessThan(children.findIndex(route => route.route === ':kind'))
+        expect(children[index].authRequired).not.toBe(true)
     })
 
     it('serves the DocuSign return route before the category catch-all', () => {

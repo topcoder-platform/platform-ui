@@ -1939,7 +1939,7 @@ describe('ChallengeEditorForm', () => {
         expect(screen.getByRole('link', { name: 'Standard Terms 2026' }))
             .toHaveAttribute(
                 'href',
-                'https://example.com/topcoder/challenges/terms/detail/standard-terms-2026',
+                'https://example.com/topcoder/opportunities/terms/detail/standard-terms-2026',
             )
     })
 

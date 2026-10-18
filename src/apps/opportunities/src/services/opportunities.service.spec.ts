@@ -35,6 +35,7 @@ import {
     getMemberChallengeRegistrationIds,
     getOpportunityPage,
     getOpportunitySummary,
+    getOutstandingTermsDetails,
     getReviewOpportunity,
     normalizeOpportunitySummary,
     unregisterFromChallenge,
@@ -66,6 +67,32 @@ jest.mock('~/libs/core', () => ({
 }), { virtual: true })
 
 describe('opportunities service normalization', () => {
+    it('reads standalone agreement state without resource roles and bypasses stale HTTP caches', async () => {
+        const get = xhrGetAsync as jest.MockedFunction<typeof xhrGetAsync>
+        get.mockReset()
+        get.mockResolvedValueOnce({ agreed: true, id: 'standard' })
+            .mockResolvedValueOnce({ agreed: false, id: 'nda' })
+        await expect(getOutstandingTermsDetails([{ id: 'standard' }, { id: 'nda' }]))
+            .resolves.toEqual([{ agreed: false, id: 'nda' }])
+        expect(get)
+            .toHaveBeenCalledTimes(2)
+        expect(get)
+            .toHaveBeenNthCalledWith(
+                1,
+                expect.stringMatching(/\/terms\/standard\?nocache=/),
+                undefined,
+                expect.any(Object),
+            )
+        expect(get)
+            .toHaveBeenNthCalledWith(
+                2,
+                expect.stringMatching(/\/terms\/nda\?nocache=/),
+                undefined,
+                expect.any(Object),
+            )
+        get.mockReset()
+    })
+
     it('normalizes the aggregation service cells and accepted legacy aliases', () => {
         expect(normalizeOpportunitySummary({
             result: {
