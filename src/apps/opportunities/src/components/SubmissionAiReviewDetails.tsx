@@ -1,5 +1,6 @@
 /* eslint-disable react/jsx-no-bind */
 import { FC } from 'react'
+import { orderBy, uniqBy } from 'lodash'
 import useSWR, { SWRResponse } from 'swr'
 
 import { ChallengeSubmissionAiWorkflowRun } from '../models'
@@ -23,6 +24,34 @@ interface WorkflowRunResult {
 const PENDING_STATUSES = new Set(['INIT', 'QUEUED', 'DISPATCHED', 'IN_PROGRESS'])
 const TERMINAL_STATUSES = new Set(['CANCELLED', 'COMPLETED', 'FAILED', 'FAILURE', 'SUCCESS', 'TIMEOUT'])
 const WORKFLOW_RUN_REFRESH_INTERVAL_MS = 10_000
+
+/**
+ * Selects the latest attempt of each workflow for this submission's details and polling.
+ *
+ * Uses the same start/dispatch and completion ordering as Review App, including
+ * reruns that have been dispatched but have not started yet. Workflow identity
+ * comes from the API id, never its display name; unidentified runs stay separate.
+ *
+ * @param runs all workflow runs for one submission, in any API order.
+ * @returns one latest run per workflow without mutating the input.
+ * @throws Does not throw.
+ */
+function latestSubmissionAiWorkflowRuns(
+    runs: ChallengeSubmissionAiWorkflowRun[],
+): ChallengeSubmissionAiWorkflowRun[] {
+    return uniqBy(
+        orderBy(
+            runs,
+            [
+                run => run.startedAt ?? run.lastDispatchedAt ?? '',
+                run => run.completedAt ?? '',
+            ],
+            ['desc', 'desc'],
+        ),
+        run => run.workflowId ?? run.workflow?.id ?? run.id,
+    )
+        .reverse()
+}
 
 /**
  * Normalizes an optional Review API workflow status for comparisons and display.
@@ -79,22 +108,23 @@ function workflowReviewDate(value: string | undefined): string {
 }
 
 /**
- * Determines whether an unfinished workflow run should keep the details fresh.
+ * Determines whether a latest workflow attempt should keep the details fresh.
  *
- * @param runs latest workflow records, when loaded.
- * @returns polling interval while any run is non-terminal, otherwise zero.
+ * @param runs all workflow records for this submission, when loaded.
+ * @returns polling interval while any latest run is non-terminal, otherwise zero.
  * @throws Does not throw.
  */
 function workflowRunRefreshInterval(
     runs: ChallengeSubmissionAiWorkflowRun[] | undefined,
 ): number {
-    return !runs?.length || runs.some(run => !TERMINAL_STATUSES.has(workflowRunStatus(run)))
+    return !runs?.length || latestSubmissionAiWorkflowRuns(runs)
+        .some(run => !TERMINAL_STATUSES.has(workflowRunStatus(run)))
         ? WORKFLOW_RUN_REFRESH_INTERVAL_MS
         : 0
 }
 
 /**
- * Displays workflow-run details for an expanded member submission row.
+ * Displays only the latest run per workflow for an expanded member submission row.
  *
  * The component owns its authenticated request so one failed submission renders
  * an inline retry state without producing a page-wide toast.
@@ -136,6 +166,8 @@ export const SubmissionAiReviewDetails: FC<SubmissionAiReviewDetailsProps> = pro
         return <p className={styles.requestState} id={props.id}>No AI review details are available yet.</p>
     }
 
+    const latestRuns = latestSubmissionAiWorkflowRuns(response.data)
+
     return (
         <div className={styles.tableWrap} id={props.id}>
             <table aria-label={`AI review details for submission ${props.submissionId}`}>
@@ -148,7 +180,7 @@ export const SubmissionAiReviewDetails: FC<SubmissionAiReviewDetailsProps> = pro
                     </tr>
                 </thead>
                 <tbody>
-                    {response.data.map(run => {
+                    {latestRuns.map(run => {
                         const successful = workflowRunStatus(run) === 'SUCCESS'
                         const workflowId = run.workflowId ?? run.workflow?.id
                         const result = submissionAiWorkflowRunResult(run)

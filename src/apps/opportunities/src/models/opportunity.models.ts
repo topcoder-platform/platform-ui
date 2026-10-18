@@ -418,7 +418,9 @@ export interface ChallengeSubmission {
 export interface ChallengeSubmissionAiWorkflowRun {
     completedAt?: string
     id: string
+    lastDispatchedAt?: string | null
     score?: number | string | null
+    startedAt?: string | null
     status?: string
     submissionId?: string
     workflow?: {
