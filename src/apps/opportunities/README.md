@@ -640,8 +640,13 @@ Active My Submissions pages periodically revalidate so an
 asynchronous AI decision score appears without requiring the member to reload
 the page. AI-reviewed challenges expand the newest submission's workflow details
 by default; each row can reveal the reviewer, completion date, threshold-derived
-result, and a score deep-link to Review App, polling while a run is pending or
-has not yet been created. A transient background failure retains the last successful submission
+result, and a score deep-link to Review App. Each submission displays only the
+latest attempt per workflow ID, ordered by start time (or dispatch time before
+the run starts), then completion time, matching Review App. A rerun replaces the
+previous score and result, including while pending or after failure. Polling
+continues while a latest attempt is pending or no run has been created;
+superseded attempts do not keep polling active.
+A transient background failure retains the last successful submission
 page, retries twice with a delay, and revalidates when the member returns to the
 tab; initial failures still expose the explicit retry action. Optional score
 requests do not enter an automatic retry loop. Final
