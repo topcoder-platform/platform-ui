@@ -1,4 +1,5 @@
 import {
+    ActiveMembersDashboard,
     ChallengeParticipationDashboard,
     DashboardSlug,
     DashboardsResponse,
@@ -8,7 +9,8 @@ import {
     NewSignupsDashboard,
 } from '../../lib/services'
 
-export type DashboardResponse = NewSignupsDashboard
+export type DashboardResponse = ActiveMembersDashboard
+    | NewSignupsDashboard
     | MembersPaidDashboard
     | MemberPaymentByMonthDashboard
     | MemberPaymentByCustomerDashboard
@@ -44,6 +46,16 @@ const customerSeriesColors: string[] = [
 const otherCustomersColor = '#d7476f'
 
 export const dashboardDefinitions: Record<DashboardSlug, DashboardDefinition> = {
+    'active-members': {
+        chartType: 'column',
+        index: 6,
+        series: [{ color: '#0f62fe', key: 'totalUniqueMembers', label: 'Active Members' }],
+        slug: 'active-members',
+        stacked: false,
+        subtitle: 'Members paid, registered for challenges, or applying to or accepting engagements',
+        title: 'Active Members per Month',
+        valueType: 'count',
+    },
     'challenge-participation': {
         chartType: 'column',
         index: 3,
@@ -168,6 +180,7 @@ export const dashboardSlugs: DashboardSlug[] = [
     'challenge-participation',
     'member-payment-by-month',
     'member-payment-by-customer',
+    'active-members',
 ]
 
 /**
@@ -221,6 +234,8 @@ export function getDashboardResponse(
     slug: DashboardSlug,
 ): DashboardResponse {
     switch (slug) {
+        case 'active-members':
+            return dashboards.activeMembers
         case 'members-paid':
             return dashboards.membersPaid
         case 'challenge-participation':

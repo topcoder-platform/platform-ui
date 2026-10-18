@@ -27,6 +27,7 @@ export const talentPageRouteId = 'talent'
 export const formsPageRouteId = 'forms'
 
 export const dashboardRouteSlugs = {
+    activeMembers: 'active-members',
     challengeParticipation: 'challenge-participation',
     memberPaymentByCustomer: 'member-payment-by-customer',
     memberPaymentByMonth: 'member-payment-by-month',

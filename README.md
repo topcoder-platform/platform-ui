@@ -632,3 +632,17 @@ status, and communicate with the Topcoder Support Team.
 
 [Support README](./src/apps/support/README.md)
 [Support Routes](./src/apps/support/src/support-app.routes.tsx)
+
+### Reports: Active Members per Month
+
+The `active-members` dashboard counts unique members with a paid payment, challenge
+registration, engagement application, or recorded engagement acceptance in each UTC
+month. The selected-period total deduplicates members across months. Below the
+chart, month sections show their unique totals and each member activity, newest
+first. Existing date controls, refresh, access controls, and CSV download apply.
+
+The companion reports API uses payout dates (falling back to payment creation when
+missing), registration/application creation dates, and durable engagement acceptance
+dates. Historical acceptances without a known date are omitted; application and
+payment activity still qualify. Deploy the engagements acceptance-date migration
+and service for full acceptance-date support.
