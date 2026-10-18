@@ -8,6 +8,7 @@ import { isTopgearCommunity, TOPGEAR_CHALLENGES_ROUTE } from './utils/topgear.ut
 
 const OpportunitiesApp: LazyLoadedComponent = lazyLoad(() => import('./OpportunitiesApp'))
 const OpportunitiesPage: LazyLoadedComponent = lazyLoad(() => import('./pages/OpportunitiesPage'))
+const TermsDetailPage: LazyLoadedComponent = lazyLoad(() => import('./pages/TermsDetailPage'))
 const HomePage: LazyLoadedComponent = lazyLoad(() => import('./pages/HomePage'))
 const ChallengeDetailsPage: LazyLoadedComponent = lazyLoad(() => import('./pages/ChallengeDetailsPage'))
 const ReviewOpportunityDetailsPage: LazyLoadedComponent = lazyLoad(
@@ -44,6 +45,12 @@ export const topgearRoutes: ReadonlyArray<PlatformRoute> = (
 export const legacyOpportunityRoutes: ReadonlyArray<PlatformRoute> = (
     EnvironmentConfig.SUBDOMAIN === AppSubdomain.opportunities ? [] : [
         {
+            element: <LegacyOpportunityRedirectPage terms />,
+            id: 'Legacy terms detail redirect',
+            route: '/challenges/terms/detail/:termId',
+            title: 'Terms and NDA',
+        },
+        {
             element: <LegacyOpportunityRedirectPage list />,
             id: 'Legacy challenges list redirect',
             route: '/challenges',
@@ -67,6 +74,12 @@ export const legacyOpportunityRoutes: ReadonlyArray<PlatformRoute> = (
 export const opportunitiesRoutes: ReadonlyArray<PlatformRoute> = [
     {
         children: [
+            {
+                element: <TermsDetailPage />,
+                id: 'Opportunity terms details',
+                route: 'terms/detail/:termId',
+                title: 'Terms and NDA',
+            },
             {
                 element: <OpportunitiesPage />,
                 id: 'Opportunities list',

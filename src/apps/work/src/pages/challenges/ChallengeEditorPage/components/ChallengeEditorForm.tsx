@@ -583,7 +583,7 @@ function normalizeSelectedTermIds(value: unknown): string[] {
  * Builds the public Topcoder terms detail URL for a term id.
  *
  * The target URL uses the configured Topcoder host so generated links point to the active
- * environment while preserving the community terms-detail route expected by members.
+ * environment and uses the Opportunities terms page for authenticated signing.
  *
  * @param termId Terms API identifier to include in the detail URL.
  * @returns The public terms detail URL.
@@ -592,7 +592,7 @@ function normalizeSelectedTermIds(value: unknown): string[] {
 function getTermDetailUrl(termId: string): string {
     const topcoderUrl = EnvironmentConfig.TOPCODER_URL.replace(/\/$/, '')
 
-    return `${topcoderUrl}/challenges/terms/detail/${encodeURIComponent(termId)}`
+    return `${topcoderUrl}/opportunities/terms/detail/${encodeURIComponent(termId)}`
 }
 
 /**

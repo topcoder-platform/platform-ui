@@ -14,6 +14,7 @@ import useSWR, {
 } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
+import { authUrlLogin, ProfileContextData, useProfileContext } from '~/libs/core'
 import { getSafeCmsLink } from '~/libs/cms'
 import {
     BaseModal,
@@ -28,12 +29,13 @@ import {
     getChallengeSubmitterTermsDetails,
     getChallengeTermDocuSignUrl,
     getChallengeTermsDetails,
+    getOutstandingTermsDetails,
 } from '../services'
 import { buildDocuSignReturnUrl, DOCUSIGN_MESSAGE_TYPE } from '../utils/docusign-return.utils'
 
 import styles from './ChallengeTermsModal.module.scss'
 
-export type ChallengeTermsMode = 'register' | 'view'
+export type ChallengeTermsMode = 'register' | 'view' | 'agree'
 
 // One immediate read followed by bounded backoff. Confirmation has a separate
 // 91-second wall-clock deadline so slow requests and throttled browser timers
@@ -190,16 +192,20 @@ export function requiresExternalAgreement(term: ChallengeTerm): boolean {
 }
 
 /**
- * Renders full Terms API content for either passive review or challenge
- * registration. View mode never exposes an agreement or registration action;
- * registration mode persists one explicit agreement at a time and does not
- * complete registration until the final outstanding term has been accepted.
+ * Renders full Terms API content for passive review, challenge registration,
+ * or standalone agreement. View mode never exposes an electronic agreement or
+ * registration action. Register/agree modes persist each explicit agreement and
+ * verify DocuSign acceptance before completion. Standalone agreement uses the
+ * exact supplied terms without resolving challenge resource roles. Electronic
+ * acceptance and DocuSign recipient views require an initialized member session.
  *
  * @param props term references, modal mode, submit state, and callbacks.
  * @returns Figma-aligned terms dialog with retryable detail loading.
  * @throws Does not throw; Terms API failures render a retry action.
  */
 export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
+    const { initialized, isLoggedIn, profile }: ProfileContextData = useProfileContext()
+    const authenticated = initialized && isLoggedIn && !!profile?.userId
     const [accepted, setAccepted] = useState(false)
     const [completedTermIds, setCompletedTermIds] = useState<string[]>([])
     const [agreementBusy, setAgreementBusy] = useState(false)
@@ -219,7 +225,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
     const docuSignUrlRequestRef = useRef(0)
     const interactionRef = useRef(0)
     const { mutate: mutateTermsCache }: FullConfiguration = useSWRConfig()
-    const memberScope = props.memberId === undefined ? 'anonymous' : String(props.memberId)
+    const memberScope = authenticated ? String(props.memberId ?? profile?.userId) : 'anonymous'
     const termKey = useMemo(
         () => props.terms.map(term => `${term.id ?? term.url ?? term.title ?? 'term'}:${term.roleId ?? ''}`)
             .join('|'),
@@ -232,41 +238,43 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         memberScope,
         termKey,
     ] : undefined
+    const loadOutstandingTerms = props.mode === 'agree'
+        ? getOutstandingTermsDetails : getChallengeSubmitterTermsDetails
     /**
      * Loads the terms appropriate to the active modal mode.
      *
-     * Registration resolves only Submitter terms; passive viewing resolves the exact selected terms.
+     * Registration resolves Submitter terms; standalone agreement and review use the exact selected terms.
      *
-     * @returns a promise containing hydrated Challenge API term details.
-     * @throws propagates Challenge API failures to SWR for the modal error state.
+     * @returns a promise containing complete Terms API records.
+     * @throws Propagates Terms API failures to SWR for the modal error state.
      */
-    const loadTerms = (): Promise<ChallengeTerm[]> => (props.mode === 'register'
-        ? getChallengeSubmitterTermsDetails(props.terms)
-        : getChallengeTermsDetails(props.terms))
+    const loadTerms = (): Promise<ChallengeTerm[]> => (props.mode === 'view'
+        ? getChallengeTermsDetails(props.terms)
+        : loadOutstandingTerms(props.terms))
     const response: SWRResponse<ChallengeTerm[], Error> = useSWR(
         termsCacheKey,
         loadTerms,
         { revalidateOnFocus: false },
     )
     const terms = response.data ?? (shouldLoad ? [] : props.terms)
-    const registrationMode = props.mode === 'register'
-    const pendingTerms = registrationMode
+    const agreementMode = authenticated && props.mode !== 'view'
+    const pendingTerms = agreementMode
         ? terms.filter(term => !term.id || !completedTermIds.includes(term.id))
         : []
     const activeTerm = pendingTerms[0]
-    const displayedTerms = registrationMode
+    const displayedTerms = agreementMode
         ? activeTerm ? [activeTerm] : []
         : terms
     const activePosition = completedTermIds.length
     const agreementTotal = completedTermIds.length + pendingTerms.length
     const activeExternalAgreement = !!activeTerm && requiresExternalAgreement(activeTerm)
-    const docuSignTerm = registrationMode
+    const docuSignTerm = agreementMode
         ? activeTerm && resolveChallengeTermDocuSignTemplateId(activeTerm) ? activeTerm : undefined
         : displayedTerms.find(term => !!resolveChallengeTermDocuSignTemplateId(term))
     const docuSignTemplateId = docuSignTerm
         ? resolveChallengeTermDocuSignTemplateId(docuSignTerm)
         : undefined
-    const docuSignRequestKey = docuSignTerm && docuSignTemplateId
+    const docuSignRequestKey = authenticated && docuSignTerm && docuSignTemplateId
         ? JSON.stringify([
             props.mode,
             memberScope,
@@ -279,14 +287,19 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         ? docuSignView?.url
         : undefined
     const docuSignBusy = docuSignLoading || docuSignCompleting
-    const compactRegistration = registrationMode
+    const compactRegistration = authenticated && props.mode === 'register'
         && !response.error
         && !response.isValidating
         && terms.length === 0
-    const hydratingRegistration = registrationMode
+    const hydratingRegistration = props.mode === 'register'
         && shouldLoad
         && !response.error
         && (response.isValidating || response.data === undefined)
+    const standaloneComplete = authenticated && props.mode === 'agree'
+        && !response.error
+        && !response.isValidating
+        && response.data !== undefined
+        && terms.length === 0
     const fullTitle = activeTerm?.title || terms[0]?.title || props.terms[0]?.title || 'Challenge Terms'
 
     useEffect(() => {
@@ -366,7 +379,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
 
     /**
      * Persists the active electronic agreement before advancing to the next
-     * Submitter term. Registration begins only after the final agreement has
+     * outstanding term. The owner is notified only after the final agreement has
      * succeeded, matching the legacy challenge prerequisite flow. An ambiguous
      * POST failure is reconciled once against authenticated outstanding terms.
      *
@@ -374,7 +387,8 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
      * @throws Does not throw; Terms API failures remain visible on the active term.
      */
     const acceptActiveTerm = async (): Promise<void> => {
-        if (!activeTerm || activeExternalAgreement || activeAgreementRequestRef.current !== undefined) return
+        if (!authenticated || !activeTerm || activeExternalAgreement
+            || activeAgreementRequestRef.current !== undefined) return
         const termId = activeTerm.id
         if (!termId || !termsCacheKey) {
             setAgreementError('We couldn\u2019t record this agreement because it is missing an identifier.')
@@ -393,9 +407,11 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                 await agreeToChallengeTerms([activeTerm])
             } catch (agreementFailure) {
                 if (interaction !== interactionRef.current) return
+                const failure = agreementFailure as { response?: { status?: number }; status?: number } | undefined
+                if ([401, 403].includes(failure?.response?.status ?? failure?.status ?? 0)) throw agreementFailure
                 let refreshedTerms: ChallengeTerm[] | undefined
                 try {
-                    refreshedTerms = await getChallengeSubmitterTermsDetails(props.terms)
+                    refreshedTerms = await loadOutstandingTerms(props.terms)
                 } catch {
                     throw agreementFailure
                 }
@@ -432,8 +448,15 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         }
     }
 
-    /** Registers directly only when no outstanding Submitter terms remain. */
+    /**
+     * Completes registration when no Submitter terms remain, or accepts the
+     * active agreement in registration and standalone modes.
+     *
+     * @returns void after starting agreement or notifying the registration owner.
+     * @throws Does not throw; asynchronous agreement failures remain in the dialog.
+     */
     const accept = (): void => {
+        if (!authenticated) return
         if (compactRegistration) {
             props.onComplete()
             return
@@ -498,7 +521,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                 // without an explicit no-store policy.
                 // eslint-disable-next-line no-await-in-loop
                 refreshedTerms = await awaitWithAbort(
-                    getChallengeSubmitterTermsDetails(props.terms, {
+                    loadOutstandingTerms(props.terms, {
                         fresh: true,
                         signal,
                         timeoutMs: Math.min(DOCUSIGN_STATUS_REQUEST_TIMEOUT_MS, remainingMs),
@@ -525,7 +548,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
      * @throws Does not throw; errors remain visible inside the active modal.
      */
     const completeDocuSignAgreement = async (): Promise<void> => {
-        if (!docuSignTerm || docuSignCompleting) return
+        if (!authenticated || !docuSignTerm || docuSignCompleting) return
         const interaction = interactionRef.current
         const termId = docuSignTerm.id
         const confirmationController = new AbortController()
@@ -539,7 +562,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         setDocuSignCompleting(true)
         setExternalError('')
         try {
-            if (!registrationMode) {
+            if (!agreementMode) {
                 await awaitWithAbort(Promise.resolve(response.mutate()), confirmationController.signal)
                 if (interaction === interactionRef.current) close()
                 return
@@ -580,7 +603,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         } catch (error) {
             if (interaction !== interactionRef.current) return
             if (confirmationController.signal.aborted) {
-                setExternalError(registrationMode
+                setExternalError(agreementMode
                     ? 'We couldn\u2019t confirm your DocuSign agreement within 91 seconds. '
                         + 'Select Check again to retry.'
                     : 'We couldn\u2019t refresh this DocuSign agreement within 91 seconds. '
@@ -645,7 +668,9 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
         return () => window.removeEventListener('message', handleDocuSignMessage)
     }, [docuSignRequestKey, props.open])
 
-    const buttons = registrationMode && activeExternalAgreement ? (
+    const buttons = standaloneComplete ? (
+        <Button label='Done' noCaps onClick={props.onComplete} primary />
+    ) : agreementMode && activeExternalAgreement ? (
         <Button
             className={styles.modalAction}
             customRadius
@@ -656,7 +681,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
             primary
             size='lg'
         />
-    ) : registrationMode ? (
+    ) : agreementMode ? (
         <>
             <Button
                 disabled={props.busy || agreementBusy}
@@ -679,7 +704,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                 className={styles.modalAction}
                 customRadius
                 label={props.busy
-                    ? 'Registering…'
+                    ? props.mode === 'register' ? 'Registering…' : 'Saving…'
                     : agreementBusy ? 'Agreeing…' : compactRegistration ? 'Register' : 'I agree'}
                 loading={props.busy || agreementBusy}
                 noCaps
@@ -721,6 +746,9 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
             title={compactRegistration ? 'Important Reminder' : fullTitle}
         >
             <div className={styles.body}>
+                {!authenticated && (
+                    <a href={authUrlLogin(window.location.href)}>Sign in to accept this agreement</a>
+                )}
                 {compactRegistration ? (
                     <>
                         <p>In accordance with the Terms &amp; Conditions and Code of Conduct you agree:</p>
@@ -734,13 +762,16 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                     </>
                 ) : (
                     <p>
-                        {registrationMode
-                            ? 'You are seeing these Terms and Conditions because you have registered to a challenge '
-                                + 'and you have to respect the terms below in order to be able to submit.'
-                            : 'These terms govern participation in this competition.'}
+                        {props.mode === 'agree'
+                            ? 'Please review this agreement before accepting or signing it.'
+                            : agreementMode
+                                ? 'You are seeing these Terms and Conditions because you have registered '
+                                    + 'to a challenge '
+                                    + 'and you have to respect the terms below in order to be able to submit.'
+                                : 'These terms govern participation in this competition.'}
                     </p>
                 )}
-                {registrationMode && activeTerm && agreementTotal > 1 && (
+                {agreementMode && activeTerm && agreementTotal > 1 && (
                     <p aria-live='polite' className={styles.progress}>
                         {`Agreement ${activePosition + 1} of ${agreementTotal}`}
                     </p>
@@ -748,22 +779,30 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                 {!compactRegistration && response.isValidating && !response.data && (
                     <div className={styles.loading} role='status'>
                         <LoadingSpinner />
-                        <span>Loading challenge terms…</span>
+                        <span>{props.mode === 'agree' ? 'Loading agreement…' : 'Loading challenge terms…'}</span>
                     </div>
                 )}
                 {!compactRegistration && response.error && (
                     <div className={styles.error} role='alert'>
-                        <span>We couldn&apos;t load the full challenge terms.</span>
+                        <span>
+                            {props.mode === 'agree'
+                                ? 'We couldn’t load the full terms.'
+                                : 'We couldn\'t load the full challenge terms.'}
+                        </span>
                         <button onClick={() => response.mutate()} type='button'>Try again</button>
                     </div>
                 )}
                 {!compactRegistration && !response.error && !response.isValidating && terms.length === 0 && (
-                    <p>No additional challenge-specific terms are listed.</p>
+                    <p>
+                        {standaloneComplete
+                            ? 'You have already accepted this agreement.'
+                            : 'No additional challenge-specific terms are listed.'}
+                    </p>
                 )}
                 {!compactRegistration && displayedTerms.length > 0 && (
                     <div
                         className={styles.terms}
-                        key={registrationMode ? activeTerm?.id : 'view'}
+                        key={agreementMode ? activeTerm?.id : 'view'}
                     >
                         {displayedTerms.map((term: ChallengeTerm, index: number) => {
                             const displayedDocuSignTerm = term === docuSignTerm && !!docuSignTemplateId
@@ -772,7 +811,7 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                                     className={styles.term}
                                     key={term.id ?? term.url ?? term.title ?? `term-${index}`}
                                 >
-                                    {!registrationMode && (terms.length > 1 || index > 0) && (
+                                    {!agreementMode && (terms.length > 1 || index > 0) && (
                                         <h3>{term.title || `Challenge term ${index + 1}`}</h3>
                                     )}
                                     {displayedDocuSignTerm ? (
@@ -812,11 +851,13 @@ export const ChallengeTermsModal: FC<ChallengeTermsModalProps> = props => {
                     </div>
                 )}
                 {!compactRegistration
-                    && registrationMode
+                    && agreementMode
                     && activeExternalAgreement
                     && !docuSignTemplateId && (
                     <div className={styles.error} role='alert'>
-                        Complete this external agreement before registering.
+                        {props.mode === 'agree'
+                            ? 'Complete this agreement using the external link above.'
+                            : 'Complete this external agreement before registering.'}
                     </div>
                 )}
                 {!compactRegistration && agreementError && (

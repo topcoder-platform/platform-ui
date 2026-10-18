@@ -221,7 +221,7 @@ export const URLS = {
     ACCOUNT_SETTINGS: `https://account-settings.${TC_DOMAIN}/#account`,
     CHALLENGES_PAGE: `${TOPCODER_URL}/challenges`,
     TERMS_OF_USE: 'https://www.topcoder.com/community/how-it-works/terms/',
-    TOPGEAR_TERMS: 'https://topgear.topcoder.com/challenges/terms/detail/f1d8cca9-ac24-473c-998d-02f499a829cb',
+    TOPGEAR_TERMS: 'https://topgear.topcoder.com/opportunities/terms/detail/f1d8cca9-ac24-473c-998d-02f499a829cb',
     UNIVERSAL_NAV: `https://uni-nav.${TC_DOMAIN}/v1/tc-universal-nav.js`,
     USER_PROFILE: `https://profiles.${TC_DOMAIN}`,
     WORK_APP: `https://work.${TC_DOMAIN}`,
@@ -252,9 +252,9 @@ export const MEMBER_VERIFY_LOOKER = getReactEnv<number>(
 export const ENABLE_TCA_CERT_MONETIZATION = false
 
 export const TERMS_URL
-    = 'https://www.topcoder-dev.com/challenges/terms/detail/317cd8f9-d66c-4f2a-8774-63c612d99cd4'
+    = 'https://www.topcoder-dev.com/opportunities/terms/detail/317cd8f9-d66c-4f2a-8774-63c612d99cd4'
 export const NDA_TERMS_URL
-    = 'https://www.topcoder-dev.com/challenges/terms/detail/e5811a7b-43d1-407a-a064-69e5015b4900'
+    = 'https://www.topcoder-dev.com/opportunities/terms/detail/e5811a7b-43d1-407a-a064-69e5015b4900'
 export const DEFAULT_NDA_UUID = getReactEnv<string>(
     'DEFAULT_NDA_UUID',
     'e5811a7b-43d1-407a-a064-69e5015b4900',

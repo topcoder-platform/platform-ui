@@ -32,6 +32,7 @@ jest.mock('~/config', () => ({
         NDA_DOCUSIGN_TEMPLATE_ID: 'configured-nda-template',
     },
 }), { virtual: true })
+jest.mock('~/libs/core', () => ({ authUrlLogin: jest.fn(), useProfileContext: jest.fn() }), { virtual: true })
 jest.mock('~/libs/cms', () => ({ getSafeCmsLink: jest.fn(value => value) }), { virtual: true })
 jest.mock('~/libs/ui', () => ({ IconOutline: {} }), { virtual: true })
 jest.mock('dompurify', () => ({ sanitize: jest.fn(value => value) }))

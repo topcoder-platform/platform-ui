@@ -13,6 +13,27 @@ public website host from `EnvironmentConfig.TOPCODER_URL`
 (`https://www.topcoder-dev.com` in development and `https://www.topcoder.com`
 in production), preserve `/opportunities/challenge/:challengeId`, and open in a new tab.
 
+## Direct terms links
+
+`/opportunities/terms/detail/:termId` (`/terms/detail/:termId` on the dedicated
+Opportunities host) replaces community-app's direct terms page. Electronic
+terms remain publicly readable. Signing requires an initialized, logged-in
+member profile, and the login link returns to the full original URL.
+
+`TermsDetailPage` uses the shared `ChallengeTermsModal` in standalone `agree`
+mode. `getOutstandingTermsDetails` loads the exact agreements without challenge
+resource-role filtering and bypasses HTTP caches. Electronic acceptance needs
+an explicit action; HTTP 401/403 never produces success. DocuSign success is
+confirmed against the Terms API before the page shows acceptance. Logout or a
+member/term change removes signing controls and invalidates pending callbacks.
+The shared modal also blocks anonymous DocuSign sessions in passive view mode.
+
+New configured terms links and challenge-editor links use Opportunities.
+Deploy this page before the companion community-app redirect of
+`/challenges/terms/detail/:termId`, which preserves the term ID, query, and fragment.
+Platform UI also recognizes that legacy path after host migration.
+DocuSign returns to the existing Opportunities `terms/docusign-return` route.
+
 ## Member home
 
 `/opportunities/home` (`/home` on the `opportunities` subdomain, where the app
@@ -536,13 +557,14 @@ resources. The Registrants tab requests bounded Resource API pages and uses its
 pagination headers instead of truncating a fixed bucket. “My competitions”
 resolves that same role and sends `memberId` plus
 `resourceRoleId` to Challenge API so role narrowing happens before the other
-filters, global sorting, counts, and pagination. The terms modal similarly
+filters, global sorting, counts, and pagination. In registration mode, the terms modal
 filters Challenge API references to the
 Submitter role and loads complete v5 Terms API records before an electronic
 agreement. Outstanding terms are presented one at a time and each electronic
 agreement is persisted before the next appears; the Submitter resource is not
 created until the final prerequisite succeeds. Ambiguous agreement failures are
-reconciled once against authenticated outstanding terms before a retry is shown.
+reconciled once against authenticated outstanding terms before a retry is shown;
+authorization failures (401/403) always remain failures.
 Member identity scopes the
 agreement cache, and numeric legacy references are followed through their
 canonical authenticated Terms API detail before eligibility is decided.
@@ -558,7 +580,8 @@ The compact Important Reminder uses the Figma teal action buttons and rounded
 checkmark asset without a footer separator.
 DocuSign-template terms, plus NDA-titled terms that use the environment's
 legacy DocuSign template fallback, replace placeholder Terms API text with the
-embedded recipient view in both registration and passive review. DocuSign
+embedded recipient view for signed-in members in registration, standalone agreement,
+and passive review. Anonymous visitors receive a sign-in link. DocuSign
 returns the frame to this app's own `terms/docusign-return` route
 (`/opportunities/terms/docusign-return`, or `/terms/docusign-return` on the
 opportunities subdomain), which replaced community-app's
@@ -746,7 +769,7 @@ Successful submissions expose the created
 submission ID and refresh challenge and member submission counts without
 leaving the confirmation state. ZIP mode's declaration opens the public Topcoder
 Terms of Use; URL mode preserves the exact TopGear declaration and opens
-community-app's TopGear terms and conditions URL in a new tab. While either
+the Opportunities TopGear terms and conditions URL in a new tab. While either
 request is active, the detail tabs and every form action that would unmount the
 submission are disabled. The explicit cancel control remains available, aborts
 its request, clears the selected file or URL, and then unlocks normal navigation.

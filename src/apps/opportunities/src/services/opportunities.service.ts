@@ -2353,6 +2353,24 @@ export function getChallengeTermsDetails(
 }
 
 /**
+ * Loads unaccepted agreements for standalone Terms/NDA pages without requiring
+ * a challenge or a resource role. Every read bypasses HTTP caches so signature
+ * confirmation and ambiguous agreement failures use current member state.
+ *
+ * @param terms exact term references selected by the member.
+ * @param options cancellation and timeout limits for the detail requests.
+ * @returns complete records for agreements the current member has not accepted.
+ * @throws Propagates Terms API failures; a failed read never implies acceptance.
+ */
+export async function getOutstandingTermsDetails(
+    terms: ChallengeTerm[],
+    options: ChallengeTermsDetailsOptions = {},
+): Promise<ChallengeTerm[]> {
+    const details = await getChallengeTermsDetails(terms, { ...options, fresh: true })
+    return details.filter(term => !term.agreed)
+}
+
+/**
  * Loads outstanding details only for challenge terms assigned to the canonical
  * Submitter role. Challenge responses can also contain reviewer, copilot, and
  * manager terms; those and already accepted terms must not be displayed or
