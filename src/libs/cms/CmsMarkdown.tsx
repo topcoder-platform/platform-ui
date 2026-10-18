@@ -254,6 +254,9 @@ const markdownComponents = {
 
 /**
  * Renders trusted Payload-authored markdown with safe HTML and approved asset origins.
+ * HTML text entities are decoded by the Markdown/HTML parsers and escaped once
+ * by React. Keep the source unchanged so literal entity names and Markdown code
+ * examples retain their authored meaning.
  *
  * @param props markdown source and optional wrapper class.
  * @returns sanitized, GitHub-flavored markdown content.
