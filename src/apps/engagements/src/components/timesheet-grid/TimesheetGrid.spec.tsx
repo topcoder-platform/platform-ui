@@ -55,12 +55,27 @@ describe('TimesheetGrid', () => {
             .toBeInTheDocument()
     })
 
-    it('shows a draft status as a dash', () => {
+    it('shows an unsaved row\'s status as a dash', () => {
         render(
             <TimesheetGrid onSelectionChange={noop} rows={[row()]} selectedDates={[]} />,
         )
 
         expect(screen.getByText('-'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Draft'))
+            .not
+            .toBeInTheDocument()
+    })
+
+    it('shows a saved draft as Draft', () => {
+        render(
+            <TimesheetGrid onSelectionChange={noop} rows={[row({ id: 'entry-1' })]} selectedDates={[]} />,
+        )
+
+        expect(screen.getByText('Draft'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('-'))
+            .not
             .toBeInTheDocument()
     })
 
