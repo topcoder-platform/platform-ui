@@ -70,6 +70,7 @@ function workflowRunStatus(run: ChallengeSubmissionAiWorkflowRun): string {
  *
  * Successful runs use the configured minimum passing score, matching the legacy
  * submission-management experience. Other lifecycle values remain explicit.
+ * Timed-out runs retain their TIMEOUT label instead of appearing as FAILED.
  *
  * @param run workflow run returned by Review API.
  * @returns uppercase result label and visual kind.
@@ -89,7 +90,7 @@ export function submissionAiWorkflowRunResult(
         return { kind: passed ? 'passed' : 'failed', label: passed ? 'PASSED' : 'FAILED' }
     }
 
-    if (status === 'FAILED' || status === 'FAILURE' || status === 'TIMEOUT') {
+    if (status === 'FAILED' || status === 'FAILURE') {
         return { kind: 'failed', label: 'FAILED' }
     }
 
