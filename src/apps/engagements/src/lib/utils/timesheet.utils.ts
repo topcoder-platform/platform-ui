@@ -45,6 +45,7 @@ export interface TimesheetRow {
     paymentReference?: string
     outsideAssignmentWindow: boolean
     remarks: string
+    reopenComment?: string
     reopenedAt?: string
     status: TimesheetEntryStatus
     /** `YYYY-MM-DD`, which is what every API payload uses. */
@@ -201,6 +202,7 @@ const toRow = (workDate: string, entry?: TimesheetEntry): TimesheetRow => ({
     paidAt: entry?.paidAt ?? undefined,
     paymentReference: entry?.paymentReference ?? undefined,
     remarks: entry?.remarks ?? '',
+    reopenComment: entry?.reopenComment ?? undefined,
     reopenedAt: entry?.reopenedAt ?? undefined,
     status: entry?.status ?? TimesheetEntryStatus.DRAFT,
     workDate,

@@ -43,6 +43,7 @@ import {
     deleteEngagement,
 } from '../../../lib/services'
 import {
+    ApprovedTimesheetsTab,
     ConfirmationModal,
     EngagementAssignmentRow,
     EngagementAssignmentsTable,
@@ -73,10 +74,11 @@ import styles from './EngagementsListPage.module.scss'
 
 type SortOrder = 'asc' | 'desc'
 
-type EngagementsPageTab = 'assignments' | 'engagements'
+type EngagementsPageTab = 'approved-timesheets' | 'assignments' | 'engagements'
 
 const TAB_QUERY_PARAM = 'tab'
 const ASSIGNMENTS_TAB: EngagementsPageTab = 'assignments'
+const APPROVED_TIMESHEETS_TAB: EngagementsPageTab = 'approved-timesheets'
 
 type EngagementSortField =
     | 'createdAt'
@@ -431,11 +433,14 @@ export const EngagementsListPage: FC = () => {
     const isAllEngagementsPage = !projectId
     const [searchParams, setSearchParams] = useSearchParams()
     // The tab lives in the URL so the assignment pages can link straight back to it.
+    const requestedTab = searchParams.get(TAB_QUERY_PARAM)
     const activeTab: EngagementsPageTab = isAllEngagementsPage
-        && searchParams.get(TAB_QUERY_PARAM) === ASSIGNMENTS_TAB
-        ? 'assignments'
+        && (requestedTab === ASSIGNMENTS_TAB || requestedTab === APPROVED_TIMESHEETS_TAB)
+        ? requestedTab
         : 'engagements'
-    const isAssignmentsTab = activeTab === 'assignments'
+    const isAssignmentsTab = activeTab === ASSIGNMENTS_TAB
+    // The approved timesheets tab loads and scopes its own rows, so the engagement fetches are skipped.
+    const isApprovedTimesheetsTab = activeTab === APPROVED_TIMESHEETS_TAB
 
     const workAppContext = useContext(WorkAppContext)
     const contextValue = workAppContext as WorkAppContextModel
@@ -448,7 +453,7 @@ export const EngagementsListPage: FC = () => {
     const canCreateProjectEngagement = canCreateEngagement(contextValue.userRoles)
     const canEditEngagement = canCreateProjectEngagement
     const memberProjectsResult = useFetchProjects({
-        enabled: isAllEngagementsPage && isTalentManagerOnly,
+        enabled: isAllEngagementsPage && isTalentManagerOnly && !isApprovedTimesheetsTab,
         memberOnly: true,
     })
 
@@ -516,6 +521,7 @@ export const EngagementsListPage: FC = () => {
         {
             enabled: canViewEngagements
                 && (isAllEngagementsPage || !!projectId)
+                && !isApprovedTimesheetsTab
                 && !isScopedProjectsLoading,
         },
     )
@@ -558,7 +564,7 @@ export const EngagementsListPage: FC = () => {
     ), [engagementsResult.engagements, projectId, projectNameLookup])
 
     const handleTabChange = useCallback((tab: EngagementsPageTab): void => {
-        setSearchParams(tab === ASSIGNMENTS_TAB ? { [TAB_QUERY_PARAM]: ASSIGNMENTS_TAB } : {})
+        setSearchParams(tab === 'engagements' ? {} : { [TAB_QUERY_PARAM]: tab })
     }, [setSearchParams])
 
     const filteredEngagements = useMemo(() => {
@@ -751,7 +757,11 @@ export const EngagementsListPage: FC = () => {
     }, [filteredEngagements.length, isAllEngagementsPage, page, perPage])
 
     const pageTitle = isAllEngagementsPage
-        ? (isAssignmentsTab ? 'All Assignments' : 'All Engagements')
+        ? (
+            isApprovedTimesheetsTab
+                ? 'Approved Timesheets'
+                : (isAssignmentsTab ? 'All Assignments' : 'All Engagements')
+        )
         : (
             projectResult.project?.name
                 ? projectResult.project.name
@@ -824,8 +834,8 @@ export const EngagementsListPage: FC = () => {
         : (
             <div className={styles.tabs} role='tablist'>
                 <button
-                    aria-selected={!isAssignmentsTab}
-                    className={classNames(styles.tab, !isAssignmentsTab ? styles.activeTab : undefined)}
+                    aria-selected={activeTab === 'engagements'}
+                    className={classNames(styles.tab, activeTab === 'engagements' ? styles.activeTab : undefined)}
                     onClick={() => handleTabChange('engagements')}
                     role='tab'
                     type='button'
@@ -840,6 +850,15 @@ export const EngagementsListPage: FC = () => {
                     type='button'
                 >
                     Assignments
+                </button>
+                <button
+                    aria-selected={isApprovedTimesheetsTab}
+                    className={classNames(styles.tab, isApprovedTimesheetsTab ? styles.activeTab : undefined)}
+                    onClick={() => handleTabChange(APPROVED_TIMESHEETS_TAB)}
+                    role='tab'
+                    type='button'
+                >
+                    Approved Timesheets
                 </button>
             </div>
         )
@@ -871,6 +890,18 @@ export const EngagementsListPage: FC = () => {
                 {billingAccountExpiredNotice}
                 {pageTabs}
                 <ErrorMessage message={accessDeniedMessage} />
+            </PageWrapper>
+        )
+    }
+
+    if (isApprovedTimesheetsTab) {
+        return (
+            <PageWrapper
+                pageTitle={pageTitle}
+                breadCrumb={[]}
+            >
+                {pageTabs}
+                <ApprovedTimesheetsTab />
             </PageWrapper>
         )
     }

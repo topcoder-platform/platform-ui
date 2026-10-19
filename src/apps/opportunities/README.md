@@ -547,9 +547,15 @@ phone tab order.
 
 Challenge details load the authenticated Review API
 `GET /v6/ai-review/configs/:challengeId` contract to render the Review Style
-rail. `AI_ONLY` and `AI_GATING` map to their Figma labels and expose the
-configuration's Instant Review state; a missing configuration or an anonymous
-viewer uses the manual Community Review Board presentation.
+rail only after the signed-in member's Submitter registration is confirmed.
+Anonymous and unregistered viewers do not see Review Style or request its
+configuration; Challenge Terms remain available. The request cache is scoped to
+the member and registration, so completing registration loads the configuration
+without a page refresh and unregistering hides the section. `AI_ONLY` and
+`AI_GATING` map to their Figma labels and expose the configuration's Instant
+Review state. A missing configuration uses the manual Community Review Board
+presentation; request failures retain the unavailable message for registered
+members.
 
 Challenge registration and registrant displays resolve the canonical
 Submitter resource role and exclude copilot, reviewer, observer, and manager

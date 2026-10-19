@@ -149,12 +149,14 @@ export function getPaymentChallengeFee(
     return Number((totalAmount - grossAmount).toFixed(2))
 }
 
+/**
+ * Resolves a payment's display status, e.g. `ON_HOLD` becomes `On Hold`.
+ *
+ * @param payment payment record returned by the finance API.
+ * @returns the title-cased installment status, or `Unknown` when finance reported none.
+ */
 export function getPaymentStatus(payment: AssignmentPayment): string {
-    if (!payment.status) {
-        return 'Unknown'
-    }
-
-    return String(payment.status)
+    return normalizeAssignmentStatus(getPaymentProcessingStatus(payment)) || 'Unknown'
 }
 
 /**

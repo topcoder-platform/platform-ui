@@ -300,7 +300,7 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                             textWrap
                             className={styles.actionButton}
                         />
-                        {/* {props.onOpenTimesheet && (
+                        {props.onOpenTimesheet && (
                             <Button
                                 label='Timesheet'
                                 onClick={props.onOpenTimesheet}
@@ -308,7 +308,7 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                                 textWrap
                                 className={styles.actionButton}
                             />
-                        )} */}
+                        )}
                     </>
                 )}
                 {showExperienceAction && (

@@ -84,9 +84,8 @@ const assignment: EngagementAssignment = {
     engagementId: 'engagement-1',
     memberId: 'member-1',
     memberHandle: 'member',
-    agreementRate: '761.25',
     ratePerHour: '20.3',
-    standardHoursPerWeek: 37.5,
+    standardHoursPerDay: 7.5,
     status: 'assigned',
     createdAt: '2026-03-25T00:00:00.000Z',
     updatedAt: '2026-03-25T00:00:00.000Z',
@@ -98,6 +97,7 @@ describe('AssignmentCard', () => {
         async status => {
             const user = userEvent.setup()
             const onDocumentExperience = jest.fn()
+            const onOpenTimesheet = jest.fn()
 
             render(
                 <AssignmentCard
@@ -105,6 +105,7 @@ describe('AssignmentCard', () => {
                     assignment={{ ...assignment, status }}
                     onViewPayments={jest.fn()}
                     onDocumentExperience={onDocumentExperience}
+                    onOpenTimesheet={onOpenTimesheet}
                     onContactTalentManager={jest.fn()}
                 />,
             )
@@ -113,6 +114,19 @@ describe('AssignmentCard', () => {
 
             expect(onDocumentExperience)
                 .toHaveBeenCalledTimes(1)
+            expect(onOpenTimesheet)
+                .not.toHaveBeenCalled()
+
+            if (status === 'assigned') {
+                await user.click(screen.getByRole('button', { name: 'Timesheet' }))
+                expect(onOpenTimesheet)
+                    .toHaveBeenCalledTimes(1)
+                expect(onDocumentExperience)
+                    .toHaveBeenCalledTimes(1)
+            } else {
+                expect(screen.queryByRole('button', { name: 'Timesheet' }))
+                    .not.toBeInTheDocument()
+            }
         },
     )
 
@@ -123,14 +137,16 @@ describe('AssignmentCard', () => {
                 assignment={{ ...assignment, status: 'selected' }}
                 onViewPayments={jest.fn()}
                 onDocumentExperience={jest.fn()}
+                onOpenTimesheet={jest.fn()}
                 onContactTalentManager={jest.fn()}
             />,
         )
 
         expect(screen.queryByRole('button', { name: 'Document Experience' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Timesheet' })).not.toBeInTheDocument()
     })
 
-    it('formats assignment currency values with two decimal places', () => {
+    it('formats the hourly rate with two decimal places and displays daily standard hours', () => {
         render(
             <AssignmentCard
                 engagement={engagement}
@@ -143,9 +159,7 @@ describe('AssignmentCard', () => {
 
         expect(screen.getByText('Rate / hr: $20.30'))
             .toBeInTheDocument()
-        expect(screen.getByText('Rate / week: $761.25'))
-            .toBeInTheDocument()
-        expect(screen.getByText('Std hrs / week: 37.5 hrs'))
+        expect(screen.getByText('Std hrs / day: 7.5 hrs'))
             .toBeInTheDocument()
     })
 })

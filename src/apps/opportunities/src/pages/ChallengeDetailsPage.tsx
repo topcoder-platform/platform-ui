@@ -344,7 +344,7 @@ function formatTimestamp(value?: string): string {
 /**
  * Renders the replacement challenge details route with lazy tab data, Markdown
  * table of contents, Review App rail, registration terms, Task-aware member
- * workflows, positive tab counts, and Support reporting.
+ * workflows, registration-gated review style, positive tab counts, and Support reporting.
  *
  * @returns challenge detail page for `/opportunities/challenge/:challengeId`.
  * @throws Does not throw; request failures render in-page recovery states.
@@ -380,13 +380,6 @@ export const ChallengeDetailsPage: FC = () => {
     const developmentChallenge = challenge
         ? challengeCatalogKey(challenge.track) === 'development'
         : false
-    const aiReviewConfigResponse: SWRResponse<ChallengeAiReviewConfig | undefined, Error> = useSWR(
-        challengeId && profile && challenge && developmentChallenge && !isMarathonMatchChallenge(challenge)
-            ? ['opportunities:challenge-review-style', challengeId]
-            : undefined,
-        () => getChallengeAiReviewConfig(challengeId),
-        { revalidateOnFocus: false, shouldRetryOnError: false },
-    )
     const memberId = profile?.userId === undefined ? undefined : String(profile.userId)
     const registrationResponse: SWRResponse<ChallengeResource | undefined, Error> = useSWR(
         challengeId && challenge && memberId && !taskChallenge
@@ -409,6 +402,14 @@ export const ChallengeDetailsPage: FC = () => {
         .toLowerCase()
         .includes('copilot') ?? false
     const isRegistered = !taskChallenge && !!registration
+    const showReviewStyle = profileInitialized && !!memberId && isRegistered
+    const aiReviewConfigResponse: SWRResponse<ChallengeAiReviewConfig | undefined, Error> = useSWR(
+        showReviewStyle && challenge && developmentChallenge && !isMarathonMatchChallenge(challenge)
+            ? ['opportunities:challenge-review-style', challengeId, memberId, registration?.id]
+            : undefined,
+        () => getChallengeAiReviewConfig(challengeId),
+        { revalidateOnFocus: false, shouldRetryOnError: false },
+    )
     const hasMemberTabAccess = !taskChallenge && (isRegistered || isAdministrator)
     const hasForumAccess = !taskChallenge && (hasMemberTabAccess || !!memberResourceResponse.data)
     const mySubmissionCountResponse: SWRResponse<number, Error> = useSWR(
@@ -890,7 +891,7 @@ export const ChallengeDetailsPage: FC = () => {
                             && aiReviewConfigResponse.data === undefined
                             && !aiReviewConfigResponse.error}
                         reviewStyleUnavailable={!!aiReviewConfigResponse.error}
-                        showReviewStyle={profileInitialized && !!profile}
+                        showReviewStyle={showReviewStyle}
                     />
                 )}
             </div>

@@ -53,11 +53,12 @@ export interface TimesheetGridProps {
 
 /**
  * A submitted entry is labelled "Pending Approval", the wording the filters and landing list use. The
- * API keeps the SUBMITTED status; only the label changes. Drafts carry no status badge.
+ * API keeps the SUBMITTED status; only the label changes. A saved draft is labelled "Draft"; a row that
+ * has never been saved carries no status badge, only a dash.
  */
 const STATUS_LABELS: Record<TimesheetEntryStatus, string> = {
     [TimesheetEntryStatus.APPROVED]: 'Approved',
-    [TimesheetEntryStatus.DRAFT]: '-',
+    [TimesheetEntryStatus.DRAFT]: 'Draft',
     [TimesheetEntryStatus.SUBMITTED]: 'Pending Approval',
 }
 
@@ -273,9 +274,15 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                                     {isRowReopened(row) ? (
                                         <span className={styles.reopenedBadge}>Reopened</span>
                                     ) : (
-                                        row.status === TimesheetEntryStatus.DRAFT
-                                            ? <span className={styles.status}>{STATUS_LABELS[row.status]}</span>
+                                        row.status === TimesheetEntryStatus.DRAFT && !row.id
+                                            ? <span className={styles.status}>-</span>
                                             : <StatusBadge size='sm' status={STATUS_LABELS[row.status]} />
+                                    )}
+                                    {isRowReopened(row) && row.reopenComment && (
+                                        <ExpandableText
+                                            className={styles.approvalComment}
+                                            text={row.reopenComment}
+                                        />
                                     )}
                                     {row.status === TimesheetEntryStatus.APPROVED && (
                                         <span className={styles.approvalDetail}>
