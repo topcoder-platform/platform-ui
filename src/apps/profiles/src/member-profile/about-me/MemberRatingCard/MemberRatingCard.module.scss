@@ -169,8 +169,13 @@
     border-radius: 4px !important;
     font-size: 14px !important;
     line-height: 21px !important;
-    opacity: 1 !important;
+    // Keep unpositioned and closing tooltips hidden, including the first hover.
+    opacity: 0 !important;
     padding: $sp-2 $sp-3 !important;
+
+    &:global(.react-tooltip__show) {
+        opacity: 1 !important;
+    }
 
     :global(.react-tooltip-arrow) {
         background-color: $black-100 !important;
