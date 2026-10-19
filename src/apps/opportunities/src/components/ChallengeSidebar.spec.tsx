@@ -225,18 +225,49 @@ describe('ChallengeSidebar Review Style', () => {
             .toContain('learningLink')
         expect(screen.getByText('The place to see your scores and feedback, and improve before the final review.'))
             .toBeInTheDocument()
-        expect(screen.getByRole('link', { name: 'Explore the program' }).className)
-            .toContain('promoLink')
-        expect(screen.getByRole('link', { name: 'Explore the program' }))
-            .toHaveAttribute('href', aiExponentialLeagueUrl)
         expect(screen.getByRole('link', { name: 'How to Compete in a Bug Hunt Challenge' }))
             .toHaveAttribute('href', qaBugHuntLearningUrl)
         expect(screen.getByRole('link', { name: 'QA Competition Types' }))
             .toHaveAttribute('href', qaCompetitionTypesUrl)
     })
 
-    it('adds the authored Marathon Match guide and arrow indicators', () => {
-        renderSidebar(undefined, marathonChallenge)
+    it.each([
+        { tags: ['AI Exponential League'] },
+        { tags: ['Rapid Development Match', 'AI Exponential League', 'AI', 'JSON'] },
+    ])('shows the AI Exponential League promo for league tags: $tags', ({ tags }: { tags?: string[] }) => {
+        renderSidebar(undefined, { ...developmentChallenge, tags })
+
+        expect(screen.getByRole('heading', { name: 'Join the AI Exponential league' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Explore the program' }).className)
+            .toContain('promoLink')
+        expect(screen.getByRole('link', { name: 'Explore the program' }))
+            .toHaveAttribute('href', aiExponentialLeagueUrl)
+    })
+
+    it.each([
+        { tags: undefined },
+        { tags: [] },
+        { tags: ['AI'] },
+        { tags: ['Data Science', 'AI/ML Inference', '3D Computer Graphics'] },
+        { tags: ['AI Exponential League Alumni'] },
+    ])('omits the AI Exponential League promo without the league tag: $tags', ({ tags }: { tags?: string[] }) => {
+        renderSidebar(undefined, { ...developmentChallenge, tags })
+
+        expect(screen.queryByRole('heading', { name: 'Join the AI Exponential league' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'Explore the program' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Review App' })
+            .closest('section'))
+            .toBe(document.querySelector('aside')?.firstElementChild)
+    })
+
+    it.each([
+        { tags: undefined },
+        { tags: ['AI Exponential League'] },
+    ])('keeps the Marathon Match promo and guide with tags: $tags', ({ tags }: { tags?: string[] }) => {
+        renderSidebar(undefined, { ...marathonChallenge, tags })
 
         expect(screen.getByRole('heading', { name: 'Marathon Match Tournament' }))
             .toBeInTheDocument()

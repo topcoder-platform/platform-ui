@@ -913,10 +913,11 @@ competition guide even when the challenge track is Development; the latter two
 submission sections remain Design-only. Learning arrows flow immediately after
 wrapped labels. The Design link reads “How to
 approach checkpoint feedback” and keeps “feedback” and its arrow together when
-wrapping. The AI Exponential promo keeps a distinct gap before its action and
+wrapping. The AI Exponential promo appears only when the challenge has the
+`AI Exponential League` tag. It keeps a distinct gap before its action and
 routes through the configured Topcoder environment to the AI Exponential League
 hub.
-Marathon Match challenges replace the general AI Exponential promo with the
+Marathon Match challenges retain their dedicated promo regardless of league tags, with the
 Marathon Match Tournament heading and copy. Its Explore the program link opens
 the environment's Marathon Match
 Tournament page in a new tab, while the Educational Materials link retains the
