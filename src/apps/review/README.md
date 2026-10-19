@@ -25,6 +25,15 @@ sudo yarn start
   visible keyboard focus indicator; Enter or Space opens the existing score editor.
 - Score-edit permissions, phase restrictions, and save behavior are unchanged.
 
+### AI workflow rerun scores:
+
+- Each workflow row uses the latest run's score and status, matching the detailed
+  review even when the saved decision breakdown still contains an earlier result.
+  The decision score and status are used only when no run is available. A rerun
+  without a score does not restore the previous run's score.
+- Regression tests cover desktop and mobile rendering, including a score changing
+  from 72 (Failed) to 80 (Passed) with a minimum passing score of 75.
+
 ### Marathon Match artifacts (PM-6242):
 
 - Submissions and submission history expose an artifact action for the selected
