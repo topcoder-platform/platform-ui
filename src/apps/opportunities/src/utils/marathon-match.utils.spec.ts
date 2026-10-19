@@ -6,6 +6,7 @@ import {
     isMarathonMatchChallenge,
     marathonDashboardIsEnabled,
     marathonLeaderboardIsPublic,
+    marathonRatingColor,
     marathonSubmissionRanks,
     marathonSubmissionScores,
     marathonSubmissionTestProgress,
@@ -13,6 +14,27 @@ import {
 } from './marathon-match.utils'
 
 describe('Marathon Match challenge detail utilities', () => {
+    it.each([
+        [undefined, '#555555'],
+        [Number.NaN, '#555555'],
+        [Infinity, '#555555'],
+        [-Infinity, '#555555'],
+        [-1, '#555555'],
+        [0, '#555555'],
+        [899, '#555555'],
+        [900, '#2D7E2D'],
+        [1199, '#2D7E2D'],
+        [1200, '#616BD5'],
+        [1499, '#616BD5'],
+        [1500, '#F2C900'],
+        [2199, '#F2C900'],
+        [2200, '#EF3A3A'],
+        [4000, '#EF3A3A'],
+    ])('uses the member-rating color for dashboard rating %s', (rating, color) => {
+        expect(marathonRatingColor(rating as number | undefined))
+            .toBe(color)
+    })
+
     it('ranks scores globally with provisional time tie-breaks and shared final ranks', () => {
         const submissions = [
             { finalScore: 90, id: 'later', provisionalScore: 100, submittedDate: '2026-10-14T09:00:00Z' },

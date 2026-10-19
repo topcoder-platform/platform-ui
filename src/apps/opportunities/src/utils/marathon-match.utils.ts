@@ -1,3 +1,4 @@
+import { getRatingColor } from '../../../../libs/core/lib/profile/profile-functions/rating.functions'
 import {
     ChallengeOpportunity,
     ChallengeReviewSummation,
@@ -686,19 +687,15 @@ export function formatMarathonFinalScore(score: number | undefined, fallback: st
 }
 
 /**
- * Maps a member's maximum rating to the canonical chart color.
+ * Maps a member's maximum rating to the shared member-rating palette for
+ * Marathon Match dashboard points, retaining the gray band for unknown ratings.
  *
  * @param rating optional maximum rating.
- * @returns design-system rating color.
+ * @returns member-rating color, or the gray rating color for missing/non-finite ratings.
  * @throws Does not throw.
  */
 export function marathonRatingColor(rating?: number): string {
-    if (rating === undefined || !Number.isFinite(rating)) return '#6f6f6f'
-    if (rating >= 2200) return '#ef476f'
-    if (rating >= 1500) return '#f1c21b'
-    if (rating >= 1200) return '#2d8acd'
-    if (rating >= 900) return '#137d60'
-    return '#6f6f6f'
+    return getRatingColor(rating !== undefined && Number.isFinite(rating) ? rating : 0)
 }
 
 /**
