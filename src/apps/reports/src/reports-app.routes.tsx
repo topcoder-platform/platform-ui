@@ -18,8 +18,11 @@ import {
     formsPageRouteId,
     reportsPageRouteId,
     rootRoute,
+    salesDashboardsPageRouteId,
     talentPageRouteId,
 } from './config/routes.config'
+
+const SalesDashboardsPage: LazyLoadedComponent = lazyLoad(() => import('../../sales/src/SalesDashboardsPage'))
 
 const ReportsApp: LazyLoadedComponent = lazyLoad(() => import('./ReportsApp'))
 const ReportsPage: LazyLoadedComponent = lazyLoad(
@@ -55,6 +58,11 @@ export const reportsRoutes: ReadonlyArray<PlatformRoute> = [
     {
         authRequired: true,
         children: [
+            {
+                authRequired: true,
+                element: <SalesDashboardsPage />,
+                route: salesDashboardsPageRouteId,
+            },
             {
                 authRequired: true,
                 element: <FormsPage />,
