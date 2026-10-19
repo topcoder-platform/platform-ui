@@ -38,6 +38,8 @@ export interface TimesheetEntry {
     remarks: string | null
     /** Set when an administrator reopened a previously approved entry; the entry is back in draft. */
     reopenedAt: string | null
+    /** The note the administrator left when last reopening the entry. */
+    reopenComment: string | null
     status: TimesheetEntryStatus
     submittedAt: string | null
     /** `YYYY-MM-DD`. `DD-MM-YYYY` is display only. */

@@ -235,6 +235,44 @@ describe('TimesheetGrid', () => {
             .toHaveLength(1)
     })
 
+    it('shows the administrator\'s note on a reopened row', () => {
+        render(
+            <TimesheetGrid
+                onSelectionChange={noop}
+                rows={[
+                    row({
+                        reopenComment: 'Hours were billed to the wrong engagement',
+                        reopenedAt: '2026-09-14T00:00:00.000Z',
+                    }),
+                ]}
+                selectedDates={[]}
+            />,
+        )
+
+        expect(screen.getByText('Hours were billed to the wrong engagement'))
+            .toBeInTheDocument()
+    })
+
+    it('drops the reopen note once the row is submitted again', () => {
+        render(
+            <TimesheetGrid
+                onSelectionChange={noop}
+                rows={[
+                    row({
+                        reopenComment: 'Hours were billed to the wrong engagement',
+                        reopenedAt: '2026-09-14T00:00:00.000Z',
+                        status: TimesheetEntryStatus.SUBMITTED,
+                    }),
+                ]}
+                selectedDates={[]}
+            />,
+        )
+
+        expect(screen.queryByText('Hours were billed to the wrong engagement'))
+            .not
+            .toBeInTheDocument()
+    })
+
     it('keeps a submitted row editable, because editing it returns it to draft', () => {
         render(
             <TimesheetGrid

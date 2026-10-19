@@ -185,6 +185,7 @@ const entry = (overrides: Partial<TimesheetEntry> = {}): TimesheetEntry => ({
     isPaid: false,
     outsideAssignmentWindow: false,
     remarks: 'Sprint planning',
+    reopenComment: null,
     reopenedAt: null,
     status: TimesheetEntryStatus.DRAFT,
     submittedAt: null,

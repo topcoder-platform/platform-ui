@@ -278,6 +278,12 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                                             ? <span className={styles.status}>-</span>
                                             : <StatusBadge size='sm' status={STATUS_LABELS[row.status]} />
                                     )}
+                                    {isRowReopened(row) && row.reopenComment && (
+                                        <ExpandableText
+                                            className={styles.approvalComment}
+                                            text={row.reopenComment}
+                                        />
+                                    )}
                                     {row.status === TimesheetEntryStatus.APPROVED && (
                                         <span className={styles.approvalDetail}>
                                             {row.approvedByHandle
