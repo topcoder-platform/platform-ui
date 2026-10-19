@@ -106,6 +106,9 @@ describe('SubmissionAiReviewDetails reruns', () => {
         ['DISPATCHED', 'PENDING', 10000],
         ['IN_PROGRESS', 'PENDING', 10000],
         ['FAILURE', 'FAILED', 0],
+        ['FAILED', 'FAILED', 0],
+        ['TIMEOUT', 'TIMEOUT', 0],
+        [' timeout ', 'TIMEOUT', 0],
     ])('replaces the previous score with the latest %s result', (status, label, interval) => {
         expect(renderRuns([
             buildRun(),
@@ -124,6 +127,8 @@ describe('SubmissionAiReviewDetails reruns', () => {
             .not.toBeInTheDocument()
         expect(screen.getByText(label))
             .toBeInTheDocument()
+        expect(screen.getAllByRole('cell', { name: '-' }))
+            .toHaveLength(2)
     })
 
     it('uses start time before completion time and ignores superseded pending runs when polling', () => {

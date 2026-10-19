@@ -675,6 +675,9 @@ the run starts), then completion time, matching Review App. A rerun replaces the
 previous score and result, including while pending or after failure. Polling
 continues while a latest attempt is pending or no run has been created;
 superseded attempts do not keep polling active.
+Timed-out AI workflow runs display TIMEOUT rather than FAILED, matching Review
+App's distinct timeout result. They retain dashes for the review date and score
+and do not keep polling active.
 A transient background failure retains the last successful submission
 page, retries twice with a delay, and revalidates when the member returns to the
 tab; initial failures still expose the explicit retry action. Optional score
