@@ -136,6 +136,8 @@ export interface TimesheetEngagementRow {
     engagementTitle: string
     /** True when at least one entry is submitted and awaiting approval. */
     hasPendingApproval: boolean
+    /** Submitted entries awaiting approval, over the dates the list was filtered by. */
+    pendingEntryCount: number
     timesheetStatus: TimesheetRollupStatus
     viewerRole: TimesheetViewerRole
 }

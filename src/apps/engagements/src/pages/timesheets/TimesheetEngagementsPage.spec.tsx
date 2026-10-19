@@ -159,6 +159,7 @@ const row = (overrides: Partial<TimesheetEngagementRow> = {}): TimesheetEngageme
     engagementId: 'eng-1',
     engagementTitle: 'Senior Frontend Engineer',
     hasPendingApproval: true,
+    pendingEntryCount: 3,
     timesheetStatus: 'Pending Approval',
     viewerRole: TimesheetViewerRole.MANAGER,
     ...overrides,
@@ -284,7 +285,7 @@ describe('TimesheetEngagementsPage', () => {
         expect(screen.queryByRole('button', { name: 'View' })).not.toBeInTheDocument()
     })
 
-    it('hides the administrator filters and status column from a manager', async () => {
+    it('hides the administrator filters from a manager', async () => {
         mockGetEngagements.mockResolvedValue(response([row()], TimesheetViewerRole.MANAGER))
 
         render(<TimesheetEngagementsPage />)
@@ -296,9 +297,6 @@ describe('TimesheetEngagementsPage', () => {
         expect(screen.getByLabelText('Assignee'))
             .toBeInTheDocument()
         expect(screen.queryByLabelText('Manager'))
-            .not
-            .toBeInTheDocument()
-        expect(screen.queryByRole('columnheader', { name: 'Timesheet Status' }))
             .not
             .toBeInTheDocument()
     })
@@ -360,13 +358,13 @@ describe('TimesheetEngagementsPage', () => {
         })
     })
 
-    it('shows a manager the assignee, engagement, assignment status, and pending flag', async () => {
+    it('shows a manager the assignee, engagement, and timesheet status with the pending count', async () => {
         mockGetEngagements.mockResolvedValue(response([
             row(),
             row({
                 assignmentId: 'asg-2',
-                assignmentStatus: 'COMPLETED',
                 hasPendingApproval: false,
+                pendingEntryCount: 0,
                 timesheetStatus: 'Approved',
             }),
         ], TimesheetViewerRole.MANAGER))
@@ -379,24 +377,26 @@ describe('TimesheetEngagementsPage', () => {
         expect(within(table)
             .getAllByRole('columnheader')
             .map(header => header.textContent))
-            .toEqual(['Assignee', 'Engagement', 'Assignment Status', ''])
+            .toEqual(['Assignee', 'Engagement', 'Timesheet Status'])
 
-        const [, assignedRow, completedRow] = within(table)
+        const [, pendingRow, approvedRow] = within(table)
             .getAllByRole('row')
-        expect(within(assignedRow)
+        expect(within(pendingRow)
             .getAllByRole('cell')
             .map(cell => cell.textContent))
             .toEqual([
                 'John Smith (johnsmith)',
                 'Senior Frontend Engineer',
-                'Assigned',
-                'Pending approval',
+                'Pending Approval (3)',
             ])
-        expect(within(completedRow)
-            .getByText('Completed'))
-            .toBeInTheDocument()
-        expect(within(completedRow)
-            .queryByText('Pending approval')).not.toBeInTheDocument()
+        expect(within(approvedRow)
+            .getAllByRole('cell')
+            .map(cell => cell.textContent))
+            .toEqual([
+                'John Smith (johnsmith)',
+                'Senior Frontend Engineer',
+                'Approved',
+            ])
     })
 
     it('keeps the timesheet status column for an administrator', async () => {

@@ -119,12 +119,11 @@ const TimesheetEngagementsPage: FC = () => {
     const isTm = viewerRole === TimesheetViewerRole.TM
     const dateRangeError = validateDateRange(filters.fromDate, filters.toDate)
 
-    // A manager reviews people rather than engagements, so their list leads with the assignee and
-    // shows where each assignment stands instead of the rolled-up timesheet status.
+    // A manager reviews people rather than engagements, so their list leads with the assignee.
     const isManagerList = !isAdministrator && !isTm
-    // Assignee, engagement, assignment status, and approval flag for a manager; engagement, assignee,
-    // and timesheet status for everyone else. The engagement title is the way into a timesheet.
-    const columnCount = isManagerList ? 4 : 3
+    // Assignee, engagement, and timesheet status for a manager; engagement, assignee, and timesheet
+    // status for everyone else. The engagement title is the way into a timesheet.
+    const columnCount = 3
 
     const emptyStateMessage = isAdministrator
         ? 'No timesheets match these filters.'
@@ -250,6 +249,17 @@ const TimesheetEngagementsPage: FC = () => {
         <Link className={styles.titleLink} to={timesheetPath(row)}>
             {row.engagementTitle}
         </Link>
+    )
+
+    // A manager sees how many entries are waiting on them, so the pending label carries the count.
+    const renderManagerTimesheetStatus = (row: TimesheetEngagementRow): JSX.Element => (
+        <StatusBadge
+            label={row.hasPendingApproval
+                ? `${row.timesheetStatus} (${row.pendingEntryCount})`
+                : undefined}
+            size='sm'
+            status={row.timesheetStatus}
+        />
     )
 
     const assigneeLabel = useMemo(() => (row: TimesheetEngagementRow): string => (
@@ -409,8 +419,7 @@ const TimesheetEngagementsPage: FC = () => {
                                     <tr>
                                         <th scope='col'>Assignee</th>
                                         <th scope='col'>Engagement</th>
-                                        <th scope='col'>Assignment Status</th>
-                                        <th scope='col' data-label='Approval Status Col' />
+                                        <th scope='col'>Timesheet Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -418,19 +427,8 @@ const TimesheetEngagementsPage: FC = () => {
                                         <tr key={row.assignmentId}>
                                             <td data-label='Assignee'>{assigneeLabel(row)}</td>
                                             <td data-label='Engagement'>{renderEngagementLink(row)}</td>
-                                            <td data-label='Assignment Status'>
-                                                <StatusBadge size='sm' status={row.assignmentStatus} />
-                                            </td>
-                                            <td data-label='Approval Status'>
-                                                {row.hasPendingApproval
-                                                    ? (
-                                                        <StatusBadge
-                                                            label='Pending approval'
-                                                            size='sm'
-                                                            status='pending_approval'
-                                                        />
-                                                    )
-                                                    : ''}
+                                            <td data-label='Timesheet Status'>
+                                                {renderManagerTimesheetStatus(row)}
                                             </td>
                                         </tr>
                                     ))}
