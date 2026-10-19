@@ -11,6 +11,7 @@ import {
     getPaymentBillingAccountId,
     getPaymentBillingAccountName,
     getPaymentChallengeFee,
+    getPaymentStatus,
 } from './payment.utils'
 
 describe('payment.utils', () => {
@@ -91,6 +92,17 @@ describe('payment.utils', () => {
             .toBe('80001063')
         expect(getPaymentBillingAccountName(payment))
             .toBe('BA For Marios')
+    })
+
+    it('reads the payment status from the finance installment', () => {
+        expect(getPaymentStatus({ details: [{ status: 'ON_HOLD' }] }))
+            .toBe('On Hold')
+        expect(getPaymentStatus({ details: [{ status: 'PAID' }], status: 'OWED' }))
+            .toBe('Paid')
+        expect(getPaymentStatus({ status: 'PROCESSING' }))
+            .toBe('Processing')
+        expect(getPaymentStatus({ details: [] }))
+            .toBe('Unknown')
     })
 
     describe('hours left', () => {

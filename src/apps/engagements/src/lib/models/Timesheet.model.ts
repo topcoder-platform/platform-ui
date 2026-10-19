@@ -1,7 +1,8 @@
 import type { EngagementManager } from './EngagementManager.model'
 
 /**
- * Workflow status of one timesheet entry. `DRAFT` is displayed as `-`.
+ * Workflow status of one timesheet entry. A saved `DRAFT` is displayed as `Draft`; a grid row that
+ * has not been saved yet shows `-`.
  *
  * There is deliberately no rejected status: a manager who disagrees asks the member to edit the entry,
  * which returns it to draft, or escalates to an administrator.
@@ -37,6 +38,8 @@ export interface TimesheetEntry {
     remarks: string | null
     /** Set when an administrator reopened a previously approved entry; the entry is back in draft. */
     reopenedAt: string | null
+    /** The note the administrator left when last reopening the entry. */
+    reopenComment: string | null
     status: TimesheetEntryStatus
     submittedAt: string | null
     /** `YYYY-MM-DD`. `DD-MM-YYYY` is display only. */
@@ -136,6 +139,8 @@ export interface TimesheetEngagementRow {
     engagementTitle: string
     /** True when at least one entry is submitted and awaiting approval. */
     hasPendingApproval: boolean
+    /** Submitted entries awaiting approval, over the dates the list was filtered by. */
+    pendingEntryCount: number
     timesheetStatus: TimesheetRollupStatus
     viewerRole: TimesheetViewerRole
 }
