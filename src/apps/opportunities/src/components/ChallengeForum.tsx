@@ -369,16 +369,14 @@ const ForumFallback: FC<ForumFallbackProps> = props => (
 )
 
 /**
- * Renders challenge forum counters and the available in-page creation actions.
+ * Renders challenge forum counters, primary topic creation, and secondary watch controls.
  *
- * @param props visible topics, counts, creation actions, and challenge-wide watch state/control.
+ * @param props visible topics, counts, topic creation callback, and challenge-wide watch state/control.
  * @returns authored forum overview rail.
  * @throws Does not throw.
  */
 const ForumOverview: FC<{
-    canCreateAnnouncements: boolean
     onCreate: () => void
-    onCreateAnnouncement: () => void
     onWatch: () => void
     watchDisabled: boolean
     watching?: boolean
@@ -410,25 +408,19 @@ const ForumOverview: FC<{
                 </span>
             </div>
             <div className={styles.overviewActions}>
+                <button onClick={props.onCreate} type='button'>
+                    <IconOutline.PlusCircleIcon aria-hidden='true' />
+                    Create new topic
+                </button>
                 <button
                     aria-pressed={props.watching ?? false}
                     disabled={props.watchDisabled}
                     onClick={props.onWatch}
                     type='button'
                 >
-                    <IconOutline.EyeIcon aria-hidden='true' />
+                    <ForumIcon name={props.watching ? 'watched' : 'watch'} />
                     {props.watching ? 'Unwatch forum' : 'Watch forum'}
                 </button>
-                <button onClick={props.onCreate} type='button'>
-                    <IconOutline.PlusCircleIcon aria-hidden='true' />
-                    Create new topic
-                </button>
-                {props.canCreateAnnouncements && (
-                    <button onClick={props.onCreateAnnouncement} type='button'>
-                        <IconOutline.SpeakerphoneIcon aria-hidden='true' />
-                        Create announcement
-                    </button>
-                )}
             </div>
         </section>
     )
@@ -870,7 +862,7 @@ export const MarkdownEditor: FC<MarkdownEditorProps> = props => {
 }
 
 /**
- * Renders the in-page topic creation workflow for the current challenge.
+ * Renders topic creation with an optional announcement checkbox for authorized members.
  *
  * @param props challenge context, navigation callback, and async create command.
  * @returns discussion guidance and controlled topic form.
@@ -879,13 +871,12 @@ export const MarkdownEditor: FC<MarkdownEditorProps> = props => {
 const ForumCreateTopicView: FC<{
     canCreateAnnouncements: boolean
     challenge: ChallengeOpportunity
-    initialIsAnnouncement: boolean
     onBack: () => void
     onCreate: (title: string, content: string, isAnnouncement: boolean) => Promise<boolean>
 }> = props => {
     const [content, setContent] = useState('')
     const [error, setError] = useState<string>()
-    const [isAnnouncement, setIsAnnouncement] = useState(props.initialIsAnnouncement)
+    const [isAnnouncement, setIsAnnouncement] = useState(false)
     const [pending, setPending] = useState(false)
     const [preview, setPreview] = useState(false)
     const [title, setTitle] = useState('')
@@ -1748,7 +1739,6 @@ function resetForumScroll(): void {
  */
 export const ChallengeForum: FC<ChallengeForumProps> = props => {
     const externalUrl = challengeForumUrl(props.challenge)
-    const [createAsAnnouncement, setCreateAsAnnouncement] = useState(false)
     const [creatingTopic, setCreatingTopic] = useState(false)
     const [editingTopicDetail, setEditingTopicDetail] = useState<ForumTopicDetail>()
     const [mutationError, setMutationError] = useState<string>()
@@ -1863,7 +1853,6 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
      * @throws Does not throw; read-state failures are intentionally non-blocking.
      */
     const openTopic = (topicId: string): void => {
-        setCreateAsAnnouncement(false)
         setCreatingTopic(false)
         setSelectedTopicId(topicId)
         setMutationError(undefined)
@@ -1902,7 +1891,6 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 title,
             })
             await response.mutate()
-            setCreateAsAnnouncement(false)
             setCreatingTopic(false)
             setSelectedTopicId(created.topic.id)
             resetForumScroll()
@@ -1976,7 +1964,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
     }
 
     /**
-     * Persists the overview's forum-wide preference and refreshes its displayed state.
+     * Persists the forum preference and reloads effective topic watches, preserving individual overrides.
      * @returns Nothing after the save and cache update finish.
      * @throws Does not throw; failures preserve the previous state and show an error.
      */
@@ -1987,6 +1975,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         try {
             const saved = await setChallengeForumWatching(props.challenge.id, !watchResponse.data.watching)
             await watchResponse.mutate(saved, false)
+            await refreshForum()
         } catch (error) {
             setMutationError(forumErrorMessage(error))
         } finally {
@@ -2023,9 +2012,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 <ForumCreateTopicView
                     canCreateAnnouncements={!!props.canCreateAnnouncements}
                     challenge={props.challenge}
-                    initialIsAnnouncement={createAsAnnouncement}
                     onBack={() => {
-                        setCreateAsAnnouncement(false)
                         setCreatingTopic(false)
                     }}
                     onCreate={createTopic}
@@ -2081,15 +2068,8 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                     onWatch={toggleForumWatch}
                     watchDisabled={!watchResponse.data || !!watchResponse.error || pendingAction === 'forum-watch'}
                     watching={watchResponse.data?.watching}
-                    canCreateAnnouncements={!!props.canCreateAnnouncements}
                     onCreate={() => {
                         setMutationError(undefined)
-                        setCreateAsAnnouncement(false)
-                        setCreatingTopic(true)
-                    }}
-                    onCreateAnnouncement={() => {
-                        setMutationError(undefined)
-                        setCreateAsAnnouncement(true)
                         setCreatingTopic(true)
                     }}
                     topics={topics}

@@ -120,7 +120,8 @@
         color: #fff;
     }
 
-    svg {
+    svg,
+    img {
         height: 18px;
         width: 18px;
     }
@@ -129,7 +130,7 @@
 .overviewActions {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 16px;
     margin-top: 24px;
 
     > button {
