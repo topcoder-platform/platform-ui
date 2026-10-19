@@ -25,6 +25,33 @@
 }
 .filters label { display: flex; flex-direction: column; gap: 8px; max-width: 100%; }
 .filters select { max-width: 100%; }
+.submissions {
+    display: grid;
+    gap: 16px;
+}
+.submission {
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid #d4d4d4;
+    border-radius: 8px;
+    background: #fff;
+}
+.details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+    gap: 20px 24px;
+    margin: 0;
+
+    > div { min-width: 0; }
+    dt { font-size: 14px; font-weight: 600; color: #555; margin-bottom: 6px; }
+    dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+}
+.inquiry {
+    grid-column: 1 / -1;
+    border-top: 1px solid #d4d4d4;
+    padding-top: 16px;
+    line-height: 1.6;
+}
 .tableScroll {
     overflow-x: auto;
     table { border-collapse: collapse; width: 100%; }
