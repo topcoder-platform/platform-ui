@@ -85,23 +85,32 @@ const getPreferredUserAssignment = (
 }
 
 /**
- * Splits engagements into the Active and Past sections requested for My Assignments.
+ * Splits every member assignment into the Active and Past sections of My Assignments.
+ * Each card receives only its own assignment so experience and offer actions keep
+ * using that assignment even when the member has been assigned to the engagement again.
  * @param assignments Engagements returned by the my-assignments endpoint.
- * @param getAssignment Resolves the displayed assignment for a given engagement.
- * @returns Engagement groups for active selected/assigned work and past completed/terminated work.
+ * @param userId Authenticated member id whose assignments should be displayed.
+ * @returns Engagement copies scoped to individual assignments, grouped by assignment status.
+ * @throws Does not throw.
  */
 const getAssignmentSections = (
     assignments: Engagement[],
-    getAssignment: (engagement: Engagement) => EngagementAssignment | undefined,
+    userId?: number,
 ): AssignmentSections => assignments.reduce<AssignmentSections>((sections, engagement) => {
-    const assignment = getAssignment(engagement)
-    const status = getAssignmentStatusKey(assignment?.status)
+    const userAssignments = engagement.assignments?.filter(
+        assignment => assignment.memberId === String(userId),
+    ) ?? []
 
-    if (status && PAST_ASSIGNMENT_STATUSES.includes(status)) {
-        sections.past.push(engagement)
-    } else {
-        sections.active.push(engagement)
-    }
+    userAssignments.forEach(assignment => {
+        const status = getAssignmentStatusKey(assignment.status)
+        const assignmentEngagement = { ...engagement, assignments: [assignment] }
+
+        if (status && PAST_ASSIGNMENT_STATUSES.includes(status)) {
+            sections.past.push(assignmentEngagement)
+        } else {
+            sections.active.push(assignmentEngagement)
+        }
+    })
 
     return sections
 }, {
@@ -381,8 +390,8 @@ const MyAssignmentsPage: FC = () => {
     const skeletonCards = useMemo(() => Array.from({ length: 6 }, (_, index) => index), [])
     const showEmptyState = getShowEmptyState(loading, error, assignments)
     const assignmentSections = useMemo(
-        () => getAssignmentSections(assignments, getUserAssignment),
-        [assignments, getUserAssignment],
+        () => getAssignmentSections(assignments, userId),
+        [assignments, userId],
     )
     const showExperienceModal = useMemo(
         () => [selectedEngagement, selectedAssignmentId].every(Boolean),
@@ -491,7 +500,7 @@ const MyAssignmentsPage: FC = () => {
 
                                         return (
                                             <AssignmentCard
-                                                key={engagement.id}
+                                                key={assignment?.id || engagement.id}
                                                 engagement={engagement}
                                                 assignment={assignment}
                                                 contactEmail={contactEmail}

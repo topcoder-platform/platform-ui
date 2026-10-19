@@ -3,6 +3,7 @@ import '@testing-library/jest-dom'
 
 import React from 'react'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 import type { Engagement, EngagementAssignment } from '../../lib/models'
 import { EngagementStatus } from '../../lib/models'
@@ -92,6 +93,43 @@ const assignment: EngagementAssignment = {
 }
 
 describe('AssignmentCard', () => {
+    it.each(['assigned', 'completed', 'terminated'])(
+        'allows documenting experience for an %s assignment',
+        async status => {
+            const user = userEvent.setup()
+            const onDocumentExperience = jest.fn()
+
+            render(
+                <AssignmentCard
+                    engagement={engagement}
+                    assignment={{ ...assignment, status }}
+                    onViewPayments={jest.fn()}
+                    onDocumentExperience={onDocumentExperience}
+                    onContactTalentManager={jest.fn()}
+                />,
+            )
+
+            await user.click(screen.getByRole('button', { name: 'Document Experience' }))
+
+            expect(onDocumentExperience)
+                .toHaveBeenCalledTimes(1)
+        },
+    )
+
+    it('does not allow documenting experience before an offer is accepted', () => {
+        render(
+            <AssignmentCard
+                engagement={engagement}
+                assignment={{ ...assignment, status: 'selected' }}
+                onViewPayments={jest.fn()}
+                onDocumentExperience={jest.fn()}
+                onContactTalentManager={jest.fn()}
+            />,
+        )
+
+        expect(screen.queryByRole('button', { name: 'Document Experience' })).not.toBeInTheDocument()
+    })
+
     it('formats assignment currency values with two decimal places', () => {
         render(
             <AssignmentCard
