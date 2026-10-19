@@ -108,6 +108,7 @@ jest.mock('~/libs/ui', () => {
         ),
         IconOutline: new Proxy({}, { get: () => Icon }),
         LoadingSpinner: (): JSX.Element => <span>Loading</span>,
+        Tooltip: jest.requireActual('../../../../libs/ui/lib/components/tooltip/Tooltip').default,
     }
 }, { virtual: true })
 
@@ -438,9 +439,22 @@ function submissionPage(
 }
 
 describe('ChallengeDetailsPage member flows', () => {
+    const originalResizeObserver = window.ResizeObserver
+
+    afterAll(() => {
+        window.ResizeObserver = originalResizeObserver
+    })
+
     beforeEach(() => {
         jest.restoreAllMocks()
         jest.clearAllMocks()
+        // JSDOM has no layout observer; tooltip visibility still uses the real hover events.
+        window.ResizeObserver = jest.fn()
+            .mockImplementation(() => ({
+                disconnect: jest.fn(),
+                observe: jest.fn(),
+                unobserve: jest.fn(),
+            }))
         jest.spyOn(window, 'scrollTo')
             .mockImplementation(() => undefined)
         mockProfile = undefined
@@ -675,12 +689,49 @@ describe('ChallengeDetailsPage member flows', () => {
 
         renderPage()
         fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
-        fireEvent.click(screen.getByRole('button', { name: 'History (8)' }))
+        fireEvent.click(screen.getByRole('button', { name: 'History (8 submissions)' }))
 
         expect(screen.getByText('History modal latest-attempt'))
             .toBeInTheDocument()
         expect(screen.queryByRole('button', { name: /Download submission artifacts/ }))
             .not.toBeInTheDocument()
+    })
+
+    it.each([
+        [8, 'History (8 submissions)', '(8)'],
+        [1, 'History (1 submission)', '(1)'],
+        [undefined, 'History', ''],
+    ])('keeps MM actions compact and describes history count %s on hover', async (count, label, visibleCount) => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockChallenge = { ...mockChallenge, type: 'Marathon Match' }
+        mockSubmissions = [{ id: 'latest-attempt', memberId: '123', submissionCount: count }]
+
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+
+        const artifacts = screen.getByRole('button', { name: 'Download submission artifacts latest-attempt' })
+        const history = screen.getByRole('button', { name: label as string })
+        expect(artifacts.textContent)
+            .toBe('')
+        expect(history.textContent)
+            .toBe(visibleCount)
+        expect(screen.queryByRole('tooltip'))
+            .not.toBeInTheDocument()
+
+        fireEvent.mouseOver(artifacts)
+        expect(await screen.findByRole('tooltip', { name: 'View Artifacts' }))
+            .toBeInTheDocument()
+        fireEvent.mouseOut(artifacts)
+        fireEvent.click(artifacts)
+        expect(screen.getByText('Artifacts modal latest-attempt'))
+            .toBeInTheDocument()
+
+        fireEvent.mouseOver(history)
+        expect(await screen.findByRole('tooltip', { name: label as string }))
+            .toBeInTheDocument()
+        fireEvent.click(history)
+        expect(screen.getByText('History modal latest-attempt'))
+            .toBeInTheDocument()
     })
 
     it('publishes the gated Marathon Match dashboard to signed out visitors', () => {

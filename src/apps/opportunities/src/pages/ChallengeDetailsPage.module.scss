@@ -333,6 +333,21 @@
     }
 }
 
+.marathonActions {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+
+    button { padding: 0; }
+}
+
+.submissionActionTooltip {
+    background: #001e2e !important;
+    box-shadow: none !important;
+    color: #fff !important;
+    white-space: nowrap;
+}
+
 .sortedHeader {
     align-items: center;
     appearance: none;

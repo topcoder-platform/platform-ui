@@ -27,7 +27,7 @@ import {
     useProfileContext,
     UserStats,
 } from '~/libs/core'
-import { ConfirmModal, IconOutline, LoadingSpinner } from '~/libs/ui'
+import { ConfirmModal, IconOutline, LoadingSpinner, Tooltip } from '~/libs/ui'
 
 import {
     ChallengeDescription,
@@ -1296,6 +1296,7 @@ interface SubmissionsTabProps {
 
 /**
  * Loads and paginates submissions only after a submission tab is selected.
+ * Marathon Match All Submissions uses compact artifact/history icons with descriptive tooltips.
  * Derived-column sorts use the full latest-submission collection before pagination;
  * Marathon Match ranks also use that collection, including when sorting by date.
  * Other submission-date sorting remains server-paginated.
@@ -2005,6 +2006,10 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                     ?? submission.submitterMaxRating
                                     ?? submission.rating
                                     ?? undefined
+                                const historyLabel = submission.submissionCount === undefined
+                                    ? 'History'
+                                    : `History (${submission.submissionCount} `
+                                    + `${submission.submissionCount === 1 ? 'submission' : 'submissions'})`
                                 return (
                                     <tr key={submission.id}>
                                         {isMarathonMatch && (
@@ -2073,27 +2078,60 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                             </td>
                                         )}
                                         <td data-mobile-label='Action'>
-                                            {canViewArtifacts(submission) && (
+                                            {isMarathonMatch ? (
+                                                <div className={styles.marathonActions}>
+                                                    {canViewArtifacts(submission) && (
+                                                        <Tooltip
+                                                            className={styles.submissionActionTooltip}
+                                                            content='View Artifacts'
+                                                            place='top'
+                                                            strategy='fixed'
+                                                        >
+                                                            <button
+                                                                aria-label={
+                                                                    `Download submission artifacts ${submission.id}`
+                                                                }
+                                                                className={styles.historyLink}
+                                                                onClick={() => openArtifacts(submission.id)}
+                                                                type='button'
+                                                            >
+                                                                <IconOutline.DocumentIcon
+                                                                    aria-hidden='true'
+                                                                    width={20}
+                                                                />
+                                                            </button>
+                                                        </Tooltip>
+                                                    )}
+                                                    <Tooltip
+                                                        className={styles.submissionActionTooltip}
+                                                        content={historyLabel}
+                                                        place='top'
+                                                        strategy='fixed'
+                                                    >
+                                                        <button
+                                                            aria-label={historyLabel}
+                                                            className={styles.historyLink}
+                                                            onClick={() => setHistorySubmission(submission)}
+                                                            type='button'
+                                                        >
+                                                            <img alt='' aria-hidden='true' src={resetIcon} />
+                                                            {submission.submissionCount !== undefined
+                                                                && `(${submission.submissionCount})`}
+                                                        </button>
+                                                    </Tooltip>
+                                                </div>
+                                            ) : (
                                                 <button
-                                                    aria-label={`Download submission artifacts ${submission.id}`}
                                                     className={styles.historyLink}
-                                                    onClick={() => openArtifacts(submission.id)}
+                                                    onClick={() => setHistorySubmission(submission)}
                                                     type='button'
                                                 >
-                                                    <IconOutline.FolderDownloadIcon aria-hidden='true' width={20} />
-                                                    Artifacts
+                                                    <img alt='' aria-hidden='true' src={resetIcon} />
+                                                    History
+                                                    {submission.submissionCount !== undefined
+                                                        && ` (${submission.submissionCount})`}
                                                 </button>
                                             )}
-                                            <button
-                                                className={styles.historyLink}
-                                                onClick={() => setHistorySubmission(submission)}
-                                                type='button'
-                                            >
-                                                <img alt='' aria-hidden='true' src={resetIcon} />
-                                                History
-                                                {submission.submissionCount !== undefined
-                                                    && ` (${submission.submissionCount})`}
-                                            </button>
                                         </td>
                                     </tr>
                                 )
