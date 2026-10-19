@@ -1,0 +1,189 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.filters {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 8px;
+    padding: 20px;
+    border-radius: 8px;
+    background: rgba(224, 228, 232, 0.3);
+}
+
+.filterField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+        color: $black-80;
+        font-size: 13px;
+    }
+}
+
+.searchInputWrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid $black-20;
+    border-radius: 4px;
+    background: #fff;
+    padding: 8px 12px;
+}
+
+.searchIcon {
+    color: $black-60;
+    width: 18px;
+    height: 18px;
+}
+
+.searchInput {
+    border: 0;
+    background: transparent;
+    color: $black-80;
+    outline: none;
+    width: 100%;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.selectionInfo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: $black-60;
+    font-size: 13px;
+}
+
+.clearSelection {
+    border: 0;
+    background: transparent;
+    color: $link-blue-dark;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 0;
+
+    &:hover,
+    &:focus {
+        text-decoration: underline;
+        outline: none;
+    }
+}
+
+.tableWrap {
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    background: #fff;
+    overflow-x: auto;
+}
+
+.table {
+    border-collapse: collapse;
+    min-width: 960px;
+    width: 100%;
+
+    thead tr {
+        background: #f7f8fa;
+    }
+}
+
+.table th,
+.table td {
+    border-bottom: 1px solid $black-10;
+    padding: 12px 10px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.table th {
+    color: $black-60;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+
+.table td {
+    color: $black-80;
+    font-size: 13px;
+}
+
+.checkboxCell {
+    width: 40px;
+}
+
+.engagementTitle,
+.memberHandle {
+    color: $black-100;
+    font-weight: 700;
+}
+
+.noWrap {
+    white-space: nowrap;
+}
+
+.notes {
+    max-width: 320px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.emptyRow {
+    color: $black-60 !important;
+    padding: 24px !important;
+    text-align: center;
+}
+
+.modalContent {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modalMessage {
+    color: #2a2a2a;
+    margin: 0;
+}
+
+.modalSummary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    color: $black-80;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.modalLabel {
+    color: #5b5b5b;
+    font-size: 12px;
+}
+
+.modalTextarea {
+    border: 1px solid #d5d5d5;
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+.modalActions {
+    display: flex;
+    gap: 12px;
+}
+
+@media (max-width: 767px) {
+    .filters {
+        grid-template-columns: 1fr;
+    }
+}
