@@ -197,6 +197,8 @@ const ChallengeTermButton: FC<ChallengeTermButtonProps> = props => {
 /**
  * Renders the challenge-details support column, including Review App, learning,
  * submission guidance, challenge terms, source files, and team contact.
+ * The AI Exponential League promo requires its matching challenge tag;
+ * Marathon Matches retain their dedicated tournament promo.
  * TopGear (Wipro) challenges follow community-app's Wipro rail: the Review App
  * card, Topcoder Thrive articles, AI reviewer guide, and Usable Code Rules are
  * replaced by a single "TopGear Challenges Explained" link to the TopGear terms,
@@ -214,6 +216,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
     const trackKey = challengeCatalogKey(props.challenge.track)
     const designChallenge = trackKey === 'design'
     const marathonMatch = isMarathonMatchChallenge(props.challenge)
+    const showPromo = marathonMatch || props.challenge.tags?.includes('AI Exponential League')
     const topgearChallenge = isTopgearChallenge(props.challenge)
     const developmentChallenge = trackKey === 'development'
     const qualityAssuranceChallenge = ['qa', 'qualityassurance'].includes(trackKey)
@@ -269,35 +272,37 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
 
     return (
         <aside className={styles.sidebar}>
-            <section className={styles.promo}>
-                <img alt='' aria-hidden='true' className={styles.promoArt} src={programBanner} />
-                <div>
-                    <h3>{marathonMatch ? 'Marathon Match Tournament' : 'Join the AI Exponential league'}</h3>
-                    <p>
+            {showPromo && (
+                <section className={styles.promo}>
+                    <img alt='' aria-hidden='true' className={styles.promoArt} src={programBanner} />
+                    <div>
+                        <h3>{marathonMatch ? 'Marathon Match Tournament' : 'Join the AI Exponential league'}</h3>
+                        <p>
+                            {marathonMatch
+                                ? 'Join the battle of competitors in a series of challenging Marathon Matches.'
+                                : 'Where elite AI builders compete to solve real-world challenges and grow fast.'}
+                        </p>
                         {marathonMatch
-                            ? 'Join the battle of competitors in a series of challenging Marathon Matches.'
-                            : 'Where elite AI builders compete to solve real-world challenges and grow fast.'}
-                    </p>
-                    {marathonMatch
-                        ? (
-                            <a
-                                className={styles.promoLink}
-                                href={MARATHON_MATCH_TOURNAMENT_URL}
-                                rel='noreferrer'
-                                target='_blank'
-                            >
-                                Explore the program
-                                <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
-                            </a>
-                        )
-                        : (
-                            <a className={styles.promoLink} href={AI_EXPONENTIAL_LEAGUE_URL}>
-                                Explore the program
-                                <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
-                            </a>
-                        )}
-                </div>
-            </section>
+                            ? (
+                                <a
+                                    className={styles.promoLink}
+                                    href={MARATHON_MATCH_TOURNAMENT_URL}
+                                    rel='noreferrer'
+                                    target='_blank'
+                                >
+                                    Explore the program
+                                    <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                                </a>
+                            )
+                            : (
+                                <a className={styles.promoLink} href={AI_EXPONENTIAL_LEAGUE_URL}>
+                                    Explore the program
+                                    <img alt='' aria-hidden='true' src={sidebarArrowIcon} />
+                                </a>
+                            )}
+                    </div>
+                </section>
+            )}
             {!topgearChallenge && (
                 <SidebarCard icon={<img alt='' aria-hidden='true' src={sidebarReviewIcon} />} title='Review App'>
                     <p>{reviewAppDescription}</p>
