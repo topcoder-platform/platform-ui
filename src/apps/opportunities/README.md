@@ -799,7 +799,9 @@ older progress, and cancelled phase scores do not fall back to placeholder or
 legacy aggregate values. Settled failed system-test aggregates remain available
 in Submissions, My Submissions, and history, where negative system scores display
 as zero; pending and cancelled runs still have no final score. Cancelled results
-are excluded from dashboard points.
+are excluded from dashboard points. Dashboard dots use the shared member-rating
+palette (gray, green, blue, yellow, and red) for each member's maximum rating;
+missing or non-finite ratings retain the gray band.
 Virus-scan and quarantine failures are reported
 as Failed in the Provisional process with explicit 0% progress; later review
 failures remain System failures. A newly active attempt stays in the Provisional

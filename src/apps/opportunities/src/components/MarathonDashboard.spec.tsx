@@ -70,6 +70,42 @@ describe('MarathonDashboard', () => {
             .toBeInTheDocument()
     })
 
+    it('colors submission dots with the member-rating palette, including unrated members', async () => {
+        mockedGetReviewSummations.mockResolvedValue(
+            [0, 900, 1200, 1500, 2200, undefined].map((rating, index) => ({
+                aggregateScore: 30 + index,
+                createdAt: '2026-10-07T10:00:00.000Z',
+                id: `summation-${index}`,
+                isPassing: true,
+                isProvisional: true,
+                submissionId: `submission-${index}`,
+                submitterHandle: `coder${index}`,
+                submitterId: index + 1,
+                submitterMaxRating: rating,
+            })),
+        )
+
+        render(
+            <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
+                <MarathonDashboard
+                    challenge={{ id: 'rating-colors', name: 'MM', type: 'Marathon Match' }}
+                />
+            </SWRConfig>,
+        )
+
+        const chart = await screen.findByTestId('marathon-chart')
+        const options = JSON.parse(chart.getAttribute('data-options') as string)
+        expect(options.series[0].data)
+            .toEqual([
+                expect.objectContaining({ color: '#555555', name: 'coder0' }),
+                expect.objectContaining({ color: '#2D7E2D', name: 'coder1' }),
+                expect.objectContaining({ color: '#616BD5', name: 'coder2' }),
+                expect.objectContaining({ color: '#F2C900', name: 'coder3' }),
+                expect.objectContaining({ color: '#EF3A3A', name: 'coder4' }),
+                expect.objectContaining({ color: '#555555', name: 'coder5' }),
+            ])
+    })
+
     it('graphs every point on Marathon Matches larger than the Highcharts turbo threshold', async () => {
         // Highcharts drops keyed point configs above its default 1000-point
         // turbo threshold, which left large Marathon Matches with an empty
