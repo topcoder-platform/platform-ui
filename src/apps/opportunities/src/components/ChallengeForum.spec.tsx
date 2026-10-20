@@ -18,6 +18,8 @@ import {
     ForumTopicSummary,
     MemberProfileSummary,
 } from '../models'
+import activeUp from '../assets/forums/44ba2.svg'
+import up from '../assets/forums/5f27f.svg'
 import {
     ChallengeForum,
     ForumTopicView,
@@ -703,6 +705,15 @@ describe('ChallengeForum', () => {
             .toHaveBeenCalledWith('topic-1', false))
     })
 
+    it('keeps selected reactions transparent without changing button spacing', () => {
+        const activeStyles = forumStyles.match(/\.postActions button\.reactionActive\s*\{[^}]*\}/)?.[0]
+
+        expect(activeStyles)
+            .toBeDefined()
+        expect(activeStyles)
+            .not.toMatch(/background|border-radius|padding/)
+    })
+
     it('shows shared reaction counts and toggles or switches the current member reaction', async () => {
         render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
         await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
@@ -710,10 +721,17 @@ describe('ChallengeForum', () => {
         const selectedThumbsUp = screen.getByRole('button', { name: 'Remove thumbs up (2)' })
         expect(selectedThumbsUp)
             .toHaveAttribute('aria-pressed', 'true')
+        expect(selectedThumbsUp)
+            .toHaveClass('reactionActive')
+        expect(selectedThumbsUp.querySelector('img'))
+            .toHaveAttribute('src', activeUp)
         expect(screen.getByRole('button', { name: 'Add thumbs down (1)' }))
             .toHaveAttribute('aria-pressed', 'false')
         expect(screen.getByRole('button', { name: 'Add thumbs up (3)' }))
             .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Add thumbs up (3)' })
+            .querySelector('img'))
+            .toHaveAttribute('src', up)
         expect(screen.getByRole('button', { name: 'Add thumbs down (4)' }))
             .toBeInTheDocument()
 
