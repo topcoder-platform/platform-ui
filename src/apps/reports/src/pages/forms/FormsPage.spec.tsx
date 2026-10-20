@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, unicorn/no-null */
 import '@testing-library/jest-dom'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 
 import FormsPage from './FormsPage'
 import { fetchReportForms, fetchFormSubmissions, downloadFormSubmissions } from '../../lib/services/forms.service'
@@ -56,6 +56,67 @@ describe('Forms reporting page', () => {
         await screen.findByText('26 submissions · Page 1')
         expect(screen.getByRole('button', { name: 'Previous' }))
             .toBeDisabled()
+    })
+
+    it('shows contact details and UTM values above full-width inquiries, hiding repetitive fields', async () => {
+        const hidden = ['source_page', 'form_version', 'leadsource', 'source__c',
+            'lead_source_for_campaign__c', 'primary_campaign__c', 'insta_page_name__c']
+        const inquiry = `A detailed request.\nAnother paragraph with a very long link: ${'x'.repeat(500)}`;
+        (fetchFormSubmissions as jest.Mock).mockResolvedValue({
+            ...report,
+            columns: [
+                'submitted_at', 'member_id', 'email', 'briefly_describe_your_inquiry', 'utm_source__c', ...hidden,
+            ],
+            data: [
+                { ...report.data[0],
+                    briefly_describe_your_inquiry: inquiry,
+                    member_id: '12345',
+                    submitted_at: '2026-10-19T12:00:00Z',
+                    utm_source__c: 'newsletter' },
+                { email: 'older@example.com', submission_id: 'two', submitted_at: '2026-10-18T12:00:00Z' },
+            ],
+            labels: { ...report.labels, briefly_describe_your_inquiry: 'What can we help you with?' },
+        })
+        render(<FormsPage />)
+        await selectForm()
+        const region = screen.getByRole('region', { name: 'Form submissions' })
+        const cards = within(region)
+            .getAllByRole('article')
+        expect(cards)
+            .toHaveLength(2)
+        expect(cards[0])
+            .toHaveTextContent('first@example.com')
+        expect(cards[1])
+            .toHaveTextContent('older@example.com')
+        expect(within(cards[0])
+            .getByText('12345'))
+            .toBeInTheDocument()
+        expect(within(cards[0])
+            .getByText('UTM source'))
+            .toBeInTheDocument()
+        expect(within(cards[0])
+            .getByText('newsletter'))
+            .toBeInTheDocument()
+        const inquiryDetails = cards[0].querySelector('dl > div:last-child')
+        expect(inquiryDetails)
+            .toHaveClass('inquiry')
+        expect(inquiryDetails?.querySelector('dd')?.textContent)
+            .toBe(inquiry)
+        hidden.forEach(column => expect(within(region)
+            .queryByText(column.replace(/_/g, ' '))).not.toBeInTheDocument())
+        expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    })
+
+    it('retains all table columns for other forms', async () => {
+        (fetchFormSubmissions as jest.Mock).mockResolvedValue({
+            ...report, columns: ['email', 'source_page'], form: 'other_form',
+        })
+        render(<FormsPage />)
+        await selectForm()
+        expect(screen.getByRole('table'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('columnheader', { name: 'source page' }))
+            .toBeInTheDocument()
     })
 
     it('exports all or filtered data independently of the current page and rejects reversed dates', async () => {

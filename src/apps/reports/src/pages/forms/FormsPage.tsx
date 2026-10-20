@@ -15,6 +15,7 @@ import {
 } from '../../lib/services/forms.service'
 import { downloadBlobFile } from '../../lib/services/reports.service'
 
+import LetsTalkSubmissions from './LetsTalkSubmissions'
 import styles from './FormsPage.module.scss'
 
 interface Selection extends FormDates {
@@ -24,6 +25,7 @@ interface Selection extends FormDates {
 
 /**
  * Displays private form submissions with date filtering, cursor pagination, and complete CSV exports.
+ * Uses contact cards for Let's talk so inquiries wrap below metadata; other forms retain their tables.
  * @returns Reports portal content. No props; access is restricted by the administrator route.
  * @throws Does not throw intentionally; API failures are shown inline with a retry action.
  */
@@ -172,7 +174,11 @@ const FormsPage: FC = () => {
             {report && !loading && (
                 <>
                     <p role='status'>{`${report.total} submissions · Page ${page}`}</p>
-                    {report.data.length === 0 ? <p>No submissions match these dates.</p> : (
+                    {report.data.length === 0 ? (
+                        <p>No submissions match these dates.</p>
+                    ) : report.form === 'lets_talk' ? (
+                        <LetsTalkSubmissions report={report} />
+                    ) : (
                         // Keyboard users must be able to scroll to offscreen columns.
                         // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
                         <div className={styles.tableScroll} tabIndex={0} role='region' aria-label='Form submissions'>
