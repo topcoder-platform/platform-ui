@@ -31,8 +31,8 @@ import { MemberRatingInfoModal } from './MemberRatingInfoModal'
 import { ModifyPreferredRolesModal } from './ModifyPreferredRolesModal'
 import styles from './MemberRatingCard.module.scss'
 
-// Matches the card's top padding so the tooltip sits above the card and its arrow points into it
-const ratingTooltipOffset = 16
+// 16px card padding plus 8px clearance keeps the standard arrow visibly separated from the card.
+const ratingTooltipOffset = 24
 
 interface MemberRatingCardProps {
     authProfile: UserProfile | undefined
