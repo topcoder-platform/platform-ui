@@ -217,3 +217,36 @@ Opportunity History report and `SALESFORCE_SALES_HISTORY_CONFIG` as documented i
 `reports-api-v6/SALES.md`. No database migration or stored opportunity snapshots
 are required. The history tab remains unavailable until that setup is complete;
 the pipeline remains independently available.
+
+## Monthly dashboards
+
+The Sales portal's **Monthly dashboards** tab and the Reports portal's
+**Sales dashboards** navigation entry render the same `SalesDashboardsPage`.
+The Reports route is `/reports/sales-dashboards` on the combined host and
+`/sales-dashboards` on the Reports host. Existing pipeline/progression reports
+and platform dashboards retain their routes and behavior.
+
+Each section calls `/sales-dashboard/:section` on the Reports API independently,
+with inline loading, failure/retry and pending-source states. Refresh reloads all
+sections. Changing Close date / Created date reloads only pipeline data. Source
+requests are aborted on unmount or control changes.
+
+Charts cover the latest six UTC calendar months. Opportunity size, expected
+revenue and pipeline stages include three months back through six months ahead;
+Closed Won remains historical. Charts include expandable monthly data tables,
+percentage/currency/count units, and gaps for unknown markup. Source notices
+remain visible above the charts.
+
+Sales passes `portal=sales` so the API removes TaaS, Topcoder and unlinked customer
+payments before computing any payment totals or customer rankings. Reports
+passes `portal=reports`. Gross margin averages all payment markups in both portals;
+flexible talent counts newly assigned, completed and ongoing members by month.
+
+Revenue shows a pending notice until the confirmed SFDC report and its date and
+revenue column IDs are configured in reports-api-v6. See that repository's
+`SALES.md` for source definitions, required settings and API parameters.
+
+Tests: `SalesDashboardsPage.spec.tsx` covers portal scope, independent failures,
+retry, refresh, date-basis changes, request cancellation, keyboard navigation and
+accessible percentage/missing-value tables. Reports route/navigation tests cover
+the new entry point.

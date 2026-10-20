@@ -2,6 +2,7 @@
 import {
     dashboardDetailRoute,
     dashboardsPageRouteId,
+    salesDashboardsPageRouteId,
 } from './config/routes.config'
 import { reportsRoutes } from './reports-app.routes'
 
@@ -28,5 +29,7 @@ describe('Reports application routes', () => {
             .toContain(dashboardsPageRouteId)
         expect(childPaths)
             .toContain(dashboardDetailRoute)
+        expect(childPaths)
+            .toContain(salesDashboardsPageRouteId)
     })
 })

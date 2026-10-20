@@ -19,6 +19,7 @@ import {
     dashboardsPageRouteId,
     formsPageRouteId,
     reportsPageRouteId,
+    salesDashboardsPageRouteId,
     talentPageRouteId,
 } from '../../../config/routes.config'
 import {
@@ -47,6 +48,10 @@ const NavTabs: FC = () => {
             {
                 id: dashboardsPageRouteId,
                 title: 'Dashboards',
+            },
+            {
+                id: salesDashboardsPageRouteId,
+                title: 'Sales dashboards',
             },
             {
                 id: bulkMemberLookupRouteId,

@@ -45,6 +45,9 @@ describe('Reports navigation tabs', () => {
         expect(screen.getByRole('link', { name: 'Reports' }))
             .toHaveAttribute('href', '/reports/reports')
 
+        expect(screen.getByRole('link', { name: 'Sales dashboards' }))
+            .toHaveAttribute('href', '/reports/sales-dashboards')
+
         const mobileTrigger = screen.getByRole('button', { name: 'Reports' })
         expect(mobileTrigger)
             .toHaveAttribute('aria-expanded', 'false')
