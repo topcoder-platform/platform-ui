@@ -226,7 +226,8 @@ The Reports route is `/reports/sales-dashboards` on the combined host and
 `/sales-dashboards` on the Reports host. Existing pipeline/progression reports
 and platform dashboards retain their routes and behavior.
 
-Each section calls `/sales-dashboard/:section` on the Reports API independently,
+The pipeline, revenue, member payments and flexible talent sections each call
+`/sales-dashboard/:section` on the Reports API independently,
 with inline loading, failure/retry and pending-source states. Refresh reloads all
 sections. Changing Close date / Created date reloads only pipeline data. Source
 requests are aborted on unmount or control changes.
@@ -234,19 +235,22 @@ requests are aborted on unmount or control changes.
 Charts cover the latest six UTC calendar months. Opportunity size, expected
 revenue and pipeline stages include three months back through six months ahead;
 Closed Won remains historical. Charts include expandable monthly data tables,
-percentage/currency/count units, and gaps for unknown markup. Source notices
+currency/count units, and gaps for unknown values. Source notices
 remain visible above the charts.
 
 Sales passes `portal=sales` so the API removes TaaS, Topcoder and unlinked customer
 payments before computing any payment totals or customer rankings. Reports
-passes `portal=reports`. Gross margin averages all payment markups in both portals;
-flexible talent counts newly assigned, completed and ongoing members by month.
+passes `portal=reports`. Flexible talent counts newly assigned, completed and
+ongoing members by month. Gross margin is on hold per the PM-6632 clarification:
+neither portal renders or requests that section, including on refresh.
 
-Revenue shows a pending notice until the confirmed SFDC report and its date and
-revenue column IDs are configured in reports-api-v6. See that repository's
+Revenue uses the confirmed SFDC report `00O1K000009GxBtUAK` by default and shows a
+pending notice until its exact date and revenue column IDs are configured in
+reports-api-v6. See that repository's
 `SALES.md` for source definitions, required settings and API parameters.
 
-Tests: `SalesDashboardsPage.spec.tsx` covers portal scope, independent failures,
+Tests: `SalesDashboardsPage.spec.tsx` covers portal scope, gross margin remaining
+hidden and unrequested in both portals, independent failures,
 retry, refresh, date-basis changes, request cancellation, keyboard navigation and
 accessible percentage/missing-value tables. Reports route/navigation tests cover
 the new entry point.
