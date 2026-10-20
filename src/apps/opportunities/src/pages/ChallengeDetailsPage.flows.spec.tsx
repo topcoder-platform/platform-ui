@@ -731,8 +731,10 @@ describe('ChallengeDetailsPage member flows', () => {
 
         const artifacts = screen.getByRole('button', { name: 'Download submission artifacts latest-attempt' })
         const history = screen.getByRole('button', { name: label as string })
-        expect(artifacts.textContent)
-            .toBe('')
+        expect(artifacts.children)
+            .toHaveLength(1)
+        expect(artifacts.querySelector('svg'))
+            .toHaveAttribute('aria-hidden', 'true')
         expect(history.textContent)
             .toBe(visibleCount)
         expect(screen.queryByRole('tooltip'))
@@ -2262,6 +2264,12 @@ describe('ChallengeDetailsPage member flows', () => {
             .toHaveAttribute('aria-sort', 'descending')
         expect(screen.getByRole('columnheader', { name: 'Submission Date' }))
             .toHaveAttribute('aria-sort', 'none')
+        expect(screen.getByRole('columnheader', { name: label })
+            .querySelector('svg'))
+            .toBeInTheDocument()
+        screen.getAllByRole('columnheader')
+            .filter(header => header.getAttribute('aria-sort') === 'none')
+            .forEach(header => expect(header.querySelector('svg')).not.toBeInTheDocument())
     })
 
     it('shows global MM ranks across date-sorted pages and supports mobile rank sorting', () => {

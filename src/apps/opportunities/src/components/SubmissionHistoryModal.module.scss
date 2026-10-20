@@ -115,6 +115,7 @@
         overflow-wrap: anywhere;
         padding: 8px 12px;
         text-align: left;
+        vertical-align: middle;
     }
 
     th {
@@ -142,6 +143,10 @@
     gap: 12px 20px;
     margin-bottom: 24px;
     overflow-wrap: anywhere;
+
+    strong {
+        font-weight: 700;
+    }
 }
 
 .artifactButton,
@@ -165,6 +170,7 @@
 .artifactButton {
     color: #008080;
     padding: 6px;
+    vertical-align: middle;
 }
 
 .sortButton {
