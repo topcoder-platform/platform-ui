@@ -837,9 +837,12 @@ horizontal clipping. The dialog also exposes the latest-submission summary only
 at that breakpoint. History requests include the selected member ID and submission type and fetch every page without a latest-only
 filter. Visible Marathon Matches expose full history to all viewers, including
 anonymous and unregistered visitors, through Review API. The History action shows
-the API's complete submission count in parentheses when available. In Marathon
-Match All Submissions, the actions stay on one line: a file icon for artifacts
-and a history icon followed by that count. Hovering shows `View Artifacts` or
+the API's complete submission count when available. In Marathon Match All
+Submissions, the actions stay on one line: the design's 20px folded-file icon for
+artifacts and clock-with-history-arrow icon followed by the count without parentheses.
+These SVGs are exported from Figma action cells `15140:77730` and `15140:77731`.
+Other challenge types retain their labeled History action and parenthesized count.
+Hovering shows `View Artifacts` or
 `History (8 submissions)` with the actual count (or `History` when unavailable);
 the buttons retain accessible names and open the existing dialogs. Artifact
 controls retain the ownership, staff, and completed-contestant access described
