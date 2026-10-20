@@ -16,7 +16,6 @@ const sections: Array<{ id: SalesDashboardSection; title: string }> = [
     { id: 'revenue', title: 'Revenue' },
     { id: 'payments', title: 'Member payments' },
     { id: 'talent', title: 'Flexible talent' },
-    { id: 'gross-margin', title: 'Gross margin' },
 ]
 
 type SectionProps = {
@@ -80,7 +79,7 @@ const DashboardSection: FC<SectionProps> = props => {
 /**
  * Shares the executive monthly dashboards between the Reports and Sales portals.
  * @param props Portal scope; Reports retains existing payment types, Sales requests only customer work.
- * @returns Four pipeline charts, revenue, payments, flexible talent and average monthly markup.
+ * @returns Four pipeline charts, revenue, payments and flexible talent. Gross margin is deferred.
  * @throws Does not throw; sections manage their source failures independently.
  */
 const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
