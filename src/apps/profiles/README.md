@@ -23,7 +23,14 @@ To check a deployed profile:
    and that both tooltip lines are center-aligned. Repeat at a mobile viewport
    width. Compare at the same browser zoom; screenshot pixels can differ from
    CSS pixels.
-4. Click the badge to open the rating information modal. The tooltip should
+4. Move the pointer away and hover again several times, including a quick
+   re-entry. The first hover and later hovers should have the same geometry.
+   The tooltip must remain hidden until react-tooltip has calculated its
+   position and applied `react-tooltip__show`. The rating styles set opacity
+   to zero otherwise, overriding the shared tooltip's default opacity. An
+   unconditional `opacity: 1 !important` exposed the unpositioned first mount
+   and bypassed the closing state, while later hovers reused a cached position.
+5. Click the badge to open the rating information modal. The tooltip should
    disappear while the modal is open.
 
 If development looks correct but production appears different, disable the
@@ -57,10 +64,12 @@ Run the existing focused regression tests from the `platform-ui` project root:
 
 ```sh
 nvm use
-CI=true yarn test:no-watch --runInBand Tooltip.spec.tsx MemberRatingCard.spec.tsx
+CI=true yarn test:no-watch --runInBand Tooltip.spec.tsx MemberRatingCard.spec.tsx MemberRatingCard.styles.spec.ts
 ```
 
 These tests cover the rating tooltip's 16px offset, forwarding that offset
 through the shared tooltip, preserving the default for other tooltips, and
-disabling the percentile tooltip while the modal is open. Jest mocks layout,
-so the deployed visual checks above are also required for QA.
+disabling the percentile tooltip while the modal is open. The stylesheet test
+compiles the shared and rating SCSS and checks computed opacity before opening
+and across repeated open/close states. Jest mocks layout, so the deployed visual
+checks above are also required for QA.
