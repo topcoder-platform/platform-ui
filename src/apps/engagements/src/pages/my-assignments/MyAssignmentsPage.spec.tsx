@@ -95,9 +95,10 @@ jest.mock('../../engagements.routes', () => ({
 
 jest.mock('../../components', () => ({
     AssignmentCard: (props: {
-        assignment?: { status?: string }
+        assignment?: { id: string; status?: string }
         engagement: { id: string; title: string }
         onAcceptOffer?: () => void
+        onDocumentExperience?: () => void
         onOpenTimesheet?: () => void
         profileGateError?: string
     }) => (
@@ -114,15 +115,34 @@ jest.mock('../../components', () => ({
                     Timesheet
                 </button>
             )}
+            <button type='button' onClick={props.onDocumentExperience}>
+                Document Experience
+            </button>
             {props.profileGateError && <div>{props.profileGateError}</div>}
         </article>
     ),
     AssignmentOfferModal: () => <></>,
     EngagementsTabs: () => <div>engagement-tabs</div>,
-    MemberExperienceModal: () => <></>,
+    MemberExperienceModal: (props: { assignmentId: string; open: boolean; onClose: () => void }) => (
+        props.open ? (
+            <div role='dialog' aria-label='Document Your Experience'>
+                <span>{props.assignmentId}</span>
+                <button type='button' onClick={props.onClose}>Close</button>
+            </div>
+        ) : <></>
+    ),
     TermsAgreementModal: () => <></>,
 }))
 
+/**
+ * Builds an engagement with one member assignment for page regression tests.
+ * @param id Engagement id used to derive fixture ids.
+ * @param title Display title.
+ * @param assignmentStatus Status of the member's assignment.
+ * @param engagementStatus Overall engagement status, defaulting to open.
+ * @returns An engagement fixture owned by the mocked signed-in member.
+ * @throws Does not throw.
+ */
 const buildEngagement = (
     id: string,
     title: string,
@@ -253,6 +273,57 @@ describe('MyAssignmentsPage', () => {
             .getByText('Terminated Engagement'))
             .toBeInTheDocument()
     })
+
+    it.each(['completed', 'terminated'])(
+        'keeps a %s assignment accessible when the same member has an active assignment',
+        async pastStatus => {
+            const user = userEvent.setup()
+            const engagement = buildEngagement('eng-repeat', 'Repeated Engagement', pastStatus)
+            const pastAssignment = engagement.assignments![0]
+            const activeAssignment = {
+                ...pastAssignment,
+                id: 'active-assignment',
+                status: 'assigned',
+            }
+            engagement.assignments = [
+                activeAssignment,
+                pastAssignment,
+                { ...pastAssignment, id: 'other-member-assignment', memberId: '456' },
+            ]
+            mockGetMyAssignedEngagements.mockResolvedValue({
+                data: [engagement],
+                page: 1,
+                perPage: 20,
+                total: 1,
+                totalPages: 1,
+            })
+
+            render(<MyAssignmentsPage />)
+
+            const pastHeading = await screen.findByRole('heading', { name: 'Past' })
+            const activeHeading = screen.getByRole('heading', { name: 'Active' })
+            const pastSection = within(pastHeading.closest('section') as HTMLElement)
+            const activeSection = within(activeHeading.closest('section') as HTMLElement)
+
+            expect(screen.getAllByRole('article'))
+                .toHaveLength(2)
+            expect(pastSection.getByText(pastStatus))
+                .toBeInTheDocument()
+            expect(activeSection.getByText('assigned'))
+                .toBeInTheDocument()
+
+            await user.click(pastSection.getByRole('button', { name: 'Document Experience' }))
+            expect(within(screen.getByRole('dialog'))
+                .getByText(pastAssignment.id))
+                .toBeInTheDocument()
+
+            await user.click(screen.getByRole('button', { name: 'Close' }))
+            await user.click(activeSection.getByRole('button', { name: 'Document Experience' }))
+            expect(within(screen.getByRole('dialog'))
+                .getByText(activeAssignment.id))
+                .toBeInTheDocument()
+        },
+    )
 
     describe('timesheet entry point', () => {
         it('shows a Timesheet button for an assigned engagement and opens the nested route', async () => {
