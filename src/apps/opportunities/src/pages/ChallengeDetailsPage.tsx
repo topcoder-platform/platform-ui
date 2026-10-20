@@ -1313,7 +1313,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
     const [allSubmissionsSortBy, setSortBy] = useState<SubmissionSortField>('submittedDate')
     const sortBy = props.mine ? 'submittedDate' : allSubmissionsSortBy
-    const [artifactsSubmissionId, setArtifactsSubmissionId] = useState<string>()
+    const [artifactsSubmission, setArtifactsSubmission] = useState<ChallengeSubmission>()
     const [historySubmission, setHistorySubmission] = useState<ChallengeSubmission | undefined>()
     const [aiSubmissionExpansionOverrides, setAiSubmissionExpansionOverrides]
         = useState<Record<string, boolean>>({})
@@ -1342,12 +1342,19 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     /**
      * Opens scorer artifacts from either the latest row or a history entry.
      * @param submissionId Authorized submission selected by the viewer.
-     * @returns void after closing history and opening the artifact dialog.
+     * Keeps the owner metadata and hides history until artifacts close, avoiding stacked backdrops.
+     * @returns void after selecting the artifact dialog submission.
      * @throws Does not throw; the dialog reports API authorization errors.
      */
     const openArtifacts = (submissionId: string): void => {
-        setHistorySubmission(undefined)
-        setArtifactsSubmissionId(submissionId)
+        const owner = historySubmission ?? loadedSubmissions.find(submission => submission.id === submissionId)
+        const profile = profilesById.get(owner ? challengeSubmissionMemberId(owner) ?? '' : '')
+        setArtifactsSubmission({
+            ...owner,
+            id: submissionId,
+            submitterHandle: profile?.handle ?? (owner ? submissionHandle(owner) : undefined),
+            submitterMaxRating: profile?.maxRating ?? owner?.submitterMaxRating ?? owner?.rating,
+        })
     }
 
     const hasAiWorkflow = !isMarathonMatch && (
@@ -2164,16 +2171,19 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
             )}
             <SubmissionArtifactsModal
                 allowInternalArtifacts={allowInternalArtifacts}
-                onClose={() => setArtifactsSubmissionId(undefined)}
-                open={!!artifactsSubmissionId}
-                submissionId={artifactsSubmissionId}
+                completed={completedMarathon}
+                handle={artifactsSubmission?.submitterHandle}
+                onClose={() => setArtifactsSubmission(undefined)}
+                open={!!artifactsSubmission}
+                rating={artifactsSubmission?.submitterMaxRating ?? undefined}
+                submissionId={artifactsSubmission?.id}
             />
             <SubmissionHistoryModal
                 challengeId={props.challenge.id}
                 isMarathonMatch={isMarathonMatch}
                 onClose={() => setHistorySubmission(undefined)}
                 onOpenArtifacts={historySubmission && canViewArtifacts(historySubmission) ? openArtifacts : undefined}
-                open={!!historySubmission}
+                open={!!historySubmission && !artifactsSubmission}
                 reviewSummations={scoreResponse.data}
                 showFinalScores={props.mine || showAllSubmissionFinalScores}
                 submission={historySubmission}

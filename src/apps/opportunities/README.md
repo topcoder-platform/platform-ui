@@ -814,20 +814,27 @@ Review App handoff.
 Artifact controls in All Submissions, My Submissions, and submission history
 use the challenge's exact `COMPLETED` status for Marathon Matches. Before completion
 (including cancelled challenges), contestants can list and download only their own
-regular artifacts. After completion, registered contestants can download regular
+`example` artifact. After completion, registered contestants can download regular
 and internal provisional/system artifacts for their own and other members' attempts.
 Scores and phase end dates never unlock artifacts. Existing admin/copilot access
-is retained. The shared dialog filters internal entries when permission changes,
-and Review API independently authorizes both listing and every download.
+is retained. The dialog filters cached entries when permission changes, and Review
+API independently authorizes both listing and every download. Completed MM dialogs
+also offer Download all, packaging every returned artifact (including example-internal,
+example, provisional-internal, and system-internal when authorized) into one ZIP.
+If any download fails, no partial ZIP is saved. The artifact header shows the
+submission ID and owner handle, including when opened from an older history entry.
 The Marathon Match My Submissions table reserves enough width for the complete
 submission timestamp and keeps its date heading and sort icon on one line,
 aligned with the dates beneath it. Score columns remain right aligned.
-Submission history replaces the unreliable status field with Final Score. At
-phone widths, each attempt becomes a compact stacked label/value card in the
-legacy Submission, Final Score, Provisional Score, and Time order, avoiding
-horizontal clipping. The dialog also exposes the latest-submission summary and
-compact close action only at that breakpoint. History requests include the
-selected member ID and submission type and fetch every page without a latest-only
+Submission history shows the member handle, sortable Submission Date (newest first),
+full-precision scores, a Failed badge for negative provisional scores, and authorized
+View artifact icons with tooltips. Final score release rules are unchanged. Both MM
+dialogs have desktop/mobile Close controls, a 50% black backdrop, and no shadow.
+Opening artifacts from history temporarily hides history to avoid stacked backdrops;
+closing artifacts restores history. At phone widths, each attempt becomes a compact
+stacked label/value card in the legacy Submission, Final Score, Provisional Score, and Time order, avoiding
+horizontal clipping. The dialog also exposes the latest-submission summary only
+at that breakpoint. History requests include the selected member ID and submission type and fetch every page without a latest-only
 filter. Visible Marathon Matches expose full history to all viewers, including
 anonymous and unregistered visitors, through Review API. The History action shows
 the API's complete submission count in parentheses when available. In Marathon
