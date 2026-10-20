@@ -40,6 +40,7 @@ const mockSetForumPostReaction = jest.fn()
 const mockSetForumTopicWatching = jest.fn()
 const mockSetChallengeForumWatching = jest.fn()
 const mockMutateForumWatch = jest.fn()
+const mockMutateTopics = jest.fn()
 let forumWatching: boolean | undefined
 let watchError: Error | undefined
 const mockUseSWR = jest.fn()
@@ -255,6 +256,7 @@ describe('ChallengeForum', () => {
         watchError = undefined
         mockSetChallengeForumWatching.mockReset()
         mockMutateForumWatch.mockReset()
+        mockMutateTopics.mockReset()
         mockUseSWR.mockImplementation((key: unknown) => {
             if (Array.isArray(key) && key[0] === 'opportunities:forum-watch') {
                 return {
@@ -272,7 +274,7 @@ describe('ChallengeForum', () => {
                     data: topicCollection,
                     error: listError,
                     isValidating: false,
-                    mutate: jest.fn(),
+                    mutate: mockMutateTopics,
                 }
             }
 
@@ -372,12 +374,44 @@ describe('ChallengeForum', () => {
             .toHaveBeenCalledWith('challenge-id', true))
     })
 
+    it('refreshes topic watches after forum toggles and orders the two overview actions', async () => {
+        mockSetChallengeForumWatching.mockResolvedValue({
+            challengeId: 'challenge-id', memberId: '10', watching: false,
+        })
+        const props = {
+            canCreateAnnouncements: true, challenge: { id: 'challenge-id', name: 'Challenge' }, memberId: '10',
+        }
+        const view = render(<ChallengeForum {...props} />)
+        const create = screen.getByRole('button', { name: 'Create new topic' })
+        const unwatch = screen.getByRole('button', { name: 'Unwatch forum' })
+        expect(create.nextElementSibling)
+            .toBe(unwatch)
+        expect(unwatch.nextElementSibling)
+            .toBeNull()
+        expect(unwatch.querySelector('img'))
+            .toHaveAttribute('src', 'watched.svg')
+        expect(screen.queryByRole('button', { name: 'Create announcement' })).not.toBeInTheDocument()
+        await act(async () => fireEvent.click(unwatch))
+        expect(mockMutateTopics)
+            .toHaveBeenCalledTimes(1)
+        forumWatching = false
+        view.rerender(<ChallengeForum {...props} />)
+        const watch = screen.getByRole('button', { name: 'Watch forum' })
+        expect(watch.querySelector('img'))
+            .toHaveAttribute('src', '74494.svg')
+        mockSetChallengeForumWatching.mockResolvedValue({ challengeId: 'challenge-id', memberId: '10', watching: true })
+        await act(async () => fireEvent.click(watch))
+        expect(mockMutateTopics)
+            .toHaveBeenCalledTimes(2)
+    })
+
     it('preserves the watch preference when saving fails', async () => {
         mockSetChallengeForumWatching.mockRejectedValue(new Error('Unable to save preference'))
         render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
         fireEvent.click(screen.getByRole('button', { name: 'Unwatch forum' }))
         await screen.findByText('Unable to save preference')
         expect(mockMutateForumWatch).not.toHaveBeenCalled()
+        expect(mockMutateTopics).not.toHaveBeenCalled()
         expect(screen.getByRole('button', { name: 'Unwatch forum' }))
             .toBeEnabled()
     })
@@ -563,9 +597,11 @@ describe('ChallengeForum', () => {
                 memberId='10'
             />,
         )
-        fireEvent.click(screen.getByRole('button', { name: /Create announcement/ }))
+        expect(screen.queryByRole('button', { name: /Create announcement/ })).not.toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: /Create new topic/ }))
         expect(screen.getByRole('checkbox', { name: /Post as announcement/ }))
-            .toBeChecked()
+            .not.toBeChecked()
+        fireEvent.click(screen.getByRole('checkbox', { name: /Post as announcement/ }))
         fireEvent.change(screen.getByPlaceholderText(/clear, descriptive title/), {
             target: { value: 'Submission deadline extended' },
         })

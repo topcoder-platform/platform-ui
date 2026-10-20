@@ -954,7 +954,13 @@ including for empty forums. It reads the authenticated member's effective
 preference from `GET /v6/forums/challenges/:challengeId/watch` and saves choices
 with PUT or DELETE on that route. The Forums API defaults registrants and
 copilots to watching based on their challenge resource assignments and persists
-explicit opt-outs. Topic-specific watches remain independent. Loading and failed
+explicit opt-outs. After saving, the UI reloads topic summaries so inherited
+watches and announcements reflect the forum preference. Individual topic watches
+and opt-outs override that preference in both topic reads and notifications.
+Create new topic is the first, filled action; Watch/Unwatch forum is the outlined
+second action with a 16px gap and the existing outlined/filled eye icons.
+Announcements are created using the topic form's administrator/copilot checkbox.
+Loading and failed
 reads disable the control; failed saves preserve the displayed preference and
 show the API error. This requires the Forums API challenge-watch migration and
 endpoints to be deployed first.
