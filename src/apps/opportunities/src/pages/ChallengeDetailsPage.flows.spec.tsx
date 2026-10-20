@@ -201,17 +201,37 @@ jest.mock('../components', () => ({
     OpportunityPagination: jest.requireActual('../components/OpportunityPagination').OpportunityPagination,
     ReportIssueModal: (): JSX.Element => <></>,
     SubmissionArtifactsModal: (props: {
+        allowInternalArtifacts?: boolean
+        completed?: boolean
+        handle?: string
+        onClose: () => void
         open: boolean
         submissionId?: string
-    }): JSX.Element => (
-        <div>{props.open ? `Artifacts modal ${props.submissionId}` : ''}</div>
-    ),
+    }): JSX.Element => (props.open ? (
+        <div
+            data-testid='artifacts-modal'
+            data-completed={props.completed}
+            data-internal={props.allowInternalArtifacts}
+        >
+            <span>{`Artifacts modal ${props.submissionId}`}</span>
+            <span>{props.handle}</span>
+            <button onClick={props.onClose} type='button'>Close artifacts</button>
+        </div>
+    ) : <></>),
     SubmissionHistoryModal: (props: {
+        onOpenArtifacts?: (id: string) => void
         open: boolean
         submission?: { id: string }
-    }): JSX.Element => (
-        <div>{props.open ? `History modal ${props.submission?.id}` : ''}</div>
-    ),
+    }): JSX.Element => (props.open ? (
+        <div>
+            <span>{`History modal ${props.submission?.id}`}</span>
+            {props.onOpenArtifacts && (
+                <button onClick={() => props.onOpenArtifacts?.('older-attempt')} type='button'>
+                    View older artifacts
+                </button>
+            )}
+        </div>
+    ) : <></>),
 }))
 
 jest.mock('../components/challenge-card.utils', () => ({
@@ -726,6 +746,7 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(screen.getByText('Artifacts modal latest-attempt'))
             .toBeInTheDocument()
 
+        fireEvent.click(screen.getByRole('button', { name: 'Close artifacts' }))
         fireEvent.mouseOver(history)
         expect(await screen.findByRole('tooltip', { name: label as string }))
             .toBeInTheDocument()
@@ -733,6 +754,37 @@ describe('ChallengeDetailsPage member flows', () => {
         expect(screen.getByText('History modal latest-attempt'))
             .toBeInTheDocument()
     })
+
+    it.each(['ACTIVE', 'CANCELLED', 'COMPLETED'])(
+        'passes exact completion and owner metadata to artifacts and restores history for %s MMs',
+        status => {
+            mockProfile = { handle: 'coder', userId: 123 }
+            mockChallenge = { ...mockChallenge, status, type: 'Marathon Match' }
+            mockSubmissions = [{ id: 'latest-attempt', memberId: '123', submitterHandle: 'coder' }]
+            renderPage()
+            fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+            fireEvent.click(screen.getByRole('button', { name: 'Download submission artifacts latest-attempt' }))
+            expect(screen.getByTestId('artifacts-modal'))
+                .toHaveAttribute('data-completed', String(status === 'COMPLETED'))
+            expect(screen.getByTestId('artifacts-modal'))
+                .toHaveAttribute('data-internal', String(status === 'COMPLETED'))
+            expect(within(screen.getByTestId('artifacts-modal'))
+                .getByText('coder'))
+                .toBeInTheDocument()
+            fireEvent.click(screen.getByRole('button', { name: 'Close artifacts' }))
+            fireEvent.click(screen.getByRole('button', { name: 'History' }))
+            fireEvent.click(screen.getByRole('button', { name: 'View older artifacts' }))
+            expect(screen.getByText('Artifacts modal older-attempt'))
+                .toBeInTheDocument()
+            expect(within(screen.getByTestId('artifacts-modal'))
+                .getByText('coder'))
+                .toBeInTheDocument()
+            expect(screen.queryByText('History modal latest-attempt')).not.toBeInTheDocument()
+            fireEvent.click(screen.getByRole('button', { name: 'Close artifacts' }))
+            expect(screen.getByText('History modal latest-attempt'))
+                .toBeInTheDocument()
+        },
+    )
 
     it('publishes the gated Marathon Match dashboard to signed out visitors', () => {
         mockChallenge = {
