@@ -814,7 +814,9 @@ Review App handoff.
 Artifact controls in All Submissions, My Submissions, and submission history
 use the challenge's exact `COMPLETED` status for Marathon Matches. Before completion
 (including cancelled challenges), contestants can list and download only their own
-`example` artifact. After completion, registered contestants can download regular
+`example` artifact, accepting both `example` and `<submissionId>-example` API IDs.
+Downloads always use the original API ID; internal and unrelated IDs remain hidden.
+After completion, registered contestants can download regular
 and internal provisional/system artifacts for their own and other members' attempts.
 Scores and phase end dates never unlock artifacts. Existing admin/copilot access
 is retained. The dialog filters cached entries when permission changes, and Review
@@ -822,7 +824,8 @@ API independently authorizes both listing and every download. Completed MM dialo
 also offer Download all, packaging every returned artifact (including example-internal,
 example, provisional-internal, and system-internal when authorized) into one ZIP.
 If any download fails, no partial ZIP is saved. The artifact header shows the
-submission ID and owner handle, including when opened from an older history entry.
+bold Submission ID and Handle labels, including when opened from an older history entry.
+Both modal tables vertically center their text and the shared folded-page artifact icons.
 The Marathon Match My Submissions table reserves enough width for the complete
 submission timestamp and keeps its date heading and sort icon on one line,
 aligned with the dates beneath it. Score columns remain right aligned.
@@ -838,7 +841,11 @@ at that breakpoint. History requests include the selected member ID and submissi
 filter. Visible Marathon Matches expose full history to all viewers, including
 anonymous and unregistered visitors, through Review API. The History action shows
 the API's complete submission count in parentheses when available. In Marathon
-Match All Submissions, the actions stay on one line: a file icon for artifacts
+Match All Submissions, proportional columns avoid a forced desktop scrollbar, rank
+values align right, and long handles stay on one line with ellipsis and a full-handle
+title when space is limited. Rank headings wrap only when necessary. All challenge
+detail tables show a sort arrow only on the active column; other headers remain
+clickable. The actions stay on one line: a file icon for artifacts
 and a history icon followed by that count. Hovering shows `View Artifacts` or
 `History (8 submissions)` with the actual count (or `History` when unavailable);
 the buttons retain accessible names and open the existing dialogs. Artifact

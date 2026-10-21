@@ -102,6 +102,55 @@ describe('SubmissionArtifactsModal', () => {
             .not.toBeInTheDocument()
     })
 
+    it('shows the active match example with its exact submission-prefixed API ID', async () => {
+        const submissionId = 'YtoH-k9To2Ggxx'
+        const exampleId = `${submissionId}-example`
+        mockedGetArtifacts.mockResolvedValue([
+            exampleId, `${submissionId}-example-internal`, `${submissionId}-provisional-internal`,
+            `${submissionId}-system-internal`, 'other-submission-example', `${submissionId}-example-extra`,
+        ])
+        render(
+            <SWRConfig value={{ provider: () => new Map() }}>
+                <SubmissionArtifactsModal onClose={jest.fn()} open submissionId={submissionId} />
+            </SWRConfig>,
+        )
+        fireEvent.click(await screen.findByRole('button', { name: `Download artifact ${exampleId}` }))
+        expect(screen.getAllByRole('row'))
+            .toHaveLength(2)
+        expect(screen.queryByRole('button', { name: 'Download all' })).not.toBeInTheDocument()
+        await waitFor(() => expect(mockedDownloadArtifact)
+            .toHaveBeenCalledWith(submissionId, exampleId))
+        await waitFor(() => expect(HTMLAnchorElement.prototype.click)
+            .toHaveBeenCalled())
+        expect((HTMLAnchorElement.prototype.click as jest.Mock).mock.instances[0].download)
+            .toBe(`${exampleId}.zip`)
+    })
+
+    it('filters cached prefixed internal artifacts when management access is removed', async () => {
+        const artifactIds = ['submission-id-example', 'submission-id-example-internal']
+        mockedGetArtifacts.mockResolvedValue(artifactIds)
+        const cache: Map<string, unknown> = new Map()
+        const { rerender }: ReturnType<typeof render> = render(
+            <SWRConfig value={{ provider: () => cache }}>
+                <SubmissionArtifactsModal
+                    allowInternalArtifacts
+                    onClose={jest.fn()}
+                    open
+                    submissionId='submission-id'
+                />
+            </SWRConfig>,
+        )
+        await screen.findByRole('button', { name: `Download artifact ${artifactIds[1]}` })
+        rerender(
+            <SWRConfig value={{ provider: () => cache }}>
+                <SubmissionArtifactsModal onClose={jest.fn()} open submissionId='submission-id' />
+            </SWRConfig>,
+        )
+        await screen.findByRole('button', { name: `Download artifact ${artifactIds[0]}` })
+        expect(screen.queryByRole('button', { name: `Download artifact ${artifactIds[1]}` }))
+            .not.toBeInTheDocument()
+    })
+
     it('loads and downloads the selected scorer artifact through Review API', async () => {
         render(
             <SWRConfig value={{ dedupingInterval: 0, provider: () => new Map() }}>
@@ -169,6 +218,7 @@ describe('SubmissionArtifactsModal', () => {
 
     it('shows submission metadata and saves all authorized artifacts in one complete ZIP', async () => {
         const artifactIds = ['example-internal', 'example', 'provisional-internal', 'system-internal']
+            .map(id => `completed-submission-${id}`)
         const onClose = jest.fn()
         mockedGetArtifacts.mockResolvedValue(artifactIds)
         mockedDownloadArtifact.mockImplementation((_submissionId, id) => (

@@ -17,6 +17,7 @@ import {
     marathonSubmissionScores,
 } from '../utils/marathon-match.utils'
 import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
+import { ReactComponent as ArtifactIcon } from '../assets/submission-artifact.svg'
 
 import styles from './SubmissionHistoryModal.module.scss'
 
@@ -232,7 +233,7 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                                                         onClick={() => props.onOpenArtifacts?.(submission.id)}
                                                         type='button'
                                                     >
-                                                        <IconOutline.DocumentIcon aria-hidden='true' />
+                                                        <ArtifactIcon aria-hidden='true' />
                                                     </button>
                                                 </Tooltip>
                                             </td>
