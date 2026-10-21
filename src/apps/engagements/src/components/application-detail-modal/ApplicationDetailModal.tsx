@@ -1,4 +1,5 @@
 import { FC, useMemo } from 'react'
+import classNames from 'classnames'
 
 import { BaseModal, Button } from '~/libs/ui'
 
@@ -120,7 +121,7 @@ const ApplicationSection: FC<ApplicationSectionProps> = (
             <div className={styles.metaGrid}>
                 <div className={styles.metaItem}>
                     <span className={styles.metaLabel}>Availability</span>
-                    <span className={styles.metaValue}>
+                    <span className={classNames(styles.metaValue, styles.multiline)}>
                         {application.availability || 'Not specified'}
                     </span>
                 </div>
@@ -160,7 +161,7 @@ const CoverLetterSection: FC<CoverLetterSectionProps> = (
         <div className={styles.section}>
             <h4>Cover letter</h4>
             <div className={styles.coverLetter}>
-                {application.coverLetter || 'No cover letter provided.'}
+                {application.coverLetter}
             </div>
         </div>
     )
@@ -244,7 +245,7 @@ const ApplicationDetailContent: FC<ApplicationDetailContentProps> = (
             />
             <ApplicantSection application={application} />
             <ApplicationSection application={application} formattedDate={formattedDate} />
-            <CoverLetterSection application={application} />
+            {application.coverLetter && <CoverLetterSection application={application} />}
             <DocumentsSection application={application} />
         </div>
     )
