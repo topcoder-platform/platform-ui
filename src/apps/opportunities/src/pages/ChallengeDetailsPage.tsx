@@ -111,12 +111,13 @@ import {
 import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
 import { ReactComponent as SortIcon } from '../assets/sort.svg'
-import { ReactComponent as ArtifactIcon } from '../assets/submission-artifact.svg'
 import { ReactComponent as DeleteIcon } from '../assets/submission-delete.svg'
 import medal1 from '../assets/winner-card-medal-1.svg'
 import medal2 from '../assets/winner-card-medal-2.svg'
 import medal3 from '../assets/winner-card-medal-3.svg'
 import resetIcon from '../assets/reset.svg'
+import submissionArtifactsIcon from '../assets/submission-artifacts.svg'
+import submissionHistoryIcon from '../assets/submission-history.svg'
 import winnerThanksIcon from '../assets/winner-thanks.svg'
 
 import styles from './ChallengeDetailsPage.module.scss'
@@ -2112,10 +2113,10 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                                 onClick={() => openArtifacts(submission.id)}
                                                                 type='button'
                                                             >
-                                                                <ArtifactIcon
+                                                                <img
+                                                                    alt=''
                                                                     aria-hidden='true'
-                                                                    height={20}
-                                                                    width={20}
+                                                                    src={submissionArtifactsIcon}
                                                                 />
                                                             </button>
                                                         </Tooltip>
@@ -2132,9 +2133,12 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                                             onClick={() => setHistorySubmission(submission)}
                                                             type='button'
                                                         >
-                                                            <img alt='' aria-hidden='true' src={resetIcon} />
-                                                            {submission.submissionCount !== undefined
-                                                                && `(${submission.submissionCount})`}
+                                                            <img
+                                                                alt=''
+                                                                aria-hidden='true'
+                                                                src={submissionHistoryIcon}
+                                                            />
+                                                            {submission.submissionCount}
                                                         </button>
                                                     </Tooltip>
                                                 </div>

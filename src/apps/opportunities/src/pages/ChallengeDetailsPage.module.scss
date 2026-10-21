@@ -336,10 +336,18 @@
 .marathonActions {
     align-items: center;
     display: flex;
-    gap: 8px;
+    gap: 16px;
     white-space: nowrap;
 
-    button { padding: 0; }
+    button {
+        gap: 8px;
+        padding: 0;
+    }
+
+    img {
+        height: 20px;
+        width: 20px;
+    }
 }
 
 .submissionActionTooltip {

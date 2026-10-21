@@ -718,8 +718,9 @@ describe('ChallengeDetailsPage member flows', () => {
     })
 
     it.each([
-        [8, 'History (8 submissions)', '(8)'],
-        [1, 'History (1 submission)', '(1)'],
+        [8, 'History (8 submissions)', '8'],
+        [1, 'History (1 submission)', '1'],
+        [0, 'History (0 submissions)', '0'],
         [undefined, 'History', ''],
     ])('keeps MM actions compact and describes history count %s on hover', async (count, label, visibleCount) => {
         mockProfile = { handle: 'coder', userId: 123 }
@@ -733,10 +734,14 @@ describe('ChallengeDetailsPage member flows', () => {
         const history = screen.getByRole('button', { name: label as string })
         expect(artifacts.children)
             .toHaveLength(1)
-        expect(artifacts.querySelector('svg'))
+        expect(artifacts.querySelector('img'))
             .toHaveAttribute('aria-hidden', 'true')
         expect(history.textContent)
             .toBe(visibleCount)
+        expect(artifacts.querySelector('img'))
+            .toHaveAttribute('src', 'submission-artifacts.svg')
+        expect(history.querySelector('img'))
+            .toHaveAttribute('src', 'submission-history.svg')
         expect(screen.queryByRole('tooltip'))
             .not.toBeInTheDocument()
 
