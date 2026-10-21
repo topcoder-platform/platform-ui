@@ -61,19 +61,63 @@ export function dateRangeError(column: string, from: string, to: string): string
  * Merges the stage drilldown into the report query.
  * @param current Active report query.
  * @param column Category column the drilldown targets, such as the Stage column.
- * @param value Exact displayed value to drill into; an empty value clears the drilldown.
+ * @param value Exact displayed values matched with OR; empty values clear the drilldown.
  * @returns The current query when nothing changed, otherwise a new query reset to page one. Does not throw.
  */
-export function withDrilldown(current: SalesQuery, column: string, value: string): SalesQuery {
+export function withDrilldown(current: SalesQuery, column: string, value: string | string[]): SalesQuery {
     // A column alone never narrows the page, so both halves travel together.
-    const applied = !!column && !!value
+    const values = [value].flat()
+        .filter(Boolean)
+    const applied = !!column && !!values.length
     const next = {
         drilldownColumn: applied ? column : undefined,
-        drilldownValue: applied ? value : undefined,
+        drilldownValue: applied ? values.length === 1 ? values[0] : values : undefined,
     }
-    if (next.drilldownColumn === current.drilldownColumn && next.drilldownValue === current.drilldownValue) {
+    if (next.drilldownColumn === current.drilldownColumn
+        && JSON.stringify(next.drilldownValue) === JSON.stringify(current.drilldownValue)) {
         return current
     }
+
+    return { ...current, ...next, page: 1 }
+}
+
+/**
+ * Validates the Sales report's exclusive numeric bounds before requesting a range.
+ * @param column Selected currency/double column ID.
+ * @param min Raw lower bound; empty means unbounded.
+ * @param max Raw upper bound; empty means unbounded.
+ * @returns A user-facing error, or an empty string for a usable range. Does not throw.
+ */
+export function amountRangeError(column: string, min: string, max: string): string {
+    if (!column && (min || max)) return 'Choose the amount field this range applies to.'
+    if ([min, max].some(value => value !== '' && !Number.isFinite(Number(value)))) {
+        return 'Enter a valid number for each amount bound.'
+    }
+
+    if (min !== '' && max !== '' && Number(min) >= Number(max)) {
+        return 'The lower amount must be less than the upper amount.'
+    }
+
+    return ''
+}
+
+/**
+ * Applies validated amount controls to the Sales report query, resetting pagination on change.
+ * @param current Active report query, including independent filters and sorting.
+ * @param column Selected currency/double column ID.
+ * @param min Exclusive lower bound, or empty for no lower bound.
+ * @param max Exclusive upper bound, or empty for no upper bound.
+ * @returns The existing query if unchanged, otherwise the updated query. Does not throw.
+ */
+export function withAmountRange(current: SalesQuery, column: string, min: string, max: string): SalesQuery {
+    const ranged = !!column && (min !== '' || max !== '')
+    const next = {
+        amountColumn: ranged ? column : undefined,
+        amountMax: ranged && max !== '' ? Number(max) : undefined,
+        amountMin: ranged && min !== '' ? Number(min) : undefined,
+    }
+    if (next.amountColumn === current.amountColumn
+        && next.amountMin === current.amountMin && next.amountMax === current.amountMax) return current
 
     return { ...current, ...next, page: 1 }
 }

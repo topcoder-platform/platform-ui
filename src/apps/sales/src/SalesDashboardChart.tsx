@@ -10,6 +10,26 @@ import styles from './SalesDashboardsPage.module.scss'
 const colors = ['#0d8984', '#0f62fe', '#6c5ce7', '#ff8a00', '#6aae3f', '#d7476f']
 
 /**
+ * Formats a y-axis tick compactly in the chart's unit. Highcharts' default would label
+ * a 500k tick interval as "1 000k" and "1 500k".
+ * @param value Tick value, possibly negative for revenue adjustments.
+ * @param unit Chart unit; currency is USD, as the API states.
+ * @returns A label such as $1.5M, -$30K, 40 or 12.5%.
+ * @throws Does not throw.
+ */
+export function axisLabel(value: number, unit: MonthlySalesChart['unit']): string {
+    const label = new Intl.NumberFormat('en-US', {
+        currency: 'USD',
+        maximumFractionDigits: 1,
+        minimumFractionDigits: 0,
+        notation: 'compact',
+        style: unit === 'currency' ? 'currency' : 'decimal',
+    })
+        .format(value)
+    return unit === 'percent' ? `${label}%` : label
+}
+
+/**
  * Renders a monthly business chart and equivalent accessible data table.
  * @param props API chart definition, including units, monthly values and stacking.
  * @returns A responsive chart card; unknown percentages remain gaps and table dashes.
@@ -40,6 +60,7 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart }> = props => {
         xAxis: { categories: labels },
         yAxis: {
             allowDecimals: chart.unit !== 'count',
+            labels: { formatter: context => axisLabel(Number(context.value), chart.unit) },
             title: { text: chart.unit === 'currency' ? 'USD' : chart.unit === 'percent' ? 'Markup (%)' : 'Members' },
         },
     }), [chart, labels])

@@ -47,6 +47,29 @@ without a matching project still displays its details, with no Work link.
 Links use the active environment's Work host. Deploy the Billing Accounts API
 `opportunity` filter, then the Projects API response expansion, before the UI.
 
+## Multiple values and amount filters (PM-6639)
+
+Select multiple stage tiles to show opportunities in any selected stage. Clicking
+a selected tile removes only that stage; **Clear stages** removes all selections.
+The summary cards retain the existing overview behavior. For other report fields,
+use **Add OR value** beside **Contains** (up to 25 values); empty inputs are ignored.
+Delete an input's text to stop matching that value. Commas remain literal text.
+
+Choose an **Amount field** and enter **Greater than**, **Less than**, or both.
+For example, Amount greater than `100000` filters amounts strictly above 100,000.
+Both bounds are exclusive, support decimals and zero, and compare raw amounts in
+the selected column's units. The lower bound must be less than the upper bound.
+Clear both bounds to remove the range. These controls debounce like search and
+apply immediately on Enter. **Clear** resets search, column values, amounts and
+sorting while preserving the independent date range and selected stages.
+
+The Reports API applies OR values and amount ranges to the full received snapshot
+before pagination, combining independent filters with AND. Amounts also narrow
+summary totals; stage selections continue to narrow only the returned rows.
+Multiple values use repeated query parameters. Deploy the PM-6639 Reports API
+change before this UI. Tests cover OR selection/removal, strict numeric bounds,
+combined filters, pagination resets, clearing, refresh and request serialization.
+
 ## Dashboard layout (PM-6392)
 
 The page reads as an executive dashboard rather than one long column:
@@ -83,12 +106,12 @@ are ordered down the pipeline — Prospecting, Qualification, Proposal, Contract
 Closing, Won SOW Signed — and a stage the pipeline adds later follows them,
 ordered by value as the API returned it.
 
-Clicking a tile filters the table below to that stage; the tile is highlighted
-and carries `aria-pressed`. Clicking it again, or the **Clear stage** control in
-the panel header, removes the filter. The selection travels as the Reports API
-`drilldownColumn`/`drilldownValue` pair, which narrows the returned rows only,
-so `summary` still covers every stage and the breakdown does not collapse to the
-one stage being examined. The stage selection is independent of the report's own
+Clicking a tile adds that stage to the table filter; selected tiles are highlighted
+and carry `aria-pressed`. Clicking a selected tile again removes only that stage;
+**Clear stages** removes all selections. The selection travels as the Reports API
+`drilldownColumn` plus repeated `drilldownValue` parameters, which narrow the returned
+rows with OR matching only, so `summary` still covers every stage and the breakdown
+does not collapse to the selected stages. The stage selection is independent of the report's own
 search and Filter field controls, and clearing those leaves it in place, exactly
 as it leaves the date range in place.
 
@@ -234,9 +257,12 @@ requests are aborted on unmount or control changes.
 
 Charts cover the latest six UTC calendar months. Opportunity size, expected
 revenue and pipeline stages include three months back through six months ahead;
-Closed Won remains historical. Charts include expandable monthly data tables,
-currency/count units, and gaps for unknown values. Source notices
-remain visible above the charts.
+Closed Won remains historical and counts the `Won - SOW Signed` stage, as the
+pipeline's Total WON SOW Signed card does. The API replaces the Salesforce
+reports' saved fiscal-year filter for each dashboard run, so months either side of
+a fiscal-year boundary are not left empty. Charts include expandable monthly data
+tables, currency/count units, and gaps for unknown values. Y-axis ticks use compact
+labels such as `$1.5M`. Source notices remain visible above the charts.
 
 Sales passes `portal=sales` so the API removes TaaS, Topcoder and unlinked customer
 payments before computing any payment totals or customer rankings. Reports
@@ -244,13 +270,15 @@ passes `portal=reports`. Flexible talent counts newly assigned, completed and
 ongoing members by month. Gross margin is on hold per the PM-6632 clarification:
 neither portal renders or requests that section, including on refresh.
 
-Revenue uses the confirmed SFDC report `00O1K000009GxBtUAK` by default and shows a
-pending notice until its exact date and revenue column IDs are configured in
-reports-api-v6. See that repository's
-`SALES.md` for source definitions, required settings and API parameters.
+Revenue uses the confirmed SFDC report `00O1K000009GxBtUAK` ("Accounts Monthly
+revenue File"), with its verified Date and Gross Amount columns as API defaults. It
+renders monthly revenue, then the same revenue stacked by offering (Type) and by
+account category. A pending notice appears only when reports-api-v6 is pointed at
+another report without column settings. See that repository's `SALES.md` for source
+definitions, settings and API parameters.
 
 Tests: `SalesDashboardsPage.spec.tsx` covers portal scope, gross margin remaining
 hidden and unrequested in both portals, independent failures,
-retry, refresh, date-basis changes, request cancellation, keyboard navigation and
-accessible percentage/missing-value tables. Reports route/navigation tests cover
+retry, refresh, date-basis changes, request cancellation, keyboard navigation,
+accessible percentage/missing-value tables and compact axis labels. Reports route/navigation tests cover
 the new entry point.
