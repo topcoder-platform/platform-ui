@@ -172,7 +172,13 @@ interface ActiveSortableColumnHeaderProps extends SortableColumnHeaderProps {
     active?: boolean
 }
 
-/** Renders an accessible table column that toggles its owning ordering. */
+/**
+ * Renders a sortable header, showing an arrow only for the active column.
+ * Shared by the Opportunities challenge detail tables.
+ * @param props label, active state, direction, and sorting callback.
+ * @returns keyboard-accessible header with its current aria-sort state.
+ * @throws Does not throw.
+ */
 const SortableColumnHeader: FC<ActiveSortableColumnHeaderProps> = props => (
     <th
         aria-label={props.label}
@@ -186,10 +192,12 @@ const SortableColumnHeader: FC<ActiveSortableColumnHeaderProps> = props => (
             type='button'
         >
             <span aria-hidden='true'>{props.label}</span>
-            <IconOutline.ChevronDownIcon
-                aria-hidden='true'
-                className={props.order === 'asc' ? styles.sortAscending : undefined}
-            />
+            {props.active !== false && (
+                <IconOutline.ChevronDownIcon
+                    aria-hidden='true'
+                    className={props.order === 'asc' ? styles.sortAscending : undefined}
+                />
+            )}
         </button>
     </th>
 )
@@ -1104,6 +1112,7 @@ function ratingClass(rating?: number): string | undefined {
 /**
  * Renders the compact avatar and linked handle shared by detail tables/cards.
  *
+ * Long handles remain available in a title when compact table cells truncate them.
  * @param props resolved member handle.
  * @returns member identity cell; members without a usable photo get the
  * handle-initial color placeholder from `MemberAvatar`.
@@ -1117,8 +1126,8 @@ const MemberHandle: FC<MemberHandleProps> = props => {
         <span className={styles.member}>
             <MemberAvatar className={styles.avatar} handle={handle} photoURL={props.profile?.photoURL} />
             {props.link === false && !props.profile?.handle
-                ? <span className={`${styles.memberHandle} ${handleClass ?? ''}`}>{handle}</span>
-                : <a className={handleClass} href={memberProfileUrl(handle)}>{handle}</a>}
+                ? <span className={`${styles.memberHandle} ${handleClass ?? ''}`} title={handle}>{handle}</span>
+                : <a className={handleClass} href={memberProfileUrl(handle)} title={handle}>{handle}</a>}
         </span>
     )
 }

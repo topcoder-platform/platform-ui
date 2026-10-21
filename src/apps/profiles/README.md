@@ -20,6 +20,7 @@ separation from the **card**, on every hover.
 To check a deployed profile:
 
 1. Open a rated member's profile, such as
+   [disnadiji in development](https://profiles.topcoder-dev.com/disnadiji) or
    [wleite in production](https://profiles.topcoder.com/wleite), and hover over
    the `Top X%` badge or its audience label.
 2. Check that the tooltip box's bottom edge sits 8 CSS pixels above the dark
@@ -50,23 +51,33 @@ Check both the production build and deployment jobs before treating a merge as
 a deployed fix. Record the URL, viewport, zoom, loaded asset URLs, and a hover
 screenshot if the checks above fail.
 
-On 2026-10-16, the follow-up investigation found the original fix in both
-`origin/dev` and `origin/master`, and the two environments served identical
-profile chunks:
+The 2026-10-21 follow-up verified [PR #2534](https://github.com/topcoder-platform/platform-ui/pull/2534)
+(`df652a1b2`), which added the 24px offset, in `origin/dev` and on the live
+development profile. The latest QA rejection (October 20 at 03:33 UTC)
+preceded that PR's creation (04:35 UTC) and merge (21:04 UTC); no later QA
+rejection was present when checked. Preserve this fix when retesting.
 
-| Asset | Path on both profile hosts |
-| --- | --- |
-| JavaScript | `/static/js/1717.c6a593de.chunk.js` |
-| CSS | `/static/css/1717.1a1af487.chunk.css` |
+Fresh Chromium sessions, at 100% zoom, loaded these profile chunks:
 
-These historical assets contained the original 16px offset and centering rules,
-not the current 24px clearance fix. The production
-[build](https://circleci.com/gh/topcoder-platform/platform-ui/18023) and
-[deployment](https://circleci.com/gh/topcoder-platform/platform-ui/18024) for
-`c436bc10d` succeeded on October 15. Asset names change on subsequent builds;
-use the page's current Network requests when repeating this check. This
-confirms the original assets were available in production, but does not establish
-which assets QA's browser loaded when the issue was reported.
+| Environment | JavaScript | CSS |
+| --- | --- | --- |
+| Development | `/static/js/1717.7da82929.chunk.js` | `/static/css/1717.aa3db4d4.chunk.css` |
+| Production | `/static/js/1717.c6a593de.chunk.js` | `/static/css/1717.1a1af487.chunk.css` |
+
+On development's `disnadiji` profile, five hovers at each of 1280px and 375px
+viewport widths, alternating the badge and audience label and including quick
+re-entry, consistently measured a 24px offset, 8px box-to-card clearance, and
+approximately 2.3px arrow-to-card clearance. The tooltip remained centered.
+The current component also passed local browser checks for hidden initial
+positioning and modal suppression/reopening at both widths.
+
+Production's `wleite` profile still measured a 16px offset, zero box-to-card
+clearance, and approximately 5.7px of arrow overlap on all five hovers at
+1280px. The clearance commit was absent from `origin/master`. Production
+therefore still needs the existing fix released through the normal deployment
+process, followed by the same hover checks. This follow-up did not deploy or
+change the working tooltip implementation. Asset names change between builds;
+record the current loaded URLs when repeating verification.
 
 Run the existing focused regression tests from the `platform-ui` project root:
 

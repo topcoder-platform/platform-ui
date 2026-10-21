@@ -11,6 +11,7 @@ import {
     getChallengeSubmissionArtifacts,
 } from '../services'
 import { marathonRatingColor } from '../utils/marathon-match.utils'
+import { ReactComponent as DownloadArtifactIcon } from '../assets/submission-artifact-download.svg'
 
 import modalStyles from './SubmissionHistoryModal.module.scss'
 import styles from './SubmissionArtifactsModal.module.scss'
@@ -77,7 +78,8 @@ function saveArtifact(blob: Blob, filename: string): void {
 /**
  * Lists and downloads scorer-generated files for one authored submission.
  *
- * Contestants see only example before completion; staff retain management access.
+ * Contestants see only example (bare or submission-prefixed ID) before completion;
+ * downloads retain the exact API identifier. Staff retain management access.
  * Completed matches offer one ZIP of all API-authorized artifacts.
  * @param props selected submission, visibility, and close callback.
  * @returns artifact dialog with loading, error, empty, and download states.
@@ -118,6 +120,7 @@ export const SubmissionArtifactsModal: FC<SubmissionArtifactsModalProps> = props
     // Also filter cached responses when completion or viewer permissions change.
     const artifacts = (response.data ?? []).filter(artifactId => (
         props.allowInternalArtifacts || artifactId.toLowerCase() === 'example'
+        || artifactId === `${props.submissionId}-example`
     ))
 
     /**
@@ -181,7 +184,7 @@ export const SubmissionArtifactsModal: FC<SubmissionArtifactsModalProps> = props
                                             onClick={() => downloadArtifact(artifactId)}
                                             type='button'
                                         >
-                                            <IconOutline.DocumentDownloadIcon aria-hidden='true' />
+                                            <DownloadArtifactIcon aria-hidden='true' />
                                         </button>
                                     </Tooltip>
                                 </td>

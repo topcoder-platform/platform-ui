@@ -337,6 +337,7 @@
     align-items: center;
     display: flex;
     gap: 16px;
+    white-space: nowrap;
 
     button {
         gap: 8px;
@@ -436,23 +437,49 @@
 }
 
 .marathonTableCard {
-    overflow-x: auto;
+    container-type: inline-size;
+    padding-right: 12px;
 }
 
 .marathonTable {
-    min-width: 1200px;
-
     th,
-    td { padding-inline: 12px; }
+    td {
+        overflow-wrap: anywhere;
+        padding-inline: 8px;
+    }
 
-    th:first-child { width: 90px; }
-    th:nth-child(2) { width: 115px; }
-    th:nth-child(3) { width: 200px; }
-    th:nth-child(4) { width: 90px; }
-    th:nth-child(5) { width: 185px; }
+    // Reserve rating/action space, then size the remaining columns from the card content width.
+    // Container units resolve in fixed-layout tables, where mixed percent/pixel widths do not.
+    th:first-child { width: calc((100cqw - 168px) * .09); }
+    th:nth-child(2) { width: calc((100cqw - 168px) * .14); }
+    th:nth-child(3) { width: calc((100cqw - 168px) * .21); }
+    th:nth-child(4) { width: 64px; }
+    th:nth-child(5) { width: calc((100cqw - 168px) * .18); }
     th:nth-child(6),
-    th:nth-child(7) { width: 170px; }
-    th:nth-child(8) { width: 140px; }
+    th:nth-child(7) { width: calc((100cqw - 168px) * .19); }
+    th:nth-child(8) { width: 104px; }
+
+    @media (min-width: 621px) {
+        td:first-child,
+        td:nth-child(2) { text-align: right; }
+    }
+
+    th:last-child,
+    td:last-child { padding-right: 0; }
+
+    .sortedHeader svg { flex-shrink: 0; }
+
+    .member {
+        max-width: 100%;
+
+        > a,
+        > .memberHandle {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
 }
 
 .mySubmissionTable {
