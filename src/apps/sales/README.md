@@ -257,9 +257,12 @@ requests are aborted on unmount or control changes.
 
 Charts cover the latest six UTC calendar months. Opportunity size, expected
 revenue and pipeline stages include three months back through six months ahead;
-Closed Won remains historical. Charts include expandable monthly data tables,
-currency/count units, and gaps for unknown values. Source notices
-remain visible above the charts.
+Closed Won remains historical and counts the `Won - SOW Signed` stage, as the
+pipeline's Total WON SOW Signed card does. The API replaces the Salesforce
+reports' saved fiscal-year filter for each dashboard run, so months either side of
+a fiscal-year boundary are not left empty. Charts include expandable monthly data
+tables, currency/count units, and gaps for unknown values. Y-axis ticks use compact
+labels such as `$1.5M`. Source notices remain visible above the charts.
 
 Sales passes `portal=sales` so the API removes TaaS, Topcoder and unlinked customer
 payments before computing any payment totals or customer rankings. Reports
@@ -267,13 +270,15 @@ passes `portal=reports`. Flexible talent counts newly assigned, completed and
 ongoing members by month. Gross margin is on hold per the PM-6632 clarification:
 neither portal renders or requests that section, including on refresh.
 
-Revenue uses the confirmed SFDC report `00O1K000009GxBtUAK` by default and shows a
-pending notice until its exact date and revenue column IDs are configured in
-reports-api-v6. See that repository's
-`SALES.md` for source definitions, required settings and API parameters.
+Revenue uses the confirmed SFDC report `00O1K000009GxBtUAK` ("Accounts Monthly
+revenue File"), with its verified Date and Gross Amount columns as API defaults. It
+renders monthly revenue, then the same revenue stacked by offering (Type) and by
+account category. A pending notice appears only when reports-api-v6 is pointed at
+another report without column settings. See that repository's `SALES.md` for source
+definitions, settings and API parameters.
 
 Tests: `SalesDashboardsPage.spec.tsx` covers portal scope, gross margin remaining
 hidden and unrequested in both portals, independent failures,
-retry, refresh, date-basis changes, request cancellation, keyboard navigation and
-accessible percentage/missing-value tables. Reports route/navigation tests cover
+retry, refresh, date-basis changes, request cancellation, keyboard navigation,
+accessible percentage/missing-value tables and compact axis labels. Reports route/navigation tests cover
 the new entry point.

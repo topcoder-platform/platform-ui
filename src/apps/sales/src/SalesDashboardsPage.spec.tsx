@@ -6,7 +6,7 @@ import { ButtonHTMLAttributes, ReactNode } from 'react'
 
 import SalesDashboardsPage from './SalesDashboardsPage'
 import SalesReportsPage from './SalesReportsPage'
-import SalesDashboardChart from './SalesDashboardChart'
+import SalesDashboardChart, { axisLabel } from './SalesDashboardChart'
 import { fetchSalesDashboard, SalesDashboardPortal, SalesDashboardResponse } from './sales-dashboard.service'
 
 jest.mock('./sales-dashboard.service', () => ({ fetchSalesDashboard: jest.fn() }))
@@ -133,4 +133,16 @@ it('shows percentage units and unknown values in the accessible monthly table', 
     expect(within(table)
         .getByText('Sep 2026'))
         .toBeInTheDocument()
+})
+
+it.each([
+    [1_500_000, 'currency', '$1.5M'],
+    [2_000_000, 'currency', '$2M'],
+    [-30_000, 'currency', '-$30K'],
+    [0, 'currency', '$0'],
+    [40, 'count', '40'],
+    [12.5, 'percent', '12.5%'],
+] as const)('labels a %s %s axis tick as %s', (value, unit, label) => {
+    expect(axisLabel(value, unit))
+        .toBe(label)
 })
