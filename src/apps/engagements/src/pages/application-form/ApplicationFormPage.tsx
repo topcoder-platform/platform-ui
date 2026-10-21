@@ -415,7 +415,7 @@ const ApplicationFormPage: FC = () => {
                     errors.expectedPayRate && styles.inputError,
                 )}
                 maxLength={100}
-                placeholder='e.g. USD 50/hour'
+                placeholder='USD 6.5/hour'
                 value={renderProps.field.value ?? ''}
                 onChange={handleTextInputChange(renderProps.field)}
                 disabled={isFormDisabled}

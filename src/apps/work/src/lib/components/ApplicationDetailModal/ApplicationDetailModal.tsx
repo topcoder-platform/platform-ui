@@ -162,8 +162,6 @@ const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
         }
     }
 
-    const portfolioUrls = application?.portfolioUrls || []
-
     return (
         <BaseModal
             open={props.open}
@@ -284,27 +282,6 @@ const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
                                                 >
                                                     Download
                                                 </a>
-                                            </div>
-                                        )
-                                        : <span className={styles.value}>-</span>}
-                                </div>
-
-                                <div className={styles.linkRow}>
-                                    <span className={styles.linkLabel}>Portfolio</span>
-                                    {portfolioUrls.length
-                                        ? (
-                                            <div className={styles.linkList}>
-                                                {portfolioUrls.map(url => (
-                                                    <a
-                                                        className={styles.link}
-                                                        href={url}
-                                                        key={url}
-                                                        rel='noreferrer noopener'
-                                                        target='_blank'
-                                                    >
-                                                        {url}
-                                                    </a>
-                                                ))}
                                             </div>
                                         )
                                         : <span className={styles.value}>-</span>}
