@@ -9,7 +9,30 @@ use `/opportunities/review/:reviewOpportunityId`, and the member home uses
 
 The Work app links directly to challenge details from its editor `Challenge`
 button and challenge list `CA` action. Both use the environment-specific
-`EnvironmentConfig.PLATFORMUI_URL` host and open in a new tab.
+public website host from `EnvironmentConfig.TOPCODER_URL`
+(`https://www.topcoder-dev.com` in development and `https://www.topcoder.com`
+in production), preserve `/opportunities/challenge/:challengeId`, and open in a new tab.
+
+## Direct terms links
+
+`/opportunities/terms/detail/:termId` (`/terms/detail/:termId` on the dedicated
+Opportunities host) replaces community-app's direct terms page. Electronic
+terms remain publicly readable. Signing requires an initialized, logged-in
+member profile, and the login link returns to the full original URL.
+
+`TermsDetailPage` uses the shared `ChallengeTermsModal` in standalone `agree`
+mode. `getOutstandingTermsDetails` loads the exact agreements without challenge
+resource-role filtering and bypasses HTTP caches. Electronic acceptance needs
+an explicit action; HTTP 401/403 never produces success. DocuSign success is
+confirmed against the Terms API before the page shows acceptance. Logout or a
+member/term change removes signing controls and invalidates pending callbacks.
+The shared modal also blocks anonymous DocuSign sessions in passive view mode.
+
+New configured terms links and challenge-editor links use Opportunities.
+Deploy this page before the companion community-app redirect of
+`/challenges/terms/detail/:termId`, which preserves the term ID, query, and fragment.
+Platform UI also recognizes that legacy path after host migration.
+DocuSign returns to the existing Opportunities `terms/docusign-return` route.
 
 ## Member home
 
@@ -265,6 +288,9 @@ reopens or to `Approved` when the reviewer is selected.
 
 Long card titles expose their complete value in the authored dark tooltip only
 when the title is clipped and the pointer hovers the visible title text.
+Opportunity cards in list and grid views and forum topic cards use a 1px
+`#007D79` stroke on hover, without an outer shadow or movement. Hovering a forum
+title does not underline or recolor it; keyboard focus indicators are preserved.
 When a card has more skills than fit in its visible skill row, its `+n` control
 exposes the hidden skill names in the corresponding bullet-list tooltip. The
 Engagement role filter uses the authored four-row keyboard-accessible listbox
@@ -334,14 +360,13 @@ to their authored subtype icons and member-facing labels.
 
 ## Challenge detail timeline
 
-The expanded challenge timeline follows chronological phase order between the
-synthetic Launch and Winners boundaries. Launch uses the challenge start, each
-authored phase displays its actual (then scheduled fallback) start and end on
-separate rows, and Winners uses the top-level challenge end. Only responses
-without a valid challenge end fall back to the latest valid phase end. When
-Registration and another phase share the same valid start, Registration is
-shown first so overlapping Checkpoint Submission schedules match the authored
-challenge flow rather than being ordered by their different end dates. Submission
+The expanded challenge timeline places Registration immediately after Launch
+for every challenge type, even when its actual or scheduled start is later than
+Submission's. The remaining phases follow chronological order before Winners.
+Launch uses the challenge start, each authored phase displays its actual (then
+scheduled fallback) start and end on separate rows, and Winners uses the top-level
+challenge end. Only responses without a valid challenge end fall back to the
+latest valid phase end. Submission
 also precedes other phases with the same valid start (after Registration), so an
 overlapping F2F Iterative Review never moves ahead of Submission just because its
 deadline is earlier.
@@ -376,8 +401,9 @@ noninteractive semantic label, avoiding a duplicate hidden keyboard stop.
 
 All Submissions and My Submissions use the same responsive record-card
 contract. Every track-specific field and action receives a visible mobile key,
-while Submission Date sorting stays above the card and continues to request
-owner-sorted pages.
+while Submission Date sorting stays above the card. Marathon Match All Submissions
+sorts the complete collection locally to retain global ranks; other date sorts
+continue to request owner-sorted pages.
 Marathon My Submissions uses compact column spacing so the complete scorer table
 fits within its desktop card. The Submission ID and Submission Date columns keep
 a wider share of that budget, and cells use 12px horizontal padding, so long
@@ -521,9 +547,15 @@ phone tab order.
 
 Challenge details load the authenticated Review API
 `GET /v6/ai-review/configs/:challengeId` contract to render the Review Style
-rail. `AI_ONLY` and `AI_GATING` map to their Figma labels and expose the
-configuration's Instant Review state; a missing configuration or an anonymous
-viewer uses the manual Community Review Board presentation.
+rail only after the signed-in member's Submitter registration is confirmed.
+Anonymous and unregistered viewers do not see Review Style or request its
+configuration; Challenge Terms remain available. The request cache is scoped to
+the member and registration, so completing registration loads the configuration
+without a page refresh and unregistering hides the section. `AI_ONLY` and
+`AI_GATING` map to their Figma labels and expose the configuration's Instant
+Review state. A missing configuration uses the manual Community Review Board
+presentation; request failures retain the unavailable message for registered
+members.
 
 Challenge registration and registrant displays resolve the canonical
 Submitter resource role and exclude copilot, reviewer, observer, and manager
@@ -531,13 +563,14 @@ resources. The Registrants tab requests bounded Resource API pages and uses its
 pagination headers instead of truncating a fixed bucket. “My competitions”
 resolves that same role and sends `memberId` plus
 `resourceRoleId` to Challenge API so role narrowing happens before the other
-filters, global sorting, counts, and pagination. The terms modal similarly
+filters, global sorting, counts, and pagination. In registration mode, the terms modal
 filters Challenge API references to the
 Submitter role and loads complete v5 Terms API records before an electronic
 agreement. Outstanding terms are presented one at a time and each electronic
 agreement is persisted before the next appears; the Submitter resource is not
 created until the final prerequisite succeeds. Ambiguous agreement failures are
-reconciled once against authenticated outstanding terms before a retry is shown.
+reconciled once against authenticated outstanding terms before a retry is shown;
+authorization failures (401/403) always remain failures.
 Member identity scopes the
 agreement cache, and numeric legacy references are followed through their
 canonical authenticated Terms API detail before eligibility is decided.
@@ -553,7 +586,8 @@ The compact Important Reminder uses the Figma teal action buttons and rounded
 checkmark asset without a footer separator.
 DocuSign-template terms, plus NDA-titled terms that use the environment's
 legacy DocuSign template fallback, replace placeholder Terms API text with the
-embedded recipient view in both registration and passive review. DocuSign
+embedded recipient view for signed-in members in registration, standalone agreement,
+and passive review. Anonymous visitors receive a sign-in link. DocuSign
 returns the frame to this app's own `terms/docusign-return` route
 (`/opportunities/terms/docusign-return`, or `/terms/docusign-return` on the
 opportunities subdomain), which replaced community-app's
@@ -618,7 +652,10 @@ and authored actions. Registrants and standard submission tables order newest
 dates first and expose accessible date headers that toggle the owning API's
 ascending or descending ordering.
 Marathon Match Submissions always use the Figma table with provisional and
-final score columns. The score graph is rendered only in the separate Dashboard
+final score columns. Marathon Match Submissions and My Submissions default to
+200 entries per page, with 10, 20, 50, and 200 available in the page-size selector.
+Other challenge types retain the 10-entry default and 10, 20, and 50 options.
+The score graph is rendered only in the separate Dashboard
 tab, and that tab exists only when Work Manager enables its challenge metadata.
 Review API submissions and Marathon Match review summations own provisional
 and final scores. In My Submissions, an `ACTIVE` submission shows Completed
@@ -632,8 +669,16 @@ Active My Submissions pages periodically revalidate so an
 asynchronous AI decision score appears without requiring the member to reload
 the page. AI-reviewed challenges expand the newest submission's workflow details
 by default; each row can reveal the reviewer, completion date, threshold-derived
-result, and a score deep-link to Review App, polling while a run is pending or
-has not yet been created. A transient background failure retains the last successful submission
+result, and a score deep-link to Review App. Each submission displays only the
+latest attempt per workflow ID, ordered by start time (or dispatch time before
+the run starts), then completion time, matching Review App. A rerun replaces the
+previous score and result, including while pending or after failure. Polling
+continues while a latest attempt is pending or no run has been created;
+superseded attempts do not keep polling active.
+Timed-out AI workflow runs display TIMEOUT rather than FAILED, matching Review
+App's distinct timeout result. They retain dashes for the review date and score
+and do not keep polling active.
+A transient background failure retains the last successful submission
 page, retries twice with a delay, and revalidates when the member returns to the
 tab; initial failures still expose the explicit retry action. Optional score
 requests do not enter an automatic retry loop. Final
@@ -653,6 +698,14 @@ Passed, Failed, and Cancelled attempts show their terminal badge instead. If
 progress is unavailable, the status label or an em dash remains visible. The
 seven-column table fits the padded desktop card; narrower tablets retain
 horizontal scrolling and mobile uses the existing record cards.
+Marathon Match All Submissions also includes sortable Final Rank and Provisional
+Rank columns, including labeled values and sorting on mobile. Ranks are calculated
+from the complete latest-submission collection before pagination, even when sorted
+by submission date. Provisional ranks order scores high-to-low and break ties by
+earlier submission time. Equal final scores share competition ranks (1, 1, 3),
+matching community-app. Missing or pending scores remain unranked (`N/A`); final
+ranks use the same release gate as final scores. Other challenge types and My
+Submissions retain their existing columns.
 The Figma keeps separate Provisional Score and Final Score columns and uses
 `-` when a final value is not yet available. Winners use Review API's canonical
 `GET /v6/projectResult` member-and-placement result instead of inferring a
@@ -730,7 +783,7 @@ Successful submissions expose the created
 submission ID and refresh challenge and member submission counts without
 leaving the confirmation state. ZIP mode's declaration opens the public Topcoder
 Terms of Use; URL mode preserves the exact TopGear declaration and opens
-community-app's TopGear terms and conditions URL in a new tab. While either
+the Opportunities TopGear terms and conditions URL in a new tab. While either
 request is active, the detail tabs and every form action that would unmount the
 submission are disabled. The explicit cancel control remains available, aborts
 its request, clears the selected file or URL, and then unlocks normal navigation.
@@ -746,7 +799,9 @@ older progress, and cancelled phase scores do not fall back to placeholder or
 legacy aggregate values. Settled failed system-test aggregates remain available
 in Submissions, My Submissions, and history, where negative system scores display
 as zero; pending and cancelled runs still have no final score. Cancelled results
-are excluded from dashboard points.
+are excluded from dashboard points. Dashboard dots use the shared member-rating
+palette (gray, green, blue, yellow, and red) for each member's maximum rating;
+missing or non-finite ratings retain the gray band.
 Virus-scan and quarantine failures are reported
 as Failed in the Provisional process with explicit 0% progress; later review
 failures remain System failures. A newly active attempt stays in the Provisional
@@ -759,23 +814,44 @@ Review App handoff.
 Artifact controls in All Submissions, My Submissions, and submission history
 use the challenge's exact `COMPLETED` status for Marathon Matches. Before completion
 (including cancelled challenges), contestants can list and download only their own
-regular artifacts. After completion, registered contestants can download regular
+`example` artifact, accepting both `example` and `<submissionId>-example` API IDs.
+Downloads always use the original API ID; internal and unrelated IDs remain hidden.
+After completion, registered contestants can download regular
 and internal provisional/system artifacts for their own and other members' attempts.
 Scores and phase end dates never unlock artifacts. Existing admin/copilot access
-is retained. The shared dialog filters internal entries when permission changes,
-and Review API independently authorizes both listing and every download.
+is retained. The dialog filters cached entries when permission changes, and Review
+API independently authorizes both listing and every download. Completed MM dialogs
+also offer Download all, packaging every returned artifact (including example-internal,
+example, provisional-internal, and system-internal when authorized) into one ZIP.
+If any download fails, no partial ZIP is saved. The artifact header shows the
+bold Submission ID and Handle labels, including when opened from an older history entry.
+Both modal tables vertically center their text and the shared folded-page artifact icons.
 The Marathon Match My Submissions table reserves enough width for the complete
 submission timestamp and keeps its date heading and sort icon on one line,
 aligned with the dates beneath it. Score columns remain right aligned.
-Submission history replaces the unreliable status field with Final Score. At
-phone widths, each attempt becomes a compact stacked label/value card in the
-legacy Submission, Final Score, Provisional Score, and Time order, avoiding
-horizontal clipping. The dialog also exposes the latest-submission summary and
-compact close action only at that breakpoint. History requests include the
-selected member ID and submission type and fetch every page without a latest-only
+Submission history shows the member handle, sortable Submission Date (newest first),
+full-precision scores, a Failed badge for negative provisional scores, and authorized
+View artifact icons with tooltips. Final score release rules are unchanged. Both MM
+dialogs have desktop/mobile Close controls, a 50% black backdrop, and no shadow.
+Opening artifacts from history temporarily hides history to avoid stacked backdrops;
+closing artifacts restores history. At phone widths, each attempt becomes a compact
+stacked label/value card in the legacy Submission, Final Score, Provisional Score, and Time order, avoiding
+horizontal clipping. The dialog also exposes the latest-submission summary only
+at that breakpoint. History requests include the selected member ID and submission type and fetch every page without a latest-only
 filter. Visible Marathon Matches expose full history to all viewers, including
 anonymous and unregistered visitors, through Review API. The History action shows
-the API's complete submission count in parentheses when available. Artifact
+the API's complete submission count when available. In Marathon Match All
+Submissions, proportional columns avoid a forced desktop scrollbar, rank
+values align right, and long handles stay on one line with ellipsis and a full-handle
+title when space is limited. Rank headings wrap only when necessary. All challenge
+detail tables show a sort arrow only on the active column; other headers remain
+clickable. The actions stay on one line: the design's 20px folded-file icon for
+artifacts and clock-with-history-arrow icon followed by the count without parentheses.
+These SVGs are exported from Figma action cells `15140:77730` and `15140:77731`.
+Other challenge types retain their labeled History action and parenthesized count.
+Hovering shows `View Artifacts` or
+`History (8 submissions)` with the actual count (or `History` when unavailable);
+the buttons retain accessible names and open the existing dialogs. Artifact
 controls retain the ownership, staff, and completed-contestant access described
 above; viewing history does not grant permission to download artifacts.
 Design submissions can be deleted only while Submission or Checkpoint
@@ -808,8 +884,10 @@ editor allows the suggestion list to extend below its border; clipping is limite
 to the toolbar so options remain visible and clickable. Profile
 lookup failures retain a neutral profile link, while search failures leave the
 draft editable and show a retry hint. Each visible post shows shared
-reaction counts and the current member's selected state; clicking the selected
-thumb again removes it, while clicking the other thumb switches it. Topic
+reaction counts and the current member's selected state. A selected thumbs-up
+uses the filled teal icon; reaction buttons keep a transparent background and
+the same spacing when selected. Clicking the selected thumb again removes it,
+while clicking the other thumb switches it. Topic
 summaries expose bounded starter excerpts, participant snapshots, unique
 authenticated view counts, and current-member watch state. The
 environment-specific Vanilla URL is retained only as a recovery link when the
@@ -860,10 +938,11 @@ competition guide even when the challenge track is Development; the latter two
 submission sections remain Design-only. Learning arrows flow immediately after
 wrapped labels. The Design link reads “How to
 approach checkpoint feedback” and keeps “feedback” and its arrow together when
-wrapping. The AI Exponential promo keeps a distinct gap before its action and
+wrapping. The AI Exponential promo appears only when the challenge has the
+`AI Exponential League` tag. It keeps a distinct gap before its action and
 routes through the configured Topcoder environment to the AI Exponential League
 hub.
-Marathon Match challenges replace the general AI Exponential promo with the
+Marathon Match challenges retain their dedicated promo regardless of league tags, with the
 Marathon Match Tournament heading and copy. Its Explore the program link opens
 the environment's Marathon Match
 Tournament page in a new tab, while the Educational Materials link retains the
@@ -891,3 +970,21 @@ The shared toolbar includes configured Filestack attachments through
 Figma grouping (dividers between formatting, heading, size, alignment, list,
 insert and expand controls, plus the size chevron) lives in the shared editor
 styles, so challenge discussion composers match the public forums.
+
+### Challenge forum notifications
+
+The Challenge Forum overview includes a Watch forum / Unwatch forum control,
+including for empty forums. It reads the authenticated member's effective
+preference from `GET /v6/forums/challenges/:challengeId/watch` and saves choices
+with PUT or DELETE on that route. The Forums API defaults registrants and
+copilots to watching based on their challenge resource assignments and persists
+explicit opt-outs. After saving, the UI reloads topic summaries so inherited
+watches and announcements reflect the forum preference. Individual topic watches
+and opt-outs override that preference in both topic reads and notifications.
+Create new topic is the first, filled action; Watch/Unwatch forum is the outlined
+second action with a 16px gap and the existing outlined/filled eye icons.
+Announcements are created using the topic form's administrator/copilot checkbox.
+Loading and failed
+reads disable the control; failed saves preserve the displayed preference and
+show the API error. This requires the Forums API challenge-watch migration and
+endpoints to be deployed first.

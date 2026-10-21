@@ -14,6 +14,8 @@ import {
     ENGAGEMENTS_ROOT_API_URL,
 } from '../constants'
 import {
+    ApprovedTimesheetListResponse,
+    ApprovedTimesheetQuery,
     AssignEngagementManagerPayload,
     Assignment,
     Engagement,
@@ -968,6 +970,41 @@ export async function fetchTimesheetPaymentSummary(
         )
     } catch (error) {
         throw normalizeError(error, 'Failed to load approved timesheet hours')
+    }
+}
+
+/**
+ * Approved, unpaid timesheets across the engagements the caller can see, one row per approval.
+ */
+export async function fetchApprovedTimesheets(
+    query: ApprovedTimesheetQuery = {},
+): Promise<ApprovedTimesheetListResponse> {
+    try {
+        const params = new URLSearchParams()
+
+        if (query.engagement?.trim()) {
+            params.set('engagement', query.engagement.trim())
+        }
+
+        if (query.assignee?.trim()) {
+            params.set('assignee', query.assignee.trim())
+        }
+
+        if (query.page) {
+            params.set('page', String(query.page))
+        }
+
+        if (query.perPage) {
+            params.set('perPage', String(query.perPage))
+        }
+
+        const queryString = params.toString()
+
+        return await xhrGetAsync<ApprovedTimesheetListResponse>(
+            `${ENGAGEMENTS_ROOT_API_URL}/timesheets/approved${queryString ? `?${queryString}` : ''}`,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to load approved timesheets')
     }
 }
 

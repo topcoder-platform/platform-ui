@@ -68,6 +68,7 @@ describe('PaymentHistoryModal', () => {
                             billingAccountName: 'BA For Marios',
                             challengeFee: 18.6,
                             grossAmount: 120,
+                            status: 'ON_HOLD_ADMIN',
                             totalAmount: 120,
                         },
                     ],
@@ -109,6 +110,8 @@ describe('PaymentHistoryModal', () => {
         expect(screen.getByText('BA Name:'))
             .toBeTruthy()
         expect(screen.getByText('BA For Marios'))
+            .toBeTruthy()
+        expect(screen.getByText('On Hold Admin'))
             .toBeTruthy()
     })
 })

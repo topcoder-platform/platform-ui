@@ -1,18 +1,30 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
-import type { PropsWithChildren } from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
+import type { ComponentProps } from 'react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { autoUpdate, computePosition } from '@floating-ui/dom'
 
 import type { UserProfile, UserStats, UserStatsDistributionResponse } from '~/libs/core'
 import { useMemberStats, useProfileCompleteness, useStatsDistribution } from '~/libs/core'
 
+import SharedTooltip from '../../../../../../libs/ui/lib/components/tooltip/Tooltip'
 import { getPreferredRolesText } from '../../../lib'
 
 import MemberRatingCard from './MemberRatingCard'
 
-type MockTooltipProps = PropsWithChildren<{ disableTooltip?: boolean, offset?: number }>
+type MockTooltipProps = ComponentProps<typeof SharedTooltip>
 
 const mockTooltip = jest.fn((props: MockTooltipProps) => <>{props.children}</>)
+
+jest.mock('uuid', () => ({
+    v4: (): string => 'rating-tooltip-id',
+}))
+
+jest.mock('@floating-ui/dom', () => ({
+    ...jest.requireActual('@floating-ui/dom'),
+    autoUpdate: jest.fn(),
+    computePosition: jest.fn(),
+}))
 
 jest.mock('~/libs/core', () => ({
     getRatingColor: jest.fn(() => '#616BD5'),
@@ -227,7 +239,22 @@ describe('MemberRatingCard', () => {
             .toBeInTheDocument()
     })
 
-    it('offsets the percentile tooltip above the card so its arrow has room', () => {
+    it('keeps clearance above the card through repeated hovers and modal reopening', async () => {
+        // Keep the real shared tooltip and react-tooltip event lifecycle; only layout is mocked.
+        mockTooltip.mockImplementation(props => <SharedTooltip {...props} />)
+        const mockedAutoUpdate = autoUpdate as jest.MockedFunction<typeof autoUpdate>
+        mockedAutoUpdate.mockImplementation((_reference, _floating, update) => {
+            update()
+            return jest.fn()
+        })
+        const mockedComputePosition = computePosition as jest.MockedFunction<typeof computePosition>
+        mockedComputePosition.mockResolvedValue({
+            middlewareData: { arrow: { centerOffset: 0, x: 50 } },
+            placement: 'top',
+            strategy: 'absolute',
+            x: 100,
+            y: 100,
+        })
         mockedUseMemberStats.mockReturnValue({
             DATA_SCIENCE: {
                 MARATHON_MATCH: {
@@ -245,8 +272,43 @@ describe('MemberRatingCard', () => {
 
         render(<MemberRatingCard {...defaultProps} />)
 
-        expect(getLastTooltipProps().offset)
-            .toBe(16)
+        const trigger = screen.getByRole('button', { name: /Top 70% Data Scientists/i })
+
+        for (let hover = 0; hover < 3; hover += 1) {
+            mockedComputePosition.mockClear()
+            fireEvent.mouseOver(trigger)
+
+            // Hover cycles must run sequentially to exercise cached positions.
+            // eslint-disable-next-line no-await-in-loop
+            await waitFor(() => {
+                expect(screen.getByRole('tooltip'))
+                    .toHaveClass('react-tooltip__show')
+                expect(mockedComputePosition)
+                    .toHaveBeenLastCalledWith(trigger, expect.any(HTMLElement), expect.objectContaining({
+                        middleware: expect.arrayContaining([
+                            // 16px card padding plus 8px clearance for the standard arrow.
+                            expect.objectContaining({ name: 'offset', options: 24 }),
+                        ]),
+                        placement: 'top',
+                    }))
+            })
+
+            if (hover === 1) {
+                fireEvent.click(trigger)
+                expect(screen.queryByRole('tooltip'))
+                    .not
+                    .toBeInTheDocument()
+                fireEvent.click(screen.getByRole('button', { name: 'Close rating modal' }))
+            } else {
+                fireEvent.mouseOut(trigger)
+                // eslint-disable-next-line no-await-in-loop
+                await waitFor(() => {
+                    expect(screen.queryByRole('tooltip'))
+                        .not
+                        .toBeInTheDocument()
+                })
+            }
+        }
     })
 
     it('disables the percentile tooltip while the rating modal is open', () => {

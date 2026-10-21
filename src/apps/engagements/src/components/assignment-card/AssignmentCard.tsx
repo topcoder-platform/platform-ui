@@ -175,6 +175,8 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         [assignment?.standardHoursPerDay],
     )
     const assignmentStatus = assignment?.status?.toLowerCase()
+    // Experience remains available for the original assignment after it ends.
+    const showExperienceAction = ['assigned', 'completed', 'terminated'].includes(assignmentStatus ?? '')
     const showAssignedActions = assignmentStatus === 'assigned'
     const showOfferActions = assignmentStatus === 'selected'
 
@@ -298,14 +300,7 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                             textWrap
                             className={styles.actionButton}
                         />
-                        <Button
-                            label='Document Experience'
-                            onClick={props.onDocumentExperience}
-                            secondary
-                            textWrap
-                            className={styles.actionButton}
-                        />
-                        {/* {props.onOpenTimesheet && (
+                        {props.onOpenTimesheet && (
                             <Button
                                 label='Timesheet'
                                 onClick={props.onOpenTimesheet}
@@ -313,8 +308,17 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                                 textWrap
                                 className={styles.actionButton}
                             />
-                        )} */}
+                        )}
                     </>
+                )}
+                {showExperienceAction && (
+                    <Button
+                        label='Document Experience'
+                        onClick={props.onDocumentExperience}
+                        secondary
+                        textWrap
+                        className={styles.actionButton}
+                    />
                 )}
                 {renderOfferActions(
                     props.profileGateError,

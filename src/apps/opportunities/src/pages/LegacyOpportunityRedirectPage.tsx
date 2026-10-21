@@ -10,6 +10,7 @@ import { isTopgearCommunity, TOPGEAR_CHALLENGES_ROUTE } from '../utils/topgear.u
 interface LegacyOpportunityRedirectPageProps {
     list?: boolean
     review?: boolean
+    terms?: boolean
 }
 
 /**
@@ -30,23 +31,36 @@ export function buildLegacyOpportunityRedirect(
 }
 
 /**
- * Redirects replaced community-app challenge and review-opportunity URLs to
+ * Redirects replaced community-app challenge, terms, and review-opportunity URLs to
  * their canonical Opportunities equivalents.
  *
  * Review URLs resolve `opportunityId` from the query string and fall back to
  * the challenge detail when it is absent. List/detail redirects preserve the
  * remaining query string and hash for compatible filters and deep links.
  *
- * @param props legacy list or review route type; omitted means challenge detail.
+ * @param props legacy list, terms, or review route type; omitted means challenge detail.
  * @returns a replace-navigation to the canonical Opportunities route.
  * @throws Does not throw for missing route/query parameters.
  */
 export const LegacyOpportunityRedirectPage: FC<LegacyOpportunityRedirectPageProps> = props => {
     const location = useLocation()
-    const { challengeId }: Readonly<{ challengeId?: string }> = useParams<{ challengeId?: string }>()
+    const { challengeId, termId }: Readonly<{ challengeId?: string; termId?: string }> = useParams()
     const query = new URLSearchParams(location.search)
     const opportunityId = query.get('opportunityId')
         ?.trim()
+
+    if (props.terms && termId) {
+        return (
+            <Navigate
+                replace
+                to={buildLegacyOpportunityRedirect(
+                    `/opportunities/terms/detail/${encodeURIComponent(termId)}`,
+                    location.search,
+                    location.hash,
+                )}
+            />
+        )
+    }
 
     if (props.review && opportunityId) {
         query.delete('opportunityId')

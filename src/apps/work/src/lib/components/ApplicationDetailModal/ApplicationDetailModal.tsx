@@ -1,7 +1,12 @@
-import { FC, useMemo } from 'react'
+import { FC, MouseEvent, useEffect, useMemo, useState } from 'react'
 import classNames from 'classnames'
 
-import { downloadProfileAsync } from '~/libs/core'
+import {
+    downloadProfileAsync,
+    profileGetPublicAsync,
+    useCountryName,
+    UserProfile,
+} from '~/libs/core'
 import {
     BaseModal,
     Button,
@@ -15,6 +20,7 @@ import {
     Application,
 } from '../../models'
 
+import { openCvPreview } from './cv-preview'
 import styles from './ApplicationDetailModal.module.scss'
 
 interface ApplicationDetailModalProps {
@@ -89,10 +95,49 @@ function getStatusPillClass(value?: string): string {
     return styles.statusGray
 }
 
+/**
+ * Loads the member profile of the applicant and returns the "City, Country" shown on their profile page.
+ *
+ * @param handle the applicant handle.
+ * @returns the member location, or `undefined` while loading or when the profile has none.
+ */
+function useMemberLocation(handle?: string): string | undefined {
+    const [profile, setProfile] = useState<UserProfile | undefined>(undefined)
+
+    useEffect(() => {
+        let cancelled = false
+        setProfile(undefined)
+
+        if (!handle) {
+            return undefined
+        }
+
+        profileGetPublicAsync(handle)
+            .then(result => {
+                if (!cancelled) {
+                    setProfile(result)
+                }
+            })
+            .catch(() => undefined)
+
+        return () => {
+            cancelled = true
+        }
+    }, [handle])
+
+    const country = useCountryName(profile?.homeCountryCode || profile?.competitionCountryCode)
+    const city = profile?.addresses?.[0]?.city?.trim()
+
+    return [city, country]
+        .filter(Boolean)
+        .join(', ') || undefined
+}
+
 const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
     props: ApplicationDetailModalProps,
 ) => {
     const application = props.application
+    const memberLocation = useMemberLocation(props.open ? application?.handle : undefined)
 
     const profileLink = useMemo(() => {
         if (!application?.handle) {
@@ -110,7 +155,12 @@ const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
             .catch(() => undefined)
     }
 
-    const portfolioUrls = application?.portfolioUrls || []
+    function handlePreviewCv(event: MouseEvent<HTMLAnchorElement>): void {
+        event.preventDefault()
+        if (application?.cvFileUrl) {
+            openCvPreview(application.cvFileUrl)
+        }
+    }
 
     return (
         <BaseModal
@@ -165,6 +215,14 @@ const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
                                 <span className={styles.value}>{application.email || '-'}</span>
                             </div>
                             <div>
+                                <span className={styles.label}>Mobile Number</span>
+                                <span className={styles.value}>{application.mobileNumber || '-'}</span>
+                            </div>
+                            <div className={styles.fullRow}>
+                                <span className={styles.label}>Location</span>
+                                <span className={styles.value}>{memberLocation || '-'}</span>
+                            </div>
+                            <div>
                                 <span className={styles.label}>Submitted</span>
                                 <span className={styles.value}>{formatDate(application.createdAt)}</span>
                             </div>
@@ -174,7 +232,9 @@ const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
                             </div>
                             <div>
                                 <span className={styles.label}>Availability</span>
-                                <span className={styles.value}>{application.availability || '-'}</span>
+                                <span className={classNames(styles.value, styles.multiline)}>
+                                    {application.availability || '-'}
+                                </span>
                             </div>
                             <div>
                                 <span className={styles.label}>Address</span>
@@ -204,34 +264,24 @@ const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
                                     <span className={styles.linkLabel}>CV</span>
                                     {application.cvFileUrl
                                         ? (
-                                            <a
-                                                className={styles.link}
-                                                href={application.cvFileUrl}
-                                                rel='noreferrer noopener'
-                                                target='_blank'
-                                            >
-                                                View CV
-                                            </a>
-                                        )
-                                        : <span className={styles.value}>-</span>}
-                                </div>
-
-                                <div className={styles.linkRow}>
-                                    <span className={styles.linkLabel}>Portfolio</span>
-                                    {portfolioUrls.length
-                                        ? (
-                                            <div className={styles.linkList}>
-                                                {portfolioUrls.map(url => (
-                                                    <a
-                                                        className={styles.link}
-                                                        href={url}
-                                                        key={url}
-                                                        rel='noreferrer noopener'
-                                                        target='_blank'
-                                                    >
-                                                        {url}
-                                                    </a>
-                                                ))}
+                                            <div className={styles.cvActions}>
+                                                <a
+                                                    className={styles.link}
+                                                    href={application.cvFileUrl}
+                                                    onClick={handlePreviewCv}
+                                                    rel='noreferrer noopener'
+                                                    target='_blank'
+                                                >
+                                                    Preview CV
+                                                </a>
+                                                <a
+                                                    className={styles.link}
+                                                    href={application.cvFileUrl}
+                                                    rel='noreferrer noopener'
+                                                    target='_blank'
+                                                >
+                                                    Download
+                                                </a>
                                             </div>
                                         )
                                         : <span className={styles.value}>-</span>}
@@ -239,12 +289,14 @@ const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
                             </div>
                         </section>
 
-                        <section className={styles.section}>
-                            <h4 className={styles.sectionTitle}>Cover Letter</h4>
-                            <p className={styles.text}>
-                                {application.coverLetter || 'No application text available.'}
-                            </p>
-                        </section>
+                        {application.coverLetter && (
+                            <section className={styles.section}>
+                                <h4 className={styles.sectionTitle}>Cover Letter</h4>
+                                <p className={styles.text}>
+                                    {application.coverLetter}
+                                </p>
+                            </section>
+                        )}
                     </div>
                 )
                 : <div className={styles.empty}>Application details are unavailable.</div>}

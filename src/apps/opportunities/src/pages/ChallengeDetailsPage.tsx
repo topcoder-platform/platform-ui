@@ -27,7 +27,7 @@ import {
     useProfileContext,
     UserStats,
 } from '~/libs/core'
-import { ConfirmModal, IconOutline, LoadingSpinner } from '~/libs/ui'
+import { ConfirmModal, IconOutline, LoadingSpinner, Tooltip } from '~/libs/ui'
 
 import {
     ChallengeDescription,
@@ -97,6 +97,7 @@ import {
     isTopgearChallenge,
     marathonDashboardIsEnabled,
     marathonLeaderboardIsPublic,
+    marathonSubmissionRanks,
     marathonSubmissionScores,
     marathonSubmissionTestProgress,
     memberProfileUrl,
@@ -115,6 +116,8 @@ import medal1 from '../assets/winner-card-medal-1.svg'
 import medal2 from '../assets/winner-card-medal-2.svg'
 import medal3 from '../assets/winner-card-medal-3.svg'
 import resetIcon from '../assets/reset.svg'
+import submissionArtifactsIcon from '../assets/submission-artifacts.svg'
+import submissionHistoryIcon from '../assets/submission-history.svg'
 import winnerThanksIcon from '../assets/winner-thanks.svg'
 
 import styles from './ChallengeDetailsPage.module.scss'
@@ -157,6 +160,7 @@ export function challengeAllowsDesignSubmissionDeletion(
 }
 
 type SubmissionSortField = 'handle' | 'rating' | 'submittedDate' | 'provisionalScore' | 'finalScore'
+    | 'provisionalRank' | 'finalRank'
 
 interface SortableColumnHeaderProps {
     label: string
@@ -168,7 +172,13 @@ interface ActiveSortableColumnHeaderProps extends SortableColumnHeaderProps {
     active?: boolean
 }
 
-/** Renders an accessible table column that toggles its owning ordering. */
+/**
+ * Renders a sortable header, showing an arrow only for the active column.
+ * Shared by the Opportunities challenge detail tables.
+ * @param props label, active state, direction, and sorting callback.
+ * @returns keyboard-accessible header with its current aria-sort state.
+ * @throws Does not throw.
+ */
 const SortableColumnHeader: FC<ActiveSortableColumnHeaderProps> = props => (
     <th
         aria-label={props.label}
@@ -182,10 +192,12 @@ const SortableColumnHeader: FC<ActiveSortableColumnHeaderProps> = props => (
             type='button'
         >
             <span aria-hidden='true'>{props.label}</span>
-            <IconOutline.ChevronDownIcon
-                aria-hidden='true'
-                className={props.order === 'asc' ? styles.sortAscending : undefined}
-            />
+            {props.active !== false && (
+                <IconOutline.ChevronDownIcon
+                    aria-hidden='true'
+                    className={props.order === 'asc' ? styles.sortAscending : undefined}
+                />
+            )}
         </button>
     </th>
 )
@@ -342,7 +354,7 @@ function formatTimestamp(value?: string): string {
 /**
  * Renders the replacement challenge details route with lazy tab data, Markdown
  * table of contents, Review App rail, registration terms, Task-aware member
- * workflows, positive tab counts, and Support reporting.
+ * workflows, registration-gated review style, positive tab counts, and Support reporting.
  *
  * @returns challenge detail page for `/opportunities/challenge/:challengeId`.
  * @throws Does not throw; request failures render in-page recovery states.
@@ -378,13 +390,6 @@ export const ChallengeDetailsPage: FC = () => {
     const developmentChallenge = challenge
         ? challengeCatalogKey(challenge.track) === 'development'
         : false
-    const aiReviewConfigResponse: SWRResponse<ChallengeAiReviewConfig | undefined, Error> = useSWR(
-        challengeId && profile && challenge && developmentChallenge && !isMarathonMatchChallenge(challenge)
-            ? ['opportunities:challenge-review-style', challengeId]
-            : undefined,
-        () => getChallengeAiReviewConfig(challengeId),
-        { revalidateOnFocus: false, shouldRetryOnError: false },
-    )
     const memberId = profile?.userId === undefined ? undefined : String(profile.userId)
     const registrationResponse: SWRResponse<ChallengeResource | undefined, Error> = useSWR(
         challengeId && challenge && memberId && !taskChallenge
@@ -407,6 +412,14 @@ export const ChallengeDetailsPage: FC = () => {
         .toLowerCase()
         .includes('copilot') ?? false
     const isRegistered = !taskChallenge && !!registration
+    const showReviewStyle = profileInitialized && !!memberId && isRegistered
+    const aiReviewConfigResponse: SWRResponse<ChallengeAiReviewConfig | undefined, Error> = useSWR(
+        showReviewStyle && challenge && developmentChallenge && !isMarathonMatchChallenge(challenge)
+            ? ['opportunities:challenge-review-style', challengeId, memberId, registration?.id]
+            : undefined,
+        () => getChallengeAiReviewConfig(challengeId),
+        { revalidateOnFocus: false, shouldRetryOnError: false },
+    )
     const hasMemberTabAccess = !taskChallenge && (isRegistered || isAdministrator)
     const hasForumAccess = !taskChallenge && (hasMemberTabAccess || !!memberResourceResponse.data)
     const mySubmissionCountResponse: SWRResponse<number, Error> = useSWR(
@@ -888,7 +901,7 @@ export const ChallengeDetailsPage: FC = () => {
                             && aiReviewConfigResponse.data === undefined
                             && !aiReviewConfigResponse.error}
                         reviewStyleUnavailable={!!aiReviewConfigResponse.error}
-                        showReviewStyle={profileInitialized && !!profile}
+                        showReviewStyle={showReviewStyle}
                     />
                 )}
             </div>
@@ -1099,6 +1112,7 @@ function ratingClass(rating?: number): string | undefined {
 /**
  * Renders the compact avatar and linked handle shared by detail tables/cards.
  *
+ * Long handles remain available in a title when compact table cells truncate them.
  * @param props resolved member handle.
  * @returns member identity cell; members without a usable photo get the
  * handle-initial color placeholder from `MemberAvatar`.
@@ -1112,8 +1126,8 @@ const MemberHandle: FC<MemberHandleProps> = props => {
         <span className={styles.member}>
             <MemberAvatar className={styles.avatar} handle={handle} photoURL={props.profile?.photoURL} />
             {props.link === false && !props.profile?.handle
-                ? <span className={`${styles.memberHandle} ${handleClass ?? ''}`}>{handle}</span>
-                : <a className={handleClass} href={memberProfileUrl(handle)}>{handle}</a>}
+                ? <span className={`${styles.memberHandle} ${handleClass ?? ''}`} title={handle}>{handle}</span>
+                : <a className={handleClass} href={memberProfileUrl(handle)} title={handle}>{handle}</a>}
         </span>
     )
 }
@@ -1293,20 +1307,24 @@ interface SubmissionsTabProps {
 
 /**
  * Loads and paginates submissions only after a submission tab is selected.
+ * Marathon Match All Submissions uses compact artifact/history icons with descriptive tooltips.
  * Derived-column sorts use the full latest-submission collection before pagination;
- * submission-date sorting remains server-paginated.
+ * Marathon Match ranks also use that collection, including when sorting by date.
+ * Other submission-date sorting remains server-paginated.
+ * Marathon Match tables default to 200 rows per page; other challenge types default to 10.
  *
  * @param props challenge, registration/management rights, viewer identity, My Submissions flag, and callbacks.
  * @returns submission table/gallery, lifecycle-aware empty state, or request state.
  * @throws Does not throw; request failures render a retry action.
  */
 const SubmissionsTab: FC<SubmissionsTabProps> = props => {
+    const isMarathonMatch = isMarathonMatchChallenge(props.challenge)
     const [page, setPage] = useState(1)
-    const [perPage, setPerPage] = useState(10)
+    const [perPage, setPerPage] = useState(isMarathonMatch ? 200 : 10)
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
     const [allSubmissionsSortBy, setSortBy] = useState<SubmissionSortField>('submittedDate')
     const sortBy = props.mine ? 'submittedDate' : allSubmissionsSortBy
-    const [artifactsSubmissionId, setArtifactsSubmissionId] = useState<string>()
+    const [artifactsSubmission, setArtifactsSubmission] = useState<ChallengeSubmission>()
     const [historySubmission, setHistorySubmission] = useState<ChallengeSubmission | undefined>()
     const [aiSubmissionExpansionOverrides, setAiSubmissionExpansionOverrides]
         = useState<Record<string, boolean>>({})
@@ -1317,7 +1335,6 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     const trackKey = challengeCatalogKey(props.challenge.track)
     const isDesign = trackKey === 'design'
     const isQa = trackKey === 'qualityassurance'
-    const isMarathonMatch = isMarathonMatchChallenge(props.challenge)
     const completedMarathon = isMarathonMatch && props.challenge.status?.toUpperCase() === 'COMPLETED'
     const allowInternalArtifacts = !!props.canManageArtifacts || completedMarathon
 
@@ -1336,12 +1353,19 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     /**
      * Opens scorer artifacts from either the latest row or a history entry.
      * @param submissionId Authorized submission selected by the viewer.
-     * @returns void after closing history and opening the artifact dialog.
+     * Keeps the owner metadata and hides history until artifacts close, avoiding stacked backdrops.
+     * @returns void after selecting the artifact dialog submission.
      * @throws Does not throw; the dialog reports API authorization errors.
      */
     const openArtifacts = (submissionId: string): void => {
-        setHistorySubmission(undefined)
-        setArtifactsSubmissionId(submissionId)
+        const owner = historySubmission ?? loadedSubmissions.find(submission => submission.id === submissionId)
+        const profile = profilesById.get(owner ? challengeSubmissionMemberId(owner) ?? '' : '')
+        setArtifactsSubmission({
+            ...owner,
+            id: submissionId,
+            submitterHandle: profile?.handle ?? (owner ? submissionHandle(owner) : undefined),
+            submitterMaxRating: profile?.maxRating ?? owner?.submitterMaxRating ?? owner?.rating,
+        })
     }
 
     const hasAiWorkflow = !isMarathonMatch && (
@@ -1363,7 +1387,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         && challengeMetadataFlag(props.challenge, 'submissionsViewable')
     const usePublicPreviewPage = privatePreviewGallery && !props.viewerMemberId
     const clientSort = !props.mine && !privatePreviewGallery && !privateDesignSubmissions
-        && sortBy !== 'submittedDate'
+        && (isMarathonMatch || sortBy !== 'submittedDate')
     const response: SWRResponse<OpportunityPage<ChallengeSubmission>, Error> = useSWR(
         privateDesignSubmissions ? undefined : [
             usePublicPreviewPage ? 'opportunities:submission-previews' : 'opportunities:submissions',
@@ -1441,15 +1465,28 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         props.challenge,
         loadedSubmissions,
     )
+    const submissionRanks = useMemo(
+        () => marathonSubmissionRanks(isMarathonMatch && !props.mine ? loadedSubmissions : []),
+        [isMarathonMatch, props.mine, loadedSubmissions],
+    )
     const submissions = useMemo(() => {
         if (!clientSort) return loadedSubmissions
 
         /**
          * Resolves a displayed value for whole-collection sorting.
          * @param submission Submission being compared, with any hydrated profile.
-         * @returns Visible handle, rating, or released score; undefined for missing values.
+         * @returns Visible handle, rating, date, rank, or released score; undefined for missing values.
+         * @throws Does not throw.
          */
         const valueFor = (submission: ChallengeSubmission): string | number | undefined => {
+            if (sortBy === 'submittedDate') {
+                const timestamp = Date.parse(submission.submittedDate ?? submission.createdAt ?? '')
+                return Number.isFinite(timestamp) ? timestamp : undefined
+            }
+
+            const ranks = submissionRanks.get(submission.id)
+            if (sortBy === 'provisionalRank') return ranks?.provisionalRank
+            if (sortBy === 'finalRank') return showAllSubmissionFinalScores ? ranks?.finalRank : undefined
             const profile = profilesById.get(challengeSubmissionMemberId(submission) ?? '')
             if (sortBy === 'handle') return profile?.handle ?? submissionHandle(submission)
             if (sortBy === 'rating') {
@@ -1479,7 +1516,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         })
             .slice((page - 1) * perPage, page * perPage)
     }, [clientSort, isMarathonMatch, loadedSubmissions, page, perPage, profilesById,
-        showAllSubmissionFinalScores, sortBy, sortOrder])
+        showAllSubmissionFinalScores, sortBy, sortOrder, submissionRanks])
 
     /**
      * Selects a sortable data field or reverses its current direction.
@@ -1628,6 +1665,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
             }}
             page={clientSort ? page : response.data.page}
             perPage={clientSort ? perPage : response.data.perPage}
+            perPageOptions={isMarathonMatch ? [10, 20, 50, 200] : undefined}
             total={response.data.total}
             totalPages={clientSort ? Math.ceil(response.data.total / perPage) : response.data.totalPages}
         />
@@ -1658,6 +1696,12 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                         onChange={event => selectSort(event.target.value as typeof sortBy)}
                         value={sortBy}
                     >
+                        {isMarathonMatch && (
+                            <>
+                                <option value='finalRank'>Final Rank</option>
+                                <option value='provisionalRank'>Provisional Rank</option>
+                            </>
+                        )}
                         <option value='handle'>Handle</option>
                         {!isDesign && <option value='rating'>Rating</option>}
                         <option value='submittedDate'>Submission Date</option>
@@ -1675,8 +1719,10 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
             {!privatePreviewGallery && (
                 <MobileTableSort
                     label={{
+                        finalRank: 'Final Rank',
                         finalScore: 'Final Score',
                         handle: 'Handle',
+                        provisionalRank: 'Provisional Rank',
                         provisionalScore: isQa ? 'Initial Score' : 'Provisional Score',
                         rating: 'Rating',
                         submittedDate: 'Submission Date',
@@ -1944,7 +1990,11 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                     </table>
                 </div>
             ) : (
-                <div className={`${styles.tableCard} ${styles.mobileRecordCard}`}>
+                <div
+                    className={`${styles.tableCard} ${styles.mobileRecordCard} ${isMarathonMatch
+                        ? styles.marathonTableCard
+                        : ''}`}
+                >
                     <table className={`${isMarathonMatch
                         ? styles.marathonTable
                         : isQa
@@ -1955,6 +2005,8 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                     >
                         <thead>
                             <tr>
+                                {isMarathonMatch && sortHeader('finalRank', 'Final Rank')}
+                                {isMarathonMatch && sortHeader('provisionalRank', 'Provisional Rank')}
                                 {sortHeader('handle', 'Handle')}
                                 {!isDesign && sortHeader('rating', 'Rating')}
                                 {sortHeader('submittedDate', 'Submission Date')}
@@ -1972,8 +2024,24 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                     ?? submission.submitterMaxRating
                                     ?? submission.rating
                                     ?? undefined
+                                const historyLabel = submission.submissionCount === undefined
+                                    ? 'History'
+                                    : `History (${submission.submissionCount} `
+                                    + `${submission.submissionCount === 1 ? 'submission' : 'submissions'})`
                                 return (
                                     <tr key={submission.id}>
+                                        {isMarathonMatch && (
+                                            <>
+                                                <td data-mobile-label='Final Rank'>
+                                                    {(showAllSubmissionFinalScores
+                                                        ? submissionRanks.get(submission.id)?.finalRank
+                                                        : undefined) ?? 'N/A'}
+                                                </td>
+                                                <td data-mobile-label='Provisional Rank'>
+                                                    {submissionRanks.get(submission.id)?.provisionalRank ?? 'N/A'}
+                                                </td>
+                                            </>
+                                        )}
                                         <td data-mobile-label='Handle'>
                                             <MemberHandle
                                                 handle={submissionHandle(submission)}
@@ -2028,27 +2096,64 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                                             </td>
                                         )}
                                         <td data-mobile-label='Action'>
-                                            {canViewArtifacts(submission) && (
+                                            {isMarathonMatch ? (
+                                                <div className={styles.marathonActions}>
+                                                    {canViewArtifacts(submission) && (
+                                                        <Tooltip
+                                                            className={styles.submissionActionTooltip}
+                                                            content='View Artifacts'
+                                                            place='top'
+                                                            strategy='fixed'
+                                                        >
+                                                            <button
+                                                                aria-label={
+                                                                    `Download submission artifacts ${submission.id}`
+                                                                }
+                                                                className={styles.historyLink}
+                                                                onClick={() => openArtifacts(submission.id)}
+                                                                type='button'
+                                                            >
+                                                                <img
+                                                                    alt=''
+                                                                    aria-hidden='true'
+                                                                    src={submissionArtifactsIcon}
+                                                                />
+                                                            </button>
+                                                        </Tooltip>
+                                                    )}
+                                                    <Tooltip
+                                                        className={styles.submissionActionTooltip}
+                                                        content={historyLabel}
+                                                        place='top'
+                                                        strategy='fixed'
+                                                    >
+                                                        <button
+                                                            aria-label={historyLabel}
+                                                            className={styles.historyLink}
+                                                            onClick={() => setHistorySubmission(submission)}
+                                                            type='button'
+                                                        >
+                                                            <img
+                                                                alt=''
+                                                                aria-hidden='true'
+                                                                src={submissionHistoryIcon}
+                                                            />
+                                                            {submission.submissionCount}
+                                                        </button>
+                                                    </Tooltip>
+                                                </div>
+                                            ) : (
                                                 <button
-                                                    aria-label={`Download submission artifacts ${submission.id}`}
                                                     className={styles.historyLink}
-                                                    onClick={() => openArtifacts(submission.id)}
+                                                    onClick={() => setHistorySubmission(submission)}
                                                     type='button'
                                                 >
-                                                    <IconOutline.FolderDownloadIcon aria-hidden='true' width={20} />
-                                                    Artifacts
+                                                    <img alt='' aria-hidden='true' src={resetIcon} />
+                                                    History
+                                                    {submission.submissionCount !== undefined
+                                                        && ` (${submission.submissionCount})`}
                                                 </button>
                                             )}
-                                            <button
-                                                className={styles.historyLink}
-                                                onClick={() => setHistorySubmission(submission)}
-                                                type='button'
-                                            >
-                                                <img alt='' aria-hidden='true' src={resetIcon} />
-                                                History
-                                                {submission.submissionCount !== undefined
-                                                    && ` (${submission.submissionCount})`}
-                                            </button>
                                         </td>
                                     </tr>
                                 )
@@ -2081,16 +2186,19 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
             )}
             <SubmissionArtifactsModal
                 allowInternalArtifacts={allowInternalArtifacts}
-                onClose={() => setArtifactsSubmissionId(undefined)}
-                open={!!artifactsSubmissionId}
-                submissionId={artifactsSubmissionId}
+                completed={completedMarathon}
+                handle={artifactsSubmission?.submitterHandle}
+                onClose={() => setArtifactsSubmission(undefined)}
+                open={!!artifactsSubmission}
+                rating={artifactsSubmission?.submitterMaxRating ?? undefined}
+                submissionId={artifactsSubmission?.id}
             />
             <SubmissionHistoryModal
                 challengeId={props.challenge.id}
                 isMarathonMatch={isMarathonMatch}
                 onClose={() => setHistorySubmission(undefined)}
                 onOpenArtifacts={historySubmission && canViewArtifacts(historySubmission) ? openArtifacts : undefined}
-                open={!!historySubmission}
+                open={!!historySubmission && !artifactsSubmission}
                 reviewSummations={scoreResponse.data}
                 showFinalScores={props.mine || showAllSubmissionFinalScores}
                 submission={historySubmission}

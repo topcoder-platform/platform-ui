@@ -8,6 +8,7 @@ import {
 } from '~/libs/core'
 
 import {
+    ChallengeForumWatchState,
     CreateForumPostRequest,
     CreateForumTopicRequest,
     CreateForumTopicResponse,
@@ -274,4 +275,33 @@ export async function markForumTopicRead(topicId: string): Promise<void> {
         `${FORUMS_URL}/topics/${encodeURIComponent(topicId)}/read-state`,
         {},
     )
+}
+
+/**
+ * Loads the current member's effective challenge-wide watch preference.
+ * @param challengeId challenge whose forum preference is requested.
+ * @returns persisted preference or default derived from registration/copilot assignment.
+ * @throws Propagates authentication, authorization, and network errors.
+ */
+export function getChallengeForumWatch(challengeId: string): Promise<ChallengeForumWatchState> {
+    return xhrGetAsync<ChallengeForumWatchState>(
+        `${FORUMS_URL}/challenges/${encodeURIComponent(challengeId)}/watch`,
+    )
+}
+
+/**
+ * Persists the current member's watch preference for existing and future forum topics.
+ * @param challengeId challenge whose forum preference is updated.
+ * @param watching true to watch, false to persist an opt-out from default notifications.
+ * @returns saved challenge-wide watch state.
+ * @throws Propagates authentication, authorization, and network errors.
+ */
+export function setChallengeForumWatching(
+    challengeId: string,
+    watching: boolean,
+): Promise<ChallengeForumWatchState> {
+    const url = `${FORUMS_URL}/challenges/${encodeURIComponent(challengeId)}/watch`
+    return watching
+        ? xhrPutAsync<Record<string, never>, ChallengeForumWatchState>(url, {})
+        : xhrDeleteAsync<ChallengeForumWatchState>(url)
 }

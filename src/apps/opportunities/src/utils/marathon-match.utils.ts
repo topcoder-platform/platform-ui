@@ -1,3 +1,4 @@
+import { getRatingColor } from '../../../../libs/core/lib/profile/profile-functions/rating.functions'
 import {
     ChallengeOpportunity,
     ChallengeReviewSummation,
@@ -13,6 +14,11 @@ type MarathonScorePhase = 'example' | 'final' | 'provisional'
 export interface MarathonSubmissionScores {
     finalScore?: number
     provisionalScore?: number
+}
+
+export interface MarathonSubmissionRanks {
+    finalRank?: number
+    provisionalRank?: number
 }
 
 export interface MarathonTestProgress {
@@ -393,6 +399,51 @@ export function marathonSubmissionScores(
 }
 
 /**
+ * Ranks the complete latest-submission collection for the MM All Submissions table.
+ * Provisional ties favor earlier submissions; final ties share competition ranks
+ * (1, 1, 3), matching community-app. Missing or pending scores remain unranked.
+ *
+ * @param submissions All latest submissions, with review summations attached, before pagination.
+ * @returns Ranks keyed by submission ID; callers apply the final-score release gate.
+ * @throws Does not throw.
+ */
+export function marathonSubmissionRanks(
+    submissions: ChallengeSubmission[],
+): Map<string, MarathonSubmissionRanks> {
+    const ranks = new Map<string, MarathonSubmissionRanks>()
+    const entries = submissions.map(submission => {
+        const timestamp = Date.parse(submission.submittedDate ?? submission.createdAt ?? '')
+        ranks.set(submission.id, {})
+        return {
+            id: submission.id,
+            ...marathonSubmissionScores(submission),
+            timestamp: Number.isFinite(timestamp) ? timestamp : Number.POSITIVE_INFINITY,
+        }
+    })
+    entries.flatMap(entry => (entry.provisionalScore === undefined ? [] : [{
+        ...entry,
+        score: entry.provisionalScore,
+    }]))
+        .sort((first, second) => (
+            (second.score - first.score) || first.timestamp - second.timestamp
+        ))
+        .forEach((entry, index) => {
+            ranks.set(entry.id, { provisionalRank: index + 1 })
+        })
+
+    let previousScore: number | undefined
+    let finalRank = 0
+    entries.flatMap(entry => (entry.finalScore === undefined ? [] : [{ ...entry, score: entry.finalScore }]))
+        .sort((first, second) => second.score - first.score)
+        .forEach((entry, index) => {
+            if (entry.score !== previousScore) finalRank = index + 1
+            ranks.set(entry.id, { ...ranks.get(entry.id), finalRank })
+            previousScore = entry.score
+        })
+    return ranks
+}
+
+/**
  * Applies community-app's final-score release timing while leaving Review API
  * as the authorization and score authority. Marathon Match results stay hidden
  * while any submission phase is open, then become visible after Review closes
@@ -636,19 +687,15 @@ export function formatMarathonFinalScore(score: number | undefined, fallback: st
 }
 
 /**
- * Maps a member's maximum rating to the canonical chart color.
+ * Maps a member's maximum rating to the shared member-rating palette for
+ * Marathon Match dashboard points, retaining the gray band for unknown ratings.
  *
  * @param rating optional maximum rating.
- * @returns design-system rating color.
+ * @returns member-rating color, or the gray rating color for missing/non-finite ratings.
  * @throws Does not throw.
  */
 export function marathonRatingColor(rating?: number): string {
-    if (rating === undefined || !Number.isFinite(rating)) return '#6f6f6f'
-    if (rating >= 2200) return '#ef476f'
-    if (rating >= 1500) return '#f1c21b'
-    if (rating >= 1200) return '#2d8acd'
-    if (rating >= 900) return '#137d60'
-    return '#6f6f6f'
+    return getRatingColor(rating !== undefined && Number.isFinite(rating) ? rating : 0)
 }
 
 /**

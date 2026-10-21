@@ -1,36 +1,28 @@
 import * as yup from 'yup'
 
-import type { ApplicationFormData } from './application-form.types'
+import type { ApplicationFormData, YesNoAnswer } from './application-form.types'
+import { REFERRAL_SOURCE_OPTIONS, REFERRED_BY_OPTION } from './application-form.constants'
 
 const requiredMessage = 'Field cannot be empty or contain only whitespace'
+const selectOptionMessage = 'Please select an option'
+const yesNoAnswers: YesNoAnswer[] = ['yes', 'no']
 
 export const applicationFormSchema: yup.ObjectSchema<ApplicationFormData> = yup.object({
     address: yup
         .string()
         .optional(),
-    availability: yup
-        .string()
-        .max(500, 'Availability must be 500 characters or less')
-        .test(
-            'not-whitespace',
-            requiredMessage,
-            value => (
-                value === undefined
-                || value === ''
-                || (typeof value === 'string' && value.trim().length > 0)
-            ),
-        )
-        .optional(),
-    coverLetter: yup
-        .string()
-        .trim()
-        .required(requiredMessage)
-        .max(5000, 'Cover letter must be 5000 characters or less')
-        .defined(),
+    availableFullTime: yup
+        .mixed<YesNoAnswer>()
+        .oneOf(yesNoAnswers, selectOptionMessage)
+        .required(selectOptionMessage),
+    availableWithinWeek: yup
+        .mixed<YesNoAnswer>()
+        .oneOf(yesNoAnswers, selectOptionMessage)
+        .required(selectOptionMessage),
     cvFileUrl: yup
         .string()
         .url('Must be a valid URL')
-        .optional(),
+        .required('Please upload your CV'),
     email: yup
         .string()
         .optional(),
@@ -61,26 +53,18 @@ export const applicationFormSchema: yup.ObjectSchema<ApplicationFormData> = yup.
     name: yup
         .string()
         .optional(),
-    portfolioUrls: yup
-        .array()
-        .of(
-            yup.object({
-                value: yup
-                    .string()
-                    .url('Must be a valid URL')
-                    .optional(),
-            })
-                .defined(),
-        )
-        .default([])
-        .test(
-            'has-portfolio-url',
-            'Add at least one portfolio URL',
-            entries => (entries ?? []).some(entry => !!entry.value?.trim()),
-        )
-        .defined(),
     referralSource: yup
         .string()
-        .max(500, 'Must be 500 characters or less')
+        .oneOf([...REFERRAL_SOURCE_OPTIONS, ''], selectOptionMessage)
         .optional(),
+    referrerHandle: yup
+        .string()
+        .max(100, 'Must be 100 characters or less')
+        .when('referralSource', {
+            is: REFERRED_BY_OPTION,
+            otherwise: schema => schema.optional(),
+            then: schema => schema
+                .trim()
+                .required('Please enter the handle of the member who referred you'),
+        }),
 })

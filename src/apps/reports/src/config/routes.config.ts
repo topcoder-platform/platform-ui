@@ -19,6 +19,7 @@ export function getReportsRootRoute(subdomain: string): string {
 export const rootRoute: string = getReportsRootRoute(EnvironmentConfig.SUBDOMAIN)
 
 export const reportsPageRouteId = 'reports'
+export const salesDashboardsPageRouteId = 'sales-dashboards'
 export const dashboardsPageRouteId = 'dashboards'
 export const dashboardDetailRoute = `${dashboardsPageRouteId}/:dashboardSlug`
 export const bulkMemberLookupRouteId = 'bulk-member-lookup'
@@ -27,6 +28,7 @@ export const talentPageRouteId = 'talent'
 export const formsPageRouteId = 'forms'
 
 export const dashboardRouteSlugs = {
+    activeMembers: 'active-members',
     challengeParticipation: 'challenge-participation',
     memberPaymentByCustomer: 'member-payment-by-customer',
     memberPaymentByMonth: 'member-payment-by-month',

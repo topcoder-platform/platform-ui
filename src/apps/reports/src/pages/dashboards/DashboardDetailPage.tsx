@@ -52,6 +52,7 @@ import {
     getDashboardRangeMonths,
     shiftDashboardRange,
 } from './dashboard.utils'
+import { ActiveMembersDetails } from './ActiveMembersDetails'
 import styles from './Dashboards.module.scss'
 
 type DashboardMetric = {
@@ -140,6 +141,14 @@ function buildAvailableDashboardRange(
  */
 function buildDashboardMetrics(response: DashboardResponse): DashboardMetric[] {
     switch (response.dashboard) {
+        case 'active-members':
+            return [{
+                icon: IconOutline.UsersIcon,
+                label: 'Unique Active Members',
+                meta: 'Selected period · each member counted once',
+                tone: 'blue',
+                value: formatMetricInteger(response.summary.totalUniqueMembers),
+            }]
         case 'member-payment-by-customer':
         case 'member-payment-by-month':
             return []
@@ -693,9 +702,17 @@ const DashboardDetailContent: FC<DashboardDetailContentProps> = props => {
                             )}
                         </section>
 
+                        {response.dashboard === 'active-members' && (
+                            <ActiveMembersDetails response={response} />
+                        )}
+
                         <div className={styles.dataNote}>
                             <IconOutline.InformationCircleIcon aria-hidden='true' />
-                            <span>Data is shown in UTC. Metrics are updated nightly.</span>
+                            <span>
+                                {response.dashboard === 'active-members'
+                                    ? 'Dates are UTC. Engagement acceptances with unknown dates are excluded.'
+                                    : 'Data is shown in UTC. Metrics are updated nightly.'}
+                            </span>
                         </div>
                     </>
                 )}

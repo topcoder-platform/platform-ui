@@ -18,6 +18,7 @@ import {
 } from 'react-router-dom'
 
 import {
+    ActiveMembersDashboard,
     downloadBlobFile,
     downloadDashboardCsv,
     fetchDashboard,
@@ -169,6 +170,41 @@ describe('Dashboard detail page', () => {
 
     afterEach(() => {
         jest.useRealTimers()
+    })
+
+    it('renders active-member totals and activities and exports the selected period', async () => {
+        const response: ActiveMembersDashboard = {
+            dashboard: 'active-members',
+            endDate: signupResponse.endDate,
+            months: [{
+                activities: [{
+                    activity: 'engagement-acceptance',
+                    date: '2026-07-15T12:00:00.000Z',
+                    description: 'Developer engagement',
+                    handle: 'active-member',
+                    id: 'acceptance:1',
+                    memberId: '1',
+                }],
+                month: '2026-07-01',
+                totalUniqueMembers: 1,
+            }],
+            startDate: signupResponse.startDate,
+            summary: { totalUniqueMembers: 1 },
+        }
+        mockedFetchDashboard.mockResolvedValue(response)
+        renderDetailRoute('active-members')
+        await flushAsyncUpdates()
+
+        expect(screen.getByText('Unique Active Members'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('region', { name: 'Monthly member activity' }))
+            .toHaveTextContent('active-memberEngagement acceptedDeveloper engagement')
+        expect(screen.getByRole('heading', { name: 'Jul ’26 — 1 active members' }))
+            .toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'Download CSV' }))
+        await flushAsyncUpdates()
+        expect(mockedDownloadDashboardCsv)
+            .toHaveBeenCalledWith('active-members', { endDate: '2026-08-01', startDate: '2026-02-01' })
     })
 
     it('renders metrics, pages by six months, and exports the selected range', async () => {

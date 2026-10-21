@@ -1,8 +1,8 @@
 /* eslint-disable react/jsx-no-bind */
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
-import { BaseModal, IconOutline, LoadingSpinner } from '~/libs/ui'
+import { BaseModal, IconOutline, LoadingSpinner, Tooltip } from '~/libs/ui'
 
 import {
     ChallengeReviewSummation,
@@ -13,9 +13,11 @@ import {
     attachMarathonReviewSummations,
     formatMarathonFinalScore,
     formatMarathonScore,
+    marathonRatingColor,
     marathonSubmissionScores,
 } from '../utils/marathon-match.utils'
 import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
+import { ReactComponent as ArtifactIcon } from '../assets/submission-artifact.svg'
 
 import styles from './SubmissionHistoryModal.module.scss'
 
@@ -74,7 +76,7 @@ function submissionHandle(submission?: ChallengeSubmission): string | undefined 
  * modal evenly between the columns. Marathon Match scores are rendered at full
  * precision, so an even split leaves the score columns too narrow and their
  * values run into the next column. Weighting the columns gives the scores the
- * room they need while the Submission ID keeps its ellipsis and Artifacts stays
+ * room they need while the Submission ID keeps its ellipsis and Actions stays
  * compact.
  *
  * @param isMarathonMatch whether the Provisional Score column is rendered.
@@ -85,10 +87,10 @@ function submissionHandle(submission?: ChallengeSubmission): string | undefined 
 function columnWidths(isMarathonMatch: boolean, showArtifacts: boolean): string[] {
     const weights = [
         24, // Submission ID
-        18, // Submission Date
+        20, // Submission Date
         ...(isMarathonMatch ? [22] : []), // Provisional Score
         22, // Final Score
-        ...(showArtifacts ? [14] : []), // Artifacts
+        ...(showArtifacts ? [10] : []), // Actions
     ]
     const total = weights.reduce((sum, weight) => sum + weight, 0)
     return weights.map(weight => `${((weight / total) * 100).toFixed(2)}%`)
@@ -97,14 +99,15 @@ function columnWidths(isMarathonMatch: boolean, showArtifacts: boolean): string[
 /**
  * Shows the selected member's server-authorized submission history without
  * navigating away from Opportunities to Review App. Visible Marathon Matches
- * expose every attempt to all viewers. Each row's authorized Artifacts control is styled
- * as a link, matching the All Submissions table on the challenge detail page.
+ * expose every attempt to all viewers, with sortable dates and authorized artifact icons.
+ * Negative provisional scores use the failed badge; final score release rules are retained.
  *
  * @param props selected submission, challenge context, visibility, and authorized artifact/close callbacks.
  * @returns modal with history rows or a loading, error, or empty state.
  * @throws Does not throw; request failures render a retryable modal state.
  */
 export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => {
+    const [ascending, setAscending] = useState(false)
     const memberId = submissionMemberId(props.submission)
     const response: SWRResponse<ChallengeSubmission[], Error> = useSWR(
         props.open && memberId
@@ -128,9 +131,14 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                 response.data ?? [],
                 props.reviewSummations ?? [],
             )
-            : response.data ?? []),
-        [props.isMarathonMatch, props.reviewSummations, response.data],
+            : [...response.data ?? []]).sort((first, second) => {
+            const firstDate = Date.parse(first.submittedDate ?? first.createdAt ?? '') || 0
+            const secondDate = Date.parse(second.submittedDate ?? second.createdAt ?? '') || 0
+            return ascending ? firstDate - secondDate : secondDate - firstDate
+        }),
+        [ascending, props.isMarathonMatch, props.reviewSummations, response.data],
     )
+    const latestSubmission = ascending ? submissions.at(-1) : submissions[0]
     const handle = submissionHandle(props.submission)
 
     let content
@@ -153,7 +161,7 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                 <p className={styles.latestSubmission}>
                     <span>Latest Submission:</span>
                     {' '}
-                    <strong title={submissions[0].id}>{submissions[0].id}</strong>
+                    <strong title={latestSubmission?.id}>{latestSubmission?.id}</strong>
                 </p>
                 <div className={styles.tableWrap}>
                     <table>
@@ -167,10 +175,22 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                         <thead>
                             <tr>
                                 <th>Submission ID</th>
-                                <th>Submission Date</th>
+                                <th aria-sort={ascending ? 'ascending' : 'descending'}>
+                                    <button
+                                        className={styles.sortButton}
+                                        onClick={() => setAscending(!ascending)}
+                                        type='button'
+                                    >
+                                        Submission Date
+                                        <IconOutline.ChevronDownIcon
+                                            aria-hidden='true'
+                                            className={ascending ? styles.ascending : undefined}
+                                        />
+                                    </button>
+                                </th>
                                 {props.isMarathonMatch && <th>Provisional Score</th>}
                                 <th>Final Score</th>
-                                {props.onOpenArtifacts && <th>Artifacts</th>}
+                                {props.onOpenArtifacts && <th>Actions</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -186,7 +206,9 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                                         </td>
                                         {props.isMarathonMatch && (
                                             <td data-mobile-label='Provisional Score' data-mobile-order='3'>
-                                                {formatMarathonScore(scores.provisionalScore, 'N/A')}
+                                                {scores.provisionalScore !== undefined && scores.provisionalScore < 0
+                                                    ? <span className={styles.failed}>Failed</span>
+                                                    : formatMarathonScore(scores.provisionalScore, '-')}
                                             </td>
                                         )}
                                         <td data-mobile-label='Final Score' data-mobile-order='2'>
@@ -198,19 +220,22 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                                                 : formatMarathonScore(scores.finalScore, 'N/A')}
                                         </td>
                                         {props.onOpenArtifacts && (
-                                            <td data-mobile-label='Artifacts' data-mobile-order='5'>
-                                                <button
-                                                    aria-label={`Download submission artifacts ${submission.id}`}
-                                                    className={styles.artifactsLink}
-                                                    onClick={() => props.onOpenArtifacts?.(submission.id)}
-                                                    type='button'
+                                            <td data-mobile-label='Actions' data-mobile-order='5'>
+                                                <Tooltip
+                                                    content='View artifact'
+                                                    place='top'
+                                                    strategy='fixed'
+                                                    className={styles.tooltip}
                                                 >
-                                                    <IconOutline.FolderDownloadIcon
-                                                        aria-hidden='true'
-                                                        width={16}
-                                                    />
-                                                    Artifacts
-                                                </button>
+                                                    <button
+                                                        aria-label={`View artifacts for ${submission.id}`}
+                                                        className={styles.artifactButton}
+                                                        onClick={() => props.onOpenArtifacts?.(submission.id)}
+                                                        type='button'
+                                                    >
+                                                        <ArtifactIcon aria-hidden='true' />
+                                                    </button>
+                                                </Tooltip>
                                             </td>
                                         )}
                                     </tr>
@@ -228,7 +253,7 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
             ariaLabelledby='submission-history-title'
             bodyClassName={styles.modalBody}
             center
-            classNames={{ modal: styles.modal }}
+            classNames={{ modal: styles.modal, overlay: styles.overlay }}
             onClose={props.onClose}
             open={props.open}
             showCloseIcon={false}
@@ -238,7 +263,6 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                 <div className={styles.modalHeading}>
                     <h2 id='submission-history-title'>
                         Submission History
-                        {handle && <span className={styles.handleSuffix}>{` for ${handle}`}</span>}
                     </h2>
                     <button
                         aria-label='Close submission history'
@@ -250,8 +274,22 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = props => 
                 </div>
             )}
         >
+            {handle && (
+                <div className={styles.metadata}>
+                    <span>
+                        <strong>Handle:</strong>
+                        {' '}
+                        <span style={{ color: marathonRatingColor(
+                            props.submission?.submitterMaxRating ?? props.submission?.rating ?? undefined,
+                        ) }}
+                        >
+                            {handle}
+                        </span>
+                    </span>
+                </div>
+            )}
             {content}
-            <div className={styles.mobileFooter}>
+            <div className={styles.footer}>
                 <button onClick={props.onClose} type='button'>Close</button>
             </div>
         </BaseModal>

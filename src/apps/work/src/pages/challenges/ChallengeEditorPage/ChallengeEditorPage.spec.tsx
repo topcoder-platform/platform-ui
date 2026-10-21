@@ -15,6 +15,8 @@ import {
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 
+import { EnvironmentConfig } from '~/config'
+
 import {
     useFetchChallenge,
     useFetchProject,
@@ -43,6 +45,7 @@ var mockWorkAppContext: Context<WorkAppContextModel>
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
         PLATFORMUI_URL: 'https://platform-ui.topcoder-dev.com',
+        TOPCODER_URL: 'https://www.topcoder-dev.com',
     },
 }), { virtual: true })
 
@@ -347,6 +350,7 @@ function renderPage(route: string, path: string): ReturnType<typeof render> {
 describe('ChallengeEditorPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        EnvironmentConfig.TOPCODER_URL = 'https://www.topcoder-dev.com'
 
         mockedUseFetchChallenge.mockReturnValue({
             challenge: {
@@ -388,6 +392,32 @@ describe('ChallengeEditorPage', () => {
         mockedIsChallengeCompletedOrCancelled.mockImplementation((status?: string) => (
             status === 'COMPLETED' || status?.startsWith('CANCELLED')
         ))
+    })
+
+    it.each([
+        ['https://www.topcoder-dev.com', 'edit'],
+        ['https://www.topcoder-dev.com', 'view'],
+        ['https://www.topcoder.com', 'edit'],
+        ['https://www.topcoder.com', 'view'],
+    ])('opens the public challenge at %s from %s mode', async (topcoderUrl, mode) => {
+        EnvironmentConfig.TOPCODER_URL = topcoderUrl
+        const challengeId = 'c271d9de-1668-4fa4-9513-993a9c038e7e'
+        const challengeResponse = mockedUseFetchChallenge()
+        mockedUseFetchChallenge.mockReturnValue({
+            ...challengeResponse,
+            challenge: { ...challengeResponse.challenge, id: challengeId },
+        })
+
+        renderPage(
+            `/projects/123/challenges/${challengeId}/${mode}`,
+            `/projects/:projectId/challenges/:challengeId/${mode}`,
+        )
+
+        const challengeLink = await screen.findByRole('link', { name: 'Challenge' })
+        expect(challengeLink.getAttribute('href'))
+            .toBe(`${topcoderUrl}/opportunities/challenge/${challengeId}`)
+        expect(challengeLink.getAttribute('target'))
+            .toBe('_blank')
     })
 
     it('renders the updated quick links in the right header for edit mode', async () => {
@@ -434,7 +464,7 @@ describe('ChallengeEditorPage', () => {
         expect(within(rightHeader)
             .getByRole('link', { name: 'Challenge' })
             .getAttribute('href'))
-            .toBe('https://platform-ui.topcoder-dev.com/opportunities/challenge/456')
+            .toBe('https://www.topcoder-dev.com/opportunities/challenge/456')
         expect(within(rightHeader)
             .getByRole('link', { name: 'Review' })
             .getAttribute('href'))
@@ -539,7 +569,7 @@ describe('ChallengeEditorPage', () => {
 
         expect(headerActions.getByRole('link', { name: 'Challenge' })
             .getAttribute('href'))
-            .toBe('https://platform-ui.topcoder-dev.com/opportunities/challenge/456')
+            .toBe('https://www.topcoder-dev.com/opportunities/challenge/456')
         expect(headerActions.getByRole('button', { name: 'Cancel' }))
             .toBeTruthy()
         expect(headerActions.getByRole('button', { name: 'Launch' }))

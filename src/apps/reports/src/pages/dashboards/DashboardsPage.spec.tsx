@@ -74,6 +74,13 @@ jest.mock('../../lib/utils', () => ({
 }))
 
 const dashboardResponse: DashboardsResponse = {
+    activeMembers: {
+        dashboard: 'active-members',
+        endDate: '2026-08-01T00:00:00.000Z',
+        months: [{ activities: [], month: '2026-07-01', totalUniqueMembers: 1 }],
+        startDate: '2026-02-01T00:00:00.000Z',
+        summary: { totalUniqueMembers: 1 },
+    },
     challengeParticipation: {
         dashboard: 'challenge-participation',
         endDate: '2026-08-01T00:00:00.000Z',
@@ -243,13 +250,13 @@ describe('Dashboards landing page', () => {
         expect(screen.getByRole('heading', { name: /Member Payment \$ by Customer/ }))
             .toBeInTheDocument()
         expect(screen.getAllByTestId('dashboard-chart'))
-            .toHaveLength(5)
+            .toHaveLength(6)
         expect(screen.getAllByRole('table'))
-            .toHaveLength(5)
+            .toHaveLength(6)
         const detailLinks = screen.getAllByRole('link', { name: 'View full dashboard' })
 
         expect(detailLinks)
-            .toHaveLength(5)
+            .toHaveLength(6)
         expect(detailLinks[3])
             .toHaveAttribute('href', '/reports/dashboards/member-payment-by-month')
         expect(detailLinks[4])
@@ -266,7 +273,7 @@ describe('Dashboards landing page', () => {
         await flushAsyncUpdates()
 
         expect(mockedFetchDashboard)
-            .toHaveBeenCalledTimes(10)
+            .toHaveBeenCalledTimes(12)
         expect(screen.getByRole('button', { name: 'Download CSV' }))
             .toBeEnabled()
 
@@ -300,7 +307,7 @@ describe('Dashboards landing page', () => {
 
         const cards = screen.getAllByRole('article')
         expect(cards)
-            .toHaveLength(5)
+            .toHaveLength(6)
         expect(screen.queryAllByTestId('dashboard-chart'))
             .toHaveLength(0)
         cards.forEach((card, index) => {
@@ -320,7 +327,7 @@ describe('Dashboards landing page', () => {
                 .toHaveAttribute('href', `/reports/dashboards/${dashboardSlugs[index]}`)
         })
         expect(mockedFetchDashboard)
-            .toHaveBeenCalledTimes(5)
+            .toHaveBeenCalledTimes(6)
 
         fireEvent.click(within(cards[dashboardSlugs.indexOf(slug)])
             .getByRole('link'))
@@ -343,13 +350,13 @@ describe('Dashboards landing page', () => {
         await flushAsyncUpdates()
 
         expect(screen.getAllByTestId('dashboard-chart'))
-            .toHaveLength(3)
+            .toHaveLength(4)
         expect(screen.getAllByRole('status'))
             .toHaveLength(1)
         expect(screen.getByRole('alert'))
             .toHaveTextContent('Members paid is unavailable')
         expect(screen.getAllByRole('link', { name: 'View full dashboard' }))
-            .toHaveLength(5)
+            .toHaveLength(6)
 
         fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
         expect(screen.getAllByRole('status'))
@@ -357,7 +364,7 @@ describe('Dashboards landing page', () => {
         await flushAsyncUpdates()
 
         expect(mockedFetchDashboard)
-            .toHaveBeenCalledTimes(6)
+            .toHaveBeenCalledTimes(7)
         expect(mockedFetchDashboard)
             .toHaveBeenLastCalledWith('members-paid', {
                 endDate: '2026-08-01',
@@ -365,14 +372,14 @@ describe('Dashboards landing page', () => {
             })
         expect(screen.queryByRole('alert')).not.toBeInTheDocument()
         expect(screen.getAllByTestId('dashboard-chart'))
-            .toHaveLength(4)
+            .toHaveLength(5)
         expect(screen.getAllByRole('status'))
             .toHaveLength(1)
 
         pending.resolve(dashboardResponse.newSignups)
         await flushAsyncUpdates()
         expect(screen.getAllByTestId('dashboard-chart'))
-            .toHaveLength(5)
+            .toHaveLength(6)
         expect(screen.queryByRole('status')).not.toBeInTheDocument()
     })
 
@@ -388,9 +395,9 @@ describe('Dashboards landing page', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
         expect(screen.getAllByRole('status'))
-            .toHaveLength(5)
+            .toHaveLength(6)
         expect(screen.getAllByRole('link', { name: 'View full dashboard' }))
-            .toHaveLength(5)
+            .toHaveLength(6)
         await flushAsyncUpdates()
 
         staleSuccess.resolve({ ...dashboardResponse.newSignups, months: [] })
@@ -398,9 +405,9 @@ describe('Dashboards landing page', () => {
         await flushAsyncUpdates()
 
         expect(mockedFetchDashboard)
-            .toHaveBeenCalledTimes(10)
+            .toHaveBeenCalledTimes(12)
         expect(screen.getAllByTestId('dashboard-chart'))
-            .toHaveLength(5)
+            .toHaveLength(6)
         expect(screen.queryByRole('alert')).not.toBeInTheDocument()
         expect(screen.queryByRole('status')).not.toBeInTheDocument()
     })
@@ -412,12 +419,12 @@ describe('Dashboards landing page', () => {
         await flushAsyncUpdates()
 
         expect(screen.getAllByRole('alert'))
-            .toHaveLength(5)
+            .toHaveLength(6)
         expect(screen.getAllByRole('alert')[0])
             .toHaveTextContent('Dashboard data could not be loaded. Please try again.')
         expect(screen.queryByRole('status')).not.toBeInTheDocument()
         expect(screen.getAllByRole('link', { name: 'View full dashboard' }))
-            .toHaveLength(5)
+            .toHaveLength(6)
 
         mockedFetchDashboard.mockImplementation((slug: DashboardSlug) => (
             Promise.resolve(getDashboardResponse(dashboardResponse, slug))
@@ -427,7 +434,7 @@ describe('Dashboards landing page', () => {
 
         expect(screen.queryByRole('alert')).not.toBeInTheDocument()
         expect(screen.getAllByTestId('dashboard-chart'))
-            .toHaveLength(5)
+            .toHaveLength(6)
     })
 
     it('exports CSV without waiting for previews or blocking navigation', async () => {
@@ -449,9 +456,9 @@ describe('Dashboards landing page', () => {
         expect(screen.getByRole('button', { name: 'Generating CSV…' }))
             .toBeDisabled()
         expect(screen.getAllByRole('link', { name: 'View full dashboard' }))
-            .toHaveLength(5)
+            .toHaveLength(6)
         expect(screen.getAllByTestId('loading-spinner'))
-            .toHaveLength(5)
+            .toHaveLength(6)
 
         fireEvent.click(screen.getAllByRole('link', { name: 'View full dashboard' })[0])
         expect(screen.getByRole('heading', { name: 'Selected dashboard' }))

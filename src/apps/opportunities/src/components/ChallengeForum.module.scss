@@ -120,7 +120,8 @@
         color: #fff;
     }
 
-    svg {
+    svg,
+    img {
         height: 18px;
         width: 18px;
     }
@@ -129,7 +130,7 @@
 .overviewActions {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 16px;
     margin-top: 24px;
 
     > button {
@@ -437,9 +438,8 @@
     padding: 24px;
     position: relative;
 
-    &:has(.topicOverlay:hover) .topicTitle {
-        color: #007d79;
-        text-decoration: underline;
+    &:hover {
+        border-color: #007d79;
     }
 }
 
@@ -516,7 +516,6 @@
     text-align: left;
     z-index: 2;
 
-    &:hover,
     &:focus-visible {
         color: #007d79;
         text-decoration: underline;
@@ -1055,10 +1054,7 @@
 }
 
 .postActions button.reactionActive {
-    background: #e5f6f6;
-    border-radius: 4px;
     color: #006b68;
-    padding: 4px 6px;
     text-decoration: none;
 }
 

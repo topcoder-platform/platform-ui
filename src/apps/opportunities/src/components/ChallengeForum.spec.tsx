@@ -18,6 +18,8 @@ import {
     ForumTopicSummary,
     MemberProfileSummary,
 } from '../models'
+import activeUp from '../assets/forums/44ba2.svg'
+import up from '../assets/forums/5f27f.svg'
 import {
     ChallengeForum,
     ForumTopicView,
@@ -38,6 +40,11 @@ const mockGetForumTopicDetail = jest.fn()
 const mockMarkForumTopicRead = jest.fn()
 const mockSetForumPostReaction = jest.fn()
 const mockSetForumTopicWatching = jest.fn()
+const mockSetChallengeForumWatching = jest.fn()
+const mockMutateForumWatch = jest.fn()
+const mockMutateTopics = jest.fn()
+let forumWatching: boolean | undefined
+let watchError: Error | undefined
 const mockUseSWR = jest.fn()
 const mockUpdateForumPost = jest.fn()
 const mockUpdateForumTopic = jest.fn()
@@ -101,9 +108,11 @@ jest.mock('../services', () => ({
     deleteForumPost: (...args: unknown[]) => mockDeleteForumPost(...args),
     deleteForumTopic: (...args: unknown[]) => mockDeleteForumTopic(...args),
     getChallengeForumTopics: jest.fn(),
+    getChallengeForumWatch: jest.fn(),
     getForumTopicDetail: (...args: unknown[]) => mockGetForumTopicDetail(...args),
     getMemberProfilesByUserIds: jest.fn(),
     markForumTopicRead: (...args: unknown[]) => mockMarkForumTopicRead(...args),
+    setChallengeForumWatching: (...args: unknown[]) => mockSetChallengeForumWatching(...args),
     setForumPostReaction: (...args: unknown[]) => mockSetForumPostReaction(...args),
     setForumTopicWatching: (...args: unknown[]) => mockSetForumTopicWatching(...args),
     updateForumPost: (...args: unknown[]) => mockUpdateForumPost(...args),
@@ -202,6 +211,20 @@ const starterPost: ForumPost = {
 const forumStyles = readFileSync(`${__dirname}/ChallengeForum.module.scss`, 'utf8')
 
 describe('ChallengeForum', () => {
+    it('highlights hovered topic cards without underlining the title or adding a shadow', () => {
+        const cardStyles = forumStyles.match(/\.topicCard \{[\s\S]*?\n\}/)?.[0]
+        const titleStyles = forumStyles.match(/\.topicTitle \{[\s\S]*?\n\}/)?.[0]
+
+        expect(cardStyles)
+            .toMatch(/&:hover\s*\{\s*border-color: #007d79;\s*\}/)
+        expect(cardStyles)
+            .not.toMatch(/text-decoration|box-shadow/)
+        expect(titleStyles)
+            .not.toContain('&:hover')
+        expect(titleStyles)
+            .toMatch(/&:focus-visible\s*\{[^}]*text-decoration: underline;/)
+    })
+
     beforeEach(() => {
         jest.clearAllMocks()
         mockCreateForumPost.mockResolvedValue({ id: 'post-3' })
@@ -231,13 +254,29 @@ describe('ChallengeForum', () => {
         }
         topicDetail = { posts: [starterPost], topic: announcement }
         mockGetForumTopicDetail.mockResolvedValue(topicDetail)
+        forumWatching = true
+        watchError = undefined
+        mockSetChallengeForumWatching.mockReset()
+        mockMutateForumWatch.mockReset()
+        mockMutateTopics.mockReset()
         mockUseSWR.mockImplementation((key: unknown) => {
+            if (Array.isArray(key) && key[0] === 'opportunities:forum-watch') {
+                return {
+                    data: forumWatching === undefined ? undefined : {
+                        challengeId: 'challenge-id', memberId: '10', watching: forumWatching,
+                    },
+                    error: watchError,
+                    isValidating: false,
+                    mutate: mockMutateForumWatch,
+                }
+            }
+
             if (Array.isArray(key) && key[0] === 'opportunities:forum-topics') {
                 return {
                     data: topicCollection,
                     error: listError,
                     isValidating: false,
-                    mutate: jest.fn(),
+                    mutate: mockMutateTopics,
                 }
             }
 
@@ -313,6 +352,84 @@ describe('ChallengeForum', () => {
             .toBeInTheDocument()
         expect(screen.queryByRole('button', { name: discussion.title }))
             .not.toBeInTheDocument()
+    })
+
+    it('unwatches an empty forum and displays the saved preference', async () => {
+        topicCollection = { data: [], sourceTotalCount: 0, truncated: false }
+        const saved = { challengeId: 'challenge-id', memberId: '10', watching: false }
+        mockSetChallengeForumWatching.mockResolvedValue(saved)
+        const view = render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        const button = screen.getByRole('button', { name: 'Unwatch forum' })
+        expect(button)
+            .toHaveAttribute('aria-pressed', 'true')
+        fireEvent.click(button)
+        await waitFor(() => expect(mockMutateForumWatch)
+            .toHaveBeenCalledWith(saved, false))
+        expect(mockSetChallengeForumWatching)
+            .toHaveBeenCalledWith('challenge-id', false)
+        forumWatching = false
+        view.rerender(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        expect(screen.getByRole('button', { name: 'Watch forum' }))
+            .toHaveAttribute('aria-pressed', 'false')
+        fireEvent.click(screen.getByRole('button', { name: 'Watch forum' }))
+        await waitFor(() => expect(mockSetChallengeForumWatching)
+            .toHaveBeenCalledWith('challenge-id', true))
+    })
+
+    it('refreshes topic watches after forum toggles and orders the two overview actions', async () => {
+        mockSetChallengeForumWatching.mockResolvedValue({
+            challengeId: 'challenge-id', memberId: '10', watching: false,
+        })
+        const props = {
+            canCreateAnnouncements: true, challenge: { id: 'challenge-id', name: 'Challenge' }, memberId: '10',
+        }
+        const view = render(<ChallengeForum {...props} />)
+        const create = screen.getByRole('button', { name: 'Create new topic' })
+        const unwatch = screen.getByRole('button', { name: 'Unwatch forum' })
+        expect(create.nextElementSibling)
+            .toBe(unwatch)
+        expect(unwatch.nextElementSibling)
+            .toBeNull()
+        expect(unwatch.querySelector('img'))
+            .toHaveAttribute('src', 'watched.svg')
+        expect(screen.queryByRole('button', { name: 'Create announcement' })).not.toBeInTheDocument()
+        await act(async () => fireEvent.click(unwatch))
+        expect(mockMutateTopics)
+            .toHaveBeenCalledTimes(1)
+        forumWatching = false
+        view.rerender(<ChallengeForum {...props} />)
+        const watch = screen.getByRole('button', { name: 'Watch forum' })
+        expect(watch.querySelector('img'))
+            .toHaveAttribute('src', '74494.svg')
+        mockSetChallengeForumWatching.mockResolvedValue({ challengeId: 'challenge-id', memberId: '10', watching: true })
+        await act(async () => fireEvent.click(watch))
+        expect(mockMutateTopics)
+            .toHaveBeenCalledTimes(2)
+    })
+
+    it('preserves the watch preference when saving fails', async () => {
+        mockSetChallengeForumWatching.mockRejectedValue(new Error('Unable to save preference'))
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        fireEvent.click(screen.getByRole('button', { name: 'Unwatch forum' }))
+        await screen.findByText('Unable to save preference')
+        expect(mockMutateForumWatch).not.toHaveBeenCalled()
+        expect(mockMutateTopics).not.toHaveBeenCalled()
+        expect(screen.getByRole('button', { name: 'Unwatch forum' }))
+            .toBeEnabled()
+    })
+
+    it('disables the watch control while its preference is loading or unavailable', () => {
+        forumWatching = undefined
+        const view = render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        expect(screen.getByRole('button', { name: 'Watch forum' }))
+            .toBeDisabled()
+        watchError = new Error('Unavailable')
+        view.rerender(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        expect(screen.getByRole('button', { name: 'Watch forum' }))
+            .toBeDisabled()
+        fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+        expect(mockMutateForumWatch)
+            .toHaveBeenCalled()
     })
 
     it('uses the API source total for topic counters', () => {
@@ -482,9 +599,11 @@ describe('ChallengeForum', () => {
                 memberId='10'
             />,
         )
-        fireEvent.click(screen.getByRole('button', { name: /Create announcement/ }))
+        expect(screen.queryByRole('button', { name: /Create announcement/ })).not.toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: /Create new topic/ }))
         expect(screen.getByRole('checkbox', { name: /Post as announcement/ }))
-            .toBeChecked()
+            .not.toBeChecked()
+        fireEvent.click(screen.getByRole('checkbox', { name: /Post as announcement/ }))
         fireEvent.change(screen.getByPlaceholderText(/clear, descriptive title/), {
             target: { value: 'Submission deadline extended' },
         })
@@ -586,6 +705,15 @@ describe('ChallengeForum', () => {
             .toHaveBeenCalledWith('topic-1', false))
     })
 
+    it('keeps selected reactions transparent without changing button spacing', () => {
+        const activeStyles = forumStyles.match(/\.postActions button\.reactionActive\s*\{[^}]*\}/)?.[0]
+
+        expect(activeStyles)
+            .toBeDefined()
+        expect(activeStyles)
+            .not.toMatch(/background|border-radius|padding/)
+    })
+
     it('shows shared reaction counts and toggles or switches the current member reaction', async () => {
         render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
         await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
@@ -593,10 +721,17 @@ describe('ChallengeForum', () => {
         const selectedThumbsUp = screen.getByRole('button', { name: 'Remove thumbs up (2)' })
         expect(selectedThumbsUp)
             .toHaveAttribute('aria-pressed', 'true')
+        expect(selectedThumbsUp)
+            .toHaveClass('reactionActive')
+        expect(selectedThumbsUp.querySelector('img'))
+            .toHaveAttribute('src', activeUp)
         expect(screen.getByRole('button', { name: 'Add thumbs down (1)' }))
             .toHaveAttribute('aria-pressed', 'false')
         expect(screen.getByRole('button', { name: 'Add thumbs up (3)' }))
             .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Add thumbs up (3)' })
+            .querySelector('img'))
+            .toHaveAttribute('src', up)
         expect(screen.getByRole('button', { name: 'Add thumbs down (4)' }))
             .toBeInTheDocument()
 

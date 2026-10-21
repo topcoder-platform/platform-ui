@@ -87,49 +87,18 @@
     box-shadow: 0 0 0 1px rgba($red-120, 0.15);
 }
 
-.textareaField {
-    min-height: 140px;
-    resize: vertical;
-}
 
-.fieldMeta {
-    display: flex;
-    justify-content: flex-end;
-}
 
 .fieldError {
     color: $red-120;
     font-size: 0.8rem;
 }
 
-.characterCounter {
-    font-size: 0.75rem;
-    color: $black-60;
-}
 
-.characterCounterWarning {
-    color: $orange-140;
-}
 
-.characterCounterLimit {
-    color: $red-120;
-}
 
-.portfolioList {
-    display: grid;
-    gap: 12px;
-}
 
-.portfolioItem {
-    display: grid;
-    gap: 6px;
-}
 
-.portfolioActions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
 
 .cvUpload {
     display: grid;
@@ -310,4 +279,33 @@
     gap: 12px;
     flex-wrap: wrap;
     margin-top: 8px;
+}
+
+.selectField {
+    appearance: auto;
+    cursor: pointer;
+}
+
+.yesNoField {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.yesNoQuestion {
+    font-size: 0.95rem;
+    color: $black-100;
+}
+
+.yesNoOptions {
+    display: flex;
+    gap: 24px;
+}
+
+.yesNoOption {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
 }

@@ -261,13 +261,11 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             const minScore = fromDecision?.minimumPassingScore
                 ?? configured?.workflow?.scorecard?.minimumPassingScore
 
-            // The decision is only rebuilt once a (re-)run completes, so while the run is
-            // in progress its breakdown still holds the previous run's status and score.
-            const isRunInProgress = Boolean(run && aiRunInProgress(run))
+            // The decision breakdown can lag behind a rerun, including after completion.
+            // Keep the score and result aligned with the latest run shown in the review viewer.
+            const score = run ? run.score : fromDecision?.runScore ?? undefined
             const status = fromDecision
-                ? normalizeStatus(isRunInProgress
-                    ? undefined
-                    : fromDecision.runStatus, fromDecision.runScore, minScore)
+                ? normalizeStatus(run ? run.status : fromDecision.runStatus, score, minScore)
                 : undefined
 
             return {
@@ -277,7 +275,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 minScore,
                 reviewDate: run?.completedAt,
                 run,
-                score: isRunInProgress ? run?.score : fromDecision?.runScore ?? run?.score,
+                score,
                 status,
                 title: getConfiguredWorkflowName(configured?.workflow) ?? run?.workflow?.name ?? 'AI Review',
                 weight: fromDecision?.weightPercent ?? configured?.weightPercent,
@@ -352,6 +350,11 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
      */
     const canSeeAuthor = isAdmin || hasCopilotRole || isProjectManager
 
+    /**
+     * Admins and the challenge copilot can manually queue / re-run the AI workflows.
+     */
+    const canTriggerWorkflows = isAdmin || hasCopilotRole
+
     const handleRerun = useCallback(async (runId?: string): Promise<void> => {
         if (!runId || runId === '-1') return
 
@@ -391,11 +394,6 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         }
     }, [mutate, props.submission.id])
 
-    /**
-     * Admin only action rendered next to the run result:
-     * - a workflow with no run at all can be queued manually
-     * - an existing (finished) run can be re-run
-     */
     const handleRebuildDecision = useCallback(async (): Promise<void> => {
         if (!isAdmin || !props.submission.id) {
             return
@@ -418,8 +416,13 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         }
     }, [aiReviewConfig?.id, isAdmin, mutate, props.submission.id])
 
+    /**
+     * Admin & copilot action rendered next to the run result:
+     * - a workflow with no run at all can be queued manually
+     * - an existing (finished) run can be re-run
+     */
     const buildRowAction = useCallback((row: AiReviewerRow): ReactNode => {
-        if (!isAdmin || row.run?.id === '-1') {
+        if (!canTriggerWorkflows || row.run?.id === '-1') {
             return undefined
         }
 
@@ -448,7 +451,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 />
             </Tooltip>
         )
-    }, [handleQueueMissingRuns, handleRerun, isAdmin, props.submission.virusScan, queueingRuns])
+    }, [canTriggerWorkflows, handleQueueMissingRuns, handleRerun, props.submission.virusScan, queueingRuns])
 
     const failedGatingReviewers = useMemo(
         () => reviewerRows

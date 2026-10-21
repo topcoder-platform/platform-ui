@@ -1,46 +1,6 @@
-.modal {
-    border-radius: 8px;
-    box-sizing: border-box;
-    color: #161616;
-    font-family: 'Nunito Sans', sans-serif;
-    max-width: min(620px, calc(100vw - 32px));
-    padding: 24px;
-    width: 100%;
-}
-
-.modalBody {
-    padding-top: 24px;
-}
-
-.modalHeading {
-    align-items: center;
-    border-bottom: 1px solid #e0e0e0;
-    display: flex;
-    justify-content: space-between;
-    padding-bottom: 16px;
-
-    h2 {
-        font-family: 'Figtree', sans-serif;
-        font-size: 24px;
-        line-height: 34px;
-        margin: 0;
-        text-transform: none;
-    }
-
-    button {
-        align-items: center;
-        background: transparent;
-        border: 0;
-        color: #161616;
-        cursor: pointer;
-        display: flex;
-        padding: 4px;
-    }
-
-    svg {
-        height: 24px;
-        width: 24px;
-    }
+:global(.react-responsive-modal-container) .modal.modal:global(.react-responsive-modal-modal) {
+    padding: 28px;
+    width: 580px;
 }
 
 .loading,
@@ -86,11 +46,12 @@
     td {
         border-bottom: 1px solid #e0e0e0;
         box-sizing: border-box;
-        font-size: 14px;
-        height: 52px;
-        line-height: 20px;
+        font-size: 16px;
+        height: 60px;
+        line-height: 24px;
         padding: 8px 16px;
         text-align: left;
+        vertical-align: middle;
     }
 
     th {
@@ -100,15 +61,13 @@
 
     th:last-child,
     td:last-child {
-        text-align: right;
-        width: 72px;
+        text-align: center;
+        width: 88px;
     }
 
     td:first-child span {
         display: block;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        overflow-wrap: anywhere;
     }
 
     td button {
@@ -119,6 +78,7 @@
         cursor: pointer;
         display: inline-flex;
         padding: 0;
+        vertical-align: middle;
 
         &:disabled {
             cursor: not-allowed;
@@ -133,12 +93,8 @@
 }
 
 @media (max-width: 620px) {
-    .modal {
+    :global(.react-responsive-modal-container) .modal.modal:global(.react-responsive-modal-modal) {
         padding: 16px;
     }
 
-    .modalHeading h2 {
-        font-size: 20px;
-        line-height: 28px;
-    }
 }

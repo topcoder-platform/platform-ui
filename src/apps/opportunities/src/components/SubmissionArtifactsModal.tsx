@@ -3,17 +3,24 @@ import { FC, useState } from 'react'
 import { toast } from 'react-toastify'
 import useSWR, { SWRResponse } from 'swr'
 
-import { BaseModal, IconOutline, LoadingSpinner } from '~/libs/ui'
+import { BaseModal, IconOutline, LoadingSpinner, Tooltip } from '~/libs/ui'
 
+import { compressFiles } from '../../../work/src/lib/utils/file.utils'
 import {
     downloadChallengeSubmissionArtifact,
     getChallengeSubmissionArtifacts,
 } from '../services'
+import { marathonRatingColor } from '../utils/marathon-match.utils'
+import { ReactComponent as DownloadArtifactIcon } from '../assets/submission-artifact-download.svg'
 
+import modalStyles from './SubmissionHistoryModal.module.scss'
 import styles from './SubmissionArtifactsModal.module.scss'
 
 interface SubmissionArtifactsModalProps {
     allowInternalArtifacts?: boolean
+    completed?: boolean
+    handle?: string
+    rating?: number
     onClose: () => void
     open: boolean
     submissionId?: string
@@ -71,7 +78,9 @@ function saveArtifact(blob: Blob, filename: string): void {
 /**
  * Lists and downloads scorer-generated files for one authored submission.
  *
- * Internal files are displayed only with explicit completion/management permission.
+ * Contestants see only example (bare or submission-prefixed ID) before completion;
+ * downloads retain the exact API identifier. Staff retain management access.
+ * Completed matches offer one ZIP of all API-authorized artifacts.
  * @param props selected submission, visibility, and close callback.
  * @returns artifact dialog with loading, error, empty, and download states.
  * @throws Does not throw; request failures remain visible in the dialog.
@@ -110,9 +119,31 @@ export const SubmissionArtifactsModal: FC<SubmissionArtifactsModalProps> = props
 
     // Also filter cached responses when completion or viewer permissions change.
     const artifacts = (response.data ?? []).filter(artifactId => (
-        props.allowInternalArtifacts || !artifactId.toLowerCase()
-            .includes('internal')
+        props.allowInternalArtifacts || artifactId.toLowerCase() === 'example'
+        || artifactId === `${props.submissionId}-example`
     ))
+
+    /**
+     * Downloads all visible, API-authorized files as a single ZIP for a completed MM.
+     * @returns promise settled after saving the complete archive or reporting an error.
+     * @throws Does not throw; failures show a toast and no partial archive is saved.
+     */
+    const downloadAllArtifacts = async (): Promise<void> => {
+        if (!props.submissionId || !props.completed || downloadingArtifactId) return
+        const submissionId = props.submissionId
+        setDownloadingArtifactId('all')
+        try {
+            const files = await Promise.all(artifacts.map(async artifactId => {
+                const blob = await downloadChallengeSubmissionArtifact(submissionId, artifactId)
+                return new File([blob], artifactFileName(artifactId, blob, submissionId), { type: blob.type })
+            }))
+            await compressFiles(files, `submission-artifacts-${submissionId}.zip`)
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Unable to download submission artifacts.')
+        } finally {
+            setDownloadingArtifactId(undefined)
+        }
+    }
 
     let content
     if (response.isValidating && !response.data) {
@@ -141,15 +172,21 @@ export const SubmissionArtifactsModal: FC<SubmissionArtifactsModalProps> = props
                             <tr key={artifactId}>
                                 <td><span title={artifactId}>{artifactId}</span></td>
                                 <td>
-                                    <button
-                                        aria-label={`Download artifact ${artifactId}`}
-                                        disabled={!!downloadingArtifactId}
-                                        onClick={() => downloadArtifact(artifactId)}
-                                        title='Download artifact'
-                                        type='button'
+                                    <Tooltip
+                                        content='Download artifact'
+                                        place='top'
+                                        strategy='fixed'
+                                        className={modalStyles.tooltip}
                                     >
-                                        <IconOutline.DownloadIcon aria-hidden='true' />
-                                    </button>
+                                        <button
+                                            aria-label={`Download artifact ${artifactId}`}
+                                            disabled={!!downloadingArtifactId}
+                                            onClick={() => downloadArtifact(artifactId)}
+                                            type='button'
+                                        >
+                                            <DownloadArtifactIcon aria-hidden='true' />
+                                        </button>
+                                    </Tooltip>
                                 </td>
                             </tr>
                         ))}
@@ -162,15 +199,15 @@ export const SubmissionArtifactsModal: FC<SubmissionArtifactsModalProps> = props
     return (
         <BaseModal
             ariaLabelledby='submission-artifacts-title'
-            bodyClassName={styles.modalBody}
+            bodyClassName={modalStyles.modalBody}
             center
-            classNames={{ modal: styles.modal }}
+            classNames={{ modal: `${modalStyles.modal} ${styles.modal}`, overlay: modalStyles.overlay }}
             onClose={props.onClose}
             open={props.open}
             showCloseIcon={false}
             spacer={false}
             title={(
-                <div className={styles.modalHeading}>
+                <div className={modalStyles.modalHeading}>
                     <h2 id='submission-artifacts-title'>Submission Artifacts</h2>
                     <button
                         aria-label='Close submission artifacts'
@@ -182,7 +219,34 @@ export const SubmissionArtifactsModal: FC<SubmissionArtifactsModalProps> = props
                 </div>
             )}
         >
+            <div className={modalStyles.metadata}>
+                <span>
+                    <strong>Submission ID:</strong>
+                    {' '}
+                    {props.submissionId}
+                </span>
+                {props.handle && (
+                    <span>
+                        <strong>Handle:</strong>
+                        {' '}
+                        <span style={{ color: marathonRatingColor(props.rating) }}>{props.handle}</span>
+                    </span>
+                )}
+            </div>
             {content}
+            <div className={modalStyles.footer}>
+                <button onClick={props.onClose} type='button'>Close</button>
+                {props.completed && !!artifacts.length && !response.error && (
+                    <button
+                        className={modalStyles.primary}
+                        disabled={!!downloadingArtifactId}
+                        onClick={downloadAllArtifacts}
+                        type='button'
+                    >
+                        {downloadingArtifactId === 'all' ? 'Downloading...' : 'Download all'}
+                    </button>
+                )}
+            </div>
         </BaseModal>
     )
 }

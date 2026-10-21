@@ -147,7 +147,32 @@ export interface ChallengeParticipationDashboard extends DashboardRange {
     summary: ChallengeParticipationSummary
 }
 
+/** A dated activity contributing to the monthly active-member count. */
+export interface ActiveMemberActivity {
+    activity: 'payment' | 'challenge-registration' | 'engagement-application' | 'engagement-acceptance'
+    date: string
+    description: string
+    handle: string
+    id: string
+    memberId: string
+}
+
+/** Active-member counts and newest-first member activity for one UTC month. */
+export interface ActiveMembersMonth {
+    activities: ActiveMemberActivity[]
+    month: string
+    totalUniqueMembers: number
+}
+
+/** Active-members chart and distinct-member summary for the selected range. */
+export interface ActiveMembersDashboard extends DashboardRange {
+    dashboard: 'active-members'
+    months: ActiveMembersMonth[]
+    summary: { totalUniqueMembers: number }
+}
+
 export interface DashboardsResponse {
+    activeMembers: ActiveMembersDashboard
     challengeParticipation: ChallengeParticipationDashboard
     memberPaymentByCustomer: MemberPaymentByCustomerDashboard
     memberPaymentByMonth: MemberPaymentByMonthDashboard
@@ -156,6 +181,7 @@ export interface DashboardsResponse {
 }
 
 export interface DashboardResponseBySlug {
+    'active-members': ActiveMembersDashboard
     'challenge-participation': ChallengeParticipationDashboard
     'member-payment-by-customer': MemberPaymentByCustomerDashboard
     'member-payment-by-month': MemberPaymentByMonthDashboard

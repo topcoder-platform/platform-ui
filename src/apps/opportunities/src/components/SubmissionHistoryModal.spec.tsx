@@ -4,6 +4,7 @@ import {
     fireEvent,
     render,
     screen,
+    within,
 } from '@testing-library/react'
 import { PropsWithChildren, ReactNode } from 'react'
 import { SWRConfig } from 'swr'
@@ -31,6 +32,7 @@ jest.mock('~/libs/ui', () => {
         ) : <></>),
         IconOutline: new Proxy({}, { get: () => Icon }),
         LoadingSpinner: (): JSX.Element => <span>Loading</span>,
+        Tooltip: (props: PropsWithChildren): JSX.Element => <>{props.children}</>,
     }
 }, { virtual: true })
 
@@ -85,7 +87,7 @@ describe('SubmissionHistoryModal', () => {
             </SWRConfig>,
         )
 
-        expect(await screen.findByRole('dialog', { name: 'Submission History for coder' }))
+        expect(await screen.findByRole('dialog', { name: 'Submission History' }))
             .toBeInTheDocument()
         expect(mockedGetHistory)
             .toHaveBeenCalledWith('challenge', '123', 'CONTEST_SUBMISSION')
@@ -145,7 +147,7 @@ describe('SubmissionHistoryModal', () => {
             </SWRConfig>,
         )
         await screen.findByText('submission-one')
-        const action = screen.queryByRole('button', { name: 'Download submission artifacts submission-one' })
+        const action = screen.queryByRole('button', { name: 'View artifacts for submission-one' })
         if (allowed) {
             fireEvent.click(action as HTMLElement)
             expect(onOpenArtifacts)
@@ -217,7 +219,7 @@ describe('SubmissionHistoryModal', () => {
             </SWRConfig>,
         )
 
-        expect(await screen.findByRole('dialog', { name: 'Submission History for other-coder' }))
+        expect(await screen.findByRole('dialog', { name: 'Submission History' }))
             .toBeInTheDocument()
         expect(mockedGetHistory)
             .toHaveBeenCalledWith('challenge', '456', 'CONTEST_SUBMISSION')
@@ -227,7 +229,75 @@ describe('SubmissionHistoryModal', () => {
             .toHaveLength(3)
         expect(screen.getByRole('cell', { name: 'older-visible-attempt' }))
             .toBeInTheDocument()
-        expect(screen.queryByRole('columnheader', { name: 'Artifacts' }))
+        expect(screen.queryByRole('columnheader', { name: 'Actions' }))
             .not.toBeInTheDocument()
     })
+
+    it('sorts dates in both directions without changing score precision or the latest ID', async () => {
+        mockedGetHistory.mockResolvedValue([
+            { id: 'older', initialScore: -1, submittedDate: '2026-06-01T10:00:00Z' },
+            {
+                createdAt: '2026-06-09T10:00:00Z',
+                finalScore: 51.41513527885356,
+                id: 'newer',
+                initialScore: 46.95659820574324,
+            },
+        ])
+        render(
+            <SWRConfig value={{ provider: () => new Map() }}>
+                <SubmissionHistoryModal
+                    challengeId='challenge'
+                    isMarathonMatch
+                    onClose={jest.fn()}
+                    onOpenArtifacts={jest.fn()}
+                    open
+                    showFinalScores
+                    submission={{ id: 'older', memberId: '123', submitterHandle: 'wleite' }}
+                />
+            </SWRConfig>,
+        )
+        await screen.findByRole('cell', { name: 'older' })
+        expect(screen.getByText('Handle:').parentElement)
+            .toHaveTextContent('wleite')
+        expect(within(screen.getAllByRole('row')[1])
+            .getByRole('cell', { name: 'newer' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('columnheader', { name: 'Submission Date' }))
+            .toHaveAttribute('aria-sort', 'descending')
+        expect(screen.getByText('Failed'))
+            .toBeInTheDocument()
+        expect(screen.getByText('46.95659820574324'))
+            .toBeInTheDocument()
+        expect(screen.getByText('51.41513527885356'))
+            .toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'Submission Date' }))
+        expect(screen.getByRole('columnheader', { name: 'Submission Date' }))
+            .toHaveAttribute('aria-sort', 'ascending')
+        expect(within(screen.getAllByRole('row')[1])
+            .getByRole('cell', { name: 'older' }))
+            .toBeInTheDocument()
+        expect(screen.getByText('Latest Submission:').parentElement)
+            .toHaveTextContent('newer')
+        fireEvent.click(screen.getByRole('button', { name: 'Submission Date' }))
+        expect(within(screen.getAllByRole('row')[1])
+            .getByRole('cell', { name: 'newer' }))
+            .toBeInTheDocument()
+    })
+
+    it('continues to hide unreleased final scores', async () => {
+        render(
+            <SWRConfig value={{ provider: () => new Map() }}>
+                <SubmissionHistoryModal
+                    challengeId='challenge'
+                    isMarathonMatch
+                    onClose={jest.fn()}
+                    open
+                    submission={{ id: 'submission-two', memberId: '123' }}
+                />
+            </SWRConfig>,
+        )
+        await screen.findByRole('cell', { name: 'submission-two' })
+        expect(screen.queryByRole('cell', { name: '50' })).not.toBeInTheDocument()
+    })
+
 })

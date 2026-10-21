@@ -24,12 +24,18 @@ interface MockSWRResponse {
 }
 
 let mockSWRResponse: MockSWRResponse
+let mockAuthenticated: boolean
 const mockBaseModal = jest.fn()
 const mockAgreeToTerms = jest.fn()
 const mockGetDocuSignUrl = jest.fn()
 const mockGetSubmitterTermsDetails = jest.fn()
 const mockMutateTermsCache = jest.fn()
 const mockUseSWR = jest.fn()
+
+jest.mock('~/libs/core', () => ({
+    authUrlLogin: (url: string): string => `https://accounts.example?retUrl=${encodeURIComponent(url)}`,
+    useProfileContext: () => ({ initialized: true, isLoggedIn: mockAuthenticated, profile: { userId: 42 } }),
+}), { virtual: true })
 
 jest.mock('swr', () => ({
     __esModule: true,
@@ -91,6 +97,7 @@ jest.mock('~/libs/ui', () => ({
 
 describe('ChallengeTermsModal', () => {
     beforeEach(() => {
+        mockAuthenticated = true
         mockBaseModal.mockClear()
         mockAgreeToTerms.mockReset()
         mockAgreeToTerms.mockResolvedValue(undefined)
@@ -113,6 +120,30 @@ describe('ChallengeTermsModal', () => {
     afterEach(() => {
         jest.useRealTimers()
         jest.restoreAllMocks()
+    })
+
+    it.each(['register', 'agree', 'view'] as const)('prevents anonymous signing in %s mode', mode => {
+        mockAuthenticated = false
+        mockSWRResponse = {
+            ...mockSWRResponse,
+            data: [{ docusignTemplateId: 'template', id: 'nda', title: 'NDA' }],
+            isValidating: false,
+        }
+        const onComplete = jest.fn()
+        render(<ChallengeTermsModal mode={mode} onClose={jest.fn()} onComplete={onComplete} open terms={[]} />)
+
+        expect(screen.getByRole('link', { name: 'Sign in to accept this agreement' }))
+            .toBeInTheDocument()
+        expect(document.querySelector('iframe'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'I agree' }))
+            .not.toBeInTheDocument()
+        expect(mockGetDocuSignUrl)
+            .not.toHaveBeenCalled()
+        expect(mockAgreeToTerms)
+            .not.toHaveBeenCalled()
+        expect(onComplete)
+            .not.toHaveBeenCalled()
     })
 
     it('does not flash unresolved terms before showing the compact registration reminder', () => {
@@ -435,14 +466,14 @@ describe('ChallengeTermsModal', () => {
         expect(mockMutateTermsCache)
             .toHaveBeenNthCalledWith(
                 1,
-                ['opportunities:challenge-terms', 'register', 'anonymous', 'standard-terms:|nda:'],
+                ['opportunities:challenge-terms', 'register', '42', 'standard-terms:|nda:'],
                 [nda],
                 { revalidate: false },
             )
         expect(mockMutateTermsCache)
             .toHaveBeenNthCalledWith(
                 2,
-                ['opportunities:challenge-terms', 'register', 'anonymous', 'standard-terms:|nda:'],
+                ['opportunities:challenge-terms', 'register', '42', 'standard-terms:|nda:'],
                 expect.any(Function),
                 { revalidate: false },
             )

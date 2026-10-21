@@ -153,12 +153,38 @@ const resolve = dir => path.resolve(__dirname, dir);
 
 module.exports = {
     jest: {
-        configure: {
+        /**
+         * Enables CMS Markdown integration tests while retaining CRA's Jest defaults.
+         * @param {object} jestConfig - CRA test configuration supplied by CRACO.
+         * @returns {object} Jest configuration that transforms the Markdown ESM dependencies.
+         * @throws Does not throw.
+         */
+        configure: (jestConfig) => ({
+            ...jestConfig,
+            // Exercise the real CMS Markdown renderer and its ESM plugins in Jest 27.
+            transformIgnorePatterns: [
+                '/node_modules/(?!(?:'
+                + 'react-markdown|rehype-[^/]+|remark-[^/]+|unified|'
+                + 'hast-util-[^/]+|hastscript|mdast-util-[^/]+|micromark[^/]*|'
+                + 'unist-util-[^/]+|vfile[^/]*|bail|ccount|character-entities|'
+                + 'comma-separated-tokens|decode-named-character-reference|devlop|'
+                + 'escape-string-regexp|html-void-elements|is-plain-obj|longest-streak|'
+                + 'markdown-table|property-information|space-separated-tokens|'
+                + 'trim-lines|trough|web-namespaces|zwitch|@ungap/structured-clone'
+                + ')/).+\\.(js|jsx|mjs|cjs|ts|tsx)$',
+                '^.+\\.module\\.(css|sass|scss)$',
+            ],
             moduleNameMapper: {
+                ...jestConfig.moduleNameMapper,
                 // Jest 27 cannot resolve React Router 7's nested conditional export.
                 '^react-router/dom$': '<rootDir>/test/react-router-dom.cjs',
+                // Resolve the Markdown visitor's conditional self-reference with Node.
+                '^unist-util-visit-parents/do-not-use-color$': require.resolve(
+                    'unist-util-visit-parents/do-not-use-color',
+                    { paths: [path.dirname(require.resolve('hast-util-raw'))] },
+                ),
             },
-        },
+        }),
     },
 
     style: {

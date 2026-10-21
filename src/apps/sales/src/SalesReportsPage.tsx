@@ -1,25 +1,28 @@
 /* eslint react/jsx-no-bind: ["error", { "allowArrowFunctions": true, "allowFunctions": true }] */
 import { FC, KeyboardEvent, useState } from 'react'
 
+import SalesDashboardsPage from './SalesDashboardsPage'
 import SalesPipelinePage from './SalesPage'
 import SalesProgressionPage from './SalesProgressionPage'
 import styles from './SalesProgressionPage.module.scss'
 import './sales.scss'
 
 /**
- * Selects the current pipeline or historical progression report on all Sales hosts.
+ * Selects the pipeline, historical progression or monthly dashboards on all Sales hosts.
  * @returns Accessible report tabs and the active report; inactive requests are cancelled on unmount.
  * @throws Does not throw.
  */
 const SalesReportsPage: FC = () => {
     const [tab, setTab] = useState('pipeline')
+    const tabs = ['pipeline', 'progression', 'dashboards']
 
     /** @param event Tab keyboard event. @returns Nothing; selects and focuses the adjacent tab. Does not throw. */
     function changeTab(event: KeyboardEvent<HTMLButtonElement>): void {
         if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
         event.preventDefault()
-        const next = event.key === 'Home' ? 'pipeline'
-            : event.key === 'End' ? 'progression' : tab === 'pipeline' ? 'progression' : 'pipeline'
+        const index = tabs.indexOf(tab)
+        const next = event.key === 'Home' ? tabs[0] : event.key === 'End' ? tabs[tabs.length - 1]
+            : tabs[(index + (event.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]
         setTab(next)
         document.getElementById(`sales-tab-${next}`)
             ?.focus()
@@ -27,7 +30,7 @@ const SalesReportsPage: FC = () => {
 
     const navigation = (
         <div className={styles.tabs} role='tablist' aria-label='Sales reports'>
-            {['pipeline', 'progression'].map(value => (
+            {tabs.map(value => (
                 <button
                     key={value}
                     id={`sales-tab-${value}`}
@@ -39,7 +42,8 @@ const SalesReportsPage: FC = () => {
                     onClick={() => setTab(value)}
                     onKeyDown={changeTab}
                 >
-                    {value === 'pipeline' ? 'Pipeline' : 'Stage progression'}
+                    {value === 'pipeline' ? 'Pipeline'
+                        : value === 'progression' ? 'Stage progression' : 'Monthly dashboards'}
                 </button>
             ))}
         </div>
@@ -49,7 +53,8 @@ const SalesReportsPage: FC = () => {
         <div className='sales-app'>
             <div className={styles.navigation}>{navigation}</div>
             <div id='sales-report-panel' role='tabpanel' aria-labelledby={`sales-tab-${tab}`}>
-                {tab === 'pipeline' ? <SalesPipelinePage /> : <SalesProgressionPage />}
+                {tab === 'pipeline' ? <SalesPipelinePage /> : tab === 'progression' ? <SalesProgressionPage />
+                    : <SalesDashboardsPage portal='sales' />}
             </div>
         </div>
     )

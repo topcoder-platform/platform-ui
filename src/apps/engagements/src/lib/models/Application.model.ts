@@ -17,7 +17,8 @@ export interface Application {
     name: string
     address?: string
     mobileNumber?: string
-    coverLetter: string
+    /** Only present on applications submitted before the field was removed from the form. */
+    coverLetter?: string
     /** Link to a resume or professional profile (LinkedIn, Google Drive CV, personal website). */
     resumeUrl?: string
     /** URL of the CV file uploaded to S3 through Filestack. */
@@ -46,10 +47,8 @@ export interface CreateApplicationRequest {
     name?: string
     email?: string
     address?: string
-    coverLetter: string
     /** URL of the CV file uploaded to S3 through Filestack. */
     cvFileUrl?: string
-    portfolioUrls?: string[]
     expectedPayRate?: string
     referralSource?: string
     availability?: string
