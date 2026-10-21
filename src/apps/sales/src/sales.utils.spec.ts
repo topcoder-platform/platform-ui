@@ -2,6 +2,7 @@ import { EnvironmentConfig } from '~/config'
 
 import { SalesReport, SalesSummary, SalesSummaryAmount } from './sales.models'
 import {
+    amountRangeError,
     amountTotal,
     dateColumns,
     dateRangeError,
@@ -11,6 +12,7 @@ import {
     expectedRevenueTotal,
     formatSummaryAmount,
     stageBreakdown,
+    withAmountRange,
     withDateRange,
     withDrilldown,
     wonSowSignedTotal,
@@ -62,6 +64,49 @@ describe('Work project links', () => {
             expect(workProjectUrl(value))
                 .toBeUndefined()
         })
+    })
+})
+
+describe('Sales amount ranges', () => {
+    it('validates numeric bounds, including zero, decimals and inverted ranges', () => {
+        expect(amountRangeError('', '100000', '')).not.toBe('')
+        expect(amountRangeError('AMOUNT', '100000', ''))
+            .toBe('')
+        expect(amountRangeError('AMOUNT', '', '0'))
+            .toBe('')
+        expect(amountRangeError('AMOUNT', '0', '0.01'))
+            .toBe('')
+        expect(amountRangeError('AMOUNT', '100', '100')).not.toBe('')
+        expect(amountRangeError('AMOUNT', '101', '100')).not.toBe('')
+        expect(amountRangeError('AMOUNT', 'NaN', '')).not.toBe('')
+        expect(amountRangeError('AMOUNT', '', 'Infinity')).not.toBe('')
+    })
+
+    it('resets pagination only on changes and keeps other controls when removing a range', () => {
+        const base = { page: 4, perPage: 25, search: 'Acme' }
+        expect(withAmountRange(base, 'AMOUNT', '', ''))
+            .toBe(base)
+        const applied = withAmountRange(base, 'AMOUNT', '0', '100000.50')
+        expect(applied)
+            .toMatchObject({ amountMax: 100000.5, amountMin: 0, page: 1, search: 'Acme' })
+        expect(withAmountRange(applied, 'AMOUNT', '0', '100000.50'))
+            .toBe(applied)
+        expect(withAmountRange(applied, 'AMOUNT', '', ''))
+            .toMatchObject({
+                amountColumn: undefined, amountMax: undefined, amountMin: undefined, search: 'Acme',
+            })
+    })
+
+    it('retains multiple stage selections without resetting an unchanged page', () => {
+        const base = { page: 4, perPage: 25 }
+        const applied = withDrilldown(base, 'STAGE', ['Proposal', 'Contracts'])
+        expect(applied)
+            .toMatchObject({ drilldownValue: ['Proposal', 'Contracts'], page: 1 })
+        const pageTwo = { ...applied, page: 2 }
+        expect(withDrilldown(pageTwo, 'STAGE', ['Proposal', 'Contracts']))
+            .toBe(pageTwo)
+        expect(withDrilldown(pageTwo, 'STAGE', []))
+            .toMatchObject({ drilldownValue: undefined, page: 1 })
     })
 })
 

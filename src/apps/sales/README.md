@@ -47,6 +47,29 @@ without a matching project still displays its details, with no Work link.
 Links use the active environment's Work host. Deploy the Billing Accounts API
 `opportunity` filter, then the Projects API response expansion, before the UI.
 
+## Multiple values and amount filters (PM-6639)
+
+Select multiple stage tiles to show opportunities in any selected stage. Clicking
+a selected tile removes only that stage; **Clear stages** removes all selections.
+The summary cards retain the existing overview behavior. For other report fields,
+use **Add OR value** beside **Contains** (up to 25 values); empty inputs are ignored.
+Delete an input's text to stop matching that value. Commas remain literal text.
+
+Choose an **Amount field** and enter **Greater than**, **Less than**, or both.
+For example, Amount greater than `100000` filters amounts strictly above 100,000.
+Both bounds are exclusive, support decimals and zero, and compare raw amounts in
+the selected column's units. The lower bound must be less than the upper bound.
+Clear both bounds to remove the range. These controls debounce like search and
+apply immediately on Enter. **Clear** resets search, column values, amounts and
+sorting while preserving the independent date range and selected stages.
+
+The Reports API applies OR values and amount ranges to the full received snapshot
+before pagination, combining independent filters with AND. Amounts also narrow
+summary totals; stage selections continue to narrow only the returned rows.
+Multiple values use repeated query parameters. Deploy the PM-6639 Reports API
+change before this UI. Tests cover OR selection/removal, strict numeric bounds,
+combined filters, pagination resets, clearing, refresh and request serialization.
+
 ## Dashboard layout (PM-6392)
 
 The page reads as an executive dashboard rather than one long column:
@@ -83,12 +106,12 @@ are ordered down the pipeline — Prospecting, Qualification, Proposal, Contract
 Closing, Won SOW Signed — and a stage the pipeline adds later follows them,
 ordered by value as the API returned it.
 
-Clicking a tile filters the table below to that stage; the tile is highlighted
-and carries `aria-pressed`. Clicking it again, or the **Clear stage** control in
-the panel header, removes the filter. The selection travels as the Reports API
-`drilldownColumn`/`drilldownValue` pair, which narrows the returned rows only,
-so `summary` still covers every stage and the breakdown does not collapse to the
-one stage being examined. The stage selection is independent of the report's own
+Clicking a tile adds that stage to the table filter; selected tiles are highlighted
+and carry `aria-pressed`. Clicking a selected tile again removes only that stage;
+**Clear stages** removes all selections. The selection travels as the Reports API
+`drilldownColumn` plus repeated `drilldownValue` parameters, which narrow the returned
+rows with OR matching only, so `summary` still covers every stage and the breakdown
+does not collapse to the selected stages. The stage selection is independent of the report's own
 search and Filter field controls, and clearing those leaves it in place, exactly
 as it leaves the date range in place.
 

@@ -307,6 +307,75 @@ describe('Sales page', () => {
             .toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }), expect.any(AbortSignal)))
     })
 
+    it('applies multiple column values with OR and clears all report filters while keeping dates', async () => {
+        render(<SalesPage />)
+        await screen.findByText('Example opportunity')
+        fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2026-09-01' } })
+        fireEvent.submit(screen.getByLabelText('From date'))
+        fireEvent.change(screen.getByLabelText('Filter field'), { target: { value: 'STAGE_NAME' } })
+        fireEvent.change(screen.getByLabelText('Contains'), { target: { value: 'Proposal' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Add OR value' }))
+        fireEvent.change(screen.getByLabelText('OR contains 2'), { target: { value: 'Contracts' } })
+        fireEvent.submit(screen.getByLabelText('Contains'))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({
+                dateFrom: '2026-09-01', filterColumn: 'STAGE_NAME', filterValue: ['Proposal', 'Contracts'], page: 1,
+            }), expect.any(AbortSignal)))
+        fireEvent.change(screen.getByLabelText('Amount field'), { target: { value: 'AMOUNT' } })
+        fireEvent.change(screen.getByLabelText('Greater than'), { target: { value: '100000' } })
+        fireEvent.submit(screen.getByLabelText('Greater than'))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({
+                amountColumn: 'AMOUNT', amountMin: 100000, filterValue: ['Proposal', 'Contracts'], page: 1,
+            }), expect.any(AbortSignal)))
+        fireEvent.click(clearButton('Sales report'))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({
+                dateFrom: '2026-09-01', page: 1,
+            }), expect.any(AbortSignal)))
+        const query = fetchReport.mock.calls[fetchReport.mock.calls.length - 1][0]
+        expect(query.filterValue)
+            .toBeUndefined()
+        expect(query.amountMin)
+            .toBeUndefined()
+        expect(screen.getByLabelText('Contains'))
+            .toHaveValue('')
+        expect(screen.queryByLabelText('OR contains 2')).not.toBeInTheDocument()
+        expect(screen.getByLabelText('Greater than'))
+            .toHaveDisplayValue('')
+    })
+
+    it('validates amount bounds and applies, refreshes and removes a numeric range', async () => {
+        render(<SalesPage />)
+        await screen.findByText('Example opportunity')
+        fireEvent.change(screen.getByLabelText('Amount field'), { target: { value: 'AMOUNT' } })
+        fireEvent.change(screen.getByLabelText('Greater than'), { target: { value: '100000' } })
+        fireEvent.change(screen.getByLabelText('Less than'), { target: { value: '50000' } })
+        fireEvent.submit(screen.getByLabelText('Greater than'))
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent('The lower amount must be less')
+        expect(fetchReport)
+            .toHaveBeenCalledTimes(1)
+        fireEvent.change(screen.getByLabelText('Less than'), { target: { value: '200000.50' } })
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({
+                amountColumn: 'AMOUNT', amountMax: 200000.5, amountMin: 100000, page: 1,
+            }), expect.any(AbortSignal)))
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Refresh' })).not.toBeDisabled())
+        fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({
+                amountMax: 200000.5, amountMin: 100000, refresh: true,
+            }), expect.any(AbortSignal)))
+        fireEvent.change(screen.getByLabelText('Greater than'), { target: { value: '' } })
+        fireEvent.change(screen.getByLabelText('Less than'), { target: { value: '' } })
+        fireEvent.submit(screen.getByLabelText('Greater than'))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({
+                amountColumn: undefined, amountMax: undefined, amountMin: undefined,
+            }), expect.any(AbortSignal)))
+    })
+
     it('searches as the user types after a short pause and applies immediately on enter', async () => {
         jest.useFakeTimers()
         render(<SalesPage />)
@@ -535,6 +604,30 @@ describe('Sales page', () => {
             .toHaveBeenLastCalledWith(expect.objectContaining({
                 drilldownColumn: undefined, drilldownValue: undefined,
             }), expect.any(AbortSignal)))
+    })
+
+    it('selects multiple stages with OR and removes only the clicked selection', async () => {
+        render(<SalesPage />)
+        await screen.findByText('Example opportunity')
+        fireEvent.click(screen.getByRole('button', { name: /Proposal.*Opportunities/ }))
+        fireEvent.click(screen.getByRole('button', { name: /Won - SOW Signed.*Opportunities/ }))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({
+                drilldownColumn: 'STAGE_NAME', drilldownValue: ['Proposal', 'Won - SOW Signed'], page: 1,
+            }), expect.any(AbortSignal)))
+        expect(screen.getAllByRole('button', { pressed: true }))
+            .toHaveLength(2)
+        fireEvent.click(screen.getByRole('button', { name: /Proposal.*Opportunities/ }))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({
+                drilldownValue: 'Won - SOW Signed',
+            }), expect.any(AbortSignal)))
+        fireEvent.click(screen.getByRole('button', { name: 'Clear stages' }))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({
+                drilldownColumn: undefined, drilldownValue: undefined,
+            }), expect.any(AbortSignal)))
+        expect(screen.queryByRole('button', { pressed: true })).not.toBeInTheDocument()
     })
 
     it('shows only the PM-6392 columns, in order, without disturbing the row data', async () => {
