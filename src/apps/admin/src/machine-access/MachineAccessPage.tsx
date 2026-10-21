@@ -702,7 +702,7 @@ const MachineAccessPage: FC = () => {
                                     id='scope-name'
                                     required
                                     readOnly={!!scopeDraft.revision}
-                                    pattern='[a-z][a-z0-9_-]*:[a-z][a-z0-9_.-]*'
+                                    pattern='[A-Za-z][A-Za-z0-9_.\-]{0,79}(:[A-Za-z][A-Za-z0-9_.\-]{0,79})?'
                                     value={scopeDraft.name}
                                     name='name'
                                     onChange={changeScope}

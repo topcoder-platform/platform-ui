@@ -34,3 +34,7 @@ unavailable in this session, so interactive visual QA remains a manual review it
 No production configuration or existing application service deployment is changed
 by this branch. Merge `keycloak_m2m` into DEV after reviewing the new route. Existing
 admin tab order and landing behavior are preserved.
+
+Permission names preserve exact case and support existing bare grants such as `auth0`,
+including `read:usersRole` and `challengesRAG:admin`. Catalog names and client
+grants remain exact matches; whitespace and wildcards are rejected.

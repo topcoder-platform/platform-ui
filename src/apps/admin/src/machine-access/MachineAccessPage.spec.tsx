@@ -59,6 +59,24 @@ describe('DEV Machine Access', () => {
         })
     })
 
+    it('accepts existing case-sensitive and bare permission names', async () => {
+        render(<MachineAccessPage />)
+        await screen.findByText('Reader', { selector: 'strong' })
+        fireEvent.click(screen.getByRole('tab', { name: 'Scope catalog' }))
+        const input = screen.getByLabelText('Permission name') as HTMLInputElement
+        for (const name of ['auth0', 'challengesRAG:admin', 'read:usersRole']) {
+            fireEvent.change(input, { target: { value: name } })
+            expect(input.checkValidity())
+                .toBe(true)
+            expect(input.value)
+                .toBe(name)
+        }
+
+        fireEvent.change(input, { target: { value: 'read:*' } })
+        expect(input.checkValidity())
+            .toBe(false)
+    })
+
     it('enables only explicit DEV environments and hosts', () => {
         expect(isMachineAccessEnabled('dev', 'admin.topcoder-dev.com'))
             .toBe(true)
