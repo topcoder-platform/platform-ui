@@ -65,15 +65,22 @@ export interface SalesQuery {
     perPage: number
     search?: string
     filterColumn?: string
-    filterValue?: string
+    /** Displayed-value substrings matched with OR; serialized as repeated parameters. */
+    filterValue?: string | string[]
     /** Column the returned page drills into; requires drilldownValue. */
     drilldownColumn?: string
     /**
-     * Exact displayed value the page drills into, such as a pipeline stage.
+     * Exact displayed values the page drills into, matched with OR, such as pipeline stages.
      * The drilldown narrows the rows only, so the summary still describes every
      * bucket and the stage breakdown stays on screen while one stage is selected.
      */
-    drilldownValue?: string
+    drilldownValue?: string | string[]
+    /** Currency or double column to compare using its numeric value. */
+    amountColumn?: string
+    /** Exclusive lower bound; requires amountColumn. */
+    amountMin?: number
+    /** Exclusive upper bound; requires amountColumn. */
+    amountMax?: number
     /** Date or datetime column the range applies to, such as Created Date or Close Date. */
     dateColumn?: string
     /** Inclusive YYYY-MM-DD lower bound; requires dateColumn. */

@@ -12,6 +12,7 @@ import { SalesQuery, SalesReport, SalesSummaryAmount, toOpportunityId } from './
 import { fetchSalesReport, salesErrorMessage } from './sales.service'
 import { salesforceSyncErrorMessage, syncSalesforceData } from './salesforce-sync.service'
 import {
+    amountRangeError,
     amountTotal,
     dateColumns,
     dateRangeError,
@@ -20,6 +21,7 @@ import {
     expectedRevenueTotal,
     formatSummaryAmount,
     stageBreakdown,
+    withAmountRange,
     withDateRange,
     withDrilldown,
     wonSowSignedTotal,
@@ -39,10 +41,10 @@ interface SelectedOpportunity {
     name: string
 }
 
-/** The stage a tile click drills the table into, identified by its column and exact label. */
+/** Stages selected by tile clicks, identified by their column and exact labels. */
 interface SelectedStage {
     columnId: string
-    label: string
+    labels: string[]
 }
 
 /**
@@ -50,20 +52,21 @@ interface SelectedStage {
  * @param current Active report query.
  * @param search Raw search input.
  * @param filterColumn Selected filter column ID.
- * @param filterValue Raw column filter input.
+ * @param filterValue Raw column filter inputs, matched with OR.
  * @returns The current query when nothing changed, otherwise a new query reset to page one. Does not throw.
  */
-function withFilters(current: SalesQuery, search: string, filterColumn: string, filterValue: string): SalesQuery {
-    const value = filterValue.trim()
+function withFilters(current: SalesQuery, search: string, filterColumn: string, filterValue: string[]): SalesQuery {
+    const values = filterValue.map(value => value.trim())
+        .filter(Boolean)
     const next = {
-        filterColumn: filterColumn && value ? filterColumn : undefined,
-        filterValue: filterColumn && value ? value : undefined,
+        filterColumn: filterColumn && values.length ? filterColumn : undefined,
+        filterValue: filterColumn && values.length ? values.length === 1 ? values[0] : values : undefined,
         search: search.trim() || undefined,
     }
     if (
         next.search === (current.search || undefined)
         && next.filterColumn === current.filterColumn
-        && next.filterValue === current.filterValue
+        && JSON.stringify(next.filterValue) === JSON.stringify(current.filterValue)
     ) {
         return current
     }
@@ -104,7 +107,11 @@ const SalesPage: FC = () => {
     const [query, setQuery] = useState<SalesQuery>(initialQuery)
     const [search, setSearch] = useState('')
     const [filterColumn, setFilterColumn] = useState('')
-    const [filterValue, setFilterValue] = useState('')
+    const [filterValue, setFilterValue] = useState([''])
+    const [amountColumn, setAmountColumn] = useState('')
+    const [amountMin, setAmountMin] = useState('')
+    const [amountMax, setAmountMax] = useState('')
+    const [amountError, setAmountError] = useState('')
     const [dateColumn, setDateColumn] = useState('')
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
@@ -199,7 +206,7 @@ const SalesPage: FC = () => {
     useEffect(() => {
         // A tile click is a deliberate, single action, so it applies at once
         // rather than after the pause the typed controls need.
-        setQuery(current => withDrilldown(current, stage?.columnId ?? '', stage?.label ?? ''))
+        setQuery(current => withDrilldown(current, stage?.columnId ?? '', stage?.labels ?? []))
     }, [stage])
 
     /** @param event Filter form submission. @returns Nothing; applies pending controls immediately. Does not throw. */
@@ -212,7 +219,11 @@ const SalesPage: FC = () => {
     function clearFilters(): void {
         setSearch('')
         setFilterColumn('')
-        setFilterValue('')
+        setFilterValue([''])
+        setAmountColumn('')
+        setAmountMin('')
+        setAmountMax('')
+        setAmountError('')
         // The date range and the stage selection are their own sections with
         // their own resets, so clearing the report filters must not empty them
         // behind the user's back.
@@ -278,15 +289,35 @@ const SalesPage: FC = () => {
     }
 
     /**
-     * Drills the table into a stage, or releases it when that stage is already selected.
+     * Adds or removes a stage from the table's OR selection.
      * @param columnId Stage column the breakdown was built from.
      * @param label Exact stage label the tile reports.
      * @returns Nothing; the summary keeps describing every stage either way. Does not throw.
      */
     function toggleStage(columnId: string, label: string): void {
-        setStage(current => (
-            current?.columnId === columnId && current.label === label ? undefined : { columnId, label }
-        ))
+        setStage(current => {
+            const selected = current?.columnId === columnId ? current.labels : []
+            const labels = selected.includes(label) ? selected.filter(value => value !== label) : [...selected, label]
+            return labels.length ? { columnId, labels } : undefined
+        })
+    }
+
+    /** Applies valid exclusive amount bounds; returns void and displays validation errors without throwing. */
+    const applyAmountRange = useCallback((): void => {
+        const invalid = amountRangeError(amountColumn, amountMin, amountMax)
+        setAmountError(invalid)
+        if (!invalid) setQuery(current => withAmountRange(current, amountColumn, amountMin, amountMax))
+    }, [amountColumn, amountMin, amountMax])
+
+    useEffect(() => {
+        const timer = window.setTimeout(applyAmountRange, filterDebounceMs)
+        return () => window.clearTimeout(timer)
+    }, [applyAmountRange])
+
+    /** @param event Amount form submission. @returns Nothing; applies valid bounds immediately. Does not throw. */
+    function submitAmountRange(event: FormEvent<HTMLFormElement>): void {
+        event.preventDefault()
+        applyAmountRange()
     }
 
     const rangeApplied = !!query.dateColumn
@@ -377,20 +408,20 @@ const SalesPage: FC = () => {
                             <div>
                                 <h2 id='sales-stage-heading'>{`${breakdown.label} breakdown`}</h2>
                                 <p className={styles.panelHint}>
-                                    Select a stage to filter the table below. Totals cover every matching record.
+                                    Select one or more stages to filter the table. Totals cover every matching record.
                                 </p>
                             </div>
                             {stage && (
-                                <Button noCaps onClick={() => setStage(undefined)} link>Clear stage</Button>
+                                <Button noCaps onClick={() => setStage(undefined)} link>Clear stages</Button>
                             )}
                         </div>
                         <ul className={styles.stages}>
                             {breakdown.stages.map(tile => (
                                 <li key={tile.label || '—'}>
                                     <button
-                                        aria-pressed={stage?.label === tile.label}
+                                        aria-pressed={stage?.labels.includes(tile.label) ?? false}
                                         className={`${styles.stage} ${
-                                            stage?.label === tile.label ? styles.stageSelected : ''
+                                            stage?.labels.includes(tile.label) ? styles.stageSelected : ''
                                         }`}
                                         onClick={() => toggleStage(breakdown.columnId, tile.label)}
                                         type='button'
@@ -506,7 +537,7 @@ const SalesPage: FC = () => {
                         <h2>{report?.reportName || 'Sales report'}</h2>
                         <p className={styles.panelHint}>
                             {stage
-                                ? `Showing the ${stage.label || '—'} stage. Salesforce is the source of truth.`
+                                ? `Showing stages: ${stage.labels.join(' OR ')}. Salesforce is the source of truth.`
                                 : 'Salesforce is the source of truth. Changes are made there.'}
                         </p>
                     </div>
@@ -546,23 +577,79 @@ const SalesPage: FC = () => {
                             ))}
                         </select>
                     </div>
-                    <div className={styles.filterField}>
-                        <label htmlFor='sales-filter-value'>Contains</label>
-                        <input
-                            disabled={!filterColumn}
-                            id='sales-filter-value'
-                            maxLength={200}
-                            name='sales-filter-value'
-                            onChange={event => setFilterValue(event.target.value)}
-                            placeholder='Filter value'
-                            spellCheck={false}
-                            type='text'
-                            value={filterValue}
-                        />
-                    </div>
+                    {filterValue.map((value, index) => (
+                        // Values are ordered input slots, so editing a value must not remount the input.
+                        // eslint-disable-next-line react/no-array-index-key
+                        <div className={styles.filterField} key={index}>
+                            <label htmlFor={`sales-filter-value-${index}`}>
+                                {index === 0 ? 'Contains' : `OR contains ${index + 1}`}
+                            </label>
+                            <input
+                                disabled={!filterColumn}
+                                id={`sales-filter-value-${index}`}
+                                maxLength={200}
+                                onChange={event => setFilterValue(current => current.map((entry, position) => (
+                                    position === index ? event.target.value : entry
+                                )))}
+                                placeholder='Filter value'
+                                spellCheck={false}
+                                type='text'
+                                value={value}
+                            />
+                        </div>
+                    ))}
                     <div className={styles.filterActions}>
+                        <Button
+                            disabled={!filterColumn || filterValue.length >= 25}
+                            noCaps
+                            onClick={() => setFilterValue(current => [...current, ''])}
+                            link
+                        >
+                            Add OR value
+                        </Button>
                         <Button noCaps onClick={clearFilters} link>Clear</Button>
                     </div>
+                </form>
+
+                <form aria-label='Amount range filter' className={styles.filters} onSubmit={submitAmountRange}>
+                    <div className={styles.filterField}>
+                        <label htmlFor='sales-amount-column'>Amount field</label>
+                        <select
+                            id='sales-amount-column'
+                            onChange={event => setAmountColumn(event.target.value)}
+                            value={amountColumn}
+                        >
+                            <option value=''>Choose an amount field</option>
+                            {columns.filter(entry => ['currency', 'double'].includes(entry.column.dataType))
+                                .map(entry => (
+                                    <option key={entry.column.id} value={entry.column.id}>{entry.column.label}</option>
+                                ))}
+                        </select>
+                    </div>
+                    <div className={styles.filterField}>
+                        <label htmlFor='sales-amount-min'>Greater than</label>
+                        <input
+                            disabled={!amountColumn}
+                            id='sales-amount-min'
+                            onChange={event => setAmountMin(event.target.value)}
+                            placeholder='e.g. 100000'
+                            step='any'
+                            type='number'
+                            value={amountMin}
+                        />
+                    </div>
+                    <div className={styles.filterField}>
+                        <label htmlFor='sales-amount-max'>Less than</label>
+                        <input
+                            disabled={!amountColumn}
+                            id='sales-amount-max'
+                            onChange={event => setAmountMax(event.target.value)}
+                            step='any'
+                            type='number'
+                            value={amountMax}
+                        />
+                    </div>
+                    {amountError && <p className={styles.dateError} role='alert'>{amountError}</p>}
                 </form>
 
                 {loading && !report && (

@@ -5,7 +5,7 @@ import { SalesQuery, SalesReport } from './sales.models'
 
 /**
  * Reads Salesforce report data through the role-protected Reports API using the user's token.
- * @param query Server-side search, filter, date range, sorting, pagination and refresh options.
+ * @param query Server-side search, OR filters, amount/date ranges, sorting, pagination and refresh options.
  * @param signal Cancels obsolete requests when controls change or the page unmounts.
  * @returns The current report schema, snapshot-wide totals and one page of rows.
  * @throws Propagates network, authorization and sanitized Reports API errors.
@@ -14,7 +14,10 @@ export function fetchSalesReport(query: SalesQuery, signal?: AbortSignal): Promi
     const params = new URLSearchParams()
     Object.entries(query)
         .forEach(([key, value]) => {
-            if (value !== undefined && value !== '') params.set(key, String(value))
+            if (value !== undefined && value !== '') {
+                [value].flat()
+                    .forEach(entry => params.append(key, String(entry)))
+            }
         })
     return xhrGetAsync<SalesReport>(`${EnvironmentConfig.REPORTS_API}/sales?${params.toString()}`, undefined, {
         signal,
