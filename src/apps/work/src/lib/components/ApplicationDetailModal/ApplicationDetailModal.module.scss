@@ -22,6 +22,14 @@
     font-size: 14px;
 }
 
+.multiline {
+    white-space: pre-line;
+}
+
+.fullRow {
+    grid-column: 1 / -1;
+}
+
 .link {
     color: #2a62d5;
     font-size: 14px;
@@ -31,6 +39,16 @@
 .link:hover {
     text-decoration: underline;
 }
+
+
+
+.cvActions {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+}
+
+
 
 .handleRow {
     align-items: center;

@@ -70,6 +70,10 @@
     word-break: break-word;
 }
 
+.multiline {
+    white-space: pre-line;
+}
+
 .coverLetter {
     white-space: pre-line;
     background: $black-5;

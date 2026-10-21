@@ -21,9 +21,16 @@ import { rootRoute } from '../../engagements.routes'
 
 import type { ApplicationFormData, PrePopulatedUserData } from './application-form.types'
 import { applicationFormSchema } from './application-form.schema'
-import CharacterCounter from './components/CharacterCounter'
+import {
+    AVAILABLE_FULL_TIME_QUESTION,
+    AVAILABLE_WITHIN_WEEK_QUESTION,
+    buildAvailabilityText,
+    buildReferralSourceText,
+    REFERRAL_SOURCE_OPTIONS,
+    REFERRED_BY_OPTION,
+} from './application-form.constants'
 import CvUploadField from './components/CvUploadField'
-import PortfolioUrlsField from './components/PortfolioUrlsField'
+import YesNoField from './components/YesNoField'
 import styles from './ApplicationFormPage.module.scss'
 
 interface SubmitDisabledParams {
@@ -64,15 +71,15 @@ const ApplicationFormPage: FC = () => {
     const form = useForm<ApplicationFormData>({
         defaultValues: {
             address: '',
-            availability: '',
-            coverLetter: '',
+            availableFullTime: undefined,
+            availableWithinWeek: undefined,
             cvFileUrl: undefined,
             email: '',
             expectedPayRate: '',
             mobileNumber: '',
             name: '',
-            portfolioUrls: [{ value: undefined }],
             referralSource: '',
+            referrerHandle: '',
         },
         mode: 'all',
         resolver: yupResolver(applicationFormSchema),
@@ -86,8 +93,7 @@ const ApplicationFormPage: FC = () => {
     const getValues = form.getValues
     const setValue = form.setValue
     const clearErrors = form.clearErrors
-    const coverLetterValue = form.watch('coverLetter') ?? ''
-    const availabilityValue = form.watch('availability') ?? ''
+    const isReferred = form.watch('referralSource') === REFERRED_BY_OPTION
 
     const fetchEngagement = useCallback(async (): Promise<void> => {
         if (!nanoId) {
@@ -237,25 +243,17 @@ const ApplicationFormPage: FC = () => {
             const trimmedName = values.name?.trim()
             const trimmedEmail = values.email?.trim()
             const trimmedAddress = values.address?.trim()
-            const trimmedAvailability = values.availability?.trim()
-            const trimmedCoverLetter = values.coverLetter?.trim() || ''
             const trimmedExpectedPayRate = values.expectedPayRate?.trim() || ''
-            const trimmedReferralSource = values.referralSource?.trim()
-            const portfolioUrls = values.portfolioUrls
-                .map(entry => entry.value)
-                .filter((url): url is string => !!url)
 
             return {
                 address: trimmedAddress || undefined,
-                availability: trimmedAvailability || undefined,
-                coverLetter: trimmedCoverLetter,
+                availability: buildAvailabilityText(values.availableWithinWeek, values.availableFullTime),
                 cvFileUrl: values.cvFileUrl || undefined,
                 email: trimmedEmail || undefined,
                 expectedPayRate: trimmedExpectedPayRate,
                 mobileNumber: values.mobileNumber?.trim() || undefined,
                 name: trimmedName || undefined,
-                portfolioUrls: portfolioUrls.length ? portfolioUrls : undefined,
-                referralSource: trimmedReferralSource || undefined,
+                referralSource: buildReferralSourceText(values.referralSource, values.referrerHandle),
             }
         },
         [],
@@ -332,20 +330,11 @@ const ApplicationFormPage: FC = () => {
         userData,
     ])
 
-    const handleCoverLetterChange = useCallback(
-        (field: ControllerRenderProps<ApplicationFormData, 'coverLetter'>) => (
-            (event: ChangeEvent<HTMLTextAreaElement>): void => {
-                field.onChange(event.target.value)
-            }
-        ),
-        [],
-    )
-
     const handleTextInputChange = useCallback(
         (
             field:
                 | ControllerRenderProps<ApplicationFormData, 'expectedPayRate'>
-                | ControllerRenderProps<ApplicationFormData, 'referralSource'>,
+                | ControllerRenderProps<ApplicationFormData, 'referrerHandle'>,
         ) => (
             (event: ChangeEvent<HTMLInputElement>): void => {
                 field.onChange(event.target.value)
@@ -354,13 +343,16 @@ const ApplicationFormPage: FC = () => {
         [],
     )
 
-    const handleAvailabilityChange = useCallback(
-        (field: ControllerRenderProps<ApplicationFormData, 'availability'>) => (
-            (event: ChangeEvent<HTMLTextAreaElement>): void => {
+    const handleReferralSourceChange = useCallback(
+        (field: ControllerRenderProps<ApplicationFormData, 'referralSource'>) => (
+            (event: ChangeEvent<HTMLSelectElement>): void => {
                 field.onChange(event.target.value)
+                if (event.target.value !== REFERRED_BY_OPTION) {
+                    setValue('referrerHandle', '', { shouldValidate: true })
+                }
             }
         ),
-        [],
+        [setValue],
     )
 
     const handleMobileNumberChange = useCallback(
@@ -399,27 +391,6 @@ const ApplicationFormPage: FC = () => {
         isValid,
     })
 
-    const renderCoverLetterField = useCallback(
-        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'coverLetter'> }): JSX.Element => (
-            <textarea
-                id='cover-letter'
-                className={classNames(
-                    styles.inputField,
-                    styles.textareaField,
-                    errors.coverLetter && styles.inputError,
-                )}
-                maxLength={5000}
-                placeholder='Share a brief note about your interest in this engagement.'
-                value={renderProps.field.value ?? ''}
-                onChange={handleCoverLetterChange(renderProps.field)}
-                disabled={isFormDisabled}
-                aria-invalid={!!errors.coverLetter}
-                aria-describedby={errors.coverLetter ? 'cover-letter-error' : undefined}
-            />
-        ),
-        [errors.coverLetter, handleCoverLetterChange, isFormDisabled],
-    )
-
     const renderCvFileField = useCallback(
         (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'cvFileUrl'> }): JSX.Element => (
             <CvUploadField
@@ -444,7 +415,7 @@ const ApplicationFormPage: FC = () => {
                     errors.expectedPayRate && styles.inputError,
                 )}
                 maxLength={100}
-                placeholder='e.g. 50'
+                placeholder='e.g. USD 50/hour'
                 value={renderProps.field.value ?? ''}
                 onChange={handleTextInputChange(renderProps.field)}
                 disabled={isFormDisabled}
@@ -457,44 +428,80 @@ const ApplicationFormPage: FC = () => {
 
     const renderReferralSourceField = useCallback(
         (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'referralSource'> }): JSX.Element => (
-            <input
+            <select
                 id='referral-source'
-                type='text'
                 className={classNames(
                     styles.inputField,
+                    styles.selectField,
                     errors.referralSource && styles.inputError,
                 )}
-                maxLength={500}
-                placeholder='e.g. Topcoder newsletter, LinkedIn, a friend'
                 value={renderProps.field.value ?? ''}
-                onChange={handleTextInputChange(renderProps.field)}
+                onChange={handleReferralSourceChange(renderProps.field)}
+                onBlur={renderProps.field.onBlur}
                 disabled={isFormDisabled}
                 aria-invalid={!!errors.referralSource}
                 aria-describedby={errors.referralSource ? 'referral-source-error' : undefined}
-            />
+            >
+                <option value=''>Select an option</option>
+                {REFERRAL_SOURCE_OPTIONS.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                ))}
+            </select>
         ),
-        [errors.referralSource, handleTextInputChange, isFormDisabled],
+        [errors.referralSource, handleReferralSourceChange, isFormDisabled],
     )
 
-    const renderAvailabilityField = useCallback(
-        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'availability'> }): JSX.Element => (
-            <textarea
-                id='availability'
+    const renderReferrerHandleField = useCallback(
+        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'referrerHandle'> }): JSX.Element => (
+            <input
+                id='referrer-handle'
+                type='text'
                 className={classNames(
                     styles.inputField,
-                    styles.textareaField,
-                    errors.availability && styles.inputError,
+                    errors.referrerHandle && styles.inputError,
                 )}
-                maxLength={500}
-                placeholder='Share your availability or preferred start date.'
+                maxLength={100}
+                placeholder='Topcoder handle of the member who referred you'
                 value={renderProps.field.value ?? ''}
-                onChange={handleAvailabilityChange(renderProps.field)}
+                onChange={handleTextInputChange(renderProps.field)}
+                onBlur={renderProps.field.onBlur}
                 disabled={isFormDisabled}
-                aria-invalid={!!errors.availability}
-                aria-describedby={errors.availability ? 'availability-error' : undefined}
+                aria-label='Referred by member'
+                aria-invalid={!!errors.referrerHandle}
+                aria-describedby={errors.referrerHandle ? 'referrer-handle-error' : undefined}
             />
         ),
-        [errors.availability, handleAvailabilityChange, isFormDisabled],
+        [errors.referrerHandle, handleTextInputChange, isFormDisabled],
+    )
+
+    const renderAvailableWithinWeekField = useCallback(
+        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'availableWithinWeek'> }): JSX.Element => (
+            <YesNoField
+                id='available-within-week'
+                question={AVAILABLE_WITHIN_WEEK_QUESTION}
+                value={renderProps.field.value}
+                onChange={renderProps.field.onChange}
+                onBlur={renderProps.field.onBlur}
+                disabled={isFormDisabled}
+                errorMessage={errors.availableWithinWeek?.message}
+            />
+        ),
+        [errors.availableWithinWeek?.message, isFormDisabled],
+    )
+
+    const renderAvailableFullTimeField = useCallback(
+        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'availableFullTime'> }): JSX.Element => (
+            <YesNoField
+                id='available-full-time'
+                question={AVAILABLE_FULL_TIME_QUESTION}
+                value={renderProps.field.value}
+                onChange={renderProps.field.onChange}
+                onBlur={renderProps.field.onBlur}
+                disabled={isFormDisabled}
+                errorMessage={errors.availableFullTime?.message}
+            />
+        ),
+        [errors.availableFullTime?.message, isFormDisabled],
     )
 
     const renderMobileNumberField = useCallback(
@@ -727,30 +734,10 @@ const ApplicationFormPage: FC = () => {
                 <section className={styles.section}>
                     <div className={styles.sectionTitle}>Application Details</div>
                     <div className={styles.fieldGroup}>
-                        <label className={styles.fieldLabel} htmlFor='cover-letter'>
-                            Cover Letter
+                        <label className={styles.fieldLabel} htmlFor='cv-file'>
+                            CV / Resume File
                             <span className={styles.requiredIndicator} aria-hidden='true'>*</span>
                         </label>
-                        <Controller
-                            name='coverLetter'
-                            control={control}
-                            render={renderCoverLetterField}
-                        />
-                        <div className={styles.fieldMeta}>
-                            <CharacterCounter
-                                currentLength={coverLetterValue.length}
-                                maxLength={5000}
-                            />
-                        </div>
-                        {errors.coverLetter && (
-                            <div className={styles.fieldError} id='cover-letter-error'>
-                                {errors.coverLetter.message}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className={styles.fieldGroup}>
-                        <label className={styles.fieldLabel} htmlFor='cv-file'>CV / Resume File</label>
                         <Controller
                             name='cvFileUrl'
                             control={control}
@@ -776,23 +763,20 @@ const ApplicationFormPage: FC = () => {
                     </div>
 
                     <div className={styles.fieldGroup}>
-                        <label className={styles.fieldLabel} htmlFor='availability'>Availability</label>
-                        <Controller
-                            name='availability'
-                            control={control}
-                            render={renderAvailabilityField}
-                        />
-                        <div className={styles.fieldMeta}>
-                            <CharacterCounter
-                                currentLength={availabilityValue.length}
-                                maxLength={500}
-                            />
+                        <div className={styles.fieldLabel}>
+                            Availability
+                            <span className={styles.requiredIndicator} aria-hidden='true'>*</span>
                         </div>
-                        {errors.availability && (
-                            <div className={styles.fieldError} id='availability-error'>
-                                {errors.availability.message}
-                            </div>
-                        )}
+                        <Controller
+                            name='availableWithinWeek'
+                            control={control}
+                            render={renderAvailableWithinWeekField}
+                        />
+                        <Controller
+                            name='availableFullTime'
+                            control={control}
+                            render={renderAvailableFullTimeField}
+                        />
                     </div>
 
                     <div className={styles.fieldGroup}>
@@ -809,16 +793,21 @@ const ApplicationFormPage: FC = () => {
                                 {errors.referralSource.message}
                             </div>
                         )}
+                        {isReferred && (
+                            <>
+                                <Controller
+                                    name='referrerHandle'
+                                    control={control}
+                                    render={renderReferrerHandleField}
+                                />
+                                {errors.referrerHandle && (
+                                    <div className={styles.fieldError} id='referrer-handle-error'>
+                                        {errors.referrerHandle.message}
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
-                </section>
-
-                <section className={styles.section}>
-                    <div className={styles.sectionTitle}>Portfolio</div>
-                    <PortfolioUrlsField
-                        control={control}
-                        errors={errors}
-                        disabled={isFormDisabled}
-                    />
                 </section>
 
                 <div className={styles.submitSection}>

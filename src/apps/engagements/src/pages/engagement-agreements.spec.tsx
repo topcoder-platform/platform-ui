@@ -17,6 +17,7 @@ import {
     getTermDetails,
     getUserDataForApplication,
     updateUserDataForApplication,
+    uploadEngagementAttachment,
 } from '../lib/services'
 import {
     acceptAssignmentOffer,
@@ -39,6 +40,7 @@ const mockCheckApplication = checkExistingApplication as jest.MockedFunction<typ
 const mockCreateApplication = createApplication as jest.MockedFunction<typeof createApplication>
 const mockGetUserData = getUserDataForApplication as jest.MockedFunction<typeof getUserDataForApplication>
 const mockUpdateUserData = updateUserDataForApplication as jest.MockedFunction<typeof updateUserDataForApplication>
+const mockUploadAttachment = uploadEngagementAttachment as jest.MockedFunction<typeof uploadEngagementAttachment>
 const mockGetAssignments = getMyAssignedEngagements as jest.MockedFunction<typeof getMyAssignedEngagements>
 const mockGetEngagements = getEngagements as jest.MockedFunction<typeof getEngagements>
 const mockAcceptOffer = acceptAssignmentOffer as jest.MockedFunction<typeof acceptAssignmentOffer>
@@ -146,6 +148,7 @@ jest.mock('../lib/services', () => ({
     getTermDetails: jest.fn(),
     getUserDataForApplication: jest.fn(),
     updateUserDataForApplication: jest.fn(),
+    uploadEngagementAttachment: jest.fn(),
 }))
 
 jest.mock('../lib/services/engagements.service', () => ({
@@ -345,14 +348,30 @@ describe('engagement agreement timing', () => {
             mockGetTermDetails.mockRejectedValue(new Error('Terms API unavailable'))
         }
 
+        mockUploadAttachment.mockResolvedValue({
+            filename: 'cv.pdf',
+            handle: 'cv-handle',
+            url: 'https://cdn.filestackcontent.com/cv-handle',
+        })
+
         const user = userEvent.setup()
-        render(<ApplicationFormPage />)
-        await user.type(await screen.findByLabelText(/Cover Letter/), 'I would like to apply for this engagement.')
+        const view = render(<ApplicationFormPage />)
+        await screen.findByRole('button', { name: 'Submit Application' })
+        const cvInput = view.container.querySelector('input[type="file"]') as HTMLInputElement
+        await user.upload(cvInput, new File(['cv'], 'cv.pdf', { type: 'application/pdf' }))
+        await screen.findByText('cv.pdf')
+        await user.type(screen.getByLabelText(/Expected Pay Rate/), '50')
+        await user.click(within(screen.getByRole('radiogroup', { name: /start within a week/ }))
+            .getByLabelText('Yes'))
+        await user.click(within(screen.getByRole('radiogroup', { name: /full-time/ }))
+            .getByLabelText('No'))
         await user.click(screen.getByRole('button', { name: 'Submit Application' }))
 
         await waitFor(() => expect(mockCreateApplication)
             .toHaveBeenCalledWith('eng-1', expect.objectContaining({
-                coverLetter: 'I would like to apply for this engagement.',
+                availability: 'Available to start within a week: Yes\nAvailable to work full-time (~8 hours/day): No',
+                cvFileUrl: 'https://cdn.filestackcontent.com/cv-handle',
+                expectedPayRate: '50',
                 mobileNumber: '+12345',
             })))
         expect(mockUpdateUserData)
