@@ -874,8 +874,10 @@ editor allows the suggestion list to extend below its border; clipping is limite
 to the toolbar so options remain visible and clickable. Profile
 lookup failures retain a neutral profile link, while search failures leave the
 draft editable and show a retry hint. Each visible post shows shared
-reaction counts and the current member's selected state; clicking the selected
-thumb again removes it, while clicking the other thumb switches it. Topic
+reaction counts and the current member's selected state. A selected thumbs-up
+uses the filled teal icon; reaction buttons keep a transparent background and
+the same spacing when selected. Clicking the selected thumb again removes it,
+while clicking the other thumb switches it. Topic
 summaries expose bounded starter excerpts, participant snapshots, unique
 authenticated view counts, and current-member watch state. The
 environment-specific Vanilla URL is retained only as a recovery link when the
