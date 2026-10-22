@@ -50,9 +50,16 @@ export interface MachineOperation {
     replay?: boolean
 }
 
+/** Response of `POST clients/:id/secret`: the client's current secret, copied on demand and audited by the backend. */
+export interface MachineSecret {
+    clientId: string
+    secret: string
+}
+
 /**
  * Call the fixed DEV backend with the existing member bearer token.
- * @param path Relative admin resource path, never a caller-selected origin.
+ * @param path Relative admin resource path, never a caller-selected origin. Includes
+ * `clients/:id/secret`, which the "Copy client secret" action posts without a body.
  * @param method HTTP method; GET by default.
  * @param data Optional secret-free mutation with reason/revision.
  * @param operationKey Stable idempotency key retained across uncertain retries.
