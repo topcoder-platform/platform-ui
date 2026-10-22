@@ -1,4 +1,16 @@
-import { ChangeEvent, FC, FormEvent, MouseEvent, useCallback, useEffect, useRef, useState } from 'react'
+import {
+    ChangeEvent,
+    FC,
+    FormEvent,
+    KeyboardEvent,
+    MouseEvent,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+} from 'react'
+
+import { BaseModal } from '~/libs/ui'
 
 import { machineAccessEnabled, machineAccessTokenUrl } from './config'
 import {
@@ -8,6 +20,7 @@ import {
     MachinePage,
     machineRequest,
     MachineScope,
+    MachineSecret,
 } from './machine-access.api'
 import styles from './MachineAccessPage.module.scss'
 
@@ -24,6 +37,54 @@ interface ClientDraft {
 
 type Section = 'clients' | 'scopes' | 'audit'
 type Credential = { clientId: string; secret: string }
+type ScopeDraft = { description: string; name: string; owner: string; revision: number }
+
+/** Return a blank scope form for creation; no I/O or errors. */
+function blankScope(): ScopeDraft {
+    return { description: '', name: '', owner: '', revision: 0 }
+}
+
+/**
+ * Write text to the system clipboard without rendering it.
+ * @param value Text to copy, such as a client secret.
+ * @returns Whether the browser accepted the write; false when the Clipboard API is missing or denied.
+ * Used by the credential copy actions; never throws.
+ */
+async function writeClipboard(value: string): Promise<boolean> {
+    try {
+        if (!navigator.clipboard?.writeText) return false
+        await navigator.clipboard.writeText(value)
+        return true
+    } catch {
+        return false
+    }
+}
+
+/**
+ * Order ready catalog scopes for the client editor and apply the name search.
+ * @param catalog Loaded scope catalog; only `ready` scopes can be granted.
+ * @param saved Scope names the saved client currently allows (empty for a new client).
+ * @param search Case-insensitive text that scope names must contain; blank matches all.
+ * @returns Matching scopes split into the saved client's allowed scopes and the remaining
+ * scopes, each sorted by name. Grouping uses the saved grants, so rows do not move while
+ * the draft is edited. Pure; never throws.
+ */
+export function groupScopes(
+    catalog: MachineScope[],
+    saved: string[],
+    search: string,
+): { allowed: MachineScope[]; other: MachineScope[] } {
+    const text = search.trim()
+        .toLowerCase()
+    const matching = catalog
+        .filter(scope => scope.state === 'ready' && scope.name.toLowerCase()
+            .includes(text))
+        .sort((first, second) => first.name.localeCompare(second.name))
+    return {
+        allowed: matching.filter(scope => saved.includes(scope.name)),
+        other: matching.filter(scope => !saved.includes(scope.name)),
+    }
+}
 
 /** Return a blank client form; no credentials, I/O, or errors. */
 function blankClient(): ClientDraft {
@@ -46,8 +107,10 @@ function time(value?: string): string {
 }
 
 /**
- * DEV administrator client/scope/audit console. Uses the current member session;
- * backend errors are shown inline, and one-time credentials stay in component memory.
+ * DEV administrator client/scope/audit console, shown as the M2M system-admin tab. Uses the
+ * current member session; backend errors are shown inline. New credentials stay in component
+ * memory, and existing client secrets are fetched on demand and copied to the clipboard
+ * without being rendered unless clipboard access is blocked.
  */
 const MachineAccessPage: FC = () => {
     const [section, setSection] = useState<Section>('clients')
@@ -62,8 +125,14 @@ const MachineAccessPage: FC = () => {
     const [notice, setNotice] = useState('')
     const [draft, setDraft] = useState<ClientDraft | undefined>(undefined)
     const [reason, setReason] = useState('')
-    const [scopeDraft, setScopeDraft] = useState({ description: '', name: '', owner: '', revision: 0 })
+    const [scopeDraft, setScopeDraft] = useState<ScopeDraft>(blankScope)
+    const [scopeModalOpen, setScopeModalOpen] = useState(false)
+    const [scopeSearch, setScopeSearch] = useState('')
     const [credential, setCredential] = useState<Credential | undefined>(undefined)
+    const [credentialStatus, setCredentialStatus] = useState('')
+    const [copyingSecret, setCopyingSecret] = useState(false)
+    const [secretStatus, setSecretStatus] = useState('')
+    const [revealed, setRevealed] = useState<Credential | undefined>(undefined)
     const [confirmation, setConfirmation] = useState<'disable' | 'replace-credential' | undefined>(
         undefined,
     )
@@ -112,6 +181,12 @@ const MachineAccessPage: FC = () => {
         load()
     }, [load])
 
+    /** Forget any copied/revealed existing secret and its status; called whenever the editor changes. */
+    function resetSecretCopy(): void {
+        setSecretStatus('')
+        setRevealed(undefined)
+    }
+
     /** Submit one mutation with a stable retry key; reveal credentials only from its first successful response. */
     async function mutate(path: string, method: 'POST' | 'PUT', data: unknown): Promise<void> {
         setBusy(true)
@@ -138,12 +213,15 @@ const MachineAccessPage: FC = () => {
                 )
                 if (result.secret && result.clientId) {
                     setCredential({ clientId: result.clientId, secret: result.secret })
+                    setCredentialStatus('')
                 }
 
                 setDraft(undefined)
                 setConfirmation(undefined)
                 setReason('')
-                setScopeDraft({ description: '', name: '', owner: '', revision: 0 })
+                setScopeDraft(blankScope())
+                setScopeModalOpen(false)
+                resetSecretCopy()
                 operation.current = { key: '', signature: '' }
             }
 
@@ -185,12 +263,14 @@ const MachineAccessPage: FC = () => {
         })
     }
 
-    /** Select a record for editing and clear confirmation/reason; returns nothing, with no secret access. */
+    /** Select a record for editing; clears confirmation, reason, scope search and any copied secret state. */
     function edit(client: MachineClient): void {
         setDraft({ ...client })
         setReason('')
         setConfirmation(undefined)
         setError('')
+        setScopeSearch('')
+        resetSecretCopy()
     }
 
     /** Switch the view from a tab button value and clear the editor; returns nothing. */
@@ -199,6 +279,7 @@ const MachineAccessPage: FC = () => {
         setDraft(undefined)
         setFilter('')
         setConfirmation(undefined)
+        resetSecretCopy()
     }
 
     /** Refresh current records; async errors are handled by load. */
@@ -214,6 +295,47 @@ const MachineAccessPage: FC = () => {
     /** Remove the one-time credential from component memory. */
     function dismissCredential(): void {
         setCredential(undefined)
+        setCredentialStatus('')
+    }
+
+    /** Copy the displayed one-time secret to the clipboard and report the result in its panel. */
+    async function copyCredential(): Promise<void> {
+        if (!credential) return
+        setCredentialStatus(await writeClipboard(credential.secret)
+            ? 'Client secret copied to clipboard.'
+            : 'Clipboard access was blocked. Select and copy the secret instead.')
+    }
+
+    /**
+     * Fetch the selected client's current secret and copy it to the clipboard without rendering it.
+     * The backend audits each request. If the browser blocks clipboard access, the secret is shown in
+     * a hidden-from-analytics field until the user hides it or leaves the editor. Errors stay inline.
+     */
+    async function copySecret(): Promise<void> {
+        if (!draft) return
+        resetSecretCopy()
+        setCopyingSecret(true)
+        try {
+            const result = await machineRequest<MachineSecret>(
+                `clients/${encodeURIComponent(draft.clientId)}/secret`,
+                'POST',
+            )
+            if (await writeClipboard(result.secret)) {
+                setSecretStatus('Client secret copied to clipboard.')
+            } else {
+                setRevealed({ clientId: result.clientId, secret: result.secret })
+                setSecretStatus('Clipboard access was blocked. Copy the secret below.')
+            }
+        } catch (failure) {
+            setSecretStatus(failure instanceof Error ? failure.message : 'The secret could not be copied.')
+        } finally {
+            setCopyingSecret(false)
+        }
+    }
+
+    /** Remove a revealed existing secret from the editor and component memory. */
+    function hideSecret(): void {
+        resetSecretCopy()
     }
 
     /** Set the local client filter from an input change; returns nothing. */
@@ -226,11 +348,23 @@ const MachineAccessPage: FC = () => {
         setReason(event.currentTarget.value)
     }
 
+    /** Set the client editor's scope-name search from its input; returns nothing. */
+    function changeScopeSearch(event: ChangeEvent<HTMLInputElement>): void {
+        setScopeSearch(event.currentTarget.value)
+    }
+
+    /** Keep Enter in the scope search from submitting the client form; other keys are untouched. */
+    function preventSearchSubmit(event: KeyboardEvent<HTMLInputElement>): void {
+        if (event.key === 'Enter') event.preventDefault()
+    }
+
     /** Start a blank client editor without issuing credentials. */
     function createClient(): void {
         setDraft(blankClient())
         setReason('')
         setConfirmation(undefined)
+        setScopeSearch('')
+        resetSecretCopy()
     }
 
     /** Select a loaded client by button value; ignores an absent client. */
@@ -283,10 +417,12 @@ const MachineAccessPage: FC = () => {
         setConfirmation(undefined)
     }
 
-    /** Close the editor without applying its draft. */
+    /** Close the editor without applying its draft, forgetting any revealed secret. */
     function closeClient(): void {
         setDraft(undefined)
         setConfirmation(undefined)
+        setScopeSearch('')
+        resetSecretCopy()
     }
 
     /** Apply an explicitly confirmed saved-client action using its expected revision. */
@@ -299,10 +435,31 @@ const MachineAccessPage: FC = () => {
         }
     }
 
-    /** Load a failed scope into the repair form using its current revision. */
+    /** Open the scope dialog with a blank creation form and a fresh audit reason. */
+    function openScopeModal(): void {
+        setScopeDraft(blankScope())
+        setReason('')
+        setError('')
+        setScopeModalOpen(true)
+    }
+
+    /** Close the scope dialog unless a submission is in flight; the draft is discarded. */
+    function closeScopeModal(): void {
+        if (busy) return
+        setScopeModalOpen(false)
+        setScopeDraft(blankScope())
+        setReason('')
+    }
+
+    /** Open the scope dialog for a failed scope using its current revision. */
     function repairScope(event: MouseEvent<HTMLButtonElement>): void {
         const scope = scopes.find(item => item.name === event.currentTarget.value)
-        if (scope) setScopeDraft(scope)
+        if (scope) {
+            setScopeDraft(scope)
+            setReason('')
+            setError('')
+            setScopeModalOpen(true)
+        }
     }
 
     /** Submit scope creation/repair with an audit reason; errors stay inline. */
@@ -311,12 +468,56 @@ const MachineAccessPage: FC = () => {
         mutate('scopes', 'POST', { ...scopeDraft, reason })
     }
 
+    /**
+     * Render allowed/default checkbox rows for one scope group of the client editor.
+     * @param list Scopes to render, already filtered and sorted by groupScopes.
+     * @param current Client draft whose allowed/default selections drive the checkboxes.
+     * @returns One grid row per scope; defaults stay disabled until the scope is allowed.
+     */
+    function renderScopeRows(list: MachineScope[], current: ClientDraft): JSX.Element[] {
+        return list.map(scope => (
+            <div className={styles.scope} key={scope.name}>
+                <span>
+                    {scope.name}
+                    <small>{scope.description}</small>
+                </span>
+                <input
+                    aria-label={`Allow ${scope.name}`}
+                    type='checkbox'
+                    checked={current.allowedScopes.includes(scope.name)}
+                    value={scope.name}
+                    onChange={changeAllowedScope}
+                />
+                <input
+                    aria-label={`Default ${scope.name}`}
+                    type='checkbox'
+                    disabled={!current.allowedScopes.includes(scope.name)}
+                    checked={current.defaultScopes.includes(scope.name)}
+                    value={scope.name}
+                    onChange={changeDefaultScope}
+                />
+            </div>
+        ))
+    }
+
     if (!machineAccessEnabled) return <p>Machine Access is available only in DEV.</p>
 
     const selected = clients.find(client => client.clientId === draft?.clientId)
     const filteredClients = clients.filter(client => `${client.clientId} ${client.name} ${client.owner} ${client.state}`
         .toLowerCase()
         .includes(filter.toLowerCase()))
+    const scopeGroups = groupScopes(scopes, draft?.revision ? selected?.allowedScopes ?? [] : [], scopeSearch)
+    const canCopySecret = !!selected
+        && selected.state === 'ready'
+        && selected.enabled
+        && !(selected.retireAt && Date.parse(selected.retireAt) <= Date.now())
+    const scopeHeader = (
+        <div className={styles.scope}>
+            <strong>Scope</strong>
+            <span>Allowed</span>
+            <span>Default</span>
+        </div>
+    )
     return (
         <main className={styles.page}>
             <span className={styles.badge}>DEVELOPMENT · KEYCLOAK</span>
@@ -346,11 +547,22 @@ const MachineAccessPage: FC = () => {
                         </button>
                     ))}
                 </div>
-                <button type='button' disabled={loading || busy} onClick={refresh}>
-                    Refresh
-                </button>
+                {section === 'scopes' ? (
+                    <button
+                        type='button'
+                        className={styles.primaryAction}
+                        disabled={loading || busy}
+                        onClick={openScopeModal}
+                    >
+                        Add scope
+                    </button>
+                ) : (
+                    <button type='button' disabled={loading || busy} onClick={refresh}>
+                        Refresh
+                    </button>
+                )}
             </div>
-            {error && (
+            {error && !scopeModalOpen && (
                 <div className={styles.error} role='alert'>
                     {error}
                 </div>
@@ -388,9 +600,15 @@ const MachineAccessPage: FC = () => {
                         Token endpoint:
                         <code>{machineAccessTokenUrl}</code>
                     </p>
-                    <button type='button' onClick={dismissCredential}>
-                        I have stored the credential
-                    </button>
+                    <div className={styles.actions}>
+                        <button type='button' onClick={copyCredential}>
+                            Copy client secret
+                        </button>
+                        <button type='button' onClick={dismissCredential}>
+                            I have stored the credential
+                        </button>
+                    </div>
+                    <small role='status'>{credentialStatus}</small>
                 </section>
             )}
             {loading && <p role='status'>Loading Machine Access…</p>}
@@ -503,6 +721,39 @@ const MachineAccessPage: FC = () => {
                                         Use m2m- followed by lowercase letters, numbers, and hyphens.
                                     </small>
                                 </label>
+                                {!!draft.revision && (
+                                    <div className={styles.copySecret}>
+                                        <button
+                                            type='button'
+                                            disabled={copyingSecret || !canCopySecret}
+                                            onClick={copySecret}
+                                        >
+                                            {copyingSecret ? 'Copying…' : 'Copy client secret'}
+                                        </button>
+                                        <small role='status'>
+                                            {secretStatus
+                                                || (canCopySecret
+                                                    ? 'Copies are recorded in the audit history.'
+                                                    : 'Only ready, enabled clients have a usable secret.')}
+                                        </small>
+                                    </div>
+                                )}
+                                {revealed && (
+                                    <div className={styles.secret} data-dd-privacy='hidden'>
+                                        <label htmlFor='machine-revealed-secret'>
+                                            Client secret
+                                            <input
+                                                id='machine-revealed-secret'
+                                                readOnly
+                                                autoComplete='off'
+                                                value={revealed.secret}
+                                            />
+                                        </label>
+                                        <button type='button' onClick={hideSecret}>
+                                            Hide secret
+                                        </button>
+                                    </div>
+                                )}
                                 <label htmlFor='machine-name'>
                                     Name
                                     <input
@@ -551,36 +802,48 @@ const MachineAccessPage: FC = () => {
                                     Allowed scopes may be requested explicitly. Default scopes apply when
                                     a caller omits scope.
                                 </p>
-                                <div className={styles.scope}>
-                                    <strong>Scope</strong>
-                                    <span>Allowed</span>
-                                    <span>Default</span>
-                                </div>
-                                {scopes
-                                    .filter(scope => scope.state === 'ready')
-                                    .map(scope => (
-                                        <div className={styles.scope} key={scope.name}>
-                                            <span>
-                                                {scope.name}
-                                                <small>{scope.description}</small>
-                                            </span>
-                                            <input
-                                                aria-label={`Allow ${scope.name}`}
-                                                type='checkbox'
-                                                checked={draft.allowedScopes.includes(scope.name)}
-                                                value={scope.name}
-                                                onChange={changeAllowedScope}
-                                            />
-                                            <input
-                                                aria-label={`Default ${scope.name}`}
-                                                type='checkbox'
-                                                disabled={!draft.allowedScopes.includes(scope.name)}
-                                                checked={draft.defaultScopes.includes(scope.name)}
-                                                value={scope.name}
-                                                onChange={changeDefaultScope}
-                                            />
-                                        </div>
-                                    ))}
+                                <label htmlFor='machine-scope-search'>
+                                    Search scopes
+                                    <input
+                                        id='machine-scope-search'
+                                        type='search'
+                                        value={scopeSearch}
+                                        onChange={changeScopeSearch}
+                                        onKeyDown={preventSearchSubmit}
+                                        placeholder='Filter by scope name'
+                                    />
+                                </label>
+                                {!!draft.revision && (
+                                    <section aria-label='Allowed for this client'>
+                                        <h3>{`Allowed for this client (${scopeGroups.allowed.length})`}</h3>
+                                        {scopeHeader}
+                                        {renderScopeRows(scopeGroups.allowed, draft)}
+                                        {!scopeGroups.allowed.length && (
+                                            <small>
+                                                {scopeSearch.trim()
+                                                    ? 'No allowed scopes match the search.'
+                                                    : 'This client has no allowed scopes.'}
+                                            </small>
+                                        )}
+                                    </section>
+                                )}
+                                <section aria-label={draft.revision ? 'Other scopes' : 'Available scopes'}>
+                                    <h3>
+                                        {`${draft.revision ? 'Other scopes' : 'Available scopes'} (${
+                                            scopeGroups.other.length})`}
+                                    </h3>
+                                    {scopeHeader}
+                                    {renderScopeRows(scopeGroups.other, draft)}
+                                    {!scopeGroups.other.length && (
+                                        <small>
+                                            {scopeSearch.trim()
+                                                ? 'No other scopes match the search.'
+                                                : draft.revision
+                                                    ? 'Every ready scope is already allowed.'
+                                                    : 'No ready scopes are available.'}
+                                        </small>
+                                    )}
+                                </section>
                                 <small>Select at least one allowed and default scope.</small>
                             </div>
                         </div>
@@ -654,98 +917,118 @@ const MachineAccessPage: FC = () => {
                 </form>
             )}
             {section === 'scopes' && (
-                <>
-                    <section className={styles.panel}>
-                        <h2>Scope catalog</h2>
-                        <p>
-                            Adding a scope does not grant it to any client. The receiving API must
-                            implement the permission.
-                        </p>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Scope</th>
-                                    <th>Description</th>
-                                    <th>Owner</th>
-                                    <th>State</th>
+                <section className={styles.panel}>
+                    <h2>Scope catalog</h2>
+                    <p>
+                        Adding a scope does not grant it to any client. The receiving API must
+                        implement the permission.
+                    </p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Scope</th>
+                                <th>Description</th>
+                                <th>Owner</th>
+                                <th>State</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {scopes.map(scope => (
+                                <tr key={scope.name}>
+                                    <td>{scope.name}</td>
+                                    <td>{scope.description}</td>
+                                    <td>{scope.owner}</td>
+                                    <td>
+                                        {scope.state}
+                                        {scope.state === 'failed' && (
+                                            <button
+                                                type='button'
+                                                value={scope.name}
+                                                onClick={repairScope}
+                                            >
+                                                Repair
+                                            </button>
+                                        )}
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {scopes.map(scope => (
-                                    <tr key={scope.name}>
-                                        <td>{scope.name}</td>
-                                        <td>{scope.description}</td>
-                                        <td>{scope.owner}</td>
-                                        <td>
-                                            {scope.state}
-                                            {scope.state === 'failed' && (
-                                                <button
-                                                    type='button'
-                                                    value={scope.name}
-                                                    onClick={repairScope}
-                                                >
-                                                    Repair
-                                                </button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </section>
-                    <form className={styles.panel} onSubmit={saveScope}>
-                        <h2>{scopeDraft.revision ? 'Repair failed scope' : 'Add scope'}</h2>
-                        <fieldset disabled={busy}>
-                            <label htmlFor='scope-name'>
-                                Permission name
-                                <input
-                                    id='scope-name'
-                                    required
-                                    readOnly={!!scopeDraft.revision}
-                                    pattern='[A-Za-z][A-Za-z0-9_.\-]{0,79}(:[A-Za-z][A-Za-z0-9_.\-]{0,79})?'
-                                    value={scopeDraft.name}
-                                    name='name'
-                                    onChange={changeScope}
-                                    placeholder='read:groups'
-                                />
-                            </label>
-                            <label htmlFor='scope-description'>
-                                Description
-                                <input
-                                    id='scope-description'
-                                    required
-                                    maxLength={1000}
-                                    value={scopeDraft.description}
-                                    name='description'
-                                    onChange={changeScope}
-                                />
-                            </label>
-                            <label htmlFor='scope-owner'>
-                                Owning team
-                                <input
-                                    id='scope-owner'
-                                    required
-                                    maxLength={200}
-                                    value={scopeDraft.owner}
-                                    name='owner'
-                                    onChange={changeScope}
-                                />
-                            </label>
-                            <label htmlFor='scope-reason'>
-                                Reason
-                                <input
-                                    id='scope-reason'
-                                    required
-                                    maxLength={500}
-                                    value={reason}
-                                    onChange={changeReason}
-                                />
-                            </label>
-                            <button type='submit'>Apply scope</button>
-                        </fieldset>
-                    </form>
-                </>
+                            ))}
+                        </tbody>
+                    </table>
+                </section>
             )}
+            <BaseModal
+                open={scopeModalOpen}
+                onClose={closeScopeModal}
+                title={scopeDraft.revision ? 'Repair failed scope' : 'Add scope'}
+                size='md'
+            >
+                <form className={styles.dialog} onSubmit={saveScope}>
+                    {error && (
+                        <div className={styles.error} role='alert'>
+                            {error}
+                        </div>
+                    )}
+                    <p>
+                        Adding a scope does not grant it to any client. The receiving API must
+                        implement the permission.
+                    </p>
+                    <fieldset disabled={busy}>
+                        <label htmlFor='scope-name'>
+                            Permission name
+                            <input
+                                id='scope-name'
+                                required
+                                readOnly={!!scopeDraft.revision}
+                                pattern='[A-Za-z][A-Za-z0-9_.\-]{0,79}(:[A-Za-z][A-Za-z0-9_.\-]{0,79})?'
+                                value={scopeDraft.name}
+                                name='name'
+                                onChange={changeScope}
+                                placeholder='read:groups'
+                            />
+                        </label>
+                        <label htmlFor='scope-description'>
+                            Description
+                            <input
+                                id='scope-description'
+                                required
+                                maxLength={1000}
+                                value={scopeDraft.description}
+                                name='description'
+                                onChange={changeScope}
+                            />
+                        </label>
+                        <label htmlFor='scope-owner'>
+                            Owning team
+                            <input
+                                id='scope-owner'
+                                required
+                                maxLength={200}
+                                value={scopeDraft.owner}
+                                name='owner'
+                                onChange={changeScope}
+                            />
+                        </label>
+                        <label htmlFor='scope-reason'>
+                            Reason
+                            <input
+                                id='scope-reason'
+                                required
+                                maxLength={500}
+                                value={reason}
+                                onChange={changeReason}
+                            />
+                        </label>
+                        <div className={styles.actions}>
+                            <button type='submit' className={styles.primaryAction}>
+                                {busy ? 'Applying…' : 'Apply scope'}
+                            </button>
+                            <button type='button' onClick={closeScopeModal}>
+                                Cancel
+                            </button>
+                        </div>
+                    </fieldset>
+                </form>
+            </BaseModal>
             {section === 'audit' && (
                 <section className={styles.panel}>
                     <h2>Audit history</h2>

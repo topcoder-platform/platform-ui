@@ -111,11 +111,11 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
         id: websitePublicationRouteId,
         title: 'Website Publishing',
     },
-    ...(machineAccessEnabled ? [{ id: 'machine-access', title: 'Machine Access · DEV' }] : []),
+    ...(machineAccessEnabled ? [{ id: 'machine-access', title: 'M2M' }] : []),
 ]
 
 /**
- * Returns administrator tabs for the supplied roles, including Machine Access only on DEV hosts.
+ * Returns administrator tabs for the supplied roles, including the M2M (Machine Access) tab only on DEV hosts.
  * Returns an empty array for other roles; performs no I/O and throws no errors.
  */
 export function getSystemAdminTabs(roles?: string[]): TabsNavItem[] {

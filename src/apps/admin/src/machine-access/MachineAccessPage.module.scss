@@ -1,12 +1,7 @@
-.page {
-    padding: 32px;
-    max-width: 1440px;
-    margin: 0 auto;
-    color: #25272b;
+@import '@libs/ui/styles/includes';
 
-    h1 { font-size: 28px; margin: 8px 0; }
-    h2 { font-size: 20px; margin: 0 0 20px; }
-    p { margin: 8px 0 16px; line-height: 1.5; }
+// Shared form controls for the page and its portal-rendered dialogs (BaseModal renders outside `.page`).
+@mixin controls {
     button {
         border: 1px solid #b4bcc4;
         border-radius: 5px;
@@ -17,6 +12,7 @@
         color: #166166;
         &:disabled { opacity: .5; cursor: wait; }
         &:focus-visible { outline: 3px solid #20b5ad; outline-offset: 2px; }
+        &.primaryAction { background: $green-1; border-color: $green-1; color: white; }
     }
     input, textarea, select {
         border: 1px solid #b4bcc4;
@@ -29,11 +25,31 @@
     input[type='checkbox'] { width: auto; margin-right: 8px; }
     label { display: block; margin: 12px 0; font-weight: 600; }
     small { display: block; font-weight: normal; color: #59626b; margin: 4px 0; }
+}
+
+.page {
+    padding: 32px;
+    max-width: 1440px;
+    margin: 0 auto;
+    color: #25272b;
+    @include controls;
+
+    h1 { font-size: 28px; margin: 8px 0; }
+    h2 { font-size: 20px; margin: 0 0 20px; }
+    h3 { font-size: 16px; margin: 20px 0 8px; }
+    p { margin: 8px 0 16px; line-height: 1.5; }
     table { width: 100%; border-collapse: collapse; text-align: left; }
     th, td { padding: 14px 12px; border-bottom: 1px solid #e4e7ea; vertical-align: top; }
     th { background: #f4f6f8; font-size: 13px; }
     td { font-size: 14px; }
     code { overflow-wrap: anywhere; }
+}
+.dialog {
+    color: #25272b;
+    @include controls;
+
+    p { margin: 0 0 8px; line-height: 1.5; }
+    fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 }
 .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; background: #e7f5f2; color: #12645a; font-size: 12px; font-weight: 700; }
 .toolbar { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 24px 0; }
@@ -44,5 +60,6 @@
 .notice { background: #f1f7fa; border-left: 4px solid #35929a; padding: 14px 18px; margin: 16px 0; }
 .error { background: #fff0ef; border-left: 4px solid #ba3d31; padding: 14px 18px; margin: 16px 0; }
 .secret { background: #fff8df; border: 1px solid #e7c761; padding: 24px; border-radius: 6px; margin: 20px 0; textarea { margin: 8px 0; } }
+.copySecret { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 12px 0; small { margin: 0; } }
 .scope { display: grid; grid-template-columns: 1fr 80px 80px; align-items: center; gap: 10px; border-bottom: 1px solid #eceff1; padding: 8px 0; label { margin: 0; } }
 @media (max-width: 800px) { .page { padding: 16px; } .grid { grid-template-columns: 1fr; } }
