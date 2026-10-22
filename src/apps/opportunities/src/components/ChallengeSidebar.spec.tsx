@@ -39,6 +39,7 @@ const topgearChallengesExplainedUrl
 const mockUseSWR = jest.fn()
 const mockChallengeAllowsStockArt = jest.fn()
 const mockChallengeFileTypes = jest.fn()
+const mockChallengeManualReviewScorecardUrl = jest.fn()
 const mockChallengeSidebarLinks = jest.fn()
 const mockIsTopgearChallenge = jest.fn()
 
@@ -64,6 +65,7 @@ jest.mock('../utils', () => ({
     challengeAllowsStockArt: (...args: unknown[]) => mockChallengeAllowsStockArt(...args),
     challengeFileTypes: (...args: unknown[]) => mockChallengeFileTypes(...args),
     challengeForumUrl: (): undefined => undefined,
+    challengeManualReviewScorecardUrl: (...args: unknown[]) => mockChallengeManualReviewScorecardUrl(...args),
     challengeReviewAppUrl: (challengeId: string): string => (
         `https://review.topcoder-dev.com/active-challenges/${challengeId}/challenge-details`
     ),
@@ -137,6 +139,7 @@ describe('ChallengeSidebar Review Style', () => {
         mockUseSWR.mockReturnValue({ data: undefined })
         mockChallengeAllowsStockArt.mockReturnValue(false)
         mockChallengeFileTypes.mockReturnValue([])
+        mockChallengeManualReviewScorecardUrl.mockReturnValue(undefined)
         mockIsTopgearChallenge.mockReturnValue(false)
         mockChallengeSidebarLinks.mockReturnValue({
             attachments: [],
@@ -170,6 +173,43 @@ describe('ChallengeSidebar Review Style', () => {
         expect(screen.getByText('Community Review Board performs a thorough review based on scorecards.'))
             .toBeInTheDocument()
         expect(screen.queryByText(/Instant Review is/))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'Scorecard Link' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('links the manual review scorecard from the challenge review definition', () => {
+        const scorecardUrl = 'https://review.topcoder-dev.com/scorecard/hFU73Ve2XlYCK-'
+        mockChallengeManualReviewScorecardUrl.mockReturnValue(scorecardUrl)
+
+        renderSidebar(undefined, developmentChallenge)
+
+        expect(mockChallengeManualReviewScorecardUrl)
+            .toHaveBeenCalledWith(developmentChallenge)
+        const scorecardLink = screen.getByRole('link', { name: 'Scorecard Link' })
+        expect(scorecardLink)
+            .toHaveAttribute('href', scorecardUrl)
+        expect(scorecardLink)
+            .toHaveAttribute('target', '_blank')
+        expect(scorecardLink.closest('li')?.textContent)
+            .toContain('Manual: Scorecard Link')
+        expect(screen.getByRole('button', { name: 'About Manual' }))
+            .toBeInTheDocument()
+    })
+
+    it('does not attach the manual scorecard link to AI review modes', () => {
+        mockChallengeManualReviewScorecardUrl.mockReturnValue('https://review.topcoder-dev.com/scorecard/manual')
+
+        renderSidebar({
+            challengeId: challenge.id,
+            id: 'ai-gating-config',
+            instantReview: false,
+            mode: 'AI_GATING',
+        }, developmentChallenge)
+
+        expect(screen.getByText('AI Gating'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'Scorecard Link' }))
             .not.toBeInTheDocument()
     })
 

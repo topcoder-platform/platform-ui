@@ -37,6 +37,8 @@ export interface ChallengePhase {
     id?: string
     isOpen?: boolean
     name: string
+    /** Phase type id; Challenge API reviewers reference phases by this value. */
+    phaseId?: string
     scheduledEndDate?: string
     scheduledStartDate?: string
 }
@@ -114,9 +116,15 @@ export interface ChallengeAiReviewConfig {
     mode: ChallengeAiReviewMode
 }
 
-/** Challenge API reviewer assignment used to identify AI-reviewed challenges. */
+/**
+ * Challenge API reviewer assignment (the challenge review definition), used to identify
+ * AI-reviewed challenges and the manual review scorecard.
+ */
 export interface ChallengeReviewer {
     aiWorkflowId?: string
+    isMemberReview?: boolean
+    phaseId?: string
+    scorecardId?: string
 }
 
 export interface ChallengeOpportunity {

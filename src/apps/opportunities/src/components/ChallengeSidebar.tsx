@@ -19,6 +19,7 @@ import {
     challengeAllowsStockArt,
     challengeFileTypes,
     challengeForumUrl,
+    challengeManualReviewScorecardUrl,
     challengeReviewAppUrl,
     ChallengeSidebarLink,
     challengeSidebarLinks,
@@ -77,26 +78,44 @@ interface SidebarCardProps {
 
 interface ReviewStyleItemProps {
     label: string
+    scorecardUrl?: string
     tooltip: string
 }
 
 interface ReviewStyleSectionProps {
     config?: ChallengeAiReviewConfig
     loading?: boolean
+    manualReviewScorecardUrl?: string
     unavailable?: boolean
 }
 
 /**
  * Renders one review-style bullet with an accessible tooltip.
  *
- * @param props member-facing label and tooltip copy.
+ * @param props member-facing label, tooltip copy, and optional scorecard destination
+ * rendered as "<label>: Scorecard Link".
  * @returns one review-style list item.
  * @throws Does not throw.
  */
 const ReviewStyleItem: FC<ReviewStyleItemProps> = props => (
     <li>
         <span className={styles.reviewStyleRow}>
-            <span>{props.label}</span>
+            <span>
+                {props.label}
+                {props.scorecardUrl && (
+                    <>
+                        {': '}
+                        <a
+                            className={styles.inlineAnchor}
+                            href={props.scorecardUrl}
+                            rel='noreferrer'
+                            target='_blank'
+                        >
+                            Scorecard Link
+                        </a>
+                    </>
+                )}
+            </span>
             <Tooltip
                 className={styles.reviewStyleTooltip}
                 content={props.tooltip}
@@ -117,13 +136,15 @@ const ReviewStyleItem: FC<ReviewStyleItemProps> = props => (
 
 /**
  * Renders development-challenge review style above challenge terms.
+ * Manual review links its scorecard when the challenge review definition provides one.
  *
- * @param props AI review configuration and request state.
+ * @param props AI review configuration, manual review scorecard URL, and request state.
  * @returns Review mode and instant review details.
  * @throws Does not throw.
  */
 const ReviewStyleSection: FC<ReviewStyleSectionProps> = props => {
     const reviewModeItem = getReviewStyleModeItem(props.config)
+    const scorecardUrl = hasAiReviewConfig(props.config) ? undefined : props.manualReviewScorecardUrl
 
     return (
         <div className={styles.infoSection}>
@@ -137,7 +158,7 @@ const ReviewStyleSection: FC<ReviewStyleSectionProps> = props => {
                     ? <p className={styles.reviewConfigStatus}>Review configuration is unavailable.</p>
                     : (
                         <ul className={styles.reviewStyleList}>
-                            <ReviewStyleItem {...reviewModeItem} />
+                            <ReviewStyleItem {...reviewModeItem} scorecardUrl={scorecardUrl} />
                             {hasAiReviewConfig(props.config) && (
                                 <ReviewStyleItem
                                     {...getInstantReviewStyleItem(props.config?.instantReview === true)}
@@ -532,6 +553,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                         <ReviewStyleSection
                             config={props.aiReviewConfig}
                             loading={props.reviewStyleLoading}
+                            manualReviewScorecardUrl={challengeManualReviewScorecardUrl(props.challenge)}
                             unavailable={props.reviewStyleUnavailable}
                         />
                     )}
