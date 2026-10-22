@@ -59,6 +59,63 @@ export function submissionAiReviewAppUrl(
         + `?workflowId=${encodeURIComponent(workflowId)}`
 }
 
+/** Phase names that carry the final manual review, in priority order. */
+const MANUAL_REVIEW_PHASE_NAMES = ['review', 'iterative review']
+
+/**
+ * Finds the scorecard configured for the challenge's manual (member) review.
+ *
+ * Reads the review definition in `challenge.reviewers`: the member reviewer on the Review
+ * phase wins, First2Finish-style challenges fall back to Iterative Review, and screening,
+ * approval, and AI workflow reviewers are ignored.
+ *
+ * @param challenge raw Challenge API detail response.
+ * @returns trimmed scorecard id, or undefined when no manual review scorecard is configured.
+ * @throws Does not throw.
+ */
+export function challengeManualReviewScorecardId(challenge: ChallengeOpportunity): string | undefined {
+    const memberReviewers = (challenge.reviewers ?? []).filter(reviewer => (
+        reviewer.isMemberReview === true
+        && !reviewer.aiWorkflowId?.trim()
+        && !!reviewer.scorecardId?.trim()
+    ))
+
+    return MANUAL_REVIEW_PHASE_NAMES
+        .map(phaseName => {
+            const phaseIds = (challenge.phases ?? [])
+                .filter(phase => phase.name?.trim()
+                    .toLowerCase() === phaseName)
+                .reduce<string[]>((ids, phase) => [...ids, phase.phaseId ?? '', phase.id ?? ''], [])
+                .filter(Boolean)
+            return memberReviewers
+                .find(reviewer => !!reviewer.phaseId && phaseIds.includes(reviewer.phaseId))
+                ?.scorecardId
+                ?.trim()
+        })
+        .find(Boolean)
+}
+
+/**
+ * Builds the public Review App scorecard page for the challenge's manual review.
+ *
+ * Used by the challenge sidebar to render the "Manual: Scorecard Link" review style.
+ *
+ * @param challenge raw Challenge API detail response.
+ * @param reviewAppUrl configured Review App origin, optionally overridden by tests.
+ * @returns absolute, safely encoded scorecard URL, or undefined without a manual review scorecard.
+ * @throws Does not throw.
+ */
+export function challengeManualReviewScorecardUrl(
+    challenge: ChallengeOpportunity,
+    reviewAppUrl: string = EnvironmentConfig.REVIEW_APP_URL
+        ?? `https://review.${EnvironmentConfig.TC_DOMAIN}`,
+): string | undefined {
+    const scorecardId = challengeManualReviewScorecardId(challenge)
+    if (!scorecardId) return undefined
+
+    return `${reviewAppUrl.replace(/\/+$/, '')}/scorecard/${encodeURIComponent(scorecardId)}`
+}
+
 /**
  * Builds a member profile URL on the environment-specific Profiles app.
  *
