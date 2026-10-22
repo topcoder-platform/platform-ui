@@ -264,6 +264,28 @@ a fiscal-year boundary are not left empty. Charts include expandable monthly dat
 tables, currency/count units, and gaps for unknown values. Y-axis ticks use compact
 labels such as `$1.5M`. Source notices remain visible above the charts.
 
+### Headlines
+
+As in the executive overview attachment, each chart opens with a headline: the current
+UTC month's value in full, its change from the full previous month, and a caption.
+`chartHeadline` in `SalesDashboardChart.tsx` derives it from the monthly data, so the
+API is unchanged.
+
+- Stacked charts headline their stack total. For the stacked count chart (members paid
+  by type) the caption notes that the series are summed, so a member paid in two types
+  counts twice.
+- Single-series charts headline their value. Other multi-series charts headline each
+  series separately, because their series can't be added; Flexible talent shows newly
+  assigned, completed and ongoing.
+- Changes are relative percentages, or percentage points for percent charts. No
+  change is shown when either month is unknown or the previous value is zero.
+- The caption reads "Current month, including expected closes" for pipeline charts
+  grouped by close date that extend past this month, and "Current month to date"
+  otherwise.
+- When nothing is recorded for the current month yet, the latest month with data is
+  headlined, compared with the month before it and named in the caption. Revenue
+  needs this because it is recognized at month end.
+
 Sales passes `portal=sales` so the API removes TaaS, Topcoder and unlinked customer
 payments before computing any payment totals or customer rankings. Reports
 passes `portal=reports`. Flexible talent counts newly assigned, completed and
@@ -280,5 +302,7 @@ definitions, settings and API parameters.
 Tests: `SalesDashboardsPage.spec.tsx` covers portal scope, gross margin remaining
 hidden and unrequested in both portals, independent failures,
 retry, refresh, date-basis changes, request cancellation, keyboard navigation,
-accessible percentage/missing-value tables and compact axis labels. Reports route/navigation tests cover
+accessible percentage/missing-value tables, compact axis labels and headlines
+(totals, per-series figures, percentage points, expected closes and the
+latest-recorded-month fallback). Reports route/navigation tests cover
 the new entry point.

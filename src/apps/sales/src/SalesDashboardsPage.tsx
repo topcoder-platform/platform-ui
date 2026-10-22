@@ -63,7 +63,13 @@ const DashboardSection: FC<SectionProps> = props => {
                 <>
                     {data.notices.map(notice => <p className={styles.notice} key={notice} role='status'>{notice}</p>)}
                     <div className={styles.grid}>
-                        {data.charts.map(chart => <SalesDashboardChart key={chart.id} chart={chart} />)}
+                        {data.charts.map(chart => (
+                            <SalesDashboardChart
+                                key={chart.id}
+                                chart={chart}
+                                expectedCloses={props.section === 'pipeline' && dateBasis === 'close'}
+                            />
+                        ))}
                     </div>
                 </>
             ) : error ? (
@@ -100,6 +106,7 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
             </header>
             <p className={styles.notice}>
                 Latest six calendar months in UTC, including the current month in progress.
+                {' Headlines compare the current month with the full previous month.'}
                 {' Opportunity size, expected revenue and pipeline stages show three months back to six months ahead.'}
             </p>
             {props.portal === 'sales' && <p>Member payments include customer work only.</p>}

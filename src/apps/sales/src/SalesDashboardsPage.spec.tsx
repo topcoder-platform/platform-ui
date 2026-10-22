@@ -6,8 +6,13 @@ import { ButtonHTMLAttributes, ReactNode } from 'react'
 
 import SalesDashboardsPage from './SalesDashboardsPage'
 import SalesReportsPage from './SalesReportsPage'
-import SalesDashboardChart, { axisLabel } from './SalesDashboardChart'
-import { fetchSalesDashboard, SalesDashboardPortal, SalesDashboardResponse } from './sales-dashboard.service'
+import SalesDashboardChart, { axisLabel, chartHeadline } from './SalesDashboardChart'
+import {
+    fetchSalesDashboard,
+    MonthlySalesChart,
+    SalesDashboardPortal,
+    SalesDashboardResponse,
+} from './sales-dashboard.service'
 
 jest.mock('./sales-dashboard.service', () => ({ fetchSalesDashboard: jest.fn() }))
 jest.mock('./SalesPage', () => () => <div>Existing pipeline</div>)
@@ -145,4 +150,125 @@ it.each([
 ] as const)('labels a %s %s axis tick as %s', (value, unit, label) => {
     expect(axisLabel(value, unit))
         .toBe(label)
+})
+
+/**
+ * @param offset Months from the current UTC month.
+ * @returns That month's first day, as the API sends it. Does not throw.
+ */
+function utcMonth(offset: number): string {
+    const now = new Date()
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + offset, 1))
+        .toISOString()
+        .slice(0, 10)
+}
+
+/**
+ * @param values Monthly values, oldest first.
+ * @param overrides Chart fields to replace.
+ * @param last Offset of the final month from the current UTC month.
+ * @returns A test chart. Does not throw.
+ */
+function monthlyChart(
+    values: Array<Record<string, number | null>>,
+    overrides: Partial<MonthlySalesChart> = {},
+    last: number = 0,
+): MonthlySalesChart {
+    return {
+        description: 'Monthly values',
+        id: 'chart',
+        months: values.map((value, index) => ({ month: utcMonth(index - values.length + 1 + last), values: value })),
+        series: [{ key: 'a', label: 'A' }, { key: 'b', label: 'B' }],
+        stacked: true,
+        title: 'Chart',
+        unit: 'currency',
+        ...overrides,
+    }
+}
+
+it('headlines the current month stack total against the full previous month', () => {
+    expect(chartHeadline(monthlyChart([{ a: 900, b: null }, { a: 1000, b: 500 }, { a: 2000, b: 301 }])))
+        .toEqual({
+            caption: 'Current month to date',
+            figures: [{ change: { direction: 'up', text: '+53.4% vs last month' }, label: undefined, value: 2301 }],
+        })
+    expect(chartHeadline(monthlyChart([{ a: 1000 }, { a: 540 }]))?.figures[0].change)
+        .toEqual({ direction: 'down', text: '-46.0% vs last month' })
+})
+
+it('headlines each series of a chart whose series cannot be added together', () => {
+    const talent = monthlyChart([{ a: 9, b: 64 }, { a: 11, b: 64 }], { stacked: false, unit: 'count' })
+    expect(chartHeadline(talent)?.figures)
+        .toEqual([
+            { change: { direction: 'up', text: '+22.2% vs last month' }, label: 'A', value: 11 },
+            { change: { direction: 'flat', text: '0.0% vs last month' }, label: 'B', value: 64 },
+        ])
+    expect(chartHeadline({ ...talent, stacked: true })?.caption)
+        .toBe('Current month to date · sums the stacked series')
+})
+
+it('uses percentage points for percent charts and omits changes it cannot calculate', () => {
+    const series = [{ key: 'a', label: 'Markup' }]
+    expect(chartHeadline(monthlyChart([{ a: 32.2 }, { a: 32.9 }], { series, stacked: false, unit: 'percent' }))
+        ?.figures[0].change)
+        .toEqual({ direction: 'up', text: '+0.7 pp vs last month' })
+    expect(chartHeadline(monthlyChart([{ a: 0 }, { a: 10 }], { series, stacked: false }))?.figures[0])
+        .toEqual({ change: undefined, label: undefined, value: 10 })
+    expect(chartHeadline(monthlyChart([{ a: 5 }, { a: null }], { series, stacked: false }))?.figures[0])
+        .toEqual({ change: undefined, label: undefined, value: 5 })
+    expect(chartHeadline(monthlyChart([{ a: null }, { a: null }], { series, stacked: false }))?.figures[0])
+        .toEqual({ change: undefined, label: undefined, value: null })
+    expect(chartHeadline(monthlyChart([])))
+        .toBeUndefined()
+})
+
+it('labels expected closes only when asked, and names the month when the chart ends before today', () => {
+    const pipeline = monthlyChart([{ a: 1 }, { a: 2 }, { a: 3 }], {}, 1)
+    expect(chartHeadline(pipeline, true)?.figures[0].value)
+        .toBe(2)
+    expect(chartHeadline(pipeline, true)?.caption)
+        .toBe('Current month, including expected closes')
+    expect(chartHeadline(pipeline)?.caption)
+        .toBe('Current month to date')
+    expect(chartHeadline(
+        monthlyChart([{ a: 1 }, { a: 2 }]),
+        true,
+        new Date(Date.UTC(2100, 0, 1)),
+    )?.caption)
+        .toBe(new Date(`${utcMonth(0)}T00:00:00Z`)
+            .toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC', year: 'numeric' }))
+})
+
+it('headlines the latest month with data while the current month has nothing recorded', () => {
+    const revenue = monthlyChart([{ a: 208_055.8, b: 0 }, { a: 1_493_615.32, b: 0 }, { a: 0, b: null }])
+    expect(chartHeadline(revenue))
+        .toEqual({
+            caption: `${new Date(`${utcMonth(-1)}T00:00:00Z`)
+                .toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC', year: 'numeric' })}`
+                + ', the latest month with data',
+            figures: [{
+                change: { direction: 'up', text: '+617.9% vs previous month' },
+                label: undefined,
+                value: 1_493_615.32,
+            }],
+        })
+    expect(chartHeadline(monthlyChart([{ a: 0 }, { a: 0 }]))?.caption)
+        .toBe('Current month to date')
+})
+
+it('renders headlines, with expected closes only for pipeline charts grouped by close date', async () => {
+    const pipeline = monthlyChart([{ a: 3_000_000, b: 0 }, { a: 4_377_046, b: 0 }, { a: 1, b: 0 }], {}, 1)
+    fetchDashboard.mockImplementation(async section => (section === 'pipeline'
+        ? { charts: [{ ...pipeline, title: 'Total opportunity size' }], notices: [] }
+        : { charts: [], notices: [] }))
+    render(<SalesDashboardsPage portal='sales' />)
+    expect(await screen.findByText('$4,377,046', { selector: 'strong' }))
+        .toBeInTheDocument()
+    expect(screen.getByText('+45.9% vs last month'))
+        .toBeInTheDocument()
+    expect(screen.getByText('Current month, including expected closes'))
+        .toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Created date' }))
+    expect(await screen.findByText('Current month to date'))
+        .toBeInTheDocument()
 })
