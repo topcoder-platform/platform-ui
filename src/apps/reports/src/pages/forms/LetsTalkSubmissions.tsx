@@ -1,12 +1,15 @@
 import { FC } from 'react'
 
-import { formatFormValue, FormReport } from '../../lib/services/forms.service'
+import { FormReport } from '../../lib/services/forms.service'
 
+import FormCell, { CLASSIFICATION_COLUMN, NEEDS_REVIEW_COLUMN } from './FormCell'
 import styles from './FormsPage.module.scss'
 
 const hiddenColumns = new Set([
     'source_page', 'form_version', 'leadsource', 'source__c',
     'lead_source_for_campaign__c', 'primary_campaign__c', 'insta_page_name__c',
+    // Shown inside the classification badge.
+    NEEDS_REVIEW_COLUMN,
 ])
 const inquiryColumn = 'briefly_describe_your_inquiry'
 const labels: Record<string, string> = {
@@ -26,7 +29,10 @@ const labels: Record<string, string> = {
  */
 const LetsTalkSubmissions: FC<{ report: FormReport }> = (props: { report: FormReport }) => {
     const report = props.report
-    const columns = report.columns.filter(column => !hiddenColumns.has(column) && column !== inquiryColumn)
+    const columns = report.columns.filter(column => !hiddenColumns.has(column)
+        && column !== inquiryColumn && column !== CLASSIFICATION_COLUMN)
+    // The AI label leads each card, so triage starts from it.
+    if (report.columns.includes(CLASSIFICATION_COLUMN)) columns.unshift(CLASSIFICATION_COLUMN)
     if (report.columns.includes(inquiryColumn)) columns.push(inquiryColumn)
 
     return (
@@ -37,7 +43,7 @@ const LetsTalkSubmissions: FC<{ report: FormReport }> = (props: { report: FormRe
                         {columns.map(column => (
                             <div key={column} className={column === inquiryColumn ? styles.inquiry : undefined}>
                                 <dt>{labels[column] || report.labels[column] || column.replace(/_/g, ' ')}</dt>
-                                <dd>{formatFormValue(row[column])}</dd>
+                                <dd><FormCell column={column} row={row} /></dd>
                             </div>
                         ))}
                     </dl>

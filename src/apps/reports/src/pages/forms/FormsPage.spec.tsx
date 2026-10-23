@@ -161,4 +161,116 @@ describe('Forms reporting page', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
         await screen.findByText('first@example.com')
     })
+
+    describe('AI classification', () => {
+        const runId = '6f1c2a9e-6b7d-4e8f-9a01-2b3c4d5e6f70'
+        const classifiedReport = {
+            ...report,
+            columns: ['email', 'classification', 'classification_status', 'classification_confidence',
+                'classification_needs_review', 'classification_run_id'],
+            data: [
+                { classification: 'SALES_LEAD',
+                    classification_confidence: '0.91',
+                    classification_needs_review: true,
+                    classification_run_id: runId,
+                    classification_status: 'CLASSIFIED',
+                    email: 'first@example.com',
+                    submission_id: 'one' },
+                { classification: 'NEW_CLASS',
+                    classification_confidence: null,
+                    classification_needs_review: null,
+                    classification_run_id: null,
+                    classification_status: null,
+                    email: 'second@example.com',
+                    submission_id: 'two' },
+            ],
+            labels: {
+                ...report.labels,
+                classification: 'Classification',
+                classification_confidence: 'Confidence',
+                classification_run_id: 'AI run',
+            },
+        }
+
+        beforeEach(() => {
+            (fetchFormSubmissions as jest.Mock).mockResolvedValue(classifiedReport)
+        })
+
+        it('leads each Let’s talk card with a labelled badge, review marker, confidence and run id', async () => {
+            const writeText = jest.fn()
+                .mockResolvedValue(undefined)
+            Object.assign(navigator, { clipboard: { writeText } })
+            render(<FormsPage />)
+            await selectForm()
+            const cards = within(screen.getByRole('region', { name: 'Form submissions' }))
+                .getAllByRole('article')
+            const first = cards[0].querySelector('dl > div:first-child')
+            expect(first?.querySelector('dt')?.textContent)
+                .toBe('Classification')
+            expect(within(cards[0])
+                .getByText('Sales lead'))
+                .toHaveAttribute('data-label', 'SALES_LEAD')
+            expect(within(cards[0])
+                .getByText('Needs review'))
+                .toBeInTheDocument()
+            expect(within(cards[0])
+                .getByText('91%'))
+                .toBeInTheDocument()
+            // The review flag has no separate field.
+            expect(within(cards[0])
+                .queryByText('classification needs review')).not.toBeInTheDocument()
+            expect(within(cards[0])
+                .getByTitle(runId))
+                .toHaveTextContent('6f1c2a9e…')
+            fireEvent.click(within(cards[0])
+                .getByRole('button', { name: `Copy AI run id ${runId}` }))
+            await within(cards[0])
+                .findByText('Copied')
+            expect(writeText)
+                .toHaveBeenCalledWith(runId)
+            // A label the UI doesn't know is shown as-is, without review marker.
+            expect(within(cards[1])
+                .getByText('NEW_CLASS'))
+                .toHaveAttribute('data-label', 'OTHER')
+            expect(within(cards[1])
+                .queryByText('Needs review')).not.toBeInTheDocument()
+        })
+
+        it('filters the table and the filtered CSV by label, and resets the filter for another form', async () => {
+            render(<FormsPage />)
+            await selectForm()
+            fireEvent.change(screen.getByLabelText('Classification'), { target: { value: 'SALES_LEAD' } })
+            await waitFor(() => expect(fetchFormSubmissions)
+                .toHaveBeenLastCalledWith(
+                    'lets_talk',
+                    expect.objectContaining({ classification: 'SALES_LEAD' }),
+                    undefined,
+                ))
+            await screen.findByText('first@example.com')
+            fireEvent.click(screen.getByRole('button', { name: 'Export filtered CSV' }))
+            await waitFor(() => expect(downloadFormSubmissions)
+                .toHaveBeenCalledWith('lets_talk', expect.objectContaining({ classification: 'SALES_LEAD' })))
+            await waitFor(() => expect(screen.getByLabelText('Form'))
+                .toBeEnabled())
+            fireEvent.change(screen.getByLabelText('Form'), { target: { value: '' } })
+            await waitFor(() => expect(screen.queryByLabelText('Classification')).not.toBeInTheDocument())
+        })
+
+        it('renders the badge in tables for other forms, without a separate review column', async () => {
+            (fetchFormSubmissions as jest.Mock).mockResolvedValue({ ...classifiedReport, form: 'other_form' })
+            render(<FormsPage />)
+            await selectForm()
+            expect(within(screen.getByRole('table'))
+                .getByText('Sales lead'))
+                .toBeInTheDocument()
+            expect(screen.queryByRole('columnheader', { name: /needs review/i })).not.toBeInTheDocument()
+        })
+
+        it('offers no classification filter for a form without classification', async () => {
+            (fetchFormSubmissions as jest.Mock).mockResolvedValue(report)
+            render(<FormsPage />)
+            await selectForm()
+            expect(screen.queryByLabelText('Classification')).not.toBeInTheDocument()
+        })
+    })
 })

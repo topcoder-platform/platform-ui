@@ -12,6 +12,16 @@ jest.mock('~/libs/core', () => ({
 describe('Forms reporting service', () => {
     beforeEach(() => jest.clearAllMocks())
 
+    it('sends the classification filter with the dates', async () => {
+        await fetchFormSubmissions('lets_talk', { classification: 'SALES_LEAD', startDate: '2026-09-01' })
+        expect(xhrGetAsync)
+            .toHaveBeenLastCalledWith(
+                'https://api.test/v6/forms/lets_talk/submissions?startDate=2026-09-01'
+                + '&classification=SALES_LEAD&limit=25',
+                expect.anything(),
+            )
+    })
+
     it('follows directory cursors and preserves date filters on a submission page', async () => {
         (xhrGetAsync as jest.Mock).mockResolvedValueOnce({ data: [{ key: 'a', title: 'A' }], nextCursor: 'a' })
             .mockResolvedValueOnce({ data: [{ key: 'b', title: 'B' }], nextCursor: null })

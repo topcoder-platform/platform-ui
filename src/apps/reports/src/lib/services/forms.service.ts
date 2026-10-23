@@ -9,6 +9,8 @@ export interface ReportForm {
 export interface FormDates {
     startDate?: string
     endDate?: string
+    /** AI classification label filter; UNKNOWN also matches unclassified submissions. */
+    classification?: string
 }
 
 export interface FormReport {
@@ -29,14 +31,15 @@ const client = xhrCreateInstance()
 const base = `${EnvironmentConfig.API.V6}/forms`
 
 /**
- * Encodes shared inclusive UTC date filters for table and CSV requests.
- * @param dates Optional calendar date bounds. @returns URL query parameters.
+ * Encodes shared inclusive UTC date and classification filters for table and CSV requests.
+ * @param dates Optional calendar date bounds and classification label. @returns URL query parameters.
  * @throws Does not throw.
  */
 export function formDateParams(dates: FormDates): URLSearchParams {
     const params = new URLSearchParams()
     if (dates.startDate) params.set('startDate', dates.startDate)
     if (dates.endDate) params.set('endDate', dates.endDate)
+    if (dates.classification) params.set('classification', dates.classification)
     return params
 }
 

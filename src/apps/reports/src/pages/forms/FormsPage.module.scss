@@ -59,3 +59,31 @@
     th { background: #f4f4f4; font-weight: 600; }
     td { white-space: pre-wrap; }
 }
+.classification { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.badge, .review {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 20px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+/* Colours keep at least 4.5:1 text contrast. */
+.badge { background: #ececec; color: #2a2a2a; }
+.badge[data-label='JUNK'] { background: #fde8e8; color: #9b1c1c; }
+.badge[data-label='COMMUNITY_OPPORTUNITY'] { background: #e0f5f3; color: #0b5e57; }
+.badge[data-label='COMMUNITY_SKILLS'] { background: #efe7fb; color: #5b2a99; }
+.badge[data-label='COMMUNITY_SUPPORT'] { background: #fdf1dc; color: #8a4b00; }
+.badge[data-label='COMMUNITY_GENERAL'] { background: #e3effc; color: #1a4f8b; }
+.badge[data-label='WIPRO_QUERIES'] { background: #e8e9fb; color: #3a3d9b; }
+.badge[data-label='SALES_LEAD'] { background: #e3f4e6; color: #19612b; }
+.review { background: #fff; color: #8a4b00; border-color: #c7832a; }
+.runId {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    code { font-size: 13px; }
+    .copy { padding: 2px 8px; font-size: 13px; }
+}

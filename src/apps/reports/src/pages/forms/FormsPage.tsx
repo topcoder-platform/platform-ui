@@ -8,13 +8,13 @@ import {
     downloadFormSubmissions,
     fetchFormSubmissions,
     fetchReportForms,
-    formatFormValue,
     FormDates,
     FormReport,
     ReportForm,
 } from '../../lib/services/forms.service'
 import { downloadBlobFile } from '../../lib/services/reports.service'
 
+import FormCell, { CLASSIFICATION_COLUMN, CLASSIFICATION_NAMES, NEEDS_REVIEW_COLUMN } from './FormCell'
 import LetsTalkSubmissions from './LetsTalkSubmissions'
 import styles from './FormsPage.module.scss'
 
@@ -42,6 +42,8 @@ const FormsPage: FC = () => {
     const [retry, setRetry] = useState(0)
     const invalidRange = !!(selection.startDate && selection.endDate && selection.startDate > selection.endDate)
     const page = selection.cursors.length
+    // Only AI-classified forms report a classification; keep the filter while a filtered page loads.
+    const classified = !!report?.columns.includes(CLASSIFICATION_COLUMN) || !!selection.classification
 
     useEffect(() => {
         let active = true
@@ -99,6 +101,9 @@ const FormsPage: FC = () => {
         }
     }
 
+    // The review flag is shown inside the classification badge.
+    const tableColumns = report?.columns.filter(column => column !== NEEDS_REVIEW_COLUMN) ?? []
+
     return (
         <div className={styles.page}>
             <PageTitle>Forms</PageTitle>
@@ -114,7 +119,7 @@ const FormsPage: FC = () => {
                         id='report-form'
                         value={selection.key}
                         disabled={loadingForms || exporting}
-                        onChange={event => updateSelection({ key: event.target.value })}
+                        onChange={event => updateSelection({ classification: '', key: event.target.value })}
                     >
                         <option value=''>Select a form</option>
                         {forms.map(form => (
@@ -149,6 +154,23 @@ const FormsPage: FC = () => {
                 >
                     Clear dates
                 </button>
+                {classified && (
+                    <label htmlFor='forms-classification'>
+                        Classification
+                        <select
+                            id='forms-classification'
+                            value={selection.classification || ''}
+                            disabled={exporting}
+                            onChange={event => updateSelection({ classification: event.target.value })}
+                        >
+                            <option value=''>All</option>
+                            {Object.entries(CLASSIFICATION_NAMES)
+                                .map(([label, name]) => (
+                                    <option key={label} value={label}>{name}</option>
+                                ))}
+                        </select>
+                    </label>
+                )}
             </div>
             {invalidRange && <p role='alert'>Start date must be on or before end date.</p>}
             <div className={styles.actions}>
@@ -185,7 +207,7 @@ const FormsPage: FC = () => {
                             <table>
                                 <thead>
                                     <tr>
-                                        {report.columns.map(column => (
+                                        {tableColumns.map(column => (
                                             <th key={column} scope='col'>
                                                 {report.labels[column] || column.replace(/_/g, ' ')}
                                             </th>
@@ -195,8 +217,8 @@ const FormsPage: FC = () => {
                                 <tbody>
                                     {report.data.map(row => (
                                         <tr key={String(row.submission_id)}>
-                                            {report.columns.map(column => (
-                                                <td key={column}>{formatFormValue(row[column])}</td>
+                                            {tableColumns.map(column => (
+                                                <td key={column}><FormCell column={column} row={row} /></td>
                                             ))}
                                         </tr>
                                     ))}
