@@ -14,6 +14,10 @@ export const NDA_DOCUSIGN_TEMPLATE_ID = getReactEnv<string>(
     '8b101e82-87c0-42c9-8440-d922749c4076',
 )
 
+// The Contact API has not been rolled out to production, so the Accounts email preferences
+// stay hidden there until REACT_APP_CONTACT_API_ENABLED=true is set for the prod build.
+export const CONTACT_API_ENABLED = getReactEnv<boolean>('CONTACT_API_ENABLED', false)
+
 export const VANILLA_FORUM = {
     V2_URL: 'https://vanilla.topcoder.com/api/v2',
 }
