@@ -255,12 +255,17 @@ with inline loading, failure/retry and pending-source states. Refresh reloads al
 sections. Changing Close date / Created date reloads only pipeline data. Source
 requests are aborted on unmount or control changes.
 
-Charts cover the latest six UTC calendar months. Opportunity size, expected
-revenue and pipeline stages include three months back through six months ahead;
-Closed Won remains historical and counts the `Won - SOW Signed` stage, as the
-pipeline's Total WON SOW Signed card does. The API replaces the Salesforce
-reports' saved fiscal-year filter for each dashboard run, so months either side of
-a fiscal-year boundary are not left empty. Charts include expandable monthly data
+All charts cover the current fiscal year's 12 UTC calendar months, April through
+March. `fetchSalesDashboard` sends an inclusive April 1 `startDate` and exclusive
+April 1 `endDate` of the following year to every section, overriding the API's
+rolling defaults for both historical and pipeline charts. For example, October
+2026 and January–March 2027 request April 2026 through March 2027; from April 1,
+2027, requests cover April 2027 through March 2028. The range is calculated on each
+request, including refresh, retry and date-basis changes, without a hardcoded year.
+Pipeline forecasts are bounded to the same fiscal year. Closed Won counts the
+`Won - SOW Signed` stage, as the pipeline's Total WON SOW Signed card does.
+The API replaces the Salesforce reports' saved fiscal-year filter with the
+requested range for each dashboard run. Charts include expandable monthly data
 tables, currency/count units, and gaps for unknown values. Y-axis ticks use compact
 labels such as `$1.5M`. Source notices remain visible above the charts.
 
@@ -277,7 +282,10 @@ account category. A pending notice appears only when reports-api-v6 is pointed a
 another report without column settings. See that repository's `SALES.md` for source
 definitions, settings and API parameters.
 
-Tests: `SalesDashboardsPage.spec.tsx` covers portal scope, gross margin remaining
+Tests: `sales-dashboard.service.spec.ts` covers fiscal-year request bounds across
+all sections, portals and date bases, UTC/year/leap-day boundaries, and rollover
+on subsequent requests. `SalesDashboardsPage.spec.tsx` covers the full April–March
+monthly table, fiscal-year notice, portal scope, gross margin remaining
 hidden and unrequested in both portals, independent failures,
 retry, refresh, date-basis changes, request cancellation, keyboard navigation,
 accessible percentage/missing-value tables and compact axis labels. Reports route/navigation tests cover
