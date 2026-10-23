@@ -2,10 +2,14 @@
 import {
     xhrGetAsync,
     xhrPostAsync,
+    xhrPutAsync,
 } from '~/libs/core'
 
 import {
+    fetchMarathonMatchConfig,
+    fetchMarathonMatchDefaults,
     fetchMarathonMatchTestSubmissionStatus,
+    updateMarathonMatchConfig,
     uploadMarathonMatchTestSubmission,
 } from './marathon-match.service'
 
@@ -151,5 +155,86 @@ describe('marathon-match.service', () => {
             .toHaveBeenCalledWith(
                 'https://example.com/marathon-match/challenge/30000123/test-submission/validation-run-1',
             )
+    })
+
+    it('reads the default scorer memory limit from the defaults response', async () => {
+        const mockedGetAsync = xhrGetAsync as jest.Mock
+
+        mockedGetAsync.mockResolvedValue({
+            compileTimeout: 120000,
+            memoryLimit: 2048,
+            reviewScorecardId: 'scorecard-1',
+            taskDefinitionName: 'mm-ecs-runner',
+            taskDefinitionVersion: '7',
+            testTimeout: 90000,
+        })
+
+        await expect(fetchMarathonMatchDefaults())
+            .resolves
+            .toMatchObject({
+                memoryLimit: 2048,
+            })
+    })
+
+    it('normalizes a saved config without a memory limit to null', async () => {
+        const mockedGetAsync = xhrGetAsync as jest.Mock
+
+        mockedGetAsync.mockResolvedValue({
+            active: true,
+            challengeId: '30000123',
+            compileTimeout: 120000,
+            createdAt: '2026-06-17T01:02:03.000Z',
+            id: 'config-1',
+            name: 'Marathon Match Scorer',
+            relativeScoringEnabled: true,
+            reviewScorecardId: 'scorecard-1',
+            scoreDirection: 'MAXIMIZE',
+            taskDefinitionName: 'mm-ecs-runner',
+            taskDefinitionVersion: '7',
+            testerId: 'tester-1',
+            testTimeout: 90000,
+            updatedAt: '2026-06-17T01:02:03.000Z',
+        })
+
+        const config = await fetchMarathonMatchConfig('30000123')
+
+        expect(config?.memoryLimit)
+            .toBeNull()
+    })
+
+    it('sends the memory limit when updating a scorer config', async () => {
+        const mockedPutAsync = xhrPutAsync as jest.Mock
+
+        mockedPutAsync.mockResolvedValue({
+            active: true,
+            challengeId: '30000123',
+            compileTimeout: 120000,
+            createdAt: '2026-06-17T01:02:03.000Z',
+            id: 'config-1',
+            memoryLimit: 4096,
+            name: 'Marathon Match Scorer',
+            relativeScoringEnabled: true,
+            reviewScorecardId: 'scorecard-1',
+            scoreDirection: 'MAXIMIZE',
+            taskDefinitionName: 'mm-ecs-runner',
+            taskDefinitionVersion: '7',
+            testerId: 'tester-1',
+            testTimeout: 90000,
+            updatedAt: '2026-06-17T01:02:03.000Z',
+        })
+
+        const config = await updateMarathonMatchConfig('30000123', {
+            memoryLimit: 4096,
+        })
+
+        expect(mockedPutAsync)
+            .toHaveBeenCalledWith(
+                'https://example.com/marathon-match/challenge/30000123',
+                expect.objectContaining({
+                    memoryLimit: 4096,
+                }),
+            )
+        expect(config.memoryLimit)
+            .toBe(4096)
     })
 })

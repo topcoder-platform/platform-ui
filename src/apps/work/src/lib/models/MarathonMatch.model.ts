@@ -19,11 +19,13 @@ export type MarathonMatchCompilationStatus = 'PENDING' | 'SUCCESS' | 'FAILED'
 /**
  * Configurable default values for creating a marathon match scorer config.
  * Used to pre-populate the scorer editor before a config exists, including runner task definition defaults.
+ * `memoryLimit` is the default scorer task memory in MB and is also used when a saved config has none.
  */
 export interface MarathonMatchDefaults {
     reviewScorecardId: string
     testTimeout: number
     compileTimeout: number
+    memoryLimit?: number
     taskDefinitionName: string
     taskDefinitionVersion: string
 }
@@ -43,6 +45,7 @@ export interface MarathonMatchPhaseConfig {
 /**
  * Persisted marathon match scorer configuration for a challenge.
  * Used by the scorer editor after loading or saving config state.
+ * `memoryLimit` is the scorer task memory in MB, or `null` when the task definition memory is used.
  */
 export interface MarathonMatchConfig {
     id: string
@@ -55,6 +58,7 @@ export interface MarathonMatchConfig {
     testerId: string
     testTimeout: number
     compileTimeout: number
+    memoryLimit: number | null
     taskDefinitionName: string
     taskDefinitionVersion: string
     example: MarathonMatchPhaseConfig | null
@@ -214,6 +218,7 @@ export interface CreateMarathonMatchConfigInput {
     testerId: string
     testTimeout: number
     compileTimeout: number
+    memoryLimit?: number
     taskDefinitionName: string
     taskDefinitionVersion: string
     example?: MarathonMatchPhaseConfig
@@ -235,6 +240,7 @@ export interface UpdateMarathonMatchConfigInput {
     testerId?: string
     testTimeout?: number
     compileTimeout?: number
+    memoryLimit?: number
     taskDefinitionName?: string
     taskDefinitionVersion?: string
     example?: MarathonMatchPhaseConfig

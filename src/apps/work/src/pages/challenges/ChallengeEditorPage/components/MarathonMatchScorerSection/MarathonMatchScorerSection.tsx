@@ -50,6 +50,7 @@ import styles from './MarathonMatchScorerSection.module.scss'
 const DEFAULT_SCORER_NAME = 'Marathon Match Scorer'
 const DEFAULT_SCORE_DIRECTION = 'MAXIMIZE'
 const POLL_INTERVAL_MS = 5000
+const MIN_MEMORY_LIMIT_MB = 512
 const TEST_SUBMISSION_TERMINAL_STATUSES = new Set(['SUCCESS', 'FAILED'])
 const PHASE_LABELS = {
     example: 'Example',
@@ -98,6 +99,7 @@ interface NumericInputState {
     compileTimeout: string
     exampleNumberOfTests: string
     exampleStartSeed: string
+    memoryLimit: string
     provisionalNumberOfTests: string
     provisionalStartSeed: string
     systemNumberOfTests: string
@@ -114,6 +116,7 @@ interface PhaseValidationErrors {
 interface ValidationErrors {
     compileTimeout?: string
     example: PhaseValidationErrors
+    memoryLimit?: string
     reviewScorecardId?: string
     taskDefinitionName?: string
     taskDefinitionVersion?: string
@@ -540,6 +543,7 @@ function buildDefaultDraft(
             'example',
             getPreferredPhaseId(phases, PHASE_DEFAULTS.example.phaseName),
         ),
+        memoryLimit: defaults.memoryLimit,
         name: DEFAULT_SCORER_NAME,
         provisional: createPhaseDraft(
             'provisional',
@@ -559,13 +563,23 @@ function buildDefaultDraft(
     }
 }
 
+/**
+ * Maps a saved scorer config into the editable draft.
+ * @param config Saved scorer config from the marathon match API.
+ * @param defaults API defaults used for fields the saved config leaves unset.
+ * @returns Draft values for the scorer editor. A config without a `memoryLimit` shows the
+ * default scorer task memory, which is the value every marathon match currently runs with.
+ * Used when the scorer section loads or saves a config.
+ */
 function mapConfigToDraft(
     config: MarathonMatchConfig,
+    defaults?: MarathonMatchDefaults,
 ): UpdateMarathonMatchConfigInput {
     return {
         active: config.active,
         compileTimeout: config.compileTimeout,
         example: config.example || undefined,
+        memoryLimit: config.memoryLimit ?? defaults?.memoryLimit,
         name: config.name,
         provisional: config.provisional || undefined,
         relativeScoringEnabled: config.relativeScoringEnabled,
@@ -591,6 +605,9 @@ function buildNumericInputState(
             : '',
         exampleStartSeed: Number.isFinite(Number(draft.example?.startSeed))
             ? String(draft.example?.startSeed)
+            : '',
+        memoryLimit: Number.isFinite(Number(draft.memoryLimit))
+            ? String(draft.memoryLimit)
             : '',
         provisionalNumberOfTests: Number.isFinite(Number(draft.provisional?.numberOfTests))
             ? String(draft.provisional?.numberOfTests)
@@ -653,6 +670,11 @@ function buildValidationErrors(
                 ? 'Compile timeout must be at least 1.'
                 : undefined,
         example: buildPhaseValidationErrors('Example', draft.example),
+        memoryLimit: !Number.isSafeInteger(draft.memoryLimit)
+            ? 'Memory limit must be an integer.'
+            : Number(draft.memoryLimit) < MIN_MEMORY_LIMIT_MB
+                ? `Memory limit must be at least ${MIN_MEMORY_LIMIT_MB} MB.`
+                : undefined,
         provisional: buildPhaseValidationErrors('Provisional', draft.provisional),
         reviewScorecardId: draft.reviewScorecardId?.trim()
             ? undefined
@@ -681,6 +703,7 @@ function getValidationMessages(errors: ValidationErrors): string[] {
         errors.testerId,
         errors.testTimeout,
         errors.compileTimeout,
+        errors.memoryLimit,
         errors.taskDefinitionName,
         errors.taskDefinitionVersion,
         errors.example.phaseId,
@@ -724,6 +747,9 @@ function serializeDraftForComparison(
             ? Number(draft?.compileTimeout)
             : undefined,
         example: normalizePhaseForComparison(draft?.example),
+        memoryLimit: Number.isFinite(Number(draft?.memoryLimit))
+            ? Number(draft?.memoryLimit)
+            : undefined,
         name: draft?.name?.trim() || DEFAULT_SCORER_NAME,
         provisional: normalizePhaseForComparison(draft?.provisional),
         relativeScoringEnabled: draft?.relativeScoringEnabled !== false,
@@ -771,6 +797,7 @@ function buildSaveInput(
         active: draft.active !== false,
         compileTimeout: Number(draft.compileTimeout),
         example: draft.example,
+        memoryLimit: Number(draft.memoryLimit),
         name: draft.name?.trim() || DEFAULT_SCORER_NAME,
         provisional: draft.provisional,
         relativeScoringEnabled: draft.relativeScoringEnabled !== false,
@@ -867,6 +894,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
         compileTimeout: '',
         exampleNumberOfTests: '',
         exampleStartSeed: '',
+        memoryLimit: '',
         provisionalNumberOfTests: '',
         provisionalStartSeed: '',
         systemNumberOfTests: '',
@@ -1137,7 +1165,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
     )
 
     const handleNumericFieldChange = useCallback(
-        (field: 'compileTimeout' | 'testTimeout') => (
+        (field: 'compileTimeout' | 'memoryLimit' | 'testTimeout') => (
             event: ChangeEvent<HTMLInputElement>,
         ): void => {
             const nextValue = event.target.value
@@ -1264,7 +1292,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                 const savedConfig = config
                     ? await updateMarathonMatchConfig(challengeId, payload)
                     : await createMarathonMatchConfig(challengeId, payload)
-                const nextDraft = mapConfigToDraft(savedConfig)
+                const nextDraft = mapConfigToDraft(savedConfig, defaults)
 
                 setConfig(savedConfig)
                 setDraft(nextDraft)
@@ -1291,6 +1319,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
         },
         [
             config,
+            defaults,
             draft,
             hasValidationError,
             hasFailedTester,
@@ -1394,7 +1423,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                 }
 
                 const initialDraft = loadedConfig
-                    ? mapConfigToDraft(loadedConfig)
+                    ? mapConfigToDraft(loadedConfig, loadedDefaults)
                     : buildDefaultDraft(loadedDefaults, phaseListRef.current)
 
                 setDefaults(loadedDefaults)
@@ -2105,6 +2134,19 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                         />
                         {validationErrors.compileTimeout
                             ? <small className={styles.fieldError}>{validationErrors.compileTimeout}</small>
+                            : undefined}
+                    </label>
+
+                    <label className={styles.fieldGroup}>
+                        <span>Memory Limit (MB)</span>
+                        <input
+                            min={MIN_MEMORY_LIMIT_MB}
+                            onChange={handleNumericFieldChange('memoryLimit')}
+                            type='number'
+                            value={numericInputs.memoryLimit}
+                        />
+                        {validationErrors.memoryLimit
+                            ? <small className={styles.fieldError}>{validationErrors.memoryLimit}</small>
                             : undefined}
                     </label>
 
