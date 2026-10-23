@@ -21,7 +21,9 @@ export interface SalesDashboardResponse {
 }
 
 /**
- * Loads an independent monthly section using the Reports API and current user's token.
+ * Loads an independent monthly section for the current April–March fiscal year in UTC.
+ * Explicit inclusive/exclusive bounds override the Reports API's rolling month defaults
+ * for every chart, including pipeline forecasts. The fiscal year is resolved on each request.
  * @param section Source section to load.
  * @param portal Server-side payment scope; Sales excludes internal and TaaS payments before aggregation.
  * @param dateBasis Date field for pipeline monthly grouping.
@@ -35,7 +37,16 @@ export function fetchSalesDashboard(
     dateBasis: 'close' | 'created',
     signal: AbortSignal,
 ): Promise<SalesDashboardResponse> {
-    const params = new URLSearchParams({ dateBasis, portal })
+    const now = new Date()
+    const fiscalYear = now.getUTCFullYear() - (now.getUTCMonth() < 3 ? 1 : 0)
+    const params = new URLSearchParams({
+        dateBasis,
+        endDate: new Date(Date.UTC(fiscalYear + 1, 3, 1))
+            .toISOString(),
+        portal,
+        startDate: new Date(Date.UTC(fiscalYear, 3, 1))
+            .toISOString(),
+    })
     return xhrGetAsync<SalesDashboardResponse>(
         `${EnvironmentConfig.REPORTS_API}/sales-dashboard/${section}?${params.toString()}`,
         undefined,

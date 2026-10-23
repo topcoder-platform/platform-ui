@@ -105,9 +105,10 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
                 <Button secondary onClick={refresh}>Refresh data</Button>
             </header>
             <p className={styles.notice}>
-                Latest six calendar months in UTC, including the current month in progress.
+                Current fiscal year: April through March in UTC, including the current month in progress.
                 {' Headlines compare the current month with the full previous month.'}
-                {' Opportunity size, expected revenue and pipeline stages show three months back to six months ahead.'}
+                {' All charts cover the same 12 months.'}
+                {' Pipeline charts include expected closes within the fiscal year.'}
             </p>
             {props.portal === 'sales' && <p>Member payments include customer work only.</p>}
             <div className={styles.controls} aria-label='Pipeline date basis' role='group'>
