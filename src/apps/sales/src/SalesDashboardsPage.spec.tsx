@@ -50,6 +50,8 @@ it.each([undefined, 'reports', 'sales'] as Array<SalesDashboardPortal | undefine
             .toEqual(['pipeline', 'revenue', 'payments', 'talent'].map(section => [section, portal ?? 'reports']))
         expect(screen.queryByRole('heading', { name: /gross margin/i }))
             .not.toBeInTheDocument()
+        expect(screen.getByText(/Current fiscal year: April through March in UTC/))
+            .toHaveTextContent('All charts cover the same 12 months.')
     },
 )
 
@@ -133,6 +135,27 @@ it('shows percentage units and unknown values in the accessible monthly table', 
     expect(within(table)
         .getByText('Sep 2026'))
         .toBeInTheDocument()
+})
+
+it('renders every fiscal-year month, including April data and the following March', () => {
+    const months = Array.from({ length: 12 }, (_, index) => ({
+        month: new Date(Date.UTC(2026, index + 3, 1))
+            .toISOString()
+            .slice(0, 10),
+        values: { amount: index === 0 ? 123.45 : 0 },
+    }))
+    render(<SalesDashboardChart chart={{ ...response.charts[0], months }} />)
+    const table = screen.getByRole('table', { hidden: true })
+    const rows = within(table)
+        .getAllByRole('row', { hidden: true })
+    expect(rows)
+        .toHaveLength(13)
+    expect(rows[1])
+        .toHaveTextContent('Apr 2026$123.45')
+    expect(rows[10])
+        .toHaveTextContent('Jan 2027')
+    expect(rows[12])
+        .toHaveTextContent('Mar 2027')
 })
 
 it.each([
