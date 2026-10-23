@@ -1,5 +1,6 @@
 /* eslint-disable no-use-before-define, ordered-imports/ordered-imports, react/jsx-no-bind */
-import { ChangeEvent, FC, FormEvent, Fragment, KeyboardEvent, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, FC, FormEvent, Fragment, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'react-toastify'
 import useSWR, { SWRResponse } from 'swr'
 
 import { BaseModal, ConfirmModal, IconOutline } from '~/libs/ui'
@@ -35,6 +36,7 @@ import {
 
 import { OpportunityTabLoading } from './OpportunityTabLoading'
 import { challengeForumUrl, memberProfileUrl } from '../utils'
+import { challengeForumLink } from '../utils/challenge-detail-route.utils'
 import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 import { ForumMarkdown } from './ForumMarkdown'
 import { ForumMentionTextarea } from './ForumMentionTextarea'
@@ -51,6 +53,12 @@ interface ChallengeForumProps {
     canDeleteTopics?: boolean
     challenge: ChallengeOpportunity
     memberId?: string
+    /** Receives the open topic, or undefined for the topic list, so the page URL can link to it. */
+    onTopicChange?: (topicId?: string) => void
+    /** Post from a shared link, scrolled to once `topicId` loads. */
+    postId?: string
+    /** Topic from a shared link, opened on first render. */
+    topicId?: string
 }
 
 interface FlatForumPost {
@@ -539,16 +547,18 @@ const DiscussionInfo: FC<{
  * Renders one topic summary card with watch and owner mutation actions.
  *
  * The upper area of the card — title, byline, excerpt, and the metrics rail —
- * opens the topic. The footer row is reserved for the Edit, Delete, and Watch
- * actions, and member links stay clickable throughout.
+ * opens the topic. The footer row is reserved for the Edit, Delete, Watch, and
+ * optional Copy link actions, and member links stay clickable throughout.
  *
  * @param props topic data, current member, projections, and mutation callbacks shared by challenge/public lists.
+ * `onCopyLink` adds the Copy link action; lists without shareable topic links omit it.
  * @returns Figma-aligned topic card.
  * @throws Does not throw; callbacks own API error handling.
  */
 export const ForumTopicCard: FC<{
     canDelete: boolean
     memberId: string
+    onCopyLink?: (topic: ForumTopicSummary) => void
     onDelete: (topic: ForumTopicSummary) => void
     onEdit: (topic: ForumTopicSummary) => void
     onSelect: (topicId: string) => void
@@ -644,6 +654,12 @@ export const ForumTopicCard: FC<{
                             <ForumIcon name={props.topic.watching ? 'watched' : 'watch'} />
                             {props.topic.watching ? 'Watched' : 'Watch'}
                         </button>
+                        {props.onCopyLink && (
+                            <button onClick={() => props.onCopyLink?.(props.topic)} type='button'>
+                                <ForumIcon name='copyLink' />
+                                Copy link
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -1220,7 +1236,11 @@ function quoteForumPost(post: ForumPost): string {
 /**
  * Renders one detail post with author context and in-page communication actions.
  *
- * @param props post thread context, current member, and mutation callbacks.
+ * A `linked` post (the target of a copied message link) is highlighted and
+ * scrolled into view when it first renders.
+ *
+ * @param props post thread context, current member, mutation callbacks, and the optional
+ * `linked` flag and `onCopyLink` action.
  * @returns Figma-aligned post card.
  * @throws Does not throw; mutation callbacks own API error handling.
  */
@@ -1228,7 +1248,9 @@ const ForumPostCard: FC<{
     canDelete: boolean
     detail: ForumTopicDetail
     item: FlatForumPost
+    linked?: boolean
     memberId: string
+    onCopyLink?: (post: ForumPost) => void
     onDelete: (post: ForumPost) => void
     onEdit: (post: ForumPost) => void
     onQuote: (post: ForumPost) => void
@@ -1242,12 +1264,20 @@ const ForumPostCard: FC<{
 }> = props => {
     const post = props.item.post
     const owner = post.authorMemberId === props.memberId
-    const postClass = props.item.depth > 0 ? styles.replyPost : styles.post
+    const articleRef = useRef<HTMLElement>(null)
+    const depthClass = props.item.depth > 0 ? styles.replyPost : styles.post
+    const postClass = props.linked ? `${depthClass} ${styles.linkedPost}` : depthClass
     // The divider separates reactions from the actions after it, so it is omitted when none render.
     const hasPostActions = !!props.onWatch
+        || !!props.onCopyLink
         || (!props.detail.topic.locked && (props.canReply !== false || owner || props.canDelete))
+
+    useEffect(() => {
+        if (props.linked) articleRef.current?.scrollIntoView?.({ block: 'start' })
+    }, [props.linked])
+
     return (
-        <article className={postClass}>
+        <article className={postClass} ref={articleRef}>
             <header>
                 {post.id === props.detail.topic.latestActivity?.postId && props.detail.topic.unread && (
                     <span className={styles.newPost}>New post</span>
@@ -1369,6 +1399,12 @@ const ForumPostCard: FC<{
                             {props.detail.topic.watching ? 'Watched' : 'Watch'}
                         </button>
                     )}
+                    {props.onCopyLink && (
+                        <button onClick={() => props.onCopyLink?.(post)} type='button'>
+                            <ForumIcon name='copyLink' />
+                            Copy link
+                        </button>
+                    )}
                 </footer>
             )}
         </article>
@@ -1382,6 +1418,8 @@ const ForumPostCard: FC<{
  * @param props topic detail, optional public presentation/sign-in callback, current member, projections,
  * navigation, and refresh callback.
  * Empty member IDs render read-only posts and send interaction attempts to sign-in.
+ * `linkedPostId` highlights and scrolls to the post from a copied message link, and
+ * `onCopyPostLink` adds a Copy link action to every post.
  * @returns topic information, post cards, and comment workflow.
  * @throws Does not throw; API failures render beside the affected workflow.
  */
@@ -1389,6 +1427,8 @@ export const ForumTopicView: FC<{
     canDeletePosts: boolean
     /** Public pages provide their own title/sidebar and keep guests read-only. */
     contentOnly?: boolean
+    linkedPostId?: string
+    onCopyPostLink?: (post: ForumPost) => void
     onSignIn?: () => void
     onWatch?: () => void
     detail: ForumTopicDetail
@@ -1611,7 +1651,9 @@ export const ForumTopicView: FC<{
                             detail={props.detail}
                             item={item}
                             key={item.post.id}
+                            linked={item.post.id === props.linkedPostId}
                             memberId={props.memberId}
+                            onCopyLink={props.onCopyPostLink}
                             onDelete={removePost}
                             onEdit={editPost}
                             onQuote={quote}
@@ -1732,8 +1774,12 @@ function resetForumScroll(): void {
  * topic create/edit/delete, nested replies, post edit/delete, reaction toggles,
  * topic and challenge-wide watch preferences, and read state. A legacy link is
  * retained only as recovery when the v6 API cannot be reached or the member is signed out.
+ * Topics and posts offer Copy link actions. A copied link reopens the topic through
+ * `topicId` and scrolls to the post through `postId`, and `onTopicChange` lets the
+ * page keep its URL in step with the open topic.
  *
- * @param props challenge context, optional member ID, and administrator announcement/delete access.
+ * @param props challenge context, optional member ID, administrator announcement/delete access,
+ * and the optional shared-link topic, post, and topic-change callback.
  * @returns embedded topic list, creation form, detail discussion, or recovery state.
  * @throws Does not throw; API failures render stable, actionable UI states.
  */
@@ -1741,13 +1787,14 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
     const externalUrl = challengeForumUrl(props.challenge)
     const [creatingTopic, setCreatingTopic] = useState(false)
     const [editingTopicDetail, setEditingTopicDetail] = useState<ForumTopicDetail>()
+    const [linkedPostId, setLinkedPostId] = useState<string | undefined>(props.postId)
     const [mutationError, setMutationError] = useState<string>()
     const [page, setPage] = useState(1)
     const [pendingAction, setPendingAction] = useState<string>()
     const [perPage, setPerPage] = useState(10)
     const [scope, setScope] = useState<ForumScope>('all')
     const [search, setSearch] = useState('')
-    const [selectedTopicId, setSelectedTopicId] = useState<string>()
+    const [selectedTopicId, setSelectedTopicId] = useState<string | undefined>(props.topicId)
     const [sort, setSort] = useState<ForumSort>('recent')
     const [topicToDelete, setTopicToDelete] = useState<ForumTopicSummary>()
     const response: SWRResponse<ForumTopicCollection, Error> = useSWR(
@@ -1837,12 +1884,61 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         [profileResponse.data],
     )
 
+    // A topic opened from a shared link skips `openTopic`, so it is marked read here once.
+    // The link's topic is frozen because the page reports later selections back as `topicId`.
+    const [linkedTopicId] = useState(props.topicId)
+    const mutateTopics = response.mutate
+    useEffect(() => {
+        if (!props.memberId || !linkedTopicId) return
+        markForumTopicRead(linkedTopicId)
+            .then(() => mutateTopics())
+            .catch(() => undefined)
+    }, [linkedTopicId, mutateTopics, props.memberId])
+
     /** Revalidates list and selected detail after a successful write. */
     const refreshForum = async (): Promise<void> => {
         await Promise.all([
             response.mutate(),
             selectedTopicId ? detailResponse.mutate() : Promise.resolve(),
         ])
+    }
+
+    /**
+     * Shows a topic, or the topic list, and reports the change to the page.
+     *
+     * Any shared-link post highlight is cleared, because it only applies to the
+     * topic that the link opened.
+     *
+     * @param topicId topic to show, or undefined for the topic list.
+     * @returns void after updating navigation state.
+     * @throws Does not throw.
+     */
+    const selectTopic = (topicId?: string): void => {
+        setSelectedTopicId(topicId)
+        setLinkedPostId(undefined)
+        props.onTopicChange?.(topicId)
+    }
+
+    /**
+     * Copies a shareable link to a topic, or to one of its posts, for the current page.
+     *
+     * @param topicId topic that the link opens.
+     * @param postId optional post that the link scrolls to.
+     * @returns promise settled after clipboard feedback is displayed.
+     * @throws Does not throw; unavailable or rejected clipboard access is reported with a toast.
+     */
+    const copyForumLink = async (topicId: string, postId?: string): Promise<void> => {
+        if (!navigator.clipboard) {
+            toast.error('Clipboard access is unavailable in this browser.')
+            return
+        }
+
+        try {
+            await navigator.clipboard.writeText(challengeForumLink(window.location.href, topicId, postId))
+            toast.success(postId ? 'Message link copied.' : 'Topic link copied.')
+        } catch {
+            toast.error('Unable to copy the link.')
+        }
     }
 
     /**
@@ -1854,7 +1950,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
      */
     const openTopic = (topicId: string): void => {
         setCreatingTopic(false)
-        setSelectedTopicId(topicId)
+        selectTopic(topicId)
         setMutationError(undefined)
         resetForumScroll()
         markForumTopicRead(topicId)
@@ -1864,7 +1960,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
 
     /** Closes the open discussion and returns the member to the topic list. */
     const closeTopic = (): void => {
-        setSelectedTopicId(undefined)
+        selectTopic(undefined)
         resetForumScroll()
     }
 
@@ -1892,7 +1988,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
             })
             await response.mutate()
             setCreatingTopic(false)
-            setSelectedTopicId(created.topic.id)
+            selectTopic(created.topic.id)
             resetForumScroll()
             return true
         } catch (error) {
@@ -1939,7 +2035,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         setMutationError(undefined)
         try {
             await deleteForumTopic(topicToDelete.id)
-            if (selectedTopicId === topicToDelete.id) setSelectedTopicId(undefined)
+            if (selectedTopicId === topicToDelete.id) selectTopic(undefined)
             await response.mutate()
             setTopicToDelete(undefined)
         } catch (error) {
@@ -2045,8 +2141,10 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
             <ForumTopicView
                 canDeletePosts={!!props.canDeleteTopics}
                 detail={detailResponse.data}
+                linkedPostId={linkedPostId}
                 memberId={props.memberId}
                 onBack={closeTopic}
+                onCopyPostLink={post => copyForumLink(post.topicId, post.id)}
                 onChanged={refreshForum}
                 profilesByMemberId={profilesByMemberId}
             />
@@ -2128,6 +2226,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                         canDelete={!!props.canDeleteTopics}
                         key={topic.id}
                         memberId={props.memberId as string}
+                        onCopyLink={item => copyForumLink(item.id)}
                         onDelete={removeTopic}
                         onEdit={editTopic}
                         onSelect={openTopic}

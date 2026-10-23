@@ -1,6 +1,8 @@
 import {
     challengeDetailPath,
     challengeDetailTabFromSearch,
+    challengeForumLink,
+    challengeForumLinkTargetFromSearch,
 } from './challenge-detail-route.utils'
 
 describe('challenge detail routes', () => {
@@ -24,5 +26,24 @@ describe('challenge detail routes', () => {
             .toBeUndefined()
         expect(challengeDetailTabFromSearch(new URLSearchParams('source=list')))
             .toBeUndefined()
+    })
+
+    it('builds shareable forum topic and message links from the current challenge page', () => {
+        const pageUrl = 'https://www.topcoder-dev.com/opportunities/challenge/challenge-id'
+        expect(challengeForumLink(`${pageUrl}?source=listing&tab=registrants#challenge`, 'topic-1'))
+            .toBe(`${pageUrl}?tab=forum&topicId=topic-1`)
+        expect(challengeForumLink('https://topgear.example/challenge/challenge-id', 'topic-1', 'post-2'))
+            .toBe('https://topgear.example/challenge/challenge-id?tab=forum&topicId=topic-1&postId=post-2')
+    })
+
+    it('reads a shared forum topic and post, ignoring blank values and posts without a topic', () => {
+        expect(challengeForumLinkTargetFromSearch(new URLSearchParams('tab=forum&topicId=topic-1&postId=post-2')))
+            .toEqual({ postId: 'post-2', topicId: 'topic-1' })
+        expect(challengeForumLinkTargetFromSearch(
+            new URLSearchParams('tab=forum&topicId=%20topic-1%20&postId=%20'),
+        ))
+            .toEqual({ postId: undefined, topicId: 'topic-1' })
+        expect(challengeForumLinkTargetFromSearch(new URLSearchParams('tab=forum&postId=post-2')))
+            .toEqual({ postId: undefined, topicId: undefined })
     })
 })
