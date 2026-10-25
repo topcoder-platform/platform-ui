@@ -11,6 +11,7 @@ import {
     displayedColumns,
     expectedRevenueTotal,
     formatSummaryAmount,
+    pipelineTotal,
     stageBreakdown,
     withAmountRange,
     withDateRange,
@@ -299,6 +300,38 @@ describe('Sales summary cards and stage breakdown', () => {
             recordCount: 16,
         }
     }
+
+    it('excludes signed bookings from both pipeline totals using the ticket example', () => {
+        const won = amount('AMOUNT', 'Amount', 3685863)
+        expect(pipelineTotal(amount('AMOUNT', 'Amount', 16974083), won)?.total)
+            .toBe(13288220)
+        expect(pipelineTotal(amount('EXP_AMOUNT', 'Expected Revenue', 6724083), won)?.total)
+            .toBe(3038220)
+        expect(pipelineTotal(undefined, won))
+            .toBeUndefined()
+        expect(pipelineTotal(won, undefined))
+            .toBeUndefined()
+        expect(pipelineTotal({ ...won, currencyCode: 'EUR' }, won))
+            .toBeUndefined()
+    })
+
+    it('shows zero won bookings for a complete breakdown with no wins, retaining the pipeline totals', () => {
+        const data = summary()
+        data.groups[0].buckets = data.groups[0].buckets.filter(bucket => !bucket.label.startsWith('Won'))
+        data.groups[0].otherBuckets = 0
+        const total = amountTotal(data.amounts)
+        const won = wonSowSignedTotal(stageBreakdown(data), total)
+        expect(won?.total)
+            .toBe(0)
+        expect(pipelineTotal(total, won)?.total)
+            .toBe(total?.total)
+        data.groups[0].otherBuckets = 1
+        expect(wonSowSignedTotal(stageBreakdown(data), total))
+            .toBeUndefined()
+        data.groups[0] = { ...data.groups[0], columnId: 'CATEGORY', label: 'Deal Category', otherBuckets: 0 }
+        expect(wonSowSignedTotal(stageBreakdown(data), total))
+            .toBeUndefined()
+    })
 
     it('reads the Amount and Expected Revenue totals behind the cards', () => {
         expect(amountTotal(summary().amounts)?.total)
