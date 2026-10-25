@@ -47,7 +47,29 @@ without a matching project still displays its details, with no Work link.
 Links use the active environment's Work host. Deploy the Billing Accounts API
 `opportunity` filter, then the Projects API response expansion, before the UI.
 
-## Multiple values and amount filters (PM-6639)
+## Pipeline filters and bookings (PM-6660)
+
+Below the date range, **Offering Type**, **Deal Category** and **Customer Type**
+are multi-select dropdowns. Each starts at **ALL**; select ALL again or remove
+all selections to reset that dropdown. Choices within a dropdown match with OR;
+the three dropdowns combine with AND and with search, dates and numeric ranges.
+Selections update the summary cards, stage breakdown and all matching records
+before pagination. They reset the current page and persist through refresh,
+metadata sync, date clearing and the report's Clear action.
+
+- Offering Type: Flexible Talent, AI Training, Crowd-Powered Outcomes,
+  Crowd-Powered Innovation.
+- Deal Category: Topcoder-Direct, Wipro-Direct, Wipro-Consumption, Wipro-Internal.
+- Customer Type: New Customer, New Project to Existing Customer,
+  Extension to Existing Project, Others.
+
+The UI sends repeated `offeringType`, `dealCategory` and `customerType` parameters.
+The Reports API resolves these against Engagement Offering Type, Deal Category
+and New Customer, or Follow-on Business? respectively; hyphen/space variants
+such as Wipro-Direct / Wipro Direct match. Deploy the companion PM-6660
+Reports API change before this UI, including support for percent numeric ranges.
+
+## Multiple values and numeric filters (PM-6639, PM-6660)
 
 Select multiple stage tiles to show opportunities in any selected stage. Clicking
 a selected tile removes only that stage; **Clear stages** removes all selections.
@@ -55,13 +77,17 @@ The summary cards retain the existing overview behavior. For other report fields
 use **Add OR value** beside **Contains** (up to 25 values); empty inputs are ignored.
 Delete an input's text to stop matching that value. Commas remain literal text.
 
-Choose an **Amount field** and enter **Greater than**, **Less than**, or both.
+Choose an **Amount or Probability Filter** field and enter **Greater than**,
+**Less than**, or both.
 For example, Amount greater than `100000` filters amounts strictly above 100,000.
 Both bounds are exclusive, support decimals and zero, and compare raw amounts in
-the selected column's units. The lower bound must be less than the upper bound.
+the selected column's units. Probability uses percentage points: Greater than
+`60` and Less than `90` matches probabilities strictly between 60% and 90%.
+The lower bound must be less than the upper bound.
 Clear both bounds to remove the range. These controls debounce like search and
 apply immediately on Enter. **Clear** resets search, column values, amounts and
-sorting while preserving the independent date range and selected stages.
+sorting while preserving the independent date range, category dropdowns and
+selected stages.
 
 The Reports API applies OR values and amount ranges to the full received snapshot
 before pagination, combining independent filters with AND. Amounts also narrow
@@ -76,24 +102,28 @@ The page reads as an executive dashboard rather than one long column:
 
 1. Page title and refresh controls.
 2. Four summary statistic cards, left to right.
-3. A two-column row: the stage breakdown on the left, the date range filter on
-   the right, each about half the width. Below 1100px they stack.
+3. A two-column row: the stage breakdown on the left, the date range and category
+   filters on the right, each about half the width. Below 1100px they stack.
 4. The opportunity table.
 
-## Summary statistic cards (PM-6392)
+## Summary statistic cards (PM-6392, PM-6660)
 
-The four cards report **Total Opportunities**, **Total Amount**, **Total
-Expected Revenue** and **Total WON SOW Signed**, in that fixed order. They read
-the API's snapshot-wide `summary`, so they describe every record the current
-search, column filter and date range match, not the visible page.
+The four cards report **Total Opportunities**, **Total Bookings Won**, **Total
+Bookings in Pipeline** and **Total Expected Bookings in Pipeline**, in that order.
+They read the API's snapshot-wide `summary`, so they describe every record the
+current search, column/category filters, numeric and date ranges match.
 
-Total Amount and Total Expected Revenue resolve their column by label, accepting
-the converted variant so a report that provides only `Amount (converted)` still
-fills the card with the single-currency figure `displayedAmounts` prefers. Total
-Amount falls back to the report's first non-converted total if no column is
-named Amount. Total WON SOW Signed is the Amount total of the `Won - SOW Signed`
-stage taken from the breakdown. A card whose column the report does not provide
-shows an em dash rather than disappearing, so the row stays four wide.
+Total Bookings Won is the Amount total of `Won - SOW Signed`. Total Bookings in
+Pipeline subtracts that signed amount from the snapshot Amount; Total Expected
+Bookings in Pipeline subtracts the same signed amount from Expected Revenue
+(displayed as Expected Amount). For example, 16,974,083 total and 6,724,083
+expected, with 3,685,863 signed, produce 13,288,220 and 3,038,220 in pipeline.
+
+Totals resolve by label, preferring converted amounts when available. Amount
+falls back to the first available amount column. Missing totals or incompatible
+currencies display an em dash. A complete stage breakdown without wins displays
+zero won bookings and leaves both pipeline totals intact; a truncated breakdown
+without a won bucket cannot establish the won total and displays a dash.
 
 The cards deliberately ignore the selected stage: they are the overview the
 stage tiles are read against. See the drilldown note below.
@@ -101,7 +131,7 @@ stage tiles are read against. See the drilldown note below.
 ## Stage breakdown (PM-6392)
 
 The stage breakdown is a compact grid of clickable tiles, one per stage, each
-showing that stage's opportunity count, Amount and Expected Revenue. The stages
+showing that stage's opportunity count, Amount and Expected Amount. The stages
 are ordered down the pipeline — Prospecting, Qualification, Proposal, Contracts,
 Closing, Won SOW Signed — and a stage the pipeline adds later follows them,
 ordered by value as the API returned it.
@@ -115,10 +145,10 @@ does not collapse to the selected stages. The stage selection is independent of 
 search and Filter field controls, and clearing those leaves it in place, exactly
 as it leaves the date range in place.
 
-## Table columns (PM-6392)
+## Table columns (PM-6392, PM-6660)
 
-The table shows ten columns, in this order: Stage, Opportunity Name, Account
-Name, Subcontracting End Customer, Reporting SMU, Amount, Expected Revenue,
+The table prioritizes these columns, in this order: Stage, Opportunity Name, Account
+Name, Subcontracting End Customer, Reporting SMU, Amount, Probability (%), Expected Amount,
 Created Date, Close Date, Opportunity Owner. Reporting Account, Close Month,
 Expected Revenue (Converted), Amount (Converted) and Forecast Alert are not
 shown.
@@ -128,10 +158,12 @@ matched by label, the API response and the WIN contract are unchanged, and a
 column the Salesforce report adds later is kept and shown behind the ordered
 ones rather than silently dropped. Each displayed column keeps the cell index it
 has in `row.cells`, so reordering headers never reorders row data. The Filter
-field dropdown offers the displayed columns only.
+field dropdown offers the displayed columns only. Expected Revenue is renamed
+to Expected Amount in headers and filter choices without changing API column IDs
+or cell positions. Probability keeps its original values and sorting ID.
 
 Currency and numeric cells are right-aligned and never wrap, date cells never
-wrap, and padding and font sizes are tightened so the ten columns fit a standard
+wrap, and padding and font sizes are tightened so the columns fit a standard
 laptop width. The focusable horizontal scroll region remains as a fallback for
 narrow windows and unusually wide values.
 
@@ -263,7 +295,7 @@ rolling defaults for both historical and pipeline charts. For example, October
 2027, requests cover April 2027 through March 2028. The range is calculated on each
 request, including refresh, retry and date-basis changes, without a hardcoded year.
 Pipeline forecasts are bounded to the same fiscal year. Closed Won counts the
-`Won - SOW Signed` stage, as the pipeline's Total WON SOW Signed card does.
+`Won - SOW Signed` stage, as the pipeline's Total Bookings Won card does.
 The API replaces the Salesforce reports' saved fiscal-year filter with the
 requested range for each dashboard run. Charts include expandable monthly data
 tables, currency/count units, and gaps for unknown values. Y-axis ticks use compact
