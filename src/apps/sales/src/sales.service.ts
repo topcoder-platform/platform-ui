@@ -5,7 +5,7 @@ import { SalesQuery, SalesReport } from './sales.models'
 
 /**
  * Reads Salesforce report data through the role-protected Reports API using the user's token.
- * @param query Server-side search, OR filters, amount/date ranges, sorting, pagination and refresh options.
+ * @param query Server-side search, category/column filters, numeric/date ranges, sorting, pagination and refresh.
  * @param signal Cancels obsolete requests when controls change or the page unmounts.
  * @returns The current report schema, snapshot-wide totals and one page of rows.
  * @throws Propagates network, authorization and sanitized Reports API errors.
