@@ -4,15 +4,23 @@ import '@testing-library/jest-dom'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { ButtonHTMLAttributes, ReactNode } from 'react'
 
+import Highcharts from 'highcharts'
+import HighchartsReact from 'highcharts-react-official'
 import SalesDashboardsPage from './SalesDashboardsPage'
 import SalesReportsPage from './SalesReportsPage'
-import SalesDashboardChart, { axisLabel } from './SalesDashboardChart'
-import { fetchSalesDashboard, SalesDashboardPortal, SalesDashboardResponse } from './sales-dashboard.service'
+import SalesCustomerPaymentsTable from './SalesCustomerPaymentsTable'
+import SalesDashboardChart, { axisLabel, stackedTooltip } from './SalesDashboardChart'
+import {
+    fetchSalesDashboard,
+    MonthlySalesChart,
+    SalesDashboardPortal,
+    SalesDashboardResponse,
+} from './sales-dashboard.service'
 
 jest.mock('./sales-dashboard.service', () => ({ fetchSalesDashboard: jest.fn() }))
 jest.mock('./SalesPage', () => () => <div>Existing pipeline</div>)
 jest.mock('./SalesProgressionPage', () => () => <div>Existing progression</div>)
-jest.mock('highcharts-react-official', () => () => <div data-testid='monthly-chart' />)
+jest.mock('highcharts-react-official', () => jest.fn(() => <div data-testid='monthly-chart' />))
 jest.mock('~/libs/ui', () => ({
     Button: (props: ButtonHTMLAttributes<HTMLButtonElement>) => (
         <button type='button' onClick={props.onClick} disabled={props.disabled}>{props.children}</button>
@@ -168,4 +176,132 @@ it.each([
 ] as const)('labels a %s %s axis tick as %s', (value, unit, label) => {
     expect(axisLabel(value, unit))
         .toBe(label)
+})
+
+it('totals visible stacked tooltip values, including negative adjustments and unknowns', () => {
+    const formatter = stackedTooltip('currency')
+    const tooltip = { defaultFormatter: () => ['Month<br/>', 'Customer A: $100<br/>', 'Customer B: -$25'] }
+    expect(formatter.call(
+{ points: [{ y: 100 }, { y: -25 }, { y: null }] } as Highcharts.TooltipFormatterContextObject,
+        tooltip as unknown as Highcharts.Tooltip,
+    ))
+        .toContain('<b>Total: $75.00</b>')
+    expect(formatter.call(
+{ points: [{ y: 100 }] } as Highcharts.TooltipFormatterContextObject,
+        tooltip as unknown as Highcharts.Tooltip,
+    ))
+        .toContain('<b>Total: $100.00</b>')
+    expect(formatter.call(
+{ points: [] } as unknown as Highcharts.TooltipFormatterContextObject,
+        tooltip as unknown as Highcharts.Tooltip,
+    ))
+        .toContain('<b>Total: —</b>')
+})
+
+it('shows totals for stacked splits without summing overlapping talent counts or percentages', () => {
+    const chart: MonthlySalesChart = {
+        ...response.charts[0],
+        months: [
+            { month: '2026-09-01', values: { a: 100, b: -25 } },
+            { month: '2026-10-01', values: { a: null, b: null } },
+        ],
+        series: [{ key: 'a', label: 'A' }, { key: 'b', label: 'B' }],
+        stacked: true,
+    }
+    const view = render(<SalesDashboardChart chart={chart} />)
+    const table = screen.getByRole('table', { hidden: true })
+    expect(within(table)
+        .getByRole('columnheader', { hidden: true, name: 'Total' }))
+        .toBeInTheDocument()
+    expect(within(table)
+        .getByText('$75.00'))
+        .toBeInTheDocument()
+    const chartOptions = (): Highcharts.Options => (jest.mocked(HighchartsReact).mock.calls.slice(-1)[0][0].options)
+    expect(chartOptions().tooltip?.formatter)
+        .toBeDefined()
+    view.rerender(<SalesDashboardChart chart={{ ...chart, stacked: false, unit: 'count' }} />)
+    expect(chartOptions().tooltip?.formatter)
+        .toBeUndefined()
+    expect(screen.queryByRole('columnheader', { hidden: true, name: 'Total' })).not.toBeInTheDocument()
+    view.rerender(<SalesDashboardChart chart={{ ...chart, unit: 'percent' }} />)
+    expect(chartOptions().tooltip?.formatter)
+        .toBeUndefined()
+})
+
+const customerPayments: MonthlySalesChart = {
+    description: 'Every customer',
+    id: 'payment-customer-all',
+    months: [
+        { month: '2026-04-01', values: { anz: 0, metro: 5000, rebel: 7500 } },
+        { month: '2026-05-01', values: { anz: 8000, metro: 0, rebel: 6500 } },
+        { month: '2026-06-01', values: { anz: 7500, metro: 3500, rebel: 7000 } },
+    ],
+    series: [{ key: 'metro', label: 'Metro' }, { key: 'rebel', label: 'Rebel' }, { key: 'anz', label: 'ANZ' }],
+    stacked: true,
+    title: 'All customer payments',
+    unit: 'currency',
+}
+
+it('renders a customer-by-month matrix with accurate row, column and grand totals', () => {
+    render(<SalesCustomerPaymentsTable data={customerPayments} />)
+    const table = screen.getByRole('table')
+    expect(within(table)
+        .getAllByRole('columnheader')
+        .map(cell => cell.textContent))
+        .toEqual(['Customer', 'Apr 2026', 'May 2026', 'Jun 2026', 'Total'])
+    expect(within(table)
+        .getByRole('row', { name: /Metro/ }))
+        .toHaveTextContent('$8,500.00')
+    expect(within(table)
+        .getByRole('row', { name: /Rebel/ }))
+        .toHaveTextContent('$21,000.00')
+    expect(within(table)
+        .getByRole('row', { name: /ANZ/ }))
+        .toHaveTextContent('$15,500.00')
+    expect(within(table)
+        .getByRole('row', { name: /^Total/ }).textContent)
+        .toBe('Total$12,500.00$14,500.00$18,000.00$45,000.00')
+    expect(screen.getByRole('region'))
+        .toHaveAttribute('tabindex', '0')
+})
+
+it('keeps unknown customer amounts distinct from zero and handles an empty dataset', () => {
+    const view = render(<SalesCustomerPaymentsTable data={{ ...customerPayments,
+        months: [{ month: '2026-04-01', values: { anz: -2.5, metro: null, rebel: 0 } }],
+    }}
+    />)
+    expect(screen.getByRole('row', { name: /Metro/ }))
+        .toHaveTextContent('Metro——')
+    expect(screen.getByRole('row', { name: /Rebel/ }))
+        .toHaveTextContent('Rebel$0.00$0.00')
+    expect(screen.getByRole('row', { name: /^Total/ }))
+        .toHaveTextContent('Total-$2.50-$2.50')
+    view.rerender(<SalesCustomerPaymentsTable data={{ ...customerPayments, series: [] }} />)
+    expect(screen.getByText('No customer payments in this fiscal year.'))
+        .toBeInTheDocument()
+})
+
+it('uses the full customer dataset below payment charts and renders all new won-booking charts', async () => {
+    const ids = [
+        'closed-won', 'expected-revenue', 'pipeline-stage', 'won-offering', 'won-deal-category', 'won-customer-type',
+    ]
+    fetchDashboard.mockImplementation(async section => {
+        if (section === 'payments') return { ...response, customerPayments }
+        if (section === 'pipeline') {
+            return { charts: ids.map(id => ({ ...response.charts[0], id, title: id })), notices: [] }
+        }
+
+        return { charts: [], notices: [] }
+    })
+    render(<SalesDashboardsPage portal='sales' />)
+    const table = await screen.findByRole('table', { name: 'All customers, monthly payments and totals (USD)' })
+    expect(within(table)
+        .getByRole('rowheader', { name: 'ANZ' }))
+        .toBeInTheDocument()
+    ids.forEach(id => expect(screen.getByRole('heading', { name: id }))
+        .toBeInTheDocument())
+    expect(screen.getByText('Member payments and flexible talent include customer work only.'))
+        .toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Bookings' }))
+        .toBeInTheDocument()
 })

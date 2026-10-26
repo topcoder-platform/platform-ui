@@ -8,12 +8,13 @@ import {
     SalesDashboardResponse,
     SalesDashboardSection,
 } from './sales-dashboard.service'
+import SalesCustomerPaymentsTable from './SalesCustomerPaymentsTable'
 import SalesDashboardChart from './SalesDashboardChart'
 import styles from './SalesDashboardsPage.module.scss'
 
 const sections: Array<{ id: SalesDashboardSection; title: string }> = [
     { id: 'pipeline', title: 'Sales pipeline' },
-    { id: 'revenue', title: 'Revenue' },
+    { id: 'revenue', title: 'Bookings' },
     { id: 'payments', title: 'Member payments' },
     { id: 'talent', title: 'Flexible talent' },
 ]
@@ -28,7 +29,7 @@ type SectionProps = {
 
 /**
  * Loads one source independently so SFDC or engagement failures leave other sections usable.
- * @param props Source identity, portal payment scope, date basis and refresh counter.
+ * @param props Source identity, portal customer scope, date basis and refresh counter.
  * @returns Monthly charts, a pending-source notice, loading state or retry button.
  * @throws Does not throw; request errors are handled inline and stale requests are cancelled.
  */
@@ -63,8 +64,16 @@ const DashboardSection: FC<SectionProps> = props => {
                 <>
                     {data.notices.map(notice => <p className={styles.notice} key={notice} role='status'>{notice}</p>)}
                     <div className={styles.grid}>
-                        {data.charts.map(chart => <SalesDashboardChart key={chart.id} chart={chart} />)}
+                        {data.charts.map(chart => (
+                            <SalesDashboardChart
+                                key={chart.id}
+                                chart={chart}
+                            />
+                        ))}
                     </div>
+                    {props.section === 'payments' && data.customerPayments && (
+                        <SalesCustomerPaymentsTable data={data.customerPayments} />
+                    )}
                 </>
             ) : error ? (
                 <div className={styles.error} role='alert'>
@@ -78,8 +87,8 @@ const DashboardSection: FC<SectionProps> = props => {
 
 /**
  * Shares the executive monthly dashboards between the Reports and Sales portals.
- * @param props Portal scope; Reports retains existing payment types, Sales requests only customer work.
- * @returns Four pipeline charts, revenue, payments and flexible talent. Gross margin is deferred.
+ * @param props Portal scope; Reports retains its existing scope; Sales payments and talent include only customer work.
+ * @returns Won-booking and open-pipeline charts, bookings, payments and flexible talent. Gross margin is deferred.
  * @throws Does not throw; sections manage their source failures independently.
  */
 const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
@@ -103,7 +112,7 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
                 {' All charts cover the same 12 months.'}
                 {' Pipeline charts include expected closes within the fiscal year.'}
             </p>
-            {props.portal === 'sales' && <p>Member payments include customer work only.</p>}
+            {props.portal === 'sales' && <p>Member payments and flexible talent include customer work only.</p>}
             <div className={styles.controls} aria-label='Pipeline date basis' role='group'>
                 <span>Group pipeline by</span>
                 <Button secondary onClick={chooseClose} disabled={dateBasis === 'close'}>Close date</Button>
