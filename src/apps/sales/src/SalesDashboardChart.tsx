@@ -5,6 +5,7 @@ import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
 import { MonthlySalesChart } from './sales-dashboard.service'
+import { salesChartTotal, salesChartValue, salesMonthLabel } from './sales-dashboard.utils'
 import styles from './SalesDashboardsPage.module.scss'
 
 const colors = ['#0d8984', '#0f62fe', '#6c5ce7', '#ff8a00', '#6aae3f', '#d7476f']
@@ -157,6 +158,21 @@ function headlineValue(value: number | null, unit: MonthlySalesChart['unit']): s
 }
 
 /**
+ * Extends Highcharts' shared tooltip with the net total of the visible stacked series.
+ * @param unit Chart unit, used for currency/count formatting.
+ * @returns A formatter retaining Highcharts' escaped labels and default point formatting.
+ * @throws Does not throw for missing or empty points; unknown totals remain dashes.
+ */
+export function stackedTooltip(unit: MonthlySalesChart['unit']): Highcharts.TooltipFormatterCallbackFunction {
+    return function formatter(tooltip: Highcharts.Tooltip) {
+        const content = tooltip.defaultFormatter.call(this, tooltip)
+        const total = salesChartTotal((this.points ?? []).map(point => point.y))
+        const body = Array.isArray(content) ? content.join('') : content
+        return `${body}<br/><b>Total: ${salesChartValue(total, unit)}</b>`
+    }
+}
+
+/**
  * Renders a monthly business chart with its headline and an equivalent accessible data table.
  * @param props API chart definition, including units, monthly values and stacking, and whether the
  * current month includes expected closes.
@@ -166,8 +182,8 @@ function headlineValue(value: number | null, unit: MonthlySalesChart['unit']): s
 const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boolean }> = props => {
     const chart = props.chart
     const headline = useMemo(() => chartHeadline(chart, props.expectedCloses), [chart, props.expectedCloses])
-    const labels = useMemo(() => chart.months.map(month => new Date(`${month.month}T00:00:00Z`)
-        .toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC', year: 'numeric' })), [chart.months])
+    const labels = useMemo(() => chart.months.map(month => salesMonthLabel(month.month)), [chart.months])
+    const showTotal = chart.stacked && chart.series.length > 1 && chart.unit !== 'percent'
     const options = useMemo<Highcharts.Options>(() => ({
         chart: { backgroundColor: 'transparent', height: 320, type: 'column' },
         colors,
@@ -181,6 +197,7 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boole
         })),
         title: { text: undefined },
         tooltip: {
+            formatter: showTotal ? stackedTooltip(chart.unit) : undefined,
             shared: true,
             valueDecimals: chart.unit === 'count' ? 0 : 2,
             valuePrefix: chart.unit === 'currency' ? '$' : '',
@@ -192,7 +209,7 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boole
             labels: { formatter: context => axisLabel(Number(context.value), chart.unit) },
             title: { text: chart.unit === 'currency' ? 'USD' : chart.unit === 'percent' ? 'Markup (%)' : 'Members' },
         },
-    }), [chart, labels])
+    }), [chart, labels, showTotal])
 
     return (
         <article className={styles.card}>
@@ -230,6 +247,7 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boole
                             <tr>
                                 <th scope='col'>Month</th>
                                 {chart.series.map(series => <th key={series.key} scope='col'>{series.label}</th>)}
+                                {showTotal && <th scope='col'>Total</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -238,17 +256,16 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boole
                                     <th scope='row'>{labels[index]}</th>
                                     {chart.series.map(series => (
                                         <td key={series.key}>
-                                            {month.values[series.key] == null ? '—' : (
-                                                <>
-                                                    {chart.unit === 'currency' ? '$' : ''}
-                                                    {month.values[series.key]?.toLocaleString('en-US', {
-                                                        maximumFractionDigits: chart.unit === 'count' ? 0 : 2,
-                                                    })}
-                                                    {chart.unit === 'percent' ? '%' : ''}
-                                                </>
-                                            )}
+                                            {salesChartValue(month.values[series.key], chart.unit)}
                                         </td>
                                     ))}
+                                    {showTotal && (
+                                        <td>
+                                            {salesChartValue(salesChartTotal(chart.series.map(series => (
+                                                month.values[series.key]
+                                            ))), chart.unit)}
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>
