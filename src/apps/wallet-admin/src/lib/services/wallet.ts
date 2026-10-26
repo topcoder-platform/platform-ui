@@ -23,6 +23,7 @@ import { TransactionResponse } from '../models/TransactionId'
 import { PaginationInfo } from '../models/PaginationInfo'
 import { WinningsAudit } from '../models/WinningsAudit'
 import { PayoutAudit } from '../models/PayoutAudit'
+import { DuplicatePaymentRelease } from '../models/DuplicatePaymentRelease'
 import ApiResponse from '../models/ApiResponse'
 
 const baseUrl = `${EnvironmentConfig.TC_FINANCE_API}`
@@ -309,6 +310,25 @@ export async function fetchAuditLogs(paymentId: string): Promise<WinningsAudit[]
 
     return response.data
 
+}
+
+/**
+ * Fetches pairs of payment releases that contain the same payments.
+ *
+ * @param days Only include pairs created in the last N days; omit for the whole history.
+ * @returns The duplicate release pairs, newest first.
+ */
+export async function fetchDuplicatePaymentReleases(days?: number): Promise<DuplicatePaymentRelease[]> {
+    const query = days ? `?days=${days}` : ''
+    const response = await xhrGetAsync<ApiResponse<DuplicatePaymentRelease[]>>(
+        `${baseUrl}/admin/payment-releases/duplicates${query}`,
+    )
+
+    if (response.status === 'error') {
+        throw new Error('Error fetching duplicate payments')
+    }
+
+    return response.data
 }
 
 export async function fetchPayoutAuditLogs(paymentId: string): Promise<PayoutAudit[]> {
