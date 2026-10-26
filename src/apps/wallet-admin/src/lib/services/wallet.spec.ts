@@ -2,7 +2,11 @@
 import { xhrGetAsync } from '~/libs/core'
 
 import { Winning } from '../models/WinningDetail'
-import { fetchChallengePaymentSummary, fetchWinningPaymentDetails } from './wallet'
+import {
+    fetchChallengePaymentSummary,
+    fetchDuplicatePaymentReleases,
+    fetchWinningPaymentDetails,
+} from './wallet'
 
 jest.mock('~/config/environments/default.env', () => ({
     CHALLENGE_API_URL: 'https://example.com/v6/challenges',
@@ -249,5 +253,39 @@ describe('fetchChallengePaymentSummary', () => {
                 creatorHandle: 'wendell',
                 paymentApproverHandle: 'kartik',
             })
+    })
+})
+
+describe('fetchDuplicatePaymentReleases', () => {
+    const mockedXhrGetAsync = xhrGetAsync as jest.Mock
+
+    beforeEach(() => {
+        mockedXhrGetAsync.mockReset()
+    })
+
+    it('requests the whole history when no period is given', async () => {
+        mockedXhrGetAsync.mockResolvedValueOnce({ data: [], status: 'success' })
+
+        await fetchDuplicatePaymentReleases()
+
+        expect(mockedXhrGetAsync)
+            .toHaveBeenCalledWith('https://example.com/v6/finance/admin/payment-releases/duplicates')
+    })
+
+    it('passes the period in days', async () => {
+        mockedXhrGetAsync.mockResolvedValueOnce({ data: [], status: 'success' })
+
+        await fetchDuplicatePaymentReleases(30)
+
+        expect(mockedXhrGetAsync)
+            .toHaveBeenCalledWith('https://example.com/v6/finance/admin/payment-releases/duplicates?days=30')
+    })
+
+    it('throws when the API reports an error', async () => {
+        mockedXhrGetAsync.mockResolvedValueOnce({ data: undefined, status: 'error' })
+
+        await expect(fetchDuplicatePaymentReleases())
+            .rejects
+            .toThrow('Error fetching duplicate payments')
     })
 })

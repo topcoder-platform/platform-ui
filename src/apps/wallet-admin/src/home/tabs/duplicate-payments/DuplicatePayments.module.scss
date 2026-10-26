@@ -1,0 +1,155 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background-color: $black-5;
+    padding: $sp-6;
+    margin: $sp-8 0;
+    border-radius: 6px;
+
+    @include ltelg {
+        padding: $sp-4;
+    }
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: $sp-4;
+    margin: $sp-4 0;
+}
+
+.periodButtons {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-1;
+    padding: $sp-1;
+    border: 1px solid $black-20;
+    border-radius: 999px;
+    background-color: white;
+}
+
+.periodButton {
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: $black-60;
+    cursor: pointer;
+    padding: $sp-2 $sp-4;
+
+    &:focus-visible {
+        outline: 2px solid $turq-160;
+        outline-offset: 2px;
+    }
+}
+
+.periodButtonActive {
+    background-color: $turq-160;
+    color: white;
+}
+
+.summary {
+    margin-bottom: $sp-2;
+}
+
+.tableContainer {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    table {
+        width: 100%;
+        min-width: 1000px;
+        border-collapse: separate;
+        border-spacing: 0;
+
+        th,
+        td {
+            text-align: left;
+            padding: $sp-2;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: white;
+            text-transform: uppercase;
+
+            &:nth-child(-n+3) {
+                width: 11%;
+            }
+
+            &:nth-last-child(-n+2) {
+                width: 33.5%;
+            }
+        }
+
+        tbody tr {
+            &:nth-child(odd) {
+                background-color: #f4f4f4;
+            }
+
+            &:nth-child(even) {
+                background-color: #ffffff;
+            }
+        }
+    }
+}
+
+.release {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.status {
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.mono {
+    font-family: monospace;
+    overflow-wrap: anywhere;
+}
+
+.muted {
+    color: $black-60;
+}
+
+.error {
+    color: $red-100;
+}
+
+.linkButton {
+    border: none;
+    background: transparent;
+    padding: 0;
+    color: $turq-160;
+    cursor: pointer;
+    text-decoration: underline;
+
+    &:focus-visible {
+        outline: 2px solid $turq-160;
+        outline-offset: 2px;
+    }
+}
+
+.winnings {
+    margin: $sp-2 0 0;
+    padding-left: $sp-4;
+    list-style: disc;
+}
+
+.centered {
+    min-height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
