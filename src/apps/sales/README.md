@@ -281,7 +281,7 @@ The Reports route is `/reports/sales-dashboards` on the combined host and
 `/sales-dashboards` on the Reports host. Existing pipeline/progression reports
 and platform dashboards retain their routes and behavior.
 
-The pipeline, revenue, member payments and flexible talent sections each call
+The pipeline, bookings, member payments and flexible talent sections each call
 `/sales-dashboard/:section` on the Reports API independently,
 with inline loading, failure/retry and pending-source states. Refresh reloads all
 sections. Changing Close date / Created date reloads only pipeline data. Source
@@ -294,7 +294,7 @@ rolling defaults for both historical and pipeline charts. For example, October
 2026 and January–March 2027 request April 2026 through March 2027; from April 1,
 2027, requests cover April 2027 through March 2028. The range is calculated on each
 request, including refresh, retry and date-basis changes, without a hardcoded year.
-Pipeline forecasts are bounded to the same fiscal year. Closed Won counts the
+Pipeline forecasts are bounded to the same fiscal year. Won bookings count the
 `Won - SOW Signed` stage, as the pipeline's Total Bookings Won card does.
 The API replaces the Salesforce reports' saved fiscal-year filter with the
 requested range for each dashboard run. Charts include expandable monthly data
@@ -302,17 +302,46 @@ tables, currency/count units, and gaps for unknown values. Y-axis ticks use comp
 labels such as `$1.5M`. Source notices remain visible above the charts.
 
 Sales passes `portal=sales` so the API removes TaaS, Topcoder and unlinked customer
-payments before computing any payment totals or customer rankings. Reports
-passes `portal=reports`. Flexible talent counts newly assigned, completed and
-ongoing members by month. Gross margin is on hold per the PM-6632 clarification:
+payments before computing any payment totals or customer rankings. Flexible talent
+also includes customer work only: the API resolves engagement projects to external
+billing-account clients before counting members. Reports passes `portal=reports`
+and retains its existing scope. Flexible talent counts newly assigned, completed
+and ongoing members by month. Gross margin is on hold per the PM-6632 clarification:
 neither portal renders or requests that section, including on refresh.
 
 Revenue uses the confirmed SFDC report `00O1K000009GxBtUAK` ("Accounts Monthly
 revenue File"), with its verified Date and Gross Amount columns as API defaults. It
-renders monthly revenue, then the same revenue stacked by offering (Type) and by
-account category. A pending notice appears only when reports-api-v6 is pointed at
+renders **Bookings** display copy, then the same amounts stacked by **Engagement
+Offering Type** and **Deal Category**. The API route and chart IDs retain `revenue`
+for compatibility. Blank offerings for TopGear map to TopGear Ops, and for Multiple
+App Enhancement(s) 5 to Flexible Talent; populated values remain unchanged. A pending notice appears only when reports-api-v6 is pointed at
 another report without column settings. See that repository's `SALES.md` for source
 definitions, settings and API parameters.
+
+### PM-6667 dashboard changes
+
+The Reports API removes Total Opportunity Size, returns Won - SOW Signed bookings
+first, excludes won stages from Expected bookings and Pipeline by stage, and adds
+Bookings won by offering type, deal category and customer type. The UI renders
+these chart definitions using the same selected Close/Created date and fiscal year.
+
+Every multi-series stacked chart has a **Total** in its shared hover tooltip and
+monthly data table. Tooltip totals sum the visible series, including negative
+adjustments; hiding a legend entry updates the total. Unknown values remain dashes
+when no values are known. Overlapping flexible-talent series and percentages are
+not added together. Members-paid stack totals count type memberships rather than globally distinct people.
+
+Below the payment charts, an always-visible, horizontally scrollable table shows
+all customers as rows and fiscal-year months as columns, with row totals, monthly
+totals and a grand total. It uses the API's optional `customerPayments` dataset,
+which retains every customer before the chart groups smaller customers as Other.
+Zero and unknown values remain distinct. The table supports keyboard scrolling,
+keeps customer names visible while scrolling, and has an explicit empty state.
+
+Deploy the PM-6667 Reports API companion before the UI. It supplies the corrected
+category/won-stage/talent aggregates and the ungrouped customer dataset. An older
+API still renders its charts; it cannot provide the all-customer table. API
+configuration and source-data corrections are documented in reports-api-v6/SALES.md.
 
 Tests: `sales-dashboard.service.spec.ts` covers fiscal-year request bounds across
 all sections, portals and date bases, UTC/year/leap-day boundaries, and rollover
@@ -320,5 +349,7 @@ on subsequent requests. `SalesDashboardsPage.spec.tsx` covers the full April–M
 monthly table, fiscal-year notice, portal scope, gross margin remaining
 hidden and unrequested in both portals, independent failures,
 retry, refresh, date-basis changes, request cancellation, keyboard navigation,
-accessible percentage/missing-value tables and compact axis labels. Reports route/navigation tests cover
+accessible percentage/missing-value tables, compact axis labels, visible-series tooltip
+totals, non-additive series, new won chart rendering and customer matrix
+totals/missing values/empty states. Reports route/navigation tests cover
 the new entry point.
