@@ -55,6 +55,13 @@
 
 /* Stage breakdown and date range filter share the width beneath the cards. */
 .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; margin-bottom: 16px; }
+.filterPanels { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.categoryPanel { overflow: visible; }
+.categoryPanel .filters { border-radius: inherit; }
+.categoryPanel :global(.pipeline-select__control) { border-color: $tc-2026-border-strong; min-height: 36px; font-size: 14px; }
+.categoryPanel :global(.pipeline-select__input-container) input { height: auto; min-height: 0; box-shadow: none; }
+.categoryPanel :global(.pipeline-select__placeholder) { color: $tc-2026-body; }
+.categoryPanel :global(.pipeline-select__menu) { z-index: 3; font-size: 14px; }
 .stages { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 12px; }
 .stage {
     width: 100%;

@@ -2,6 +2,7 @@
 import '@testing-library/jest-dom'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { ButtonHTMLAttributes, ReactNode } from 'react'
+import userEvent from '@testing-library/user-event'
 import { useProfileContext } from '~/libs/core'
 
 import SalesPage from './SalesReportsPage'
@@ -76,6 +77,8 @@ function fixture(): SalesReport {
             { dataType: 'currency', id: 'AMOUNT', label: 'Amount' },
             { dataType: 'datetime', id: 'CREATED_DATE', label: 'Created Date' },
             { dataType: 'date', id: 'CLOSE_DATE', label: 'Close Date' },
+            { dataType: 'percent', id: 'PROBABILITY', label: 'Probability (%)' },
+            { dataType: 'currency', id: 'EXP_AMOUNT', label: 'Expected Revenue' },
         ],
         page: 1,
         perPage: 25,
@@ -90,6 +93,8 @@ function fixture(): SalesReport {
                 { currencyCode: 'USD', label: '$1,000', value: 1000 },
                 { label: '9/1/2026', value: '2026-09-01T10:00:00Z' },
                 { label: '9/30/2026', value: '2026-09-30' },
+                { label: '75%', value: 75 },
+                { label: '$750', value: 750 },
             ],
             id: '0:0',
         }],
@@ -321,7 +326,7 @@ describe('Sales page', () => {
             .toHaveBeenLastCalledWith(expect.objectContaining({
                 dateFrom: '2026-09-01', filterColumn: 'STAGE_NAME', filterValue: ['Proposal', 'Contracts'], page: 1,
             }), expect.any(AbortSignal)))
-        fireEvent.change(screen.getByLabelText('Amount field'), { target: { value: 'AMOUNT' } })
+        fireEvent.change(screen.getByLabelText('Amount or Probability Filter'), { target: { value: 'AMOUNT' } })
         fireEvent.change(screen.getByLabelText('Greater than'), { target: { value: '100000' } })
         fireEvent.submit(screen.getByLabelText('Greater than'))
         await waitFor(() => expect(fetchReport)
@@ -348,12 +353,12 @@ describe('Sales page', () => {
     it('validates amount bounds and applies, refreshes and removes a numeric range', async () => {
         render(<SalesPage />)
         await screen.findByText('Example opportunity')
-        fireEvent.change(screen.getByLabelText('Amount field'), { target: { value: 'AMOUNT' } })
+        fireEvent.change(screen.getByLabelText('Amount or Probability Filter'), { target: { value: 'AMOUNT' } })
         fireEvent.change(screen.getByLabelText('Greater than'), { target: { value: '100000' } })
         fireEvent.change(screen.getByLabelText('Less than'), { target: { value: '50000' } })
         fireEvent.submit(screen.getByLabelText('Greater than'))
         expect(await screen.findByRole('alert'))
-            .toHaveTextContent('The lower amount must be less')
+            .toHaveTextContent('The lower bound must be less')
         expect(fetchReport)
             .toHaveBeenCalledTimes(1)
         fireEvent.change(screen.getByLabelText('Less than'), { target: { value: '200000.50' } })
@@ -472,6 +477,8 @@ describe('Sales page', () => {
         expect(field.value)
             .toBe('CREATED_DATE')
         fireEvent.change(field, { target: { value: 'CLOSE_DATE' } })
+        expect(screen.getByLabelText('Filter type'))
+            .toHaveValue('CLOSE_DATE')
         fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2026-07-01' } })
         fireEvent.change(screen.getByLabelText('To date'), { target: { value: '2026-09-30' } })
         expect(fetchReport)
@@ -541,21 +548,93 @@ describe('Sales page', () => {
         await screen.findByText('No date range applied.')
     })
 
+    it('combines category dropdowns and preserves them through refresh and report clear', async () => {
+        const user = userEvent.setup()
+        render(<SalesPage />)
+        await screen.findByText('Example opportunity')
+        const filters = within(screen.getByRole('region', { name: 'Pipeline filters' }))
+        expect(filters.getAllByText('ALL'))
+            .toHaveLength(3)
+        fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }), expect.any(AbortSignal)))
+        await user.click(filters.getByLabelText('Offering Type'))
+        await user.click(filters.getByRole('option', { name: 'Flexible Talent' }))
+        await user.click(filters.getByLabelText('Offering Type'))
+        await user.click(filters.getByRole('option', { name: 'AI Training' }))
+        await user.click(filters.getByLabelText('Deal Category'))
+        await user.click(filters.getByRole('option', { name: 'Wipro-Direct' }))
+        await user.click(filters.getByLabelText('Customer Type'))
+        await user.click(filters.getByRole('option', { name: 'New Customer' }))
+        const selected = {
+            customerType: ['New Customer'],
+            dealCategory: ['Wipro-Direct'],
+            offeringType: ['Flexible Talent', 'AI Training'],
+            page: 1,
+        }
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining(selected), expect.any(AbortSignal)))
+        fireEvent.click(await screen.findByRole('button', { name: 'Refresh' }))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({ ...selected, refresh: true }), expect.any(AbortSignal)))
+        fireEvent.click(clearButton('Sales report'))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining(selected), expect.any(AbortSignal)))
+        await user.click(filters.getByLabelText('Offering Type'))
+        await user.click(filters.getByRole('option', { name: 'ALL' }))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(
+                expect.objectContaining({ ...selected, offeringType: undefined }),
+                expect.any(AbortSignal),
+            ))
+    })
+
+    it('offers probability bounds in percent units and keeps data aligned after column reordering', async () => {
+        render(<SalesPage />)
+        await screen.findByText('Example opportunity')
+        const headers = screen.getAllByRole('columnheader')
+            .map(header => header.textContent)
+        expect(headers.slice(2, 5))
+            .toEqual(['Amount ↕', 'Probability (%) ↕', 'Expected Amount ↕'])
+        const row = screen.getByText('Example opportunity')
+            .closest('tr') as HTMLElement
+        expect(within(row)
+            .getAllByRole('cell')
+            .slice(2, 5)
+            .map(cell => cell.textContent))
+            .toEqual(['$1,000', '75%', '$750'])
+        expect(screen.queryByText('Expected Revenue')).not.toBeInTheDocument()
+        fireEvent.change(screen.getByLabelText('Amount or Probability Filter'), { target: { value: 'PROBABILITY' } })
+        fireEvent.change(screen.getByLabelText('Greater than'), { target: { value: '60' } })
+        fireEvent.change(screen.getByLabelText('Less than'), { target: { value: '90' } })
+        fireEvent.submit(screen.getByLabelText('Greater than'))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(
+                expect.objectContaining({ amountColumn: 'PROBABILITY', amountMax: 90, amountMin: 60, page: 1 }),
+                expect.any(AbortSignal),
+            ))
+    })
+
     it('shows the four summary cards over every matching record', async () => {
         render(<SalesPage />)
         await screen.findByText('Example opportunity')
-        const cards = ['Total Opportunities', 'Total Amount', 'Total Expected Revenue', 'Total WON SOW Signed']
+        const cards = ['Total Opportunities', 'Total Bookings Won',
+            'Total Bookings in Pipeline', 'Total Expected Bookings in Pipeline']
+        expect(within(screen.getByRole('region', { name: 'Filtered sales totals' }))
+            .getAllByText(/Total /)
+            .map(card => card.textContent))
+            .toEqual(cards)
         cards.forEach(card => expect(screen.getByText(card))
             .toBeInTheDocument())
         expect(screen.getByText('30'))
             .toBeInTheDocument()
         // The plain Amount is redundant beside Amount (converted), so the card reads the converted total.
-        expect(screen.getByText('$1,234,567'))
+        expect(screen.getByText('$1,146,913'))
             .toBeInTheDocument()
         expect(screen.queryByText('$987,654'))
             .not.toBeInTheDocument()
         // An uncoded single-currency total reads in dollars like the converted columns.
-        expect(screen.getByText('$555,555'))
+        expect(screen.getByText('$467,901'))
             .toBeInTheDocument()
         // The WON SOW Signed card reports the signed Amount from the stage breakdown.
         expect(screen.getAllByText('$87,654').length)

@@ -83,19 +83,19 @@ export function withDrilldown(current: SalesQuery, column: string, value: string
 
 /**
  * Validates the Sales report's exclusive numeric bounds before requesting a range.
- * @param column Selected currency/double column ID.
+ * @param column Selected numeric column ID (probability uses 0–100 units).
  * @param min Raw lower bound; empty means unbounded.
  * @param max Raw upper bound; empty means unbounded.
  * @returns A user-facing error, or an empty string for a usable range. Does not throw.
  */
 export function amountRangeError(column: string, min: string, max: string): string {
-    if (!column && (min || max)) return 'Choose the amount field this range applies to.'
+    if (!column && (min || max)) return 'Choose the amount or probability field this range applies to.'
     if ([min, max].some(value => value !== '' && !Number.isFinite(Number(value)))) {
-        return 'Enter a valid number for each amount bound.'
+        return 'Enter a valid number for each bound.'
     }
 
     if (min !== '' && max !== '' && Number(min) >= Number(max)) {
-        return 'The lower amount must be less than the upper amount.'
+        return 'The lower bound must be less than the upper bound.'
     }
 
     return ''
@@ -104,7 +104,7 @@ export function amountRangeError(column: string, min: string, max: string): stri
 /**
  * Applies validated amount controls to the Sales report query, resetting pagination on change.
  * @param current Active report query, including independent filters and sorting.
- * @param column Selected currency/double column ID.
+ * @param column Selected numeric column ID (probability uses 0–100 units).
  * @param min Exclusive lower bound, or empty for no lower bound.
  * @param max Exclusive upper bound, or empty for no upper bound.
  * @returns The existing query if unchanged, otherwise the updated query. Does not throw.
@@ -209,13 +209,13 @@ export function formatSummaryAmount(amount: SalesSummaryAmount): string {
 const hiddenColumnPatterns: RegExp[] = [
     /^reporting account$/i,
     /^close month$/i,
-    /^expected revenue \(converted\)$/i,
+    /^expected (?:revenue|amount) \(converted\)$/i,
     /^amount \(converted\)$/i,
     /^forecast alert$/i,
 ]
 
 /**
- * The PM-6392 column order. A column the Salesforce report adds later matches no
+ * The PM-6660 column order. A column the Salesforce report adds later matches no
  * pattern and keeps its report position behind the ordered ones, so new fields
  * appear rather than silently disappearing.
  */
@@ -226,7 +226,8 @@ const columnOrderPatterns: RegExp[] = [
     /^subcontracting end customer$/i,
     /^reporting smu$/i,
     /^amount$/i,
-    /^expected revenue$/i,
+    /^probability(?:\s*\(?%\)?)?$/i,
+    /^expected (?:revenue|amount)$/i,
     /^created date$/i,
     /^close date$/i,
     /^opportunity owner$/i,
@@ -242,7 +243,7 @@ export interface SalesDisplayColumn {
 /**
  * Chooses and orders the columns the Sales table shows.
  * @param report Loaded report, or undefined before the first response.
- * @returns The visible columns in PM-6392 order, each paired with its original cell
+ * @returns The visible columns in PM-6660 order, each paired with its original cell
  * index, so callers read `row.cells[index]` rather than re-ordering row data.
  * @throws Does not throw; a report with none of the known columns keeps report order.
  */
@@ -255,7 +256,10 @@ export function displayedColumns(report?: SalesReport): SalesDisplayColumn[] {
             return { ...entry, rank: rank < 0 ? columnOrderPatterns.length : rank }
         })
         .sort((left, right) => left.rank - right.rank || left.index - right.index)
-        .map(entry => ({ column: entry.column, index: entry.index }))
+        .map(entry => ({
+            column: { ...entry.column, label: entry.column.label.replace(/^expected revenue/i, 'Expected Amount') },
+            index: entry.index,
+        }))
 }
 
 /**
@@ -265,7 +269,7 @@ export function displayedColumns(report?: SalesReport): SalesDisplayColumn[] {
  */
 const amountLabelPattern = /^amount(\s*\(converted\))?$/i
 /** Matches the Expected Revenue column the summary cards and stage tiles total. */
-const expectedRevenueLabelPattern = /^expected\s*revenue(\s*\(converted\))?$/i
+const expectedRevenueLabelPattern = /^expected\s*(?:revenue|amount)(\s*\(converted\))?$/i
 /** Matches the stage column among the report's category breakdowns. */
 const stageLabelPattern = /stage/i
 /** Matches the stage whose signed value the WON SOW Signed card reports. */
@@ -375,12 +379,32 @@ export function stageBreakdown(summary?: SalesSummary): SalesStageBreakdown | un
 }
 
 /**
- * Reads the signed value behind the Total WON SOW Signed card.
+ * Reads the signed value behind the Total Bookings Won card.
  * @param breakdown Stage breakdown for the current filters, or undefined.
- * @returns The Amount total of the Won - SOW Signed stage, or undefined when the
- * filtered pipeline contains no such stage.
+ * @param total Snapshot Amount total used to produce zero when the complete breakdown has no wins.
+ * @returns The signed Amount, zero for no wins, or undefined when the report lacks the required totals.
  * @throws Does not throw.
  */
-export function wonSowSignedTotal(breakdown?: SalesStageBreakdown): SalesSummaryAmount | undefined {
-    return breakdown?.stages.find(stage => wonSowSignedPattern.test(stage.label.trim()))?.amount
+export function wonSowSignedTotal(
+    breakdown?: SalesStageBreakdown,
+    total?: SalesSummaryAmount,
+): SalesSummaryAmount | undefined {
+    const won = breakdown?.stages.find(stage => wonSowSignedPattern.test(stage.label.trim()))
+    if (won) return won.amount
+    const isStage = breakdown && (stageLabelPattern.test(breakdown.label)
+        || stageLabelPattern.test(breakdown.columnId))
+    return isStage && !breakdown.otherStages && total ? { ...total, count: 0, total: 0 } : undefined
+}
+
+/**
+ * Removes signed bookings from a snapshot Amount or Expected Amount total for the pipeline cards.
+ * @param total Matching snapshot total, preferring its converted column.
+ * @param won Signed bookings total in the same currency units.
+ * @returns Remaining pipeline value, or undefined if totals are missing or currencies differ. Does not throw.
+ */
+export function pipelineTotal(total?: SalesSummaryAmount, won?: SalesSummaryAmount): SalesSummaryAmount | undefined {
+    if (!total || !won) return undefined
+    if (!total.mixedCurrency && !won.mixedCurrency
+        && (total.currencyCode ?? defaultCurrencyCode) !== (won.currencyCode ?? defaultCurrencyCode)) return undefined
+    return { ...total, mixedCurrency: total.mixedCurrency || won.mixedCurrency, total: total.total - won.total }
 }
