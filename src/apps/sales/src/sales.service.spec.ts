@@ -15,10 +15,13 @@ describe('Sales report filters request', () => {
             amountColumn: 'AMOUNT',
             amountMax: 100000.5,
             amountMin: 0,
+            customerType: ['New Customer', 'Others'],
+            dealCategory: ['Wipro-Direct'],
             drilldownColumn: 'STAGE',
             drilldownValue: ['Proposal', 'Contracts'],
             filterColumn: 'NAME',
             filterValue: ['Acme, Inc.', 'Other & Co'],
+            offeringType: ['Flexible Talent', 'AI Training'],
             page: 1,
             perPage: 25,
         }, signal)
@@ -28,6 +31,12 @@ describe('Sales report filters request', () => {
             .toEqual(['Acme, Inc.', 'Other & Co'])
         expect(params.getAll('drilldownValue'))
             .toEqual(['Proposal', 'Contracts'])
+        expect(params.getAll('offeringType'))
+            .toEqual(['Flexible Talent', 'AI Training'])
+        expect(params.getAll('dealCategory'))
+            .toEqual(['Wipro-Direct'])
+        expect(params.getAll('customerType'))
+            .toEqual(['New Customer', 'Others'])
         expect(params.get('amountMin'))
             .toBe('0')
         expect(params.get('amountMax'))

@@ -3,6 +3,7 @@
 /* The horizontal report viewport must be focusable for keyboard scrolling. */
 /* eslint jsx-a11y/no-noninteractive-tabindex: ["error", { "roles": ["region"] }] */
 import { FC, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Select from 'react-select'
 
 import { Button, IconOutline, LoadingSpinner, PageTitle } from '~/libs/ui'
 import { ProfileContextData, useProfileContext, UserRole } from '~/libs/core'
@@ -20,6 +21,7 @@ import {
     displayedColumns,
     expectedRevenueTotal,
     formatSummaryAmount,
+    pipelineTotal,
     stageBreakdown,
     withAmountRange,
     withDateRange,
@@ -35,6 +37,25 @@ const filterDebounceMs = 400
 const numericTypes = ['currency', 'double', 'int', 'percent']
 /** Column types whose cells must not wrap, so a date never costs two lines. */
 const dateTypes = ['date', 'datetime']
+
+/** Independent pipeline dropdowns; no selected values means ALL. */
+const categoryFilters = [
+    {
+        key: 'offeringType',
+        label: 'Offering Type',
+        options: ['Flexible Talent', 'AI Training', 'Crowd-Powered Outcomes', 'Crowd-Powered Innovation'],
+    },
+    {
+        key: 'dealCategory',
+        label: 'Deal Category',
+        options: ['Topcoder-Direct', 'Wipro-Direct', 'Wipro-Consumption', 'Wipro-Internal'],
+    },
+    {
+        key: 'customerType',
+        label: 'Customer Type',
+        options: ['New Customer', 'New Project to Existing Customer', 'Extension to Existing Project', 'Others'],
+    },
+] as const
 
 interface SelectedOpportunity {
     id: string
@@ -93,7 +114,7 @@ const SummaryCard: FC<{ amount?: SalesSummaryAmount; label: string; value?: stri
 /**
  * Sales reporting workspace with administrator metadata sync, used on the dedicated host and inside Work.
  * @returns An executive dashboard: four snapshot-wide summary cards, a clickable stage
- * breakdown beside the Created/Close date range filter, and a compact report table with
+ * breakdown beside the date range and category filters, and a compact report table with
  * server-side view controls, manual refresh and a sync action that reloads the displayed data after commit.
  * @throws Does not throw request failures; shows inline recovery and stale-data status.
  */
@@ -229,11 +250,14 @@ const SalesPage: FC = () => {
         // behind the user's back.
         setQuery(current => ({
             ...initialQuery,
+            customerType: current.customerType,
             dateColumn: current.dateColumn,
             dateFrom: current.dateFrom,
             dateTo: current.dateTo,
+            dealCategory: current.dealCategory,
             drilldownColumn: current.drilldownColumn,
             drilldownValue: current.drilldownValue,
+            offeringType: current.offeringType,
             perPage: current.perPage,
         }))
     }
@@ -254,9 +278,9 @@ const SalesPage: FC = () => {
         // The report defines its own date fields, so the selection follows the
         // live schema instead of hard-coded Salesforce column IDs.
         if (!availableDates.length) return
-        if (availableDates.some(column => column.id === dateColumn)) return
-        setDateColumn(defaultDateColumn(availableDates))
-    }, [availableDates, dateColumn])
+        setDateColumn(current => (availableDates.some(column => column.id === current)
+            ? current : defaultDateColumn(availableDates)))
+    }, [availableDates])
 
     /** Applies the pending range when it is valid, otherwise shows why it cannot be sent. Does not throw. */
     const applyDateRange = useCallback((): void => {
@@ -326,7 +350,7 @@ const SalesPage: FC = () => {
     const breakdown = useMemo(() => stageBreakdown(summary), [summary])
     const totalAmount = summary && amountTotal(summary.amounts)
     const totalExpectedRevenue = summary && expectedRevenueTotal(summary.amounts)
-    const totalWonSowSigned = wonSowSignedTotal(breakdown)
+    const totalWonSowSigned = wonSowSignedTotal(breakdown, totalAmount)
     const firstRow = report?.total ? (report.page - 1) * report.perPage + 1 : 0
     const lastRow = report ? Math.min(report.page * report.perPage, report.total) : 0
     const updatedAt = report ? new Date(report.refreshedAt)
@@ -395,9 +419,15 @@ const SalesPage: FC = () => {
             {summary && (
                 <section className={styles.metrics} aria-label='Filtered sales totals'>
                     <SummaryCard label='Total Opportunities' value={summary.recordCount.toLocaleString()} />
-                    <SummaryCard amount={totalAmount} label='Total Amount' />
-                    <SummaryCard amount={totalExpectedRevenue} label='Total Expected Revenue' />
-                    <SummaryCard amount={totalWonSowSigned} label='Total WON SOW Signed' />
+                    <SummaryCard amount={totalWonSowSigned} label='Total Bookings Won' />
+                    <SummaryCard
+                        amount={pipelineTotal(totalAmount, totalWonSowSigned)}
+                        label='Total Bookings in Pipeline'
+                    />
+                    <SummaryCard
+                        amount={pipelineTotal(totalExpectedRevenue, totalWonSowSigned)}
+                        label='Total Expected Bookings in Pipeline'
+                    />
                 </section>
             )}
 
@@ -446,7 +476,7 @@ const SalesPage: FC = () => {
                                                         ? formatSummaryAmount(tile.expectedRevenue)
                                                         : '—'}
                                                 </span>
-                                                Expected revenue
+                                                Expected Amount
                                             </span>
                                         </span>
                                     </button>
@@ -464,71 +494,100 @@ const SalesPage: FC = () => {
                     </section>
                 )}
 
-                <section aria-labelledby='sales-date-heading' className={styles.panel}>
-                    <div className={styles.panelHeader}>
-                        <div>
-                            <h2 id='sales-date-heading'>Date range filter</h2>
-                            <p className={styles.panelHint}>
-                                Filter by Created Date for pipeline generation, or by Close Date for revenue
-                                projections.
+                <div className={styles.filterPanels}>
+                    <section aria-labelledby='sales-date-heading' className={styles.panel}>
+                        <div className={styles.panelHeader}>
+                            <div>
+                                <h2 id='sales-date-heading'>Date range filter</h2>
+                                <p className={styles.panelHint}>
+                                    Filter by Created Date for pipeline generation, or by Close Date for revenue
+                                    projections.
+                                </p>
+                            </div>
+                        </div>
+                        <form className={styles.filters} onSubmit={submitDateRange}>
+                            <div className={styles.filterField}>
+                                <label htmlFor='sales-date-column'>Filter type</label>
+                                <select
+                                    disabled={!availableDates.length}
+                                    id='sales-date-column'
+                                    onChange={event => setDateColumn(event.target.value)}
+                                    value={dateColumn}
+                                >
+                                    {!availableDates.length && <option value=''>No date fields available</option>}
+                                    {availableDates.map(column => (
+                                        <option key={column.id} value={column.id}>{column.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className={styles.filterField}>
+                                <label htmlFor='sales-date-from'>From date</label>
+                                <input
+                                    disabled={!availableDates.length}
+                                    id='sales-date-from'
+                                    name='sales-date-from'
+                                    onChange={event => setDateFrom(event.target.value)}
+                                    type='date'
+                                    value={dateFrom}
+                                />
+                            </div>
+                            <div className={styles.filterField}>
+                                <label htmlFor='sales-date-to'>To date</label>
+                                <input
+                                    disabled={!availableDates.length}
+                                    id='sales-date-to'
+                                    name='sales-date-to'
+                                    onChange={event => setDateTo(event.target.value)}
+                                    type='date'
+                                    value={dateTo}
+                                />
+                            </div>
+                            <div className={styles.filterActions}>
+                                <Button noCaps onClick={resetDateRange} link>Clear</Button>
+                            </div>
+                            <p className={styles.dateStatus} aria-live='polite' role='status'>
+                                {dateError && <span className={styles.dateError}>{dateError}</span>}
+                                {!dateError && rangeApplied && (
+                                    <span>
+                                        {`Showing records by ${availableDates
+                                            .find(column => column.id === query.dateColumn)
+                                            ?.label ?? query.dateColumn}`}
+                                        {query.dateFrom ? ` from ${query.dateFrom}` : ''}
+                                        {query.dateTo ? ` through ${query.dateTo}` : ''}
+                                        .
+                                    </span>
+                                )}
+                                {!dateError && !rangeApplied && <span>No date range applied.</span>}
                             </p>
+                        </form>
+                    </section>
+                    <section aria-label='Pipeline filters' className={`${styles.panel} ${styles.categoryPanel}`}>
+                        <div className={styles.filters}>
+                            {categoryFilters.map(filter => (
+                                <div className={styles.filterField} key={filter.key}>
+                                    <label htmlFor={`sales-${filter.key}`}>{filter.label}</label>
+                                    <Select
+                                        classNamePrefix='pipeline-select'
+                                        closeMenuOnSelect={false}
+                                        inputId={`sales-${filter.key}`}
+                                        isClearable
+                                        isMulti
+                                        onChange={options => setQuery(current => ({
+                                            ...current,
+                                            [filter.key]: options.some(option => option.value === 'ALL')
+                                                ? undefined
+                                                : options.length ? options.map(option => option.value) : undefined,
+                                            page: 1,
+                                        }))}
+                                        options={['ALL', ...filter.options].map(value => ({ label: value, value }))}
+                                        placeholder='ALL'
+                                        value={(query[filter.key] ?? []).map(value => ({ label: value, value }))}
+                                    />
+                                </div>
+                            ))}
                         </div>
-                    </div>
-                    <form className={styles.filters} onSubmit={submitDateRange}>
-                        <div className={styles.filterField}>
-                            <label htmlFor='sales-date-column'>Filter type</label>
-                            <select
-                                disabled={!availableDates.length}
-                                id='sales-date-column'
-                                onChange={event => setDateColumn(event.target.value)}
-                                value={dateColumn}
-                            >
-                                {!availableDates.length && <option value=''>No date fields available</option>}
-                                {availableDates.map(column => (
-                                    <option key={column.id} value={column.id}>{column.label}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className={styles.filterField}>
-                            <label htmlFor='sales-date-from'>From date</label>
-                            <input
-                                disabled={!availableDates.length}
-                                id='sales-date-from'
-                                name='sales-date-from'
-                                onChange={event => setDateFrom(event.target.value)}
-                                type='date'
-                                value={dateFrom}
-                            />
-                        </div>
-                        <div className={styles.filterField}>
-                            <label htmlFor='sales-date-to'>To date</label>
-                            <input
-                                disabled={!availableDates.length}
-                                id='sales-date-to'
-                                name='sales-date-to'
-                                onChange={event => setDateTo(event.target.value)}
-                                type='date'
-                                value={dateTo}
-                            />
-                        </div>
-                        <div className={styles.filterActions}>
-                            <Button noCaps onClick={resetDateRange} link>Clear</Button>
-                        </div>
-                        <p className={styles.dateStatus} aria-live='polite' role='status'>
-                            {dateError && <span className={styles.dateError}>{dateError}</span>}
-                            {!dateError && rangeApplied && (
-                                <span>
-                                    {`Showing records by ${availableDates
-                                        .find(column => column.id === query.dateColumn)?.label ?? query.dateColumn}`}
-                                    {query.dateFrom ? ` from ${query.dateFrom}` : ''}
-                                    {query.dateTo ? ` through ${query.dateTo}` : ''}
-                                    .
-                                </span>
-                            )}
-                            {!dateError && !rangeApplied && <span>No date range applied.</span>}
-                        </p>
-                    </form>
-                </section>
+                    </section>
+                </div>
             </div>
 
             <section className={styles.panel} aria-label='Sales report'>
@@ -611,16 +670,16 @@ const SalesPage: FC = () => {
                     </div>
                 </form>
 
-                <form aria-label='Amount range filter' className={styles.filters} onSubmit={submitAmountRange}>
+                <form aria-label='Amount or probability range' className={styles.filters} onSubmit={submitAmountRange}>
                     <div className={styles.filterField}>
-                        <label htmlFor='sales-amount-column'>Amount field</label>
+                        <label htmlFor='sales-amount-column'>Amount or Probability Filter</label>
                         <select
                             id='sales-amount-column'
                             onChange={event => setAmountColumn(event.target.value)}
                             value={amountColumn}
                         >
-                            <option value=''>Choose an amount field</option>
-                            {columns.filter(entry => ['currency', 'double'].includes(entry.column.dataType))
+                            <option value=''>Choose an amount or probability field</option>
+                            {columns.filter(entry => numericTypes.includes(entry.column.dataType))
                                 .map(entry => (
                                     <option key={entry.column.id} value={entry.column.id}>{entry.column.label}</option>
                                 ))}
@@ -737,6 +796,8 @@ const SalesPage: FC = () => {
                                 <h3>No sales records found</h3>
                                 <p>
                                     {query.search || query.filterValue || query.drilldownValue
+                                        || query.dateColumn || query.amountColumn
+                                        || categoryFilters.some(filter => query[filter.key]?.length)
                                         ? 'Try a different search, stage or clear the filters.'
                                         : 'The Salesforce report does not contain any records yet.'}
                                 </p>

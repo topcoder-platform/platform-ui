@@ -75,7 +75,11 @@ export interface SalesQuery {
      * bucket and the stage breakdown stays on screen while one stage is selected.
      */
     drilldownValue?: string | string[]
-    /** Currency or double column to compare using its numeric value. */
+    /** Exact category choices, OR within each field and AND across fields; omitted means ALL. */
+    offeringType?: string[]
+    dealCategory?: string[]
+    customerType?: string[]
+    /** Currency, double, int or percent column to compare using its numeric value (probability is 0–100). */
     amountColumn?: string
     /** Exclusive lower bound; requires amountColumn. */
     amountMin?: number
