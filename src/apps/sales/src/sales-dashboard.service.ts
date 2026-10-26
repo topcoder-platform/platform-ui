@@ -18,6 +18,8 @@ export interface MonthlySalesChart {
 export interface SalesDashboardResponse {
     charts: MonthlySalesChart[]
     notices: string[]
+    /** Every customer before top-five/Other grouping, used for the monthly payments matrix. */
+    customerPayments?: MonthlySalesChart
 }
 
 /**
@@ -25,7 +27,7 @@ export interface SalesDashboardResponse {
  * Explicit inclusive/exclusive bounds override the Reports API's rolling month defaults
  * for every chart, including pipeline forecasts. The fiscal year is resolved on each request.
  * @param section Source section to load.
- * @param portal Server-side payment scope; Sales excludes internal and TaaS payments before aggregation.
+ * @param portal Server-side scope; Sales excludes internal payments and talent assignments before aggregation.
  * @param dateBasis Date field for pipeline monthly grouping.
  * @param signal Cancels superseded or unmounted requests.
  * @returns Monthly chart definitions and any source limitations.
