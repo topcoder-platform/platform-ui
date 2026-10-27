@@ -28,6 +28,7 @@ import {
     withDrilldown,
     wonSowSignedTotal,
 } from './sales.utils'
+import { salesFiscalYearLabel } from './sales-fiscal-year'
 import styles from './SalesPage.module.scss'
 import './sales.scss'
 
@@ -351,6 +352,7 @@ const SalesPage: FC = () => {
     const totalAmount = summary && amountTotal(summary.amounts)
     const totalExpectedRevenue = summary && expectedRevenueTotal(summary.amounts)
     const totalWonSowSigned = wonSowSignedTotal(breakdown, totalAmount)
+    const title = `Sales - ${salesFiscalYearLabel(query.dateFrom, query.dateTo)}`
     const firstRow = report?.total ? (report.page - 1) * report.perPage + 1 : 0
     const lastRow = report ? Math.min(report.page * report.perPage, report.total) : 0
     const updatedAt = report ? new Date(report.refreshedAt)
@@ -358,11 +360,11 @@ const SalesPage: FC = () => {
 
     return (
         <div className={`sales-app ${styles.page}`}>
-            <PageTitle>Sales</PageTitle>
+            <PageTitle>{title}</PageTitle>
             <header className={styles.header}>
                 <div>
                     <p className={styles.eyebrow}>WORK / SALES</p>
-                    <h1>Sales</h1>
+                    <h1>{title}</h1>
                     <p className={styles.subtitle}>Your sales pipeline, directly from Salesforce.</p>
                 </div>
                 <div className={styles.headerActions}>

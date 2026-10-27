@@ -9,7 +9,7 @@ import styles from './SalesDashboardsPage.module.scss'
 /**
  * Shows all customers as rows and fiscal-year months as columns in the bottom Customer section.
  * @param props Complete customer dataset, report title and source notices; no top-five/Other grouping.
- * @returns An accessible scrollable matrix with customer, month and grand totals, or an empty state.
+ * @returns An accessible scrollable matrix with totals directly below the month headers, or an empty state.
  * @throws Does not throw for empty datasets. Unknown amounts stay distinct from zero.
  */
 const SalesCustomerTable: FC<{ data: MonthlySalesChart; title: string; notices?: string[] }> = props => {
@@ -38,6 +38,13 @@ const SalesCustomerTable: FC<{ data: MonthlySalesChart; title: string; notices?:
                             </tr>
                         </thead>
                         <tbody>
+                            <tr className={styles.annual}>
+                                <th scope='row'>Total</th>
+                                {data.months.map((month, index) => (
+                                    <td key={month.month}>{salesChartValue(monthlyTotals[index], 'currency')}</td>
+                                ))}
+                                <td>{salesChartValue(salesChartTotal(monthlyTotals), 'currency')}</td>
+                            </tr>
                             {data.series.map(series => (
                                 <tr key={series.key}>
                                     <th scope='row'>{series.label}</th>
@@ -54,15 +61,6 @@ const SalesCustomerTable: FC<{ data: MonthlySalesChart; title: string; notices?:
                                 </tr>
                             ))}
                         </tbody>
-                        <tfoot>
-                            <tr>
-                                <th scope='row'>Total</th>
-                                {data.months.map((month, index) => (
-                                    <td key={month.month}>{salesChartValue(monthlyTotals[index], 'currency')}</td>
-                                ))}
-                                <td>{salesChartValue(salesChartTotal(monthlyTotals), 'currency')}</td>
-                            </tr>
-                        </tfoot>
                     </table>
                 </div>
             ) : <p>No customer data in this fiscal year.</p>}
