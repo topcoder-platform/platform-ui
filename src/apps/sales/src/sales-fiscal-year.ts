@@ -24,3 +24,16 @@ export function salesFiscalYearLabel(from?: string, to?: string): string {
         .slice(-2)
     return first === last ? `FY '${start}` : `FY '${start}–'${end}`
 }
+
+/**
+ * Displays the full April–March period named by the report title.
+ * @param from Inclusive ISO start date, or undefined for the current fiscal year.
+ * @param to Inclusive ISO end date; a range can span multiple fiscal years.
+ * @returns Human-readable financial-year bounds. Does not throw for valid report dates.
+ */
+export function salesFiscalYearPeriod(from?: string, to?: string): string {
+    const bound = from || to
+    const first = salesFiscalYear(bound ? new Date(bound) : undefined)
+    const last = to ? salesFiscalYear(new Date(to)) : first
+    return `01 April ${first - 1} - 31 March ${last}`
+}

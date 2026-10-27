@@ -1,6 +1,6 @@
 /* Highcharts requires null to represent missing values without turning them into zero. */
 /* eslint-disable unicorn/no-null */
-import { FC, useMemo } from 'react'
+import { FC, ReactNode, useMemo } from 'react'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
@@ -46,15 +46,15 @@ export function chartTooltip(unit: MonthlySalesChart['unit']): Highcharts.Toolti
 }
 
 /**
- * Renders a monthly chart and accessible data table with annual and monthly currency/count totals.
- * @param props API chart definition, including units, monthly values and stacking.
+ * Renders a monthly chart and accessible data table with currency totals and optional card controls.
+ * @param props API chart definition, including units, monthly values, stacking and filter/toggle controls.
  * @returns A responsive chart card; unknown percentages remain gaps and table dashes.
  * @throws Does not throw for empty month or series arrays.
  */
-const SalesDashboardChart: FC<{ chart: MonthlySalesChart }> = props => {
+const SalesDashboardChart: FC<{ chart: MonthlySalesChart; controls?: ReactNode }> = props => {
     const chart = props.chart
     const labels = useMemo(() => chart.months.map(month => salesMonthLabel(month.month)), [chart.months])
-    const hasTotals = chart.unit !== 'percent'
+    const hasTotals = chart.unit === 'currency'
     const showTotal = hasTotals && chart.series.length > 1
     const annual = useMemo(() => chart.series.map(series => salesChartTotal(chart.months.map(month => (
         month.values[series.key]
@@ -87,8 +87,9 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart }> = props => {
     }), [chart, labels, hasTotals])
 
     return (
-        <article className={styles.card}>
+        <article className={styles.card} aria-label={chart.title}>
             <h3>{chart.title}</h3>
+            {props.controls}
             <p>{chart.description}</p>
             <figure aria-label={`${chart.title} chart`}>
                 <HighchartsReact highcharts={Highcharts} options={options} />
@@ -96,7 +97,10 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart }> = props => {
             <details>
                 <summary>View monthly data</summary>
                 {chart.unit === 'count' && (
-                    <p>Counts are summed across months and categories; totals are not unique member counts.</p>
+                    <p>
+                        Counts are unique within each category and month.
+                        Members may appear in more than one category or month.
+                    </p>
                 )}
                 <div className={styles.tableScroll}>
                     <table>

@@ -491,6 +491,8 @@ describe('Sales page', () => {
         await screen.findByText(/Showing records by Close Date from 2026-07-01 through 2026-09-30/)
         expect(screen.getByRole('heading', { level: 1 }))
             .toHaveTextContent("Sales - FY '27")
+        expect(screen.getByText('01 April 2026 - 31 March 2027'))
+            .toBeInTheDocument()
         fireEvent.change(field, { target: { value: 'CREATED_DATE' } })
         await waitFor(() => expect(fetchReport)
             .toHaveBeenLastCalledWith(expect.objectContaining({ dateColumn: 'CREATED_DATE' }), expect.any(AbortSignal)))
