@@ -281,11 +281,13 @@ The Reports route is `/reports/sales-dashboards` on the combined host and
 `/sales-dashboards` on the Reports host. Existing pipeline/progression reports
 and platform dashboards retain their routes and behavior.
 
-The pipeline, bookings, member payments and flexible talent sections each call
+The pipeline, revenue, member payments and flexible talent sections each call
 `/sales-dashboard/:section` on the Reports API independently,
 with inline loading, failure/retry and pending-source states. Refresh reloads all
 sections. Changing Close date / Created date reloads only pipeline data. Source
-requests are aborted on unmount or control changes.
+requests are aborted on unmount or control changes. The bottom Customer section
+shares the revenue and payment responses, including loading/error/retry states;
+it does not make additional requests or retain superseded data during refresh.
 
 All charts cover the current fiscal year's 12 UTC calendar months, April through
 March. `fetchSalesDashboard` sends an inclusive April 1 `startDate` and exclusive
@@ -333,7 +335,7 @@ neither portal renders or requests that section, including on refresh.
 
 Revenue uses the confirmed SFDC report `00O1K000009GxBtUAK` ("Accounts Monthly
 revenue File"), with its verified Date and Gross Amount columns as API defaults. It
-renders **Bookings** display copy, then the same amounts stacked by **Engagement
+renders **Revenue** display copy, then the same amounts stacked by **Engagement
 Offering Type** and **Deal Category**. The API route and chart IDs retain `revenue`
 for compatibility. Blank offerings for TopGear map to TopGear Ops, and for Multiple
 App Enhancement(s) 5 to Flexible Talent; populated values remain unchanged. A pending notice appears only when reports-api-v6 is pointed at
@@ -348,24 +350,33 @@ Bookings won by offering type, deal category and customer type. The UI renders
 these chart definitions using the same selected Close/Created date and fiscal year.
 Only the open-pipeline charts use the “including expected closes” headline caption.
 
-Every multi-series stacked chart has a **Total** in its shared hover tooltip and
-monthly data table. Tooltip totals sum the visible series, including negative
-adjustments; hiding a legend entry updates the total. Unknown values remain dashes
-when no values are known. Overlapping flexible-talent series and percentages are
-not added together. Members-paid stack totals count type memberships, as noted
-in the headline, rather than globally distinct people.
+### PM-6668 totals and customer reporting
 
-Below the payment charts, an always-visible, horizontally scrollable table shows
-all customers as rows and fiscal-year months as columns, with row totals, monthly
-totals and a grand total. It uses the API's optional `customerPayments` dataset,
-which retains every customer before the chart groups smaller customers as Other.
-Zero and unknown values remain distinct. The table supports keyboard scrolling,
-keeps customer names visible while scrolling, and has an explicit empty state.
+Every currency/count chart's monthly table starts with an **Annual** row summing
+each column across the fiscal year. Multi-series tables also include a Total
+column. Shared tooltips show **Total** before the category details, including for
+single-series and grouped charts. Tooltip totals sum visible series, including
+negative adjustments; hiding a legend entry updates the total. Unknown values
+remain dashes when no values are known. Count totals are sums across months and
+categories, not unique member counts, as explained alongside the monthly table.
+Percentages are not summed; gross margin remains on hold.
 
-Deploy the PM-6667 Reports API companion before the UI. It supplies the corrected
-category/won-stage/talent aggregates and the ungrouped customer dataset. An older
-API still renders its charts; it cannot provide the all-customer table. API
-configuration and source-data corrections are documented in reports-api-v6/SALES.md.
+The bottom **Customer** section replaces the Member payments by customer chart
+with two always-visible tables: **Revenue Customer-Wise**, from the optional API
+`customerRevenue` dataset, and **Goods Sold Customer-Wise**, from `customerPayments`.
+Each shows all customer names as rows and fiscal-year months as columns, with an
+Annual column, monthly totals and a grand total. No top-five/Other grouping is
+applied. Zero and unknown values remain distinct. Tables support keyboard
+scrolling, keep customer names visible while scrolling and show explicit empty
+states. Missing datasets and source notices are displayed beside the affected
+table; a failed source can be retried independently from either place it appears.
+
+Deploy the PM-6668 Reports API companion before the UI. It supplies the full
+revenue customer dataset and restores Revenue titles; pipeline Bookings wording
+is unchanged. Older APIs still render charts and the payments table but show an
+unavailable state for customer revenue. The revenue report must expose a customer
+name field; metadata label matching and the optional field override are documented
+in reports-api-v6/SALES.md.
 
 Tests: `sales-dashboard.service.spec.ts` covers fiscal-year request bounds across
 all sections, portals and date bases, UTC/year/leap-day boundaries, and rollover
@@ -375,6 +386,7 @@ hidden and unrequested in both portals, independent failures,
 retry, refresh, date-basis changes, request cancellation, keyboard navigation,
 accessible percentage/missing-value tables, compact axis labels and headlines
 (totals, per-series figures, percentage points, expected closes and the
-latest-recorded-month fallback), visible-series tooltip totals, non-additive series,
-new won chart rendering and customer matrix totals/missing values/empty states). Reports route/navigation tests cover
-the new entry point.
+latest-recorded-month fallback), total-first tooltips, annual totals, count-sum caveats,
+new won chart rendering, both customer matrices and their totals/missing values/empty
+states, shared-source retries and cancellation. Reports route/navigation tests
+cover the entry point.
