@@ -112,18 +112,29 @@ describe('Sales amount ranges', () => {
 })
 
 describe('Sales date range utilities', () => {
-    it('offers only date fields and opens on Created Date for pipeline analysis', () => {
+    it('offers only date fields and opens on Close Date for revenue analysis', () => {
         const columns = dateColumns(report())
         expect(columns.map(column => column.id))
             .toEqual(['CREATED_DATE', 'CLOSE_DATE'])
         expect(defaultDateColumn(columns))
-            .toBe('CREATED_DATE')
+            .toBe('CLOSE_DATE')
         expect(dateColumns(undefined))
             .toEqual([])
         expect(defaultDateColumn([]))
             .toBe('')
         expect(defaultDateColumn([{ dataType: 'date', id: 'CLOSE_DATE', label: 'Close Date' }]))
             .toBe('CLOSE_DATE')
+    })
+
+    it.each([
+        { dataType: 'date', id: 'custom', label: 'Closed Date' },
+        { dataType: 'date', id: 'custom', label: 'Opportunity: Close Date' },
+        { dataType: 'date', id: 'Opportunity.CloseDate', label: 'Closing day' },
+    ])('prefers the close field $label over the first date field', column => {
+        expect(defaultDateColumn([report().columns[2], column]))
+            .toBe(column.id)
+        expect(defaultDateColumn([report().columns[2]]))
+            .toBe('CREATED_DATE')
     })
 
     it('rejects an inverted range and a bound without a field before any request', () => {

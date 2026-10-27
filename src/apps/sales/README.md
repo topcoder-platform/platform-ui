@@ -96,6 +96,12 @@ Multiple values use repeated query parameters. Deploy the PM-6639 Reports API
 change before this UI. Tests cover OR selection/removal, strict numeric bounds,
 combined filters, pagination resets, clearing, refresh and request serialization.
 
+The pipeline title shows **Sales - FY '27** for April 2026–March 2027, using
+the fiscal year's ending year. Applied date bounds update the title; a range
+spanning fiscal years shows both (for example, **Sales - FY '26–'27**). With no
+date bounds, it shows the current UTC fiscal year. Monthly dashboards show the
+same fiscal-year suffix using their displayed months.
+
 ## Dashboard layout (PM-6392)
 
 The page reads as an executive dashboard rather than one long column:
@@ -173,8 +179,9 @@ The date range panel, now the right half of the two-column row, filters the
 report by **Created Date** for pipeline generation, or by **Close Date** for
 revenue projection.
 The Filter type dropdown lists the report's own `date`/`datetime` columns rather
-than hard-coded Salesforce field IDs, and opens on the Created Date column when
-the report has one. From date and To date are inclusive and either may be left
+than hard-coded Salesforce field IDs, and opens on Close Date (or Closed Date)
+when the report has one, falling back to its first date field. Clear restores this
+default. From date and To date are inclusive and either may be left
 empty for an open-ended range.
 
 Like the search and column filters, the range applies automatically (debounced)
@@ -365,7 +372,8 @@ The bottom **Customer** section replaces the Member payments by customer chart
 with two always-visible tables: **Revenue Customer-Wise**, from the optional API
 `customerRevenue` dataset, and **Goods Sold Customer-Wise**, from `customerPayments`.
 Each shows all customer names as rows and fiscal-year months as columns, with an
-Annual column, monthly totals and a grand total. No top-five/Other grouping is
+Annual column and a **Total** row directly below the Customer/month header,
+containing monthly totals and a grand total. No top-five/Other grouping is
 applied. Zero and unknown values remain distinct. Tables support keyboard
 scrolling, keep customer names visible while scrolling and show explicit empty
 states. Missing datasets and source notices are displayed beside the affected
