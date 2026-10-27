@@ -20,6 +20,8 @@ export interface SalesDashboardResponse {
     notices: string[]
     /** Every customer before top-five/Other grouping, used for the monthly payments matrix. */
     customerPayments?: MonthlySalesChart
+    /** Every customer from the revenue report, without grouping smaller customers into Other. */
+    customerRevenue?: MonthlySalesChart
 }
 
 /**

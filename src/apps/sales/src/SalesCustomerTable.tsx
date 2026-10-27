@@ -7,33 +7,34 @@ import { salesChartTotal, salesChartValue, salesMonthLabel } from './sales-dashb
 import styles from './SalesDashboardsPage.module.scss'
 
 /**
- * Shows all customers as rows and fiscal-year months as columns below the payment charts.
- * @param props Ungrouped customer-payment dataset returned by the API, before top-five ranking.
+ * Shows all customers as rows and fiscal-year months as columns in the bottom Customer section.
+ * @param props Complete customer dataset, report title and source notices; no top-five/Other grouping.
  * @returns An accessible scrollable matrix with customer, month and grand totals, or an empty state.
  * @throws Does not throw for empty datasets. Unknown amounts stay distinct from zero.
  */
-const SalesCustomerPaymentsTable: FC<{ data: MonthlySalesChart }> = props => {
+const SalesCustomerTable: FC<{ data: MonthlySalesChart; title: string; notices?: string[] }> = props => {
     const data = props.data
     const monthlyTotals = data.months.map(month => salesChartTotal(data.series.map(series => month.values[series.key])))
     return (
-        <article className={`${styles.card} ${styles.customerPayments}`}>
-            <h3>Monthly member payments by customer</h3>
+        <article className={`${styles.card} ${styles.customerTable}`}>
+            <h3>{props.title}</h3>
+            {props.notices?.map(notice => <p key={notice} role='status'>{notice}</p>)}
             {data.series.length ? (
                 <div
                     className={styles.tableScroll}
                     role='region'
-                    aria-label='Monthly member payments by customer'
+                    aria-label={props.title}
                     tabIndex={0}
                 >
                     <table>
-                        <caption>All customers, monthly payments and totals (USD)</caption>
+                        <caption>{`${props.title} (USD)`}</caption>
                         <thead>
                             <tr>
                                 <th scope='col'>Customer</th>
                                 {data.months.map(month => (
                                     <th key={month.month} scope='col'>{salesMonthLabel(month.month)}</th>
                                 ))}
-                                <th scope='col'>Total</th>
+                                <th scope='col'>Annual</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -64,9 +65,9 @@ const SalesCustomerPaymentsTable: FC<{ data: MonthlySalesChart }> = props => {
                         </tfoot>
                     </table>
                 </div>
-            ) : <p>No customer payments in this fiscal year.</p>}
+            ) : <p>No customer data in this fiscal year.</p>}
         </article>
     )
 }
 
-export default SalesCustomerPaymentsTable
+export default SalesCustomerTable
