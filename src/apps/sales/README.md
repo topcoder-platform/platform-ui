@@ -60,7 +60,7 @@ metadata sync, date clearing and the report's Clear action.
 - Offering Type: Flexible Talent, AI Training, Crowd-Powered Outcomes,
   Crowd-Powered Innovation.
 - Deal Category: Topcoder-Direct, Wipro-Direct, Wipro-Consumption, Wipro-Internal.
-- Customer Type: New Customer, New Project to Existing Customer,
+- Customer Type: New Customer, New Project at Existing Customer,
   Extension to Existing Project, Others.
 
 The UI sends repeated `offeringType`, `dealCategory` and `customerType` parameters.
@@ -288,13 +288,27 @@ The Reports route is `/reports/sales-dashboards` on the combined host and
 `/sales-dashboards` on the Reports host. Existing pipeline/progression reports
 and platform dashboards retain their routes and behavior.
 
-The pipeline, revenue, member payments and flexible talent sections each call
-`/sales-dashboard/:section` on the Reports API independently,
-with inline loading, failure/retry and pending-source states. Refresh reloads all
-sections. Changing Close date / Created date reloads only pipeline data. Source
-requests are aborted on unmount or control changes. The bottom Customer section
-shares the revenue and payment responses, including loading/error/retry states;
-it does not make additional requests or retain superseded data during refresh.
+The page groups its six cards into **Sales** (Bookings Won and Bookings in Pipeline),
+**Revenue** (Revenue Closed), **Payments** (Topcoder Payments and TaaS Payments), and
+**Flexible Talent** (Members Engaged), followed by the two **Customer** matrices.
+The six sources call `/sales-dashboard/:section` independently, with inline loading,
+failure/retry and pending-source states. Refresh reloads every active source; changing
+Close date / Created date reloads bookings and pipeline only. Requests are aborted
+on unmount or control changes.
+
+Bookings Won, Bookings in Pipeline and Revenue Closed each have independent Offering
+Type, Deal Category and Customer Type dropdowns. ALL clears that filter. The API filters
+rows before computing both the chart and its expandable table, combines fields with
+AND, and retains the unfiltered choices. Customer Type has the same four options as
+Pipeline, including the corrected **New Project at Existing Customer**; the API accepts
+the previous “to” spelling as an alias. Revenue reads this category from its linked
+Opportunity, not the Yes/No New Customer field. Unlinked rows remain in ALL totals.
+
+Bookings in Pipeline switches between Amount and Expected Amount, and Topcoder Payments
+between Amount and Count, without refetching. TaaS Payments is a separate monthly amount
+chart based on platform payment creation date. The Customer section shares unfiltered
+revenue and payment responses, including loading/error/retry states. Filtering Revenue
+Closed starts a separate request, so customer totals keep the full fiscal-year scope.
 
 All charts cover the current fiscal year's 12 UTC calendar months, April through
 March. `fetchSalesDashboard` sends an inclusive April 1 `startDate` and exclusive
@@ -311,7 +325,8 @@ tables, currency/count units, and gaps for unknown values. Y-axis ticks use comp
 labels such as `$1.5M`. Source notices remain visible above the charts.
 
 Sales passes `portal=sales` so the API removes TaaS, Topcoder and unlinked customer
-payments before computing any payment totals or customer rankings. Flexible talent
+payments before computing Topcoder payment totals or customer rankings. TaaS Payments
+loads separately and includes all TaaS payments in the period in either portal. Flexible talent
 also includes customer work only: the API resolves engagement projects to external
 billing-account clients before counting members. Reports passes `portal=reports`
 and retains its existing scope. Flexible talent counts newly assigned, completed
@@ -320,8 +335,7 @@ neither portal renders or requests that section, including on refresh.
 
 Revenue uses the confirmed SFDC report `00O1K000009GxBtUAK` ("Accounts Monthly
 revenue File"), with its verified Date and Gross Amount columns as API defaults. It
-renders **Revenue** display copy, then the same amounts stacked by **Engagement
-Offering Type** and **Deal Category**. The API route and chart IDs retain `revenue`
+renders one **Revenue Closed** chart with three category filters. The API route and chart IDs retain `revenue`
 for compatibility. Blank offerings for TopGear map to TopGear Ops, and for Multiple
 App Enhancement(s) 5 to Flexible Talent; populated values remain unchanged. A pending notice appears only when reports-api-v6 is pointed at
 another report without column settings. See that repository's `SALES.md` for source
@@ -331,37 +345,36 @@ definitions, settings and API parameters.
 
 The Reports API removes Total Opportunity Size, returns Won - SOW Signed bookings
 first, excludes won stages from Expected bookings and Pipeline by stage, and adds
-Bookings won by offering type, deal category and customer type. The UI renders
-these chart definitions using the same selected Close/Created date and fiscal year.
+Bookings won by offering type, deal category and customer type. PM-6672 consolidates
+these into two cards using the same selected Close/Created date and fiscal year.
 
 ### PM-6668 totals and customer reporting
 
-Every currency/count chart's monthly table starts with an **Annual** row summing
-each column across the fiscal year. Multi-series tables also include a Total
-column. Shared tooltips show **Total** before the category details, including for
-single-series and grouped charts. Tooltip totals sum visible series, including
-negative adjustments; hiding a legend entry updates the total. Unknown values
-remain dashes when no values are known. Count totals are sums across months and
-categories, not unique member counts, as explained alongside the monthly table.
-Percentages are not summed; gross margin remains on hold.
+Each currency chart's monthly table starts with an **Annual** row summing each column
+across the fiscal year. Multi-series currency tables include a Total column, and currency
+tooltips show Total before category details. Hiding a series updates tooltip totals;
+negative adjustments and unknown values are preserved. PM-6672 removes Annual rows,
+Total columns and summed tooltips from count charts because members may recur across
+months and categories. Percentages are not summed; gross margin remains on hold.
 
 The bottom **Customer** section replaces the Member payments by customer chart
 with two always-visible tables: **Revenue Customer-Wise**, from the optional API
 `customerRevenue` dataset, and **Goods Sold Customer-Wise**, from `customerPayments`.
 Each shows all customer names as rows and fiscal-year months as columns, with an
-Annual column and a **Total** row directly below the Customer/month header,
+**Annual** column immediately after Customer, before the month columns, and a
+**Total** row directly below the header,
 containing monthly totals and a grand total. No top-five/Other grouping is
 applied. Zero and unknown values remain distinct. Tables support keyboard
 scrolling, keep customer names visible while scrolling and show explicit empty
 states. Missing datasets and source notices are displayed beside the affected
 table; a failed source can be retried independently from either place it appears.
 
-Deploy the PM-6668 Reports API companion before the UI. It supplies the full
-revenue customer dataset and restores Revenue titles; pipeline Bookings wording
-is unchanged. Older APIs still render charts and the payments table but show an
-unavailable state for customer revenue. The revenue report must expose a customer
-name field; metadata label matching and the optional field override are documented
-in reports-api-v6/SALES.md.
+Deploy the PM-6672 Reports API companion before the UI. It adds the bookings and TaaS
+sections, category filtering and filter options, revenue Opportunity-based customer
+categories, Reporting Account priority for customer revenue, and Client.name fallback
+for goods-sold customers. See reports-api-v6/SALES.md for field configuration. Both Sales
+pages show the fiscal-year title and full April–March date range; Close Date remains the
+default pipeline filter. The Total-first customer rows from the previous fix are retained.
 
 Tests: `sales-dashboard.service.spec.ts` covers fiscal-year request bounds across
 all sections, portals and date bases, UTC/year/leap-day boundaries, and rollover
@@ -369,8 +382,7 @@ on subsequent requests. `SalesDashboardsPage.spec.tsx` covers the full April–M
 monthly table, fiscal-year notice, portal scope, gross margin remaining
 hidden and unrequested in both portals, independent failures,
 retry, refresh, date-basis changes, request cancellation, keyboard navigation,
-accessible percentage/missing-value tables, compact axis labels, total-first
-tooltips, annual totals, count-sum caveats,
-new won chart rendering, both customer matrices and their totals/missing values/empty
+accessible percentage/missing-value tables, compact axis labels, total-first tooltips, currency annual totals, count totals being omitted,
+independent category filters, measure switches, consolidated card rendering, both customer matrices and their totals/missing values/empty
 states, shared-source retries and cancellation. Reports route/navigation tests
 cover the entry point.

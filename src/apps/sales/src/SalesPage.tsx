@@ -28,7 +28,7 @@ import {
     withDrilldown,
     wonSowSignedTotal,
 } from './sales.utils'
-import { salesFiscalYearLabel } from './sales-fiscal-year'
+import { salesFiscalYearLabel, salesFiscalYearPeriod } from './sales-fiscal-year'
 import styles from './SalesPage.module.scss'
 import './sales.scss'
 
@@ -54,7 +54,7 @@ const categoryFilters = [
     {
         key: 'customerType',
         label: 'Customer Type',
-        options: ['New Customer', 'New Project to Existing Customer', 'Extension to Existing Project', 'Others'],
+        options: ['New Customer', 'New Project at Existing Customer', 'Extension to Existing Project', 'Others'],
     },
 ] as const
 
@@ -365,7 +365,7 @@ const SalesPage: FC = () => {
                 <div>
                     <p className={styles.eyebrow}>WORK / SALES</p>
                     <h1>{title}</h1>
-                    <p className={styles.subtitle}>Your sales pipeline, directly from Salesforce.</p>
+                    <p className={styles.subtitle}>{salesFiscalYearPeriod(query.dateFrom, query.dateTo)}</p>
                 </div>
                 <div className={styles.headerActions}>
                     <span className={styles.readOnly}>Read only</span>

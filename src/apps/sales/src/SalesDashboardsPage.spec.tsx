@@ -43,6 +43,8 @@ const response: SalesDashboardResponse = {
     notices: [],
 }
 
+const activeSections = ['bookings', 'pipeline', 'revenue', 'payments', 'taas-payments', 'talent']
+
 beforeEach(() => {
     jest.clearAllMocks()
     fetchDashboard.mockResolvedValue({ charts: [], notices: [] })
@@ -53,9 +55,9 @@ it.each([undefined, 'reports', 'sales'] as Array<SalesDashboardPortal | undefine
     async portal => {
         render(<SalesDashboardsPage portal={portal} />)
         await waitFor(() => expect(fetchDashboard)
-            .toHaveBeenCalledTimes(4))
+            .toHaveBeenCalledTimes(6))
         expect(fetchDashboard.mock.calls.map(call => [call[0], call[1]]))
-            .toEqual(['pipeline', 'revenue', 'payments', 'talent'].map(section => [section, portal ?? 'reports']))
+            .toEqual(activeSections.map(section => [section, portal ?? 'reports']))
         expect(screen.queryByRole('heading', { name: /gross margin/i }))
             .not.toBeInTheDocument()
         expect(screen.getByText(/Current fiscal year: April through March in UTC/))
@@ -68,18 +70,18 @@ it.each(['reports', 'sales'] as SalesDashboardPortal[])(
     async portal => {
         render(<SalesDashboardsPage portal={portal} />)
         await waitFor(() => expect(fetchDashboard)
-            .toHaveBeenCalledTimes(4))
+            .toHaveBeenCalledTimes(6))
         fireEvent.click(screen.getByRole('button', { name: 'Created date' }))
         await waitFor(() => expect(fetchDashboard)
-            .toHaveBeenCalledTimes(5))
+            .toHaveBeenCalledTimes(8))
         expect(fetchDashboard)
             .toHaveBeenLastCalledWith('pipeline', portal, 'created', expect.any(AbortSignal))
         fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
         await waitFor(() => expect(fetchDashboard)
-            .toHaveBeenCalledTimes(9))
-        expect(fetchDashboard.mock.calls.slice(5)
+            .toHaveBeenCalledTimes(14))
+        expect(fetchDashboard.mock.calls.slice(8)
             .map(call => call[0]))
-            .toEqual(['pipeline', 'revenue', 'payments', 'talent'])
+            .toEqual(activeSections)
         expect(screen.queryByRole('heading', { name: /gross margin/i }))
             .not.toBeInTheDocument()
     },
@@ -96,14 +98,14 @@ it('keeps independent sections usable when one source fails and retries just tha
         .toHaveTextContent('Flexible talent could not be loaded')
     expect(screen.getAllByText('Revenue report pending configuration.'))
         .toHaveLength(2)
-    expect(screen.getByRole('heading', { name: 'Member payments by type' }))
+    expect(screen.getByRole('heading', { name: 'Topcoder Payments' }))
         .toBeInTheDocument()
     fetchDashboard.mockResolvedValue({ charts: [], notices: ['Talent data loaded.'] })
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
     expect(await screen.findByText('Talent data loaded.'))
         .toBeInTheDocument()
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(5)
+        .toHaveBeenCalledTimes(7)
 })
 
 it('cancels pending source requests on unmount', () => {
@@ -200,7 +202,7 @@ it('totals visible stacked tooltip values, including negative adjustments and un
         .toContain('<b>Total: —</b>')
 })
 
-it('shows totals for stacked and grouped counts, labels repeated member counts, and excludes percentages', () => {
+it('totals currency and omits annual totals from member counts and percentages', () => {
     const chart: MonthlySalesChart = {
         ...response.charts[0],
         months: [
@@ -223,10 +225,12 @@ it('shows totals for stacked and grouped counts, labels repeated member counts, 
         .toBeDefined()
     view.rerender(<SalesDashboardChart chart={{ ...chart, stacked: false, unit: 'count' }} />)
     expect(chartOptions().tooltip?.formatter)
-        .toBeDefined()
-    expect(screen.getByRole('columnheader', { hidden: true, name: 'Total' }))
-        .toBeInTheDocument()
-    expect(screen.getByText(/totals are not unique member counts/))
+        .toBeUndefined()
+    expect(screen.queryByRole('columnheader', { hidden: true, name: 'Total' }))
+        .not.toBeInTheDocument()
+    expect(screen.queryByRole('rowheader', { hidden: true, name: 'Annual' }))
+        .not.toBeInTheDocument()
+    expect(screen.getByText(/Counts are unique within each category and month/))
         .toBeInTheDocument()
     view.rerender(<SalesDashboardChart chart={{ ...chart, unit: 'percent' }} />)
     expect(chartOptions().tooltip?.formatter)
@@ -255,7 +259,7 @@ it.each(['Goods Sold Customer-Wise', 'Revenue Customer-Wise'])(
         expect(within(table)
             .getAllByRole('columnheader')
             .map(cell => cell.textContent))
-            .toEqual(['Customer', 'Apr 2026', 'May 2026', 'Jun 2026', 'Annual'])
+            .toEqual(['Customer', 'Annual', 'Apr 2026', 'May 2026', 'Jun 2026'])
         expect(within(table)
             .getByRole('row', { name: /Metro/ }))
             .toHaveTextContent('$8,500.00')
@@ -267,7 +271,7 @@ it.each(['Goods Sold Customer-Wise', 'Revenue Customer-Wise'])(
             .toHaveTextContent('$15,500.00')
         expect(within(table)
             .getByRole('row', { name: /^Total/ }).textContent)
-            .toBe('Total$12,500.00$14,500.00$18,000.00$45,000.00')
+            .toBe('Total$45,000.00$12,500.00$14,500.00$18,000.00')
         expect(within(table)
             .getAllByRole('row')[1])
             .toBe(within(table)
@@ -335,15 +339,18 @@ it('places both customer tables at the bottom without duplicate requests or the 
         .slice(-1)[0])
         .toBe(customer)
     expect(screen.queryByRole('heading', { name: 'Member payments by customer' })).not.toBeInTheDocument()
-    ids.forEach(id => expect(screen.getByRole('heading', { name: id }))
-        .toBeInTheDocument())
+    expect(screen.getByRole('heading', { name: 'Bookings Won' }))
+        .toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Bookings in Pipeline' }))
+        .toBeInTheDocument()
+    ids.forEach(id => expect(screen.queryByRole('heading', { name: id })).not.toBeInTheDocument())
     expect(screen.getByRole('heading', { level: 1 }))
         .toHaveTextContent("Sales - FY '27")
     expect(screen.getByRole('heading', { name: 'Revenue' }))
         .toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Bookings' })).not.toBeInTheDocument()
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(4)
+        .toHaveBeenCalledTimes(6)
 })
 
 it('shows customer-source failures independently and retries the shared source only once', async () => {
@@ -369,7 +376,7 @@ it('shows customer-source failures independently and retries the shared source o
         .getByText('Partial source.'))
         .toBeInTheDocument()
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(5)
+        .toHaveBeenCalledTimes(7)
     expect(fetchDashboard)
         .toHaveBeenLastCalledWith('revenue', 'sales', 'close', expect.any(AbortSignal))
 })
@@ -444,4 +451,120 @@ it('adds an Annual row before all months for single-series charts without treati
     expect(within(table)
         .getAllByRole('row', { hidden: true })[1])
         .toHaveTextContent('Annual—')
+})
+
+/** @returns Complete independent card sources with deterministic amount/count/filter results. Does not throw. */
+function mockConsolidatedDashboards(): void {
+    fetchDashboard.mockImplementation(async (section, portal, basis, signal, filters) => {
+        const total = Object.values(filters ?? {})
+            .some(values => values?.length) ? 100 : 1000
+        const chart = (id: string, value: number, unit: MonthlySalesChart['unit'] = 'currency'): MonthlySalesChart => ({
+            ...response.charts[0], id, months: [{ month: '2026-09-01', values: { amount: value } }], unit,
+        })
+        const charts = section === 'bookings' ? [chart('closed-won', total)]
+            : section === 'pipeline' ? [chart('pipeline-stage', total), chart('expected-revenue', total / 2)]
+                : section === 'revenue' ? [chart('revenue', total)]
+                    : section === 'payments' ? [chart('payment-type', total), chart('members-paid', 2, 'count')]
+                        : section === 'taas-payments' ? [chart('taas-payments', 75)]
+                            : [chart('flexible-talent', 3, 'count')]
+        return { charts,
+            customerPayments: section === 'payments' ? customerPayments : undefined,
+            customerRevenue: section === 'revenue' ? customerPayments : undefined,
+            filterOptions: {
+                customerType: ['New Customer', 'New Project at Existing Customer'],
+                dealCategory: ['Wipro Direct', 'Topcoder Direct'],
+                offeringType: ['Flexible Talent', 'AI Training'],
+            },
+            notices: [] }
+    })
+}
+
+it('filters the three cards independently and preserves the full customer report', async () => {
+    mockConsolidatedDashboards()
+    render(<SalesDashboardsPage portal='sales' />)
+    const card = (title: string): ReturnType<typeof within> => within(screen.getByRole('article', { name: title }))
+    await waitFor(() => expect(card('Bookings Won')
+        .getByLabelText('Offering Type'))
+        .toBeEnabled())
+    fireEvent.change(card('Bookings Won')
+        .getByLabelText('Offering Type'), { target: { value: 'Flexible Talent' } })
+    await waitFor(() => expect(fetchDashboard)
+        .toHaveBeenLastCalledWith(
+            'bookings',
+            'sales',
+            'close',
+            expect.any(AbortSignal),
+            { offeringType: ['Flexible Talent'] },
+        ))
+    await waitFor(() => expect(card('Bookings Won')
+        .getAllByRole('cell', { hidden: true, name: '$100.00' }))
+        .toHaveLength(2))
+    fireEvent.change(
+        card('Bookings in Pipeline')
+            .getByLabelText('Customer Type'),
+        { target: { value: 'New Project at Existing Customer' } },
+    )
+    await waitFor(() => expect(fetchDashboard)
+        .toHaveBeenLastCalledWith(
+            'pipeline',
+            'sales',
+            'close',
+            expect.any(AbortSignal),
+            { customerType: ['New Project at Existing Customer'] },
+        ))
+    fireEvent.change(card('Revenue Closed')
+        .getByLabelText('Deal Category'), { target: { value: 'Wipro Direct' } })
+    await waitFor(() => expect(fetchDashboard)
+        .toHaveBeenLastCalledWith(
+            'revenue',
+            'sales',
+            'close',
+            expect.any(AbortSignal),
+            { dealCategory: ['Wipro Direct'] },
+        ))
+    await waitFor(() => expect(card('Revenue Closed')
+        .getByLabelText('Deal Category'))
+        .toHaveValue('Wipro Direct'))
+    expect(within(screen.getByRole('table', { name: 'Revenue Customer-Wise (USD)' }))
+        .getByRole('row', { name: /^Total/ }))
+        .toHaveTextContent('$45,000.00')
+    expect(card('Bookings Won')
+        .getByLabelText('Offering Type'))
+        .toHaveValue('Flexible Talent')
+    fireEvent.change(card('Bookings Won')
+        .getByLabelText('Offering Type'), { target: { value: '' } })
+    await waitFor(() => expect(fetchDashboard)
+        .toHaveBeenLastCalledWith('bookings', 'sales', 'close', expect.any(AbortSignal)))
+    expect(card('Bookings in Pipeline')
+        .getByLabelText('Customer Type'))
+        .toHaveValue('New Project at Existing Customer')
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
+    await waitFor(() => expect(fetchDashboard.mock.calls.slice(-7)
+        .filter(call => call[4]))
+        .toHaveLength(2))
+})
+
+it('switches pipeline and payment measures without refetching and never sums member counts annually', async () => {
+    mockConsolidatedDashboards()
+    render(<SalesDashboardsPage portal='sales' />)
+    await waitFor(() => expect(screen.getAllByRole('figure'))
+        .toHaveLength(6))
+    const pipeline = within(screen.getByRole('article', { name: 'Bookings in Pipeline' }))
+    fireEvent.click(pipeline.getByRole('button', { name: 'Expected Amount' }))
+    expect(pipeline.getByRole('row', { hidden: true, name: 'Annual $500.00' }))
+        .toBeInTheDocument()
+    const payments = within(screen.getByRole('article', { name: 'Topcoder Payments' }))
+    fireEvent.click(payments.getByRole('button', { name: 'Count' }))
+    expect(payments.queryByRole('rowheader', { hidden: true, name: 'Annual' })).not.toBeInTheDocument()
+    expect(payments.getByRole('cell', { hidden: true, name: '2' }))
+        .toBeInTheDocument()
+    const talent = within(screen.getByRole('article', { name: 'Members Engaged' }))
+    expect(talent.queryByRole('rowheader', { hidden: true, name: 'Annual' })).not.toBeInTheDocument()
+    expect(screen.getByRole('article', { name: 'TaaS Payments' }))
+        .toHaveTextContent('$75.00')
+    fireEvent.click(payments.getByRole('button', { name: 'Amount' }))
+    expect(payments.getByRole('row', { hidden: true, name: 'Annual $1,000.00' }))
+        .toBeInTheDocument()
+    expect(fetchDashboard)
+        .toHaveBeenCalledTimes(6)
 })
