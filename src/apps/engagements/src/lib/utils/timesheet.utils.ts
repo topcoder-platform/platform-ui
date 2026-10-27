@@ -184,6 +184,14 @@ export const isRowReadOnly = (row: TimesheetRow): boolean => (
     row.status === TimesheetEntryStatus.APPROVED
 )
 
+/**
+ * Only a saved, unpaid draft can be deleted. A paid entry stays even once reopened to draft, since the
+ * payment still points at it.
+ */
+export const isRowDeletable = (row: TimesheetRow): boolean => (
+    Boolean(row.id) && row.status === TimesheetEntryStatus.DRAFT && !row.isPaid
+)
+
 /** A reopened row comes back as a draft; this is what distinguishes it from one never submitted. */
 export const isRowReopened = (row: TimesheetRow): boolean => (
     Boolean(row.reopenedAt) && row.status === TimesheetEntryStatus.DRAFT

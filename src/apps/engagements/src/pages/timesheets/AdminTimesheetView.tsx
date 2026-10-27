@@ -14,6 +14,7 @@ import type { TimesheetAssignment, TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus } from '../../lib/models'
 import {
     approveTimesheetEntries,
+    deleteTimesheetEntries,
     getTimesheet,
     reopenTimesheetEntries,
     saveTimesheetEntries,
@@ -30,6 +31,7 @@ import {
     getDayLabel,
     hasEnteredHours,
     hasRowValidationError,
+    isRowDeletable,
     sumSelectedTotals,
     toWorkDateString,
     validateDateRange,
@@ -620,6 +622,55 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         && selectedRows.every(row => row.status === TimesheetEntryStatus.DRAFT)
     const canReopen = selectedIds.length > 0
         && selectedRows.every(row => row.status === TimesheetEntryStatus.APPROVED)
+    // Rows added here but never saved are only dropped from the grid; saved drafts are deleted.
+    const canDelete = selectedRows.length > 0
+        && selectedRows.every(row => !row.id || isRowDeletable(row))
+
+    const handleDelete = useCallback(async () => {
+        if (!selectedIds.length) {
+            setRows(current => current.filter(row => !selectedDates.includes(row.workDate)))
+            setSelectedDates([])
+            return
+        }
+
+        const entriesLabel = selectedIds.length === 1 ? 'entry' : `${selectedIds.length} entries`
+        // The grid reloads after the delete, so edits outside the selection would be lost silently.
+        const rowsLabel = unselectedChangedRowCount === 1
+            ? '1 row that is not selected has'
+            : `${unselectedChangedRowCount} rows that are not selected have`
+        const discardNote = unselectedChangedRowCount
+            ? ` ${rowsLabel} unsaved edits, which will be discarded.`
+            : ''
+        const confirmed = await confirmation.confirm({
+            action: 'Delete',
+            content: `The member's draft ${entriesLabel} will be permanently deleted.${discardNote}`,
+            title: selectedIds.length === 1 ? 'Delete draft entry?' : 'Delete draft entries?',
+        })
+
+        if (!confirmed) {
+            return
+        }
+
+        setActionError(undefined)
+        setPartialResult(undefined)
+        setIsWorking(true)
+
+        try {
+            const updated = await deleteTimesheetEntries(
+                props.timesheet.engagementId,
+                props.timesheet.assignment.id,
+                { entryIds: selectedIds },
+            )
+            props.onTimesheetChange(updated)
+            toast.success(
+                `Deleted ${selectedIds.length} ${selectedIds.length === 1 ? 'entry' : 'entries'}.`,
+            )
+        } catch (error) {
+            setActionError(extractErrorMessage(error, 'Failed to delete the selected entries.'))
+        } finally {
+            setIsWorking(false)
+        }
+    }, [confirmation, props, selectedDates, selectedIds, unselectedChangedRowCount])
 
     return (
         <div className={styles.view}>
@@ -729,6 +780,14 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                         disabled={isWorking}
                         label='Save'
                         onClick={handleSaveDrafts}
+                        secondary
+                    />
+                )}
+                {canDelete && (
+                    <Button
+                        disabled={isWorking}
+                        label={`Delete (${selectedRows.length})`}
+                        onClick={handleDelete}
                         secondary
                     />
                 )}

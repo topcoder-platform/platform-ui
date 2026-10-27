@@ -94,7 +94,7 @@ export const PayApprovedTimesheetsModal: FC<PayApprovedTimesheetsModalProps> = (
             open={props.open}
             onClose={handleCancel}
             title='Create Payments'
-            size='md'
+            size='body'
             buttons={(
                 <div className={styles.modalActions}>
                     <Button
@@ -140,7 +140,23 @@ export const PayApprovedTimesheetsModal: FC<PayApprovedTimesheetsModalProps> = (
                                     <tbody key={engagement.engagementId}>
                                         <tr>
                                             <th className={styles.modalEngagementRow} colSpan={3} scope='colgroup'>
-                                                {engagement.engagementTitle || '-'}
+                                                {engagement.engagementTitle ? (
+                                                    <a
+                                                        href={
+                                                            `/projects/${
+                                                                engagement.projectId
+                                                            }/engagements/${
+                                                                engagement.engagementId
+                                                            }/view`
+                                                        }
+                                                        target='_blank'
+                                                        rel='noopener noreferrer'
+                                                    >
+                                                        {engagement.engagementTitle}
+                                                    </a>
+                                                ) : (
+                                                    '-'
+                                                )}
                                             </th>
                                         </tr>
                                         {engagement.assignees.map(assignee => (

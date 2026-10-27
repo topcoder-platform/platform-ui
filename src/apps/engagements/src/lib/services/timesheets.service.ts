@@ -4,6 +4,7 @@ import { xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
 import type {
     ApproveTimesheetEntriesRequest,
     ApproveTimesheetEntriesResult,
+    DeleteTimesheetEntriesRequest,
     ReopenTimesheetEntriesRequest,
     SubmitTimesheetEntriesRequest,
     TimesheetAuditRecord,
@@ -67,6 +68,18 @@ export const saveTimesheetEntries = async (
 ): Promise<TimesheetView> => (
     xhrPutAsync<UpsertTimesheetEntriesRequest, TimesheetView>(
         `${timesheetUrl(engagementId, assignmentId)}/entries`,
+        data,
+    )
+)
+
+/** Deletes unpaid draft entries. Atomic: if any entry is not one, nothing is deleted. */
+export const deleteTimesheetEntries = async (
+    engagementId: string,
+    assignmentId: string,
+    data: DeleteTimesheetEntriesRequest,
+): Promise<TimesheetView> => (
+    xhrPostAsync<DeleteTimesheetEntriesRequest, TimesheetView>(
+        `${timesheetUrl(engagementId, assignmentId)}/entries/delete`,
         data,
     )
 )

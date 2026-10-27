@@ -84,6 +84,10 @@ export interface UpsertTimesheetEntriesRequest {
     overrideReason?: string
 }
 
+export interface DeleteTimesheetEntriesRequest {
+    entryIds: string[]
+}
+
 export interface SubmitTimesheetEntriesRequest {
     entryIds: string[]
     overrideReason?: string
