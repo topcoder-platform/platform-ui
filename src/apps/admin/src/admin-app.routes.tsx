@@ -26,10 +26,7 @@ import {
 } from './config/routes.config'
 import { administratorOnlyRoles, adminReportsAccessRoles } from './lib/utils'
 import { platformSkillRouteId } from './platform/routes.config'
-import { machineAccessEnabled } from './machine-access/config'
 import AdminHomeRedirect from './AdminHomeRedirect'
-
-const MachineAccessPage: LazyLoadedComponent = lazyLoad(() => import('./machine-access/MachineAccessPage'))
 
 const AdminApp: LazyLoadedComponent = lazyLoad(() => import('./AdminApp'))
 
@@ -326,12 +323,6 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 rolesRequired: administratorOnlyRoles,
                 route: billingAccountRouteId,
             },
-            ...(machineAccessEnabled ? [{
-                element: <MachineAccessPage />,
-                id: 'machine-access',
-                rolesRequired: administratorOnlyRoles,
-                route: 'machine-access',
-            }] : []),
             // Permission Management Module
             {
                 children: [
