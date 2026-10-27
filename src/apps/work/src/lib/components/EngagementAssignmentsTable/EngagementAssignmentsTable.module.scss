@@ -76,6 +76,17 @@
     vertical-align: middle;
 }
 
+.sortButton {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    white-space: nowrap;
+}
+
 .table th {
     color: $black-60;
     font-size: 12px;
@@ -94,7 +105,7 @@
     font-weight: 700;
 }
 
-.projectName {
+.customerName {
     color: $black-60;
     font-weight: 600;
 }

@@ -28,6 +28,7 @@ export function useFetchApprovedTimesheets(
             'work/approved-timesheets',
             query.assignee || '',
             query.engagement || '',
+            query.excludeTestProjects ? 'exclude-test-projects' : '',
             String(query.page || ''),
             String(query.perPage || ''),
         ]

@@ -103,12 +103,20 @@ function reportPaymentResults(results: ApprovedTimesheetPaymentResult[]): void {
     })
 }
 
+interface ApprovedTimesheetsTabProps {
+    /** Leaves out timesheets on the test projects the API is configured with. */
+    excludeTestProjects?: boolean
+}
+
 /**
  * Approved, unpaid timesheets across the engagements the caller can see, one row per approval, with
  * the ability to pay a selection of them in one go. Filtering, pagination, and access scoping run on
  * the API.
  */
-export const ApprovedTimesheetsTab: FC = () => {
+export const ApprovedTimesheetsTab: FC<ApprovedTimesheetsTabProps> = (
+    props: ApprovedTimesheetsTabProps,
+) => {
+    const excludeTestProjects = props.excludeTestProjects === true
     const [engagementInput, setEngagementInput] = useState<string>('')
     const [assigneeInput, setAssigneeInput] = useState<string>('')
     const [engagementFilter, setEngagementFilter] = useState<string>('')
@@ -131,11 +139,12 @@ export const ApprovedTimesheetsTab: FC = () => {
 
     useEffect(() => {
         setPage(1)
-    }, [assigneeFilter, engagementFilter])
+    }, [assigneeFilter, engagementFilter, excludeTestProjects])
 
     const approvedTimesheetsResult = useFetchApprovedTimesheets({
         assignee: assigneeFilter || undefined,
         engagement: engagementFilter || undefined,
+        excludeTestProjects,
         page,
         perPage,
     })

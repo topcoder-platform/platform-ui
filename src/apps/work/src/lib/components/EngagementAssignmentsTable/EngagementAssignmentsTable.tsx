@@ -3,6 +3,7 @@
 import {
     ChangeEvent,
     FC,
+    MouseEvent,
     useEffect,
     useMemo,
     useState,
@@ -25,10 +26,8 @@ import {
 import {
     formatDate,
     getAssignmentPaymentCycle,
-    getAssignmentRatePerHour,
     normalizeAssignmentStatus,
 } from '../../utils'
-import { formatCurrency } from '../../utils/payment.utils'
 import { Pagination } from '../Pagination'
 
 import styles from './EngagementAssignmentsTable.module.scss'
@@ -39,6 +38,8 @@ import styles from './EngagementAssignmentsTable.module.scss'
  */
 export interface EngagementAssignmentRow {
     assignment: Assignment
+    /** Customer from the project details; empty when the project names none. */
+    customerName: string
     engagement: Engagement
     projectId: string
     projectName: string
@@ -68,17 +69,33 @@ const STATUS_OPTIONS: SelectOption[] = [
     })),
 ]
 
-const columnLabels = [
-    'Member',
-    'Project Name',
-    'Engagement Title',
-    'Status',
-    'Start Date',
-    'End Date',
-    'Rate / Hour',
-    'Payment Cycle',
-    'Actions',
+type SortField = 'endDate' | 'lastPaidAt' | 'paymentCycle' | 'startDate'
+
+type SortOrder = 'asc' | 'desc'
+
+interface ColumnDefinition {
+    label: string
+    sortField?: SortField
+}
+
+const columns: ColumnDefinition[] = [
+    { label: 'Member' },
+    { label: 'Customer Name' },
+    { label: 'Engagement Title' },
+    { label: 'Status' },
+    { label: 'Start Date', sortField: 'startDate' },
+    { label: 'End Date', sortField: 'endDate' },
+    { label: 'Last Paid Date', sortField: 'lastPaidAt' },
+    { label: 'Payment Cycle', sortField: 'paymentCycle' },
+    { label: 'Actions' },
 ]
+
+/** Shortest cycle first, so ascending reads weekly, fortnightly, monthly. */
+const PAYMENT_CYCLE_ORDER: Record<string, number> = {
+    FORTNIGHTLY: 2,
+    MONTHLY: 3,
+    WEEKLY: 1,
+}
 
 function normalizeStatus(status: unknown): string {
     return String(status || '')
@@ -120,13 +137,48 @@ function formatPaymentCycle(assignment: Assignment): string {
     return normalizeAssignmentStatus(getAssignmentPaymentCycle(assignment))
 }
 
+function toTimestamp(value?: string): number | undefined {
+    const timestamp = value ? new Date(value)
+        .getTime() : Number.NaN
+
+    return Number.isNaN(timestamp) ? undefined : timestamp
+}
+
+function getSortValue(row: EngagementAssignmentRow, sortField: SortField): number | undefined {
+    if (sortField === 'paymentCycle') {
+        return PAYMENT_CYCLE_ORDER[normalizeStatus(getAssignmentPaymentCycle(row.assignment))]
+    }
+
+    return toTimestamp(row.assignment[sortField])
+}
+
+/** Sorts by the given field; rows without a value go last in either direction. */
+function sortRows(
+    rows: EngagementAssignmentRow[],
+    sortField: SortField,
+    sortOrder: SortOrder,
+): EngagementAssignmentRow[] {
+    const direction = sortOrder === 'asc' ? 1 : -1
+
+    return [...rows].sort((rowA, rowB) => {
+        const valueA = getSortValue(rowA, sortField)
+        const valueB = getSortValue(rowB, sortField)
+
+        if (valueA === undefined || valueB === undefined) {
+            return (valueA === undefined ? 1 : 0) - (valueB === undefined ? 1 : 0)
+        }
+
+        return (valueA - valueB) * direction
+    })
+}
+
 function matchesText(value: string, filter: string): boolean {
     return !filter || value.toLowerCase()
         .includes(filter)
 }
 
 function renderRow(row: EngagementAssignmentRow, backUrl: string): JSX.Element {
-    const { assignment, engagement, projectId, projectName }: EngagementAssignmentRow = row
+    const { assignment, customerName, engagement, projectId, projectName }: EngagementAssignmentRow = row
     const status = String(assignment.status || '')
     const assignmentsRoute = projectId && engagement.id
         ? `${rootRoute}/projects/${projectId}/engagements/${engagement.id}/assignments`
@@ -138,15 +190,7 @@ function renderRow(row: EngagementAssignmentRow, backUrl: string): JSX.Element {
     return (
         <tr key={`${engagement.id}-${assignment.id}`}>
             <td className={styles.memberHandle}>{assignment.memberHandle || '-'}</td>
-            <td className={styles.projectName}>
-                {projectId
-                    ? (
-                        <Link className={styles.link} to={`${rootRoute}/projects/${projectId}/challenges`}>
-                            {projectName || projectId}
-                        </Link>
-                    )
-                    : projectName || '-'}
-            </td>
+            <td className={styles.customerName}>{customerName || '-'}</td>
             <td className={styles.engagementTitle}>
                 {engagementDetailsRoute
                     ? (
@@ -163,7 +207,7 @@ function renderRow(row: EngagementAssignmentRow, backUrl: string): JSX.Element {
             </td>
             <td>{formatDate(assignment.startDate)}</td>
             <td>{formatDate(assignment.endDate)}</td>
-            <td>{formatCurrency(getAssignmentRatePerHour(assignment))}</td>
+            <td>{formatDate(assignment.lastPaidAt)}</td>
             <td>{formatPaymentCycle(assignment)}</td>
             <td>
                 <div className={styles.actions}>
@@ -194,6 +238,17 @@ function renderRow(row: EngagementAssignmentRow, backUrl: string): JSX.Element {
                             </a>
                         )
                         : undefined}
+                    {projectId
+                        ? (
+                            <Link
+                                className={styles.actionLink}
+                                title={projectName || undefined}
+                                to={`${rootRoute}/projects/${projectId}/challenges`}
+                            >
+                                Project
+                            </Link>
+                        )
+                        : undefined}
                 </div>
             </td>
         </tr>
@@ -215,6 +270,8 @@ export const EngagementAssignmentsTable: FC<EngagementAssignmentsTableProps> = (
     const [engagementTitleInput, setEngagementTitleInput] = useState<string>('')
     const [page, setPage] = useState<number>(1)
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
+    const [sortField, setSortField] = useState<SortField | undefined>(undefined)
+    const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
 
     const filteredRows = useMemo(() => {
         const projectNameFilter = projectNameInput.trim()
@@ -222,13 +279,16 @@ export const EngagementAssignmentsTable: FC<EngagementAssignmentsTableProps> = (
         const engagementTitleFilter = engagementTitleInput.trim()
             .toLowerCase()
 
-        return props.rows
+        const rows = props.rows
             .filter(row => status === ALL_STATUSES_VALUE
                 || normalizeStatus(row.assignment.status) === status)
             .filter(row => matchesText(row.projectName, projectNameFilter)
-                || matchesText(row.projectId, projectNameFilter))
+                || matchesText(row.projectId, projectNameFilter)
+                || matchesText(row.customerName, projectNameFilter))
             .filter(row => matchesText(String(row.engagement.title || ''), engagementTitleFilter))
-    }, [engagementTitleInput, projectNameInput, props.rows, status])
+
+        return sortField ? sortRows(rows, sortField, sortOrder) : rows
+    }, [engagementTitleInput, projectNameInput, props.rows, sortField, sortOrder, status])
 
     const paginatedRows = useMemo(() => {
         const start = (page - 1) * perPage
@@ -261,19 +321,56 @@ export const EngagementAssignmentsTable: FC<EngagementAssignmentsTableProps> = (
         setPage(1)
     }
 
+    function handleSortClick(event: MouseEvent<HTMLButtonElement>): void {
+        const nextSortField = event.currentTarget.dataset.sortField as SortField | undefined
+
+        if (!nextSortField) {
+            return
+        }
+
+        setSortOrder(nextSortField === sortField && sortOrder === 'asc' ? 'desc' : 'asc')
+        setSortField(nextSortField)
+        setPage(1)
+    }
+
+    function renderHeader(column: ColumnDefinition): JSX.Element {
+        if (!column.sortField) {
+            return <th key={column.label}>{column.label}</th>
+        }
+
+        const isSorted = column.sortField === sortField
+
+        return (
+            <th
+                aria-sort={isSorted ? (sortOrder === 'asc' ? 'ascending' : 'descending') : undefined}
+                key={column.label}
+            >
+                <button
+                    className={styles.sortButton}
+                    data-sort-field={column.sortField}
+                    onClick={handleSortClick}
+                    type='button'
+                >
+                    {column.label}
+                    {isSorted ? (sortOrder === 'asc' ? ' \u2191' : ' \u2193') : ''}
+                </button>
+            </th>
+        )
+    }
+
     return (
         <div className={styles.container}>
             <div className={styles.filters}>
                 <div className={styles.filterField}>
-                    <label htmlFor='work-assignments-project-search'>Search by project name</label>
+                    <label htmlFor='work-assignments-project-search'>Search by project or customer</label>
                     <div className={styles.searchInputWrap}>
                         <IconOutline.SearchIcon className={styles.searchIcon} />
                         <input
                             id='work-assignments-project-search'
-                            aria-label='Search assignments by project name'
+                            aria-label='Search assignments by project or customer name'
                             className={styles.searchInput}
                             onChange={handleProjectNameChange}
-                            placeholder='Search by project name'
+                            placeholder='Search by project or customer'
                             type='text'
                             value={projectNameInput}
                         />
@@ -314,7 +411,7 @@ export const EngagementAssignmentsTable: FC<EngagementAssignmentsTableProps> = (
                 <table className={styles.table}>
                     <thead>
                         <tr>
-                            {columnLabels.map(label => <th key={label}>{label}</th>)}
+                            {columns.map(renderHeader)}
                         </tr>
                     </thead>
                     <tbody>
@@ -322,7 +419,7 @@ export const EngagementAssignmentsTable: FC<EngagementAssignmentsTableProps> = (
                             ? paginatedRows.map(row => renderRow(row, props.backUrl))
                             : (
                                 <tr>
-                                    <td colSpan={columnLabels.length} className={styles.emptyRow}>
+                                    <td colSpan={columns.length} className={styles.emptyRow}>
                                         No assignments found.
                                     </td>
                                 </tr>

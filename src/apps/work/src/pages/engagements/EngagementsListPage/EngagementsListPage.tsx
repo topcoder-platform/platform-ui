@@ -16,6 +16,7 @@ import { PageWrapper } from '~/apps/review/src/lib'
 import {
     Button,
     IconOutline,
+    InputCheckbox,
 } from '~/libs/ui'
 
 import {
@@ -77,6 +78,8 @@ type SortOrder = 'asc' | 'desc'
 type EngagementsPageTab = 'approved-timesheets' | 'assignments' | 'engagements'
 
 const TAB_QUERY_PARAM = 'tab'
+
+const noopCheckboxChange = (() => undefined) as (event: Event) => void
 const ASSIGNMENTS_TAB: EngagementsPageTab = 'assignments'
 const APPROVED_TIMESHEETS_TAB: EngagementsPageTab = 'approved-timesheets'
 
@@ -472,6 +475,8 @@ export const EngagementsListPage: FC = () => {
     }))
     const [page, setPage] = useState<number>(1)
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
+    // Shared by all three tabs, so it stays set while the user switches between them.
+    const [hideTestProjects, setHideTestProjects] = useState<boolean>(false)
     const [engagementToDelete, setEngagementToDelete] = useState<Engagement | undefined>(undefined)
     const [isDeletingEngagement, setIsDeletingEngagement] = useState<boolean>(false)
     const scopedProjectIds = useMemo(
@@ -487,6 +492,9 @@ export const EngagementsListPage: FC = () => {
     )
 
     const requestFilters = useMemo<EngagementFilters>(() => ({
+        excludeTestProjects: (isAllEngagementsPage && hideTestProjects) || undefined,
+        // Only the Assignments tab shows payment dates, so only it pays for the finance lookup.
+        includeLastPaidAt: isAssignmentsTab || undefined,
         includePrivate: canManage && canViewEngagements,
         projectId: isAllEngagementsPage ? undefined : projectId,
         projectIds: isAllEngagementsPage && isTalentManagerOnly
@@ -505,6 +513,7 @@ export const EngagementsListPage: FC = () => {
         canViewEngagements,
         canManage,
         filters.status,
+        hideTestProjects,
         isAllEngagementsPage,
         isAssignmentsTab,
         isTalentManagerOnly,
@@ -552,10 +561,13 @@ export const EngagementsListPage: FC = () => {
                 undefined,
                 projectId,
             )
+            const customerName = String(engagement.project?.customer || '')
+                .trim()
 
             return (Array.isArray(engagement.assignments) ? engagement.assignments : [])
                 .map(assignment => ({
                     assignment,
+                    customerName,
                     engagement,
                     projectId: engagementProjectId,
                     projectName,
@@ -566,6 +578,11 @@ export const EngagementsListPage: FC = () => {
     const handleTabChange = useCallback((tab: EngagementsPageTab): void => {
         setSearchParams(tab === 'engagements' ? {} : { [TAB_QUERY_PARAM]: tab })
     }, [setSearchParams])
+
+    const handleHideTestProjectsToggle = useCallback((): void => {
+        setHideTestProjects(current => !current)
+        setPage(1)
+    }, [])
 
     const filteredEngagements = useMemo(() => {
         const memberHandleFilter = (filters.memberHandle || '')
@@ -862,6 +879,19 @@ export const EngagementsListPage: FC = () => {
                 </button>
             </div>
         )
+    const testProjectsToggle = isAllEngagementsPage
+        ? (
+            <div className={styles.testProjectsToggle}>
+                <InputCheckbox
+                    checked={hideTestProjects}
+                    label='Hide test projects'
+                    name='engagements-hide-test-projects'
+                    onChange={noopCheckboxChange}
+                    onClick={handleHideTestProjectsToggle}
+                />
+            </div>
+        )
+        : undefined
     const billingAccountExpiredNotice = !isAllEngagementsPage && projectId
         ? (
             <ProjectBillingAccountExpiredNotice
@@ -901,7 +931,8 @@ export const EngagementsListPage: FC = () => {
                 breadCrumb={[]}
             >
                 {pageTabs}
-                <ApprovedTimesheetsTab />
+                {testProjectsToggle}
+                <ApprovedTimesheetsTab excludeTestProjects={hideTestProjects} />
             </PageWrapper>
         )
     }
@@ -922,6 +953,7 @@ export const EngagementsListPage: FC = () => {
             >
                 {billingAccountExpiredNotice}
                 {pageTabs}
+                {testProjectsToggle}
                 <LoadingSpinner />
             </PageWrapper>
         )
@@ -937,6 +969,7 @@ export const EngagementsListPage: FC = () => {
             >
                 {billingAccountExpiredNotice}
                 {pageTabs}
+                {testProjectsToggle}
                 <ErrorMessage
                     message={engagementsResult.error.message}
                     onRetry={() => {
@@ -957,6 +990,7 @@ export const EngagementsListPage: FC = () => {
         >
             {billingAccountExpiredNotice}
             {pageTabs}
+            {testProjectsToggle}
             {isAssignmentsTab
                 ? (
                     <EngagementAssignmentsTable
