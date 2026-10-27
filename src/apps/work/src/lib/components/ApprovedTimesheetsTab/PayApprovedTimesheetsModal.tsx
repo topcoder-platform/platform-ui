@@ -143,7 +143,11 @@ export const PayApprovedTimesheetsModal: FC<PayApprovedTimesheetsModalProps> = (
                                                 {engagement.engagementTitle ? (
                                                     <a
                                                         href={
-                                                            `/projects/${engagement.projectId}/engagements/${engagement.engagementId}/view`
+                                                            `/projects/${
+                                                                engagement.projectId
+                                                            }/engagements/${
+                                                                engagement.engagementId
+                                                            }/view`
                                                         }
                                                         target='_blank'
                                                         rel='noopener noreferrer'
