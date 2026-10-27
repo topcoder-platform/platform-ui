@@ -34,6 +34,9 @@ jest.mock('~/libs/ui', () => ({
     IconOutline: {
         SearchIcon: () => <span>search-icon</span>,
     },
+    Tooltip: (props: { children: JSX.Element, content: string }) => (
+        <span data-tooltip={props.content}>{props.children}</span>
+    ),
 }), {
     virtual: true,
 })
@@ -201,5 +204,59 @@ describe('ApprovedTimesheetsTab', () => {
             .toHaveBeenCalled()
         expect(screen.getByText('0 selected'))
             .toBeTruthy()
+    })
+
+    it('breaks the selection down by engagement and assignee', () => {
+        mockedUseFetch.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            meta: { page: 1, perPage: 10, totalCount: 3, totalPages: 1 },
+            mutate,
+            rows: [
+                buildRow({ hours: 30, id: 'row-1' }),
+                // Same assignee, the following week: agreed hours cover both weeks.
+                buildRow({
+                    hours: 20,
+                    id: 'row-3',
+                    workPeriodEnd: '2026-10-16',
+                    workPeriodStart: '2026-10-12',
+                }),
+                buildRow({
+                    assigneeHandle: 'janedoe',
+                    assignmentId: 'asg2',
+                    engagementId: 'eng2',
+                    engagementTitle: 'Data Engineer',
+                    hours: 45,
+                    id: 'row-2',
+                }),
+            ],
+        } as never)
+
+        render(<ApprovedTimesheetsTab />)
+
+        fireEvent.click(screen.getByLabelText('Select all approved timesheets on this page'))
+        fireEvent.click(screen.getByText('Pay'))
+
+        const dialog = screen.getByRole('dialog')
+        const rowsText = Array.from(dialog.querySelectorAll('tbody tr'))
+            .map(row => Array.from(row.querySelectorAll('th, td'))
+                .map(cell => cell.textContent)
+                .join(' | '))
+
+        expect(rowsText)
+            .toEqual([
+                'Senior Frontend Engineer',
+                'johnsmith | 50 | $2,500.00',
+                'Data Engineer',
+                'janedoe | 45 | $2,250.00',
+            ])
+        // 50 hours over two 40-hour weeks is fine; 45 hours in one 40-hour week is flagged.
+        expect(screen.getByText('50')
+            .closest('[data-tooltip]'))
+            .toBeNull()
+        expect(screen.getByText('45')
+            .closest('[data-tooltip]')
+            ?.getAttribute('data-tooltip'))
+            .toBe('45 hours is above the 40 agreed hours for the selected period')
     })
 })

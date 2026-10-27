@@ -166,6 +166,60 @@
     font-weight: 700;
 }
 
+.modalBreakdown {
+    border: 1px solid $black-10;
+    border-radius: 6px;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.modalBreakdownTable {
+    border-collapse: collapse;
+    width: 100%;
+
+    th,
+    td {
+        border-bottom: 1px solid $black-10;
+        font-size: 13px;
+        padding: 8px 12px;
+        text-align: left;
+    }
+
+    thead th {
+        position: sticky;
+        top: 0;
+        background: #f7f8fa;
+        color: $black-60;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    td {
+        color: $black-80;
+    }
+
+    tbody:last-child tr:last-child td {
+        border-bottom: 0;
+    }
+}
+
+.modalBreakdownTable th.modalEngagementRow {
+    background: rgba(224, 228, 232, 0.3);
+    color: $black-100;
+    font-weight: 700;
+}
+
+.modalBreakdownTable .numericCell {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.overAgreedHours {
+    color: $red-100;
+    cursor: help;
+    font-weight: 700;
+}
+
 .modalLabel {
     color: #5b5b5b;
     font-size: 12px;
