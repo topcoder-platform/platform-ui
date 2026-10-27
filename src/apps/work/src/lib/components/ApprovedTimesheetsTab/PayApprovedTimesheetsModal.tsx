@@ -142,7 +142,9 @@ export const PayApprovedTimesheetsModal: FC<PayApprovedTimesheetsModalProps> = (
                                             <th className={styles.modalEngagementRow} colSpan={3} scope='colgroup'>
                                                 {engagement.engagementTitle ? (
                                                     <a
-                                                        href={`/projects/${engagement.projectId}/engagements/${engagement.engagementId}/view`}
+                                                        href={
+                                                            `/projects/${engagement.projectId}/engagements/${engagement.engagementId}/view`
+                                                        }
                                                         target='_blank'
                                                         rel='noopener noreferrer'
                                                     >

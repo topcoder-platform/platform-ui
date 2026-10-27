@@ -11,6 +11,7 @@ import type { TimesheetEntry, TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus, TimesheetViewerRole } from '../../lib/models'
 import {
     approveTimesheetEntries,
+    deleteTimesheetEntries,
     getTimesheet,
     getTimesheetEntryAudit,
     reopenTimesheetEntries,
@@ -161,6 +162,7 @@ jest.mock('~/config', () => ({
 
 jest.mock('../../lib/services', () => ({
     approveTimesheetEntries: jest.fn(),
+    deleteTimesheetEntries: jest.fn(),
     getTimesheet: jest.fn(),
     getTimesheetEntryAudit: jest.fn()
         .mockResolvedValue([]),
@@ -171,6 +173,7 @@ jest.mock('../../lib/services', () => ({
 
 const mockApprove = approveTimesheetEntries as jest.MockedFunction<typeof approveTimesheetEntries>
 const mockGetTimesheet = getTimesheet as jest.MockedFunction<typeof getTimesheet>
+const mockDelete = deleteTimesheetEntries as jest.MockedFunction<typeof deleteTimesheetEntries>
 const mockReopen = reopenTimesheetEntries as jest.MockedFunction<typeof reopenTimesheetEntries>
 const mockSave = saveTimesheetEntries as jest.MockedFunction<typeof saveTimesheetEntries>
 const mockSubmit = submitTimesheetEntries as jest.MockedFunction<typeof submitTimesheetEntries>
@@ -390,6 +393,62 @@ describe('AdminTimesheetView', () => {
         expect(screen.queryByLabelText('Hours worked on 07-09-2026')).not.toBeInTheDocument()
         expect(screen.getByLabelText('Select 09-09-2026'))
             .toBeChecked()
+    })
+
+    it('deletes a member\'s draft once the administrator confirms', async () => {
+        const user = userEvent.setup()
+        mockDelete.mockResolvedValue(timesheet([]))
+        const { onTimesheetChange }: { onTimesheetChange: jest.Mock } = renderView([entry()])
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Delete (1)' }))
+
+        const dialog = screen.getByRole('alertdialog')
+        expect(within(dialog)
+            .getByText('The member\'s draft entry will be permanently deleted.'))
+            .toBeInTheDocument()
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Continue' }))
+
+        await waitFor(() => {
+            expect(mockDelete)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', { entryIds: ['entry-1'] })
+        })
+        expect(onTimesheetChange)
+            .toHaveBeenCalledWith(timesheet([]))
+    })
+
+    it('drops rows added but never saved without calling the API', async () => {
+        const user = userEvent.setup()
+        renderView([])
+
+        await user.click(screen.getByRole('button', { name: 'Add entries' }))
+        await user.clear(screen.getByLabelText('From Date'))
+        await user.type(screen.getByLabelText('From Date'), '2026-09-08')
+        await user.clear(screen.getByLabelText('To Date'))
+        await user.type(screen.getByLabelText('To Date'), '2026-09-08')
+        await user.click(screen.getByRole('button', { name: 'Confirm' }))
+        await screen.findByLabelText('Hours worked on 08-09-2026')
+
+        await user.click(screen.getByRole('button', { name: 'Delete (1)' }))
+
+        expect(screen.queryByLabelText('Hours worked on 08-09-2026')).not.toBeInTheDocument()
+        expect(mockDelete).not.toHaveBeenCalled()
+    })
+
+    it('does not offer delete for a submitted or paid entry', async () => {
+        const user = userEvent.setup()
+        renderView([
+            entry({ id: 'submitted', status: TimesheetEntryStatus.SUBMITTED }),
+            entry({ id: 'paid', isPaid: true, workDate: '2026-09-08' }),
+        ])
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        expect(screen.queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument()
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByLabelText('Select 08-09-2026'))
+        expect(screen.queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument()
     })
 
     it('keeps an approved row editable so a correction can be typed', async () => {

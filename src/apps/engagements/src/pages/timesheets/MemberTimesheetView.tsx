@@ -2,11 +2,12 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 
-import { Button, InputDatePicker } from '~/libs/ui'
+import { Button, InputDatePicker, useConfirmationModal } from '~/libs/ui'
 
 import type { TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus } from '../../lib/models'
 import {
+    deleteTimesheetEntries,
     saveTimesheetEntries,
     submitTimesheetEntries,
 } from '../../lib/services'
@@ -18,6 +19,7 @@ import {
     formatHoursLabel,
     hasEnteredHours,
     hasRowValidationError,
+    isRowDeletable,
     isRowReadOnly,
     parseTimesheetSaveError,
     sumSelectedTotals,
@@ -95,6 +97,7 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
     const [isDirty, setIsDirty] = useState<boolean>(false)
     const [isSaving, setIsSaving] = useState<boolean>(false)
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+    const [isDeleting, setIsDeleting] = useState<boolean>(false)
     const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false)
     const [actionError, setActionError] = useState<string | undefined>()
     const [fieldErrors, setFieldErrors] = useState<TimesheetFieldErrors>({})
@@ -149,6 +152,14 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
         [isUnchangedSubmitted, selectedRows],
     )
     const totals = useMemo(() => sumSelectedTotals(selectedRows), [selectedRows])
+    // Blank rows the range generated have nothing to delete, so they neither count nor block it.
+    const deletableRows = useMemo(
+        () => selectedRows.filter(isRowDeletable),
+        [selectedRows],
+    )
+    const canDelete = deletableRows.length > 0
+        && selectedRows.every(row => !row.id || isRowDeletable(row))
+    const confirmation = useConfirmationModal()
 
     const handleRowChange = useCallback((workDate: string, changes: Partial<TimesheetRow>) => {
         setRows(current => current.map(row => (
@@ -292,6 +303,41 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
         }
     }, [buildSavePayload, props, selectedDates, showSaveError])
 
+    const handleDelete = useCallback(async () => {
+        const entryIds = deletableRows
+            .map(row => row.id)
+            .filter((id): id is string => Boolean(id))
+        const entriesLabel = entryIds.length === 1 ? 'entry' : `${entryIds.length} entries`
+        const discardNote = isDirty ? ' Unsaved edits on this page will be discarded.' : ''
+        const confirmed = await confirmation.confirm({
+            action: 'Delete',
+            content: `The draft ${entriesLabel} will be permanently deleted.${discardNote}`,
+            title: entryIds.length === 1 ? 'Delete draft entry?' : 'Delete draft entries?',
+        })
+
+        if (!confirmed) {
+            return
+        }
+
+        setActionError(undefined)
+        setFieldErrors({})
+        setIsDeleting(true)
+
+        try {
+            const updated = await deleteTimesheetEntries(
+                props.timesheet.engagementId,
+                props.timesheet.assignment.id,
+                { entryIds },
+            )
+            props.onTimesheetChange(updated)
+            toast.success(`Deleted ${entryIds.length} ${entryIds.length === 1 ? 'entry' : 'entries'}.`)
+        } catch (error) {
+            showSaveError(error, deletableRows, 'Failed to delete the selected entries.')
+        } finally {
+            setIsDeleting(false)
+        }
+    }, [confirmation, deletableRows, isDirty, props, showSaveError])
+
     const handleOpenConfirm = useCallback(() => {
         if (invalidRows.length) {
             setActionError('Fix the highlighted fields before submitting.')
@@ -402,6 +448,14 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                                     onClick={handleSave}
                                     secondary
                                 />
+                                {canDelete && (
+                                    <Button
+                                        disabled={isDeleting || isSubmitting}
+                                        label={`Delete (${deletableRows.length})`}
+                                        onClick={handleDelete}
+                                        secondary
+                                    />
+                                )}
                                 {selectedRows.length > 0 && !hasOnlyUnchangedSubmittedSelected && (
                                     <Button
                                         disabled={isSubmitting}
@@ -425,6 +479,7 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                 open={isConfirmOpen}
                 totalHours={totals.hours}
             />
+            {confirmation.modal}
         </div>
     )
 }
