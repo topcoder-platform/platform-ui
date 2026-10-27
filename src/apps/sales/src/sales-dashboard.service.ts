@@ -3,8 +3,18 @@ import { xhrGetAsync } from '~/libs/core'
 
 import { salesFiscalYear } from './sales-fiscal-year'
 
-export type SalesDashboardSection = 'pipeline' | 'revenue' | 'payments' | 'talent' | 'gross-margin'
+export type SalesDashboardSection =
+    'bookings' | 'pipeline' | 'revenue' | 'payments' | 'taas-payments' | 'talent' | 'gross-margin'
 export type SalesDashboardPortal = 'reports' | 'sales'
+
+/** Category selections are matched before server-side aggregation. Empty arrays mean ALL. */
+export interface SalesDashboardFilters {
+    offeringType?: string[]
+    dealCategory?: string[]
+    customerType?: string[]
+}
+
+export type SalesDashboardFilterOptions = Required<SalesDashboardFilters>
 
 /** One monthly API chart. Undefined markup is represented as null by the API. */
 export interface MonthlySalesChart {
@@ -20,6 +30,7 @@ export interface MonthlySalesChart {
 export interface SalesDashboardResponse {
     charts: MonthlySalesChart[]
     notices: string[]
+    filterOptions?: SalesDashboardFilterOptions
     /** Every customer before top-five/Other grouping, used for the monthly payments matrix. */
     customerPayments?: MonthlySalesChart
     /** Every customer from the revenue report, without grouping smaller customers into Other. */
@@ -34,6 +45,7 @@ export interface SalesDashboardResponse {
  * @param portal Server-side scope; Sales excludes internal payments and talent assignments before aggregation.
  * @param dateBasis Date field for pipeline monthly grouping.
  * @param signal Cancels superseded or unmounted requests.
+ * @param filters Independent card categories; repeated values use OR, fields combine with AND.
  * @returns Monthly chart definitions and any source limitations.
  * @throws Propagates network and authorization errors for the section's inline retry state.
  */
@@ -42,6 +54,7 @@ export function fetchSalesDashboard(
     portal: SalesDashboardPortal,
     dateBasis: 'close' | 'created',
     signal: AbortSignal,
+    filters: SalesDashboardFilters = {},
 ): Promise<SalesDashboardResponse> {
     const fiscalYear = salesFiscalYear() - 1
     const params = new URLSearchParams({
@@ -52,6 +65,10 @@ export function fetchSalesDashboard(
         startDate: new Date(Date.UTC(fiscalYear, 3, 1))
             .toISOString(),
     })
+    Object.entries(filters)
+        .forEach(([key, values]) => {
+            values?.forEach((value: string) => params.append(key, value))
+        })
     return xhrGetAsync<SalesDashboardResponse>(
         `${EnvironmentConfig.REPORTS_API}/sales-dashboard/${section}?${params.toString()}`,
         undefined,

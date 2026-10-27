@@ -1,6 +1,6 @@
 /* Highcharts requires null to represent missing values without turning them into zero. */
 /* eslint-disable unicorn/no-null */
-import { FC, useMemo } from 'react'
+import { FC, ReactNode, useMemo } from 'react'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
@@ -175,15 +175,15 @@ export function chartTooltip(unit: MonthlySalesChart['unit']): Highcharts.Toolti
 /**
  * Renders a monthly business chart with its headline and an equivalent accessible data table.
  * @param props API chart definition, including units, monthly values and stacking, and whether the
- * current month includes expected closes.
+ * current month includes expected closes, plus optional card-level filter/toggle controls.
  * @returns A responsive chart card; unknown percentages remain gaps and table dashes.
  * @throws Does not throw for empty month or series arrays.
  */
-const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boolean }> = props => {
+const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boolean; controls?: ReactNode }> = props => {
     const chart = props.chart
     const headline = useMemo(() => chartHeadline(chart, props.expectedCloses), [chart, props.expectedCloses])
     const labels = useMemo(() => chart.months.map(month => salesMonthLabel(month.month)), [chart.months])
-    const hasTotals = chart.unit !== 'percent'
+    const hasTotals = chart.unit === 'currency'
     const showTotal = hasTotals && chart.series.length > 1
     const annual = useMemo(() => chart.series.map(series => salesChartTotal(chart.months.map(month => (
         month.values[series.key]
@@ -216,8 +216,9 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boole
     }), [chart, labels, hasTotals])
 
     return (
-        <article className={styles.card}>
+        <article className={styles.card} aria-label={chart.title}>
             <h3>{chart.title}</h3>
+            {props.controls}
             <p>{chart.description}</p>
             {headline && (
                 <div className={styles.headline}>
@@ -245,7 +246,10 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boole
             <details>
                 <summary>View monthly data</summary>
                 {chart.unit === 'count' && (
-                    <p>Counts are summed across months and categories; totals are not unique member counts.</p>
+                    <p>
+                        Counts are unique within each category and month.
+                        Members may appear in more than one category or month.
+                    </p>
                 )}
                 <div className={styles.tableScroll}>
                     <table>

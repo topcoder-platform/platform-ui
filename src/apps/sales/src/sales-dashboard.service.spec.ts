@@ -19,7 +19,9 @@ describe('Sales dashboard fiscal year requests', () => {
         jest.useRealTimers()
     })
 
-    it.each(['pipeline', 'revenue', 'payments', 'talent', 'gross-margin'] as SalesDashboardSection[])(
+    it.each([
+        'bookings', 'pipeline', 'revenue', 'payments', 'taas-payments', 'talent', 'gross-margin',
+    ] as SalesDashboardSection[])(
         'requests the full fiscal year for %s in both portals and date bases',
         section => {
             const signal = new AbortController().signal
@@ -68,6 +70,21 @@ describe('Sales dashboard fiscal year requests', () => {
             .toBe(`${fiscalYear}-04-01T00:00:00.000Z`)
         expect(params.get('endDate'))
             .toBe(`${Number(fiscalYear) + 1}-04-01T00:00:00.000Z`)
+    })
+
+    it('serializes independent category choices as repeated query parameters', () => {
+        fetchSalesDashboard('bookings', 'sales', 'close', new AbortController().signal, {
+            customerType: ['New Project at Existing Customer'],
+            dealCategory: ['Wipro Direct'],
+            offeringType: ['Flexible Talent', 'AI Training'],
+        })
+        const params = new URL(String(jest.mocked(xhrGetAsync).mock.calls[0][0])).searchParams
+        expect(params.getAll('offeringType'))
+            .toEqual(['Flexible Talent', 'AI Training'])
+        expect(params.getAll('customerType'))
+            .toEqual(['New Project at Existing Customer'])
+        expect(params.get('dealCategory'))
+            .toBe('Wipro Direct')
     })
 
     it('rolls over to the next fiscal year on a subsequent request without reloading the app', () => {

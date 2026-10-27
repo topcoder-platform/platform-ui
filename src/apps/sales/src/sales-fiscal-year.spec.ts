@@ -1,4 +1,4 @@
-import { salesFiscalYear, salesFiscalYearLabel } from './sales-fiscal-year'
+import { salesFiscalYear, salesFiscalYearLabel, salesFiscalYearPeriod } from './sales-fiscal-year'
 
 describe('Sales fiscal year titles', () => {
     afterEach(() => jest.useRealTimers())
@@ -20,6 +20,8 @@ describe('Sales fiscal year titles', () => {
     })
 
     it('uses the viewed bounds, including open-ended and multi-year ranges', () => {
+        expect(salesFiscalYearPeriod('2026-04-01', '2027-03-31'))
+            .toBe('01 April 2026 - 31 March 2027')
         expect(salesFiscalYearLabel('2026-04-01', '2027-03-31'))
             .toBe("FY '27")
         expect(salesFiscalYearLabel('2025-07-01'))
