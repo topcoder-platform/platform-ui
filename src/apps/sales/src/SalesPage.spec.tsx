@@ -468,17 +468,14 @@ describe('Sales page', () => {
         jest.useRealTimers()
     })
 
-    it('offers the report date fields, defaults to Created Date and applies a range as it changes', async () => {
+    it('offers the report date fields, defaults to Close Date and applies a range as it changes', async () => {
         render(<SalesPage />)
         await screen.findByText('Example opportunity')
         const field = screen.getByLabelText('Filter type') as HTMLSelectElement
         expect([...field.options].map(option => option.text))
             .toEqual(['Created Date', 'Close Date'])
-        expect(field.value)
-            .toBe('CREATED_DATE')
-        fireEvent.change(field, { target: { value: 'CLOSE_DATE' } })
-        expect(screen.getByLabelText('Filter type'))
-            .toHaveValue('CLOSE_DATE')
+        await waitFor(() => expect(field)
+            .toHaveValue('CLOSE_DATE'))
         fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2026-07-01' } })
         fireEvent.change(screen.getByLabelText('To date'), { target: { value: '2026-09-30' } })
         expect(fetchReport)
@@ -488,10 +485,17 @@ describe('Sales page', () => {
             .toHaveBeenLastCalledWith(expect.objectContaining({
                 dateColumn: 'CLOSE_DATE', dateFrom: '2026-07-01', dateTo: '2026-09-30', page: 1,
             }), expect.any(AbortSignal)))
-        // The three changes within one pause are sent as a single request.
+        // The date changes within one pause are sent as a single request.
         expect(fetchReport)
             .toHaveBeenCalledTimes(2)
         await screen.findByText(/Showing records by Close Date from 2026-07-01 through 2026-09-30/)
+        expect(screen.getByRole('heading', { level: 1 }))
+            .toHaveTextContent("Sales - FY '27")
+        fireEvent.change(field, { target: { value: 'CREATED_DATE' } })
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({ dateColumn: 'CREATED_DATE' }), expect.any(AbortSignal)))
+        expect(field)
+            .toHaveValue('CREATED_DATE')
     })
 
     it('refuses an inverted range without sending a request and clears the error on Clear', async () => {
@@ -518,7 +522,7 @@ describe('Sales page', () => {
         fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2026-09-01' } })
         await waitFor(() => expect(fetchReport)
             .toHaveBeenLastCalledWith(
-                expect.objectContaining({ dateColumn: 'CREATED_DATE', dateFrom: '2026-09-01' }),
+                expect.objectContaining({ dateColumn: 'CLOSE_DATE', dateFrom: '2026-09-01' }),
                 expect.any(AbortSignal),
             ))
         fireEvent.change(screen.getByLabelText('Search sales'), { target: { value: 'Example' } })
@@ -536,7 +540,7 @@ describe('Sales page', () => {
             ))
         expect(fetchReport)
             .toHaveBeenLastCalledWith(
-                expect.objectContaining({ dateColumn: 'CREATED_DATE', dateFrom: '2026-09-01' }),
+                expect.objectContaining({ dateColumn: 'CLOSE_DATE', dateFrom: '2026-09-01' }),
                 expect.any(AbortSignal),
             )
         fireEvent.click(clearButton('Date range filter'))

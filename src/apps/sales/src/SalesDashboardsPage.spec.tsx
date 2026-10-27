@@ -247,28 +247,35 @@ const customerPayments: MonthlySalesChart = {
     unit: 'currency',
 }
 
-it('renders a customer-by-month matrix with accurate row, column and grand totals', () => {
-    render(<SalesCustomerTable title='Goods Sold Customer-Wise' data={customerPayments} />)
-    const table = screen.getByRole('table')
-    expect(within(table)
-        .getAllByRole('columnheader')
-        .map(cell => cell.textContent))
-        .toEqual(['Customer', 'Apr 2026', 'May 2026', 'Jun 2026', 'Annual'])
-    expect(within(table)
-        .getByRole('row', { name: /Metro/ }))
-        .toHaveTextContent('$8,500.00')
-    expect(within(table)
-        .getByRole('row', { name: /Rebel/ }))
-        .toHaveTextContent('$21,000.00')
-    expect(within(table)
-        .getByRole('row', { name: /ANZ/ }))
-        .toHaveTextContent('$15,500.00')
-    expect(within(table)
-        .getByRole('row', { name: /^Total/ }).textContent)
-        .toBe('Total$12,500.00$14,500.00$18,000.00$45,000.00')
-    expect(screen.getByRole('region'))
-        .toHaveAttribute('tabindex', '0')
-})
+it.each(['Goods Sold Customer-Wise', 'Revenue Customer-Wise'])(
+    'renders %s with totals directly below the month headers',
+    title => {
+        render(<SalesCustomerTable title={title} data={customerPayments} />)
+        const table = screen.getByRole('table')
+        expect(within(table)
+            .getAllByRole('columnheader')
+            .map(cell => cell.textContent))
+            .toEqual(['Customer', 'Apr 2026', 'May 2026', 'Jun 2026', 'Annual'])
+        expect(within(table)
+            .getByRole('row', { name: /Metro/ }))
+            .toHaveTextContent('$8,500.00')
+        expect(within(table)
+            .getByRole('row', { name: /Rebel/ }))
+            .toHaveTextContent('$21,000.00')
+        expect(within(table)
+            .getByRole('row', { name: /ANZ/ }))
+            .toHaveTextContent('$15,500.00')
+        expect(within(table)
+            .getByRole('row', { name: /^Total/ }).textContent)
+            .toBe('Total$12,500.00$14,500.00$18,000.00$45,000.00')
+        expect(within(table)
+            .getAllByRole('row')[1])
+            .toBe(within(table)
+                .getByRole('row', { name: /^Total/ }))
+        expect(screen.getByRole('region'))
+            .toHaveAttribute('tabindex', '0')
+    },
+)
 
 it('keeps unknown customer amounts distinct from zero and handles an empty dataset', () => {
     const view = render(<SalesCustomerTable
@@ -330,6 +337,8 @@ it('places both customer tables at the bottom without duplicate requests or the 
     expect(screen.queryByRole('heading', { name: 'Member payments by customer' })).not.toBeInTheDocument()
     ids.forEach(id => expect(screen.getByRole('heading', { name: id }))
         .toBeInTheDocument())
+    expect(screen.getByRole('heading', { level: 1 }))
+        .toHaveTextContent("Sales - FY '27")
     expect(screen.getByRole('heading', { name: 'Revenue' }))
         .toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Bookings' })).not.toBeInTheDocument()
