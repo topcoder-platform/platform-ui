@@ -14,6 +14,25 @@ export interface PaymentDetail {
     datePaid: string
 }
 
+export interface DuplicateRelease {
+    releaseId: string
+    status: string | null
+    createdAt: string
+    amount: string
+    externalTransactionId: string | null
+}
+
+/**
+ * A payment row included in more than one PROCESSING/PROCESSED release,
+ * i.e. the member was (or is being) paid for it more than once.
+ */
+export interface DuplicatePaymentReleases {
+    paymentId: string
+    installmentNumber: number
+    /** Active releases containing the payment, oldest first. */
+    releases: DuplicateRelease[]
+}
+
 export interface PayoutStatus {
     payoutSetupComplete: boolean;
     taxFormSetupComplete: boolean;
@@ -92,6 +111,8 @@ export interface Winning {
     currency: string
     details: PaymentDetail[]
     winnerId?: string
+    /** Payments of this winning released more than once (double payment). */
+    duplicateReleases?: DuplicatePaymentReleases[]
 }
 
 export interface WinningDetail {
@@ -119,4 +140,6 @@ export interface WinningDetail {
     releaseDate: string
     datePaid: string
     paymentStatus?: PayoutStatus
+    /** Admin search only; absent on older Finance deployments. */
+    duplicateReleases?: DuplicatePaymentReleases[]
 }

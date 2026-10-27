@@ -4,9 +4,9 @@
 import React, { useEffect, useState } from 'react'
 import classNames from 'classnames'
 
-import { Button, IconOutline } from '~/libs/ui'
+import { Button, IconOutline, Tooltip } from '~/libs/ui'
 
-import { Winning } from '../../models/WinningDetail'
+import { DuplicatePaymentReleases, Winning } from '../../models/WinningDetail'
 
 import styles from './PaymentTable.module.scss'
 
@@ -24,6 +24,36 @@ interface PaymentTableProps {
     onPageClick: (pageNumber: number) => void;
     canEdit: boolean;
 }
+
+const formatReleaseStatus = (status: string | null): string => (status ?? 'Unknown').toLowerCase()
+
+const DoublePaymentFlag: React.FC<{ duplicates: DuplicatePaymentReleases[] }> = props => (
+    <Tooltip
+        content={(
+            <div className={styles.doublePaymentTooltip}>
+                {props.duplicates.map(d => (
+                    <div key={d.paymentId}>
+                        <strong>
+                            {`Installment ${d.installmentNumber} is in ${d.releases.length} releases:`}
+                        </strong>
+                        {d.releases.map(r => (
+                            <div key={r.releaseId}>
+                                {`${r.releaseId} (${formatReleaseStatus(r.status)}, ${new Date(r.createdAt)
+                                    .toLocaleString()})`}
+                                {r.externalTransactionId && ` - Trolley ${r.externalTransactionId}`}
+                            </div>
+                        ))}
+                    </div>
+                ))}
+            </div>
+        )}
+    >
+        <span className={styles.doublePaymentBadge}>
+            <IconOutline.ExclamationIcon className={styles.doublePaymentIcon} />
+            Double payment
+        </span>
+    </Tooltip>
+)
 
 const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) => {
     const [selectedPayments, setSelectedPayments] = useState<{ [paymentId: string]: Winning }>({})
@@ -112,7 +142,10 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                         {props.payments.map(payment => (
                             <tr
                                 key={`${payment.id}`}
-                                className={selectedPayments[payment.id] ? 'selected' : ''}
+                                className={classNames(
+                                    selectedPayments[payment.id] && 'selected',
+                                    payment.duplicateReleases?.length && styles.doublePaymentRow,
+                                )}
                             >
                                 {props.enableBulkEdit && (
                                     <td className={styles.bulkSelectColumn}>
@@ -131,7 +164,12 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 </td>
                                 <td className={classNames('body-small-bold', styles.paymentColumn)}>{payment.totalAmount}</td>
                                 <td className={classNames('body-small', styles.capitalize, styles.type)}>{payment.type}</td>
-                                <td className={classNames('body-small-bold', styles.capitalize, styles.statusColumn)}>{payment.status}</td>
+                                <td className={classNames('body-small-bold', styles.capitalize, styles.statusColumn)}>
+                                    {payment.status}
+                                    {!!payment.duplicateReleases?.length && (
+                                        <DoublePaymentFlag duplicates={payment.duplicateReleases} />
+                                    )}
+                                </td>
                                 <td className={classNames('body-small-bold', styles.dateColumn)}>{payment.createDate}</td>
                                 <td className={styles.dateColumn}>{payment.releaseDate}</td>
                                 <td className={styles.dateColumn}>{payment.datePaid}</td>
