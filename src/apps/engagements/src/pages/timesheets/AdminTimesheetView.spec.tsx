@@ -335,6 +335,63 @@ describe('AdminTimesheetView', () => {
         })
     })
 
+    it('switches to Pending Approval when entries are added from the Approved view', async () => {
+        const user = userEvent.setup()
+        const approved = entry({ id: 'approved-1', status: TimesheetEntryStatus.APPROVED })
+        const submitted = entry({
+            id: 'submitted-1',
+            status: TimesheetEntryStatus.SUBMITTED,
+            workDate: '2026-09-08',
+        })
+        mockGetTimesheet.mockImplementation(async (engagementId, assignmentId, filters) => (
+            timesheet(filters?.status === TimesheetEntryStatus.APPROVED
+                ? [approved]
+                : [approved, submitted])
+        ))
+        // Feeds reloads back in the way the page does, so the view sees what each filter loads.
+        const StatefulView: React.FC = () => {
+            const [view, setView] = React.useState<TimesheetView>(timesheet([approved]))
+
+            return (
+                <AdminTimesheetView
+                    initialStatus={TimesheetEntryStatus.APPROVED}
+                    onTimesheetChange={setView}
+                    timesheet={view}
+                />
+            )
+        }
+
+        render(<StatefulView />)
+        await screen.findByLabelText('Hours worked on 07-09-2026')
+
+        await user.click(screen.getByRole('button', { name: 'Add entries' }))
+        const dialog = screen.getByRole('dialog')
+        expect(within(dialog)
+            .getByText('New entries are added in the Pending Approval view.'))
+            .toBeInTheDocument()
+        await user.clear(within(dialog)
+            .getByLabelText('From Date'))
+        await user.type(within(dialog)
+            .getByLabelText('From Date'), '2026-09-08')
+        await user.clear(within(dialog)
+            .getByLabelText('To Date'))
+        await user.type(within(dialog)
+            .getByLabelText('To Date'), '2026-09-09')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Confirm' }))
+
+        expect(await screen.findByLabelText('Hours worked on 09-09-2026'))
+            .toBeInTheDocument()
+        expect(screen.getByLabelText('Status'))
+            .toHaveValue(TimesheetEntryStatus.SUBMITTED)
+        // The submitted entry loaded with the Pending Approval view is kept, not duplicated.
+        expect(screen.getAllByLabelText('Hours worked on 08-09-2026'))
+            .toHaveLength(1)
+        expect(screen.queryByLabelText('Hours worked on 07-09-2026')).not.toBeInTheDocument()
+        expect(screen.getByLabelText('Select 09-09-2026'))
+            .toBeChecked()
+    })
+
     it('keeps an approved row editable so a correction can be typed', async () => {
         const user = userEvent.setup()
         renderView([entry({ status: TimesheetEntryStatus.APPROVED })])

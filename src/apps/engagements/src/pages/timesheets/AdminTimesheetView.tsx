@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { ChangeEvent, FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
@@ -10,7 +10,7 @@ import {
     useConfirmationModal,
 } from '~/libs/ui'
 
-import type { TimesheetView } from '../../lib/models'
+import type { TimesheetAssignment, TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus } from '../../lib/models'
 import {
     approveTimesheetEntries,
@@ -136,6 +136,44 @@ const toPickerDate = (value: string): Date | undefined => {
     return new Date(year, month - 1, day)
 }
 
+interface DateRange {
+    fromDate: string
+    toDate: string
+}
+
+/** Adds an empty draft row for every work date in the range that has no row yet. */
+const addRangeRows = (
+    rows: TimesheetRow[],
+    range: DateRange,
+    assignment: TimesheetAssignment,
+): { missingDates: string[], rows: TimesheetRow[] } => {
+    const existingDates = new Set(rows.map(row => row.workDate))
+    const missingDates = generateWorkDates(range.fromDate, range.toDate)
+        .filter(workDate => !existingDates.has(workDate))
+
+    return {
+        missingDates,
+        rows: sortRowsByWorkDate([
+            ...rows,
+            ...missingDates.map(workDate => ({
+                dayLabel: getDayLabel(workDate),
+                displayDate: formatDisplayDate(workDate),
+                hoursWorked: '',
+                isPaid: false,
+                outsideAssignmentWindow: Boolean(
+                    (assignment.startDate && workDate < assignment.startDate)
+                    || (assignment.endDate && workDate > assignment.endDate),
+                ),
+                remarks: '',
+                status: TimesheetEntryStatus.DRAFT,
+                workDate,
+            })),
+        ]),
+    }
+}
+
+const ALL_DATES_EXIST_ERROR = 'All dates in this range already exist in this timesheet.'
+
 /**
  * The administrator's view: everything a member or manager can do, on anyone's timesheet, plus reopen
  * and correct.
@@ -164,11 +202,30 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
     const [fieldErrors, setFieldErrors] = useState<TimesheetFieldErrors>({})
     const [partialResult, setPartialResult] = useState<string | undefined>()
 
+    // A range confirmed on the Approved view, added once the Pending Approval entries have loaded.
+    const queuedAddRange = useRef<DateRange | undefined>()
+
     const isApprovedView = statusFilter === TimesheetEntryStatus.APPROVED
 
     useEffect(() => {
-        setRows(buildRowsFromEntries(props.timesheet.entries))
-        setSelectedDates([])
+        const loadedRows = buildRowsFromEntries(props.timesheet.entries)
+        const range = queuedAddRange.current
+
+        if (!range) {
+            setRows(loadedRows)
+            setSelectedDates([])
+            return
+        }
+
+        queuedAddRange.current = undefined
+        const added = addRangeRows(loadedRows, range, props.timesheet.assignment)
+        setRows(added.rows)
+        setSelectedDates(added.missingDates)
+        if (!added.missingDates.length) {
+            setActionError(ALL_DATES_EXIST_ERROR)
+        }
+        // Rebuild only when the loaded entries change; the assignment comes with them.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.timesheet.entries])
 
     const rangeError = isApprovedView ? validateDateRange(filterFromDate, filterToDate) : undefined
@@ -270,6 +327,7 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
         setSelectedDates([])
         reload()
             .catch(error => {
+                queuedAddRange.current = undefined
                 setActionError(extractErrorMessage(error, 'Failed to load the timesheet.'))
             })
         // Reload only when filter state changes. Including reload would also refetch whenever
@@ -291,39 +349,34 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
             return false
         }
 
-        const rangeWorkDates = generateWorkDates(fromDate, toDate)
-        const existingDates = new Set(rows.map(row => row.workDate))
-        const missingDates = rangeWorkDates.filter(workDate => !existingDates.has(workDate))
+        // The Approved view loads and shows approved entries only, so new draft rows would be
+        // hidden there and could collide with unapproved entries it never loaded. Switch to Pending
+        // Approval and add the rows once its entries are in.
+        if (isApprovedView) {
+            queuedAddRange.current = { fromDate, toDate }
+            setStatusFilter(TimesheetEntryStatus.SUBMITTED)
+            setSelectedDates([])
+            setPartialResult(undefined)
+            setActionError(undefined)
+            return true
+        }
 
-        if (!missingDates.length) {
-            setActionError('All dates in this range already exist in this timesheet.')
+        const added = addRangeRows(rows, { fromDate, toDate }, props.timesheet.assignment)
+
+        if (!added.missingDates.length) {
+            setActionError(ALL_DATES_EXIST_ERROR)
             return false
         }
 
-        setRows(current => sortRowsByWorkDate([
-            ...current,
-            ...missingDates.map(workDate => ({
-                dayLabel: getDayLabel(workDate),
-                displayDate: formatDisplayDate(workDate),
-                hoursWorked: '',
-                isPaid: false,
-                outsideAssignmentWindow: Boolean(
-                    (props.timesheet.assignment.startDate && workDate < props.timesheet.assignment.startDate)
-                    || (props.timesheet.assignment.endDate && workDate > props.timesheet.assignment.endDate),
-                ),
-                remarks: '',
-                status: TimesheetEntryStatus.DRAFT,
-                workDate,
-            })),
-        ]))
-        setSelectedDates(current => Array.from(new Set([...current, ...missingDates])))
+        setRows(added.rows)
+        setSelectedDates(current => Array.from(new Set([...current, ...added.missingDates])))
         setActionError(undefined)
         return true
     }, [
         addRangeError,
         fromDate,
-        props.timesheet.assignment.endDate,
-        props.timesheet.assignment.startDate,
+        isApprovedView,
+        props.timesheet.assignment,
         rows,
         toDate,
     ])
@@ -817,6 +870,9 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                         }}
                     />
                 </section>
+                {isApprovedView && (
+                    <p>New entries are added in the Pending Approval view.</p>
+                )}
                 {addRangeError && <p className={styles.error}>{addRangeError}</p>}
             </BaseModal>
             {confirmation.modal}
