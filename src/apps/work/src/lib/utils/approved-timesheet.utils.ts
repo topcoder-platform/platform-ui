@@ -21,6 +21,7 @@ export interface ApprovedTimesheetEngagementSummary {
     assignees: ApprovedTimesheetAssigneeSummary[]
     engagementId: string
     engagementTitle: string
+    projectId: string
 }
 
 function parseWorkDate(value: string): Date {
@@ -160,6 +161,7 @@ export function summarizeApprovedTimesheetsByEngagement(
                 assignees,
                 engagementId,
                 engagementTitle: firstRow[0].engagementTitle,
+                projectId: firstRow[0].projectId,
             }
         })
 }
