@@ -8,8 +8,8 @@ import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 import SalesDashboardsPage from './SalesDashboardsPage'
 import SalesReportsPage from './SalesReportsPage'
-import SalesCustomerPaymentsTable from './SalesCustomerPaymentsTable'
-import SalesDashboardChart, { axisLabel, stackedTooltip } from './SalesDashboardChart'
+import SalesCustomerTable from './SalesCustomerTable'
+import SalesDashboardChart, { axisLabel, chartTooltip } from './SalesDashboardChart'
 import {
     fetchSalesDashboard,
     MonthlySalesChart,
@@ -94,8 +94,8 @@ it('keeps independent sections usable when one source fails and retries just tha
     render(<SalesDashboardsPage />)
     expect(await screen.findByRole('alert'))
         .toHaveTextContent('Flexible talent could not be loaded')
-    expect(screen.getByText('Revenue report pending configuration.'))
-        .toBeInTheDocument()
+    expect(screen.getAllByText('Revenue report pending configuration.'))
+        .toHaveLength(2)
     expect(screen.getByRole('heading', { name: 'Member payments by type' }))
         .toBeInTheDocument()
     fetchDashboard.mockResolvedValue({ charts: [], notices: ['Talent data loaded.'] })
@@ -157,12 +157,14 @@ it('renders every fiscal-year month, including April data and the following Marc
     const rows = within(table)
         .getAllByRole('row', { hidden: true })
     expect(rows)
-        .toHaveLength(13)
+        .toHaveLength(14)
     expect(rows[1])
+        .toHaveTextContent('Annual$123.45')
+    expect(rows[2])
         .toHaveTextContent('Apr 2026$123.45')
-    expect(rows[10])
+    expect(rows[11])
         .toHaveTextContent('Jan 2027')
-    expect(rows[12])
+    expect(rows[13])
         .toHaveTextContent('Mar 2027')
 })
 
@@ -179,13 +181,13 @@ it.each([
 })
 
 it('totals visible stacked tooltip values, including negative adjustments and unknowns', () => {
-    const formatter = stackedTooltip('currency')
+    const formatter = chartTooltip('currency')
     const tooltip = { defaultFormatter: () => ['Month<br/>', 'Customer A: $100<br/>', 'Customer B: -$25'] }
     expect(formatter.call(
 { points: [{ y: 100 }, { y: -25 }, { y: null }] } as Highcharts.TooltipFormatterContextObject,
         tooltip as unknown as Highcharts.Tooltip,
     ))
-        .toContain('<b>Total: $75.00</b>')
+        .toBe('Month<br/><b>Total: $75.00</b><br/>Customer A: $100<br/>Customer B: -$25')
     expect(formatter.call(
 { points: [{ y: 100 }] } as Highcharts.TooltipFormatterContextObject,
         tooltip as unknown as Highcharts.Tooltip,
@@ -198,7 +200,7 @@ it('totals visible stacked tooltip values, including negative adjustments and un
         .toContain('<b>Total: —</b>')
 })
 
-it('shows totals for stacked splits without summing overlapping talent counts or percentages', () => {
+it('shows totals for stacked and grouped counts, labels repeated member counts, and excludes percentages', () => {
     const chart: MonthlySalesChart = {
         ...response.charts[0],
         months: [
@@ -214,15 +216,18 @@ it('shows totals for stacked splits without summing overlapping talent counts or
         .getByRole('columnheader', { hidden: true, name: 'Total' }))
         .toBeInTheDocument()
     expect(within(table)
-        .getByText('$75.00'))
-        .toBeInTheDocument()
+        .getAllByText('$75.00'))
+        .toHaveLength(2)
     const chartOptions = (): Highcharts.Options => (jest.mocked(HighchartsReact).mock.calls.slice(-1)[0][0].options)
     expect(chartOptions().tooltip?.formatter)
         .toBeDefined()
     view.rerender(<SalesDashboardChart chart={{ ...chart, stacked: false, unit: 'count' }} />)
     expect(chartOptions().tooltip?.formatter)
-        .toBeUndefined()
-    expect(screen.queryByRole('columnheader', { hidden: true, name: 'Total' })).not.toBeInTheDocument()
+        .toBeDefined()
+    expect(screen.getByRole('columnheader', { hidden: true, name: 'Total' }))
+        .toBeInTheDocument()
+    expect(screen.getByText(/totals are not unique member counts/))
+        .toBeInTheDocument()
     view.rerender(<SalesDashboardChart chart={{ ...chart, unit: 'percent' }} />)
     expect(chartOptions().tooltip?.formatter)
         .toBeUndefined()
@@ -243,12 +248,12 @@ const customerPayments: MonthlySalesChart = {
 }
 
 it('renders a customer-by-month matrix with accurate row, column and grand totals', () => {
-    render(<SalesCustomerPaymentsTable data={customerPayments} />)
+    render(<SalesCustomerTable title='Goods Sold Customer-Wise' data={customerPayments} />)
     const table = screen.getByRole('table')
     expect(within(table)
         .getAllByRole('columnheader')
         .map(cell => cell.textContent))
-        .toEqual(['Customer', 'Apr 2026', 'May 2026', 'Jun 2026', 'Total'])
+        .toEqual(['Customer', 'Apr 2026', 'May 2026', 'Jun 2026', 'Annual'])
     expect(within(table)
         .getByRole('row', { name: /Metro/ }))
         .toHaveTextContent('$8,500.00')
@@ -266,9 +271,11 @@ it('renders a customer-by-month matrix with accurate row, column and grand total
 })
 
 it('keeps unknown customer amounts distinct from zero and handles an empty dataset', () => {
-    const view = render(<SalesCustomerPaymentsTable data={{ ...customerPayments,
-        months: [{ month: '2026-04-01', values: { anz: -2.5, metro: null, rebel: 0 } }],
-    }}
+    const view = render(<SalesCustomerTable
+        title='Goods Sold Customer-Wise'
+        data={{ ...customerPayments,
+            months: [{ month: '2026-04-01', values: { anz: -2.5, metro: null, rebel: 0 } }],
+        }}
     />)
     expect(screen.getByRole('row', { name: /Metro/ }))
         .toHaveTextContent('Metro——')
@@ -276,32 +283,156 @@ it('keeps unknown customer amounts distinct from zero and handles an empty datas
         .toHaveTextContent('Rebel$0.00$0.00')
     expect(screen.getByRole('row', { name: /^Total/ }))
         .toHaveTextContent('Total-$2.50-$2.50')
-    view.rerender(<SalesCustomerPaymentsTable data={{ ...customerPayments, series: [] }} />)
-    expect(screen.getByText('No customer payments in this fiscal year.'))
+    view.rerender(<SalesCustomerTable title='Goods Sold Customer-Wise' data={{ ...customerPayments, series: [] }} />)
+    expect(screen.getByText('No customer data in this fiscal year.'))
         .toBeInTheDocument()
 })
 
-it('uses the full customer dataset below payment charts and renders all new won-booking charts', async () => {
+it('places both customer tables at the bottom without duplicate requests or the old customer chart', async () => {
     const ids = [
         'closed-won', 'expected-revenue', 'pipeline-stage', 'won-offering', 'won-deal-category', 'won-customer-type',
     ]
     fetchDashboard.mockImplementation(async section => {
-        if (section === 'payments') return { ...response, customerPayments }
+        if (section === 'payments') {
+            return { ...response,
+                charts: [...response.charts,
+                    { ...response.charts[0], id: 'payment-customer', title: 'Member payments by customer' }],
+                customerPayments }
+        }
+
+        if (section === 'revenue') {
+            return { charts: [{ ...response.charts[0], title: 'Revenue report' }],
+                customerRevenue: customerPayments,
+                notices: [] }
+        }
+
         if (section === 'pipeline') {
             return { charts: ids.map(id => ({ ...response.charts[0], id, title: id })), notices: [] }
         }
 
         return { charts: [], notices: [] }
     })
-    render(<SalesDashboardsPage portal='sales' />)
-    const table = await screen.findByRole('table', { name: 'All customers, monthly payments and totals (USD)' })
-    expect(within(table)
-        .getByRole('rowheader', { name: 'ANZ' }))
-        .toBeInTheDocument()
+    const view = render(<SalesDashboardsPage portal='sales' />)
+    const customer = screen.getByRole('region', { name: 'Customer' })
+    await within(customer)
+        .findByRole('table', { name: 'Revenue Customer-Wise (USD)' })
+    for (const name of ['Revenue Customer-Wise (USD)', 'Goods Sold Customer-Wise (USD)']) {
+        const table = within(customer)
+            .getByRole('table', { name })
+        expect(within(table)
+            .getByRole('rowheader', { name: 'ANZ' }))
+            .toBeInTheDocument()
+    }
+
+    expect(Array.from(view.container.querySelectorAll('section'))
+        .slice(-1)[0])
+        .toBe(customer)
+    expect(screen.queryByRole('heading', { name: 'Member payments by customer' })).not.toBeInTheDocument()
     ids.forEach(id => expect(screen.getByRole('heading', { name: id }))
         .toBeInTheDocument())
-    expect(screen.getByText('Member payments and flexible talent include customer work only.'))
+    expect(screen.getByRole('heading', { name: 'Revenue' }))
         .toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Bookings' }))
+    expect(screen.queryByRole('heading', { name: 'Bookings' })).not.toBeInTheDocument()
+    expect(fetchDashboard)
+        .toHaveBeenCalledTimes(4)
+})
+
+it('shows customer-source failures independently and retries the shared source only once', async () => {
+    fetchDashboard.mockImplementation(async section => {
+        if (section === 'revenue') throw new Error('offline')
+        return section === 'payments' ? { ...response, customerPayments } : { charts: [], notices: [] }
+    })
+    render(<SalesDashboardsPage portal='sales' />)
+    const customer = screen.getByRole('region', { name: 'Customer' })
+    expect(await within(customer)
+        .findByRole('alert'))
+        .toHaveTextContent('Revenue could not be loaded')
+    expect(within(customer)
+        .getByRole('table', { name: 'Goods Sold Customer-Wise (USD)' }))
         .toBeInTheDocument()
+    fetchDashboard.mockResolvedValue({ charts: [], customerRevenue: customerPayments, notices: ['Partial source.'] })
+    fireEvent.click(within(customer)
+        .getByRole('button', { name: 'Try again' }))
+    expect(await within(customer)
+        .findByRole('table', { name: 'Revenue Customer-Wise (USD)' }))
+        .toBeInTheDocument()
+    expect(within(customer)
+        .getByText('Partial source.'))
+        .toBeInTheDocument()
+    expect(fetchDashboard)
+        .toHaveBeenCalledTimes(5)
+    expect(fetchDashboard)
+        .toHaveBeenLastCalledWith('revenue', 'sales', 'close', expect.any(AbortSignal))
+})
+
+it('clears both customer tables on refresh and ignores superseded source responses', async () => {
+    const stale: Array<(data: SalesDashboardResponse) => void> = []
+    fetchDashboard.mockImplementation(() => new Promise(resolve => { stale.push(resolve) }))
+    render(<SalesDashboardsPage portal='sales' />)
+    const oldSignals = fetchDashboard.mock.calls.map(call => call[3])
+    fetchDashboard.mockImplementation(async section => ({
+        charts: [],
+        customerPayments: section === 'payments' ? customerPayments : undefined,
+        customerRevenue: section === 'revenue' ? customerPayments : undefined,
+        notices: [],
+    }))
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
+    expect(oldSignals.every(signal => signal.aborted))
+        .toBe(true)
+    const customer = screen.getByRole('region', { name: 'Customer' })
+    await within(customer)
+        .findByRole('table', { name: 'Revenue Customer-Wise (USD)' })
+    stale.forEach(resolve => resolve({ charts: [], notices: ['Obsolete result'] }))
+    await waitFor(() => expect(within(customer)
+        .getAllByRole('table'))
+        .toHaveLength(2))
+    expect(screen.queryByText('Obsolete result')).not.toBeInTheDocument()
+    fetchDashboard.mockImplementation(() => new Promise(() => { /* Keep refresh pending. */ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
+    await waitFor(() => expect(within(customer)
+        .queryAllByRole('table'))
+        .toHaveLength(0))
+})
+
+it('provides explicit missing-customer-data notices for older APIs and authorization failures', async () => {
+    fetchDashboard.mockResolvedValue({ charts: [], notices: [] })
+    render(<SalesDashboardsPage />)
+    const customer = screen.getByRole('region', { name: 'Customer' })
+    expect(await within(customer)
+        .findAllByText('Customer details are unavailable for this source.'))
+        .toHaveLength(2)
+    fetchDashboard.mockRejectedValue({ response: { status: 403 } })
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
+    expect(await within(customer)
+        .findAllByRole('alert'))
+        .toHaveLength(2)
+    expect(within(customer)
+        .queryAllByRole('table'))
+        .toHaveLength(0)
+})
+
+it('adds an Annual row before all months for single-series charts without treating missing data as zero', () => {
+    const chart: MonthlySalesChart = {
+        ...response.charts[0],
+        months: [
+            { month: '2026-04-01', values: { amount: 10.5 } },
+            { month: '2027-01-01', values: { amount: -2.25 } },
+            { month: '2027-03-01', values: { amount: null } },
+        ],
+    }
+    const view = render(<SalesDashboardChart chart={chart} />)
+    let table = screen.getByRole('table', { hidden: true })
+    expect(within(table)
+        .getAllByRole('row', { hidden: true })[1])
+        .toHaveTextContent('Annual$8.25')
+    expect(jest.mocked(HighchartsReact).mock.calls.slice(-1)[0][0].options.tooltip.formatter)
+        .toBeDefined()
+    view.rerender(<SalesDashboardChart chart={{ ...chart,
+        months: [{ month: '2026-04-01', values: { amount: null } }],
+    }}
+    />)
+    table = screen.getByRole('table', { hidden: true })
+    expect(within(table)
+        .getAllByRole('row', { hidden: true })[1])
+        .toHaveTextContent('Annual—')
 })
