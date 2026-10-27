@@ -1,6 +1,8 @@
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
 
+import { salesFiscalYear } from './sales-fiscal-year'
+
 export type SalesDashboardSection = 'pipeline' | 'revenue' | 'payments' | 'talent' | 'gross-margin'
 export type SalesDashboardPortal = 'reports' | 'sales'
 
@@ -41,8 +43,7 @@ export function fetchSalesDashboard(
     dateBasis: 'close' | 'created',
     signal: AbortSignal,
 ): Promise<SalesDashboardResponse> {
-    const now = new Date()
-    const fiscalYear = now.getUTCFullYear() - (now.getUTCMonth() < 3 ? 1 : 0)
+    const fiscalYear = salesFiscalYear() - 1
     const params = new URLSearchParams({
         dateBasis,
         endDate: new Date(Date.UTC(fiscalYear + 1, 3, 1))

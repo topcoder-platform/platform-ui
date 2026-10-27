@@ -3,6 +3,7 @@ import { FC, ReactNode, useCallback, useState } from 'react'
 import { Button, LoadingSpinner, PageTitle } from '~/libs/ui'
 
 import { SalesDashboardPortal, SalesDashboardSection } from './sales-dashboard.service'
+import { salesFiscalYearLabel } from './sales-fiscal-year'
 import { dashboardTitles, SalesDashboardSource, useSalesDashboard } from './useSalesDashboard'
 import SalesCustomerTable from './SalesCustomerTable'
 import SalesDashboardChart from './SalesDashboardChart'
@@ -91,15 +92,19 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
     const talent = useSalesDashboard('talent', portal, dateBasis, refreshKey)
     const sources = { payments, pipeline, revenue, talent }
     const sections = ['pipeline', 'revenue', 'payments', 'talent'] as const
+    const months = sections.map(section => sources[section].data?.charts[0]?.months)
+        .find(value => value?.length)
+    const fiscalYear = salesFiscalYearLabel(months?.[0]?.month, months?.[months.length - 1]?.month)
+    const title = `${portal === 'sales' ? 'Sales' : 'Sales dashboards'} - ${fiscalYear}`
     const refresh = useCallback(() => setRefreshKey(value => value + 1), [])
     const chooseClose = useCallback(() => setDateBasis('close'), [])
     const chooseCreated = useCallback(() => setDateBasis('created'), [])
     return (
         <div className={styles.page}>
-            <PageTitle>Sales dashboards</PageTitle>
+            <PageTitle>{title}</PageTitle>
             <header className={styles.header}>
                 <div>
-                    <h1>Sales dashboards</h1>
+                    <h1>{title}</h1>
                     <p>Monthly business performance, from opportunity to member payments.</p>
                 </div>
                 <Button secondary onClick={refresh}>Refresh data</Button>

@@ -17,8 +17,8 @@ export function workProjectUrl(value: string | number | boolean | null | undefin
 /** Report column types a date range can be applied to; mirrors the Reports API contract. */
 const dateTypes = ['date', 'datetime']
 
-/** Matches the Created Date column so the portal opens on pipeline generation. */
-const createdDatePattern = /creat/i
+/** Matches Close Date and Closed Date labels so the portal opens on expected closes. */
+const closedDatePattern = /^closed? date$/i
 
 export type SalesDateColumn = SalesReport['columns'][number]
 
@@ -33,14 +33,16 @@ export function dateColumns(report?: SalesReport): SalesDateColumn[] {
 }
 
 /**
- * Chooses the date column the portal starts on, preferring Created Date for pipeline analysis.
+ * Chooses the date column the portal starts on, preferring Close Date (also labelled Closed Date).
  * @param columns Available date columns, in report order.
  * @returns The preferred column ID, or an empty string when the report has no date column.
  * @throws Does not throw.
  */
 export function defaultDateColumn(columns: SalesDateColumn[]): string {
-    const created = columns.find(column => createdDatePattern.test(column.label))
-    return (created ?? columns[0])?.id ?? ''
+    const closed = columns.find(column => closedDatePattern.test(column.label.split(':')
+        .pop()
+        ?.trim() ?? '') || /(?:^|\.)CLOSE_?DATE$/i.test(column.id))
+    return (closed ?? columns[0])?.id ?? ''
 }
 
 /**

@@ -103,7 +103,7 @@
 
     caption { color: #4a5577; padding: 0 0 16px; text-align: left; }
     th, td { white-space: nowrap; }
-    thead, tfoot { background: #f4f6fa; font-weight: 700; }
+    thead { background: #f4f6fa; font-weight: 700; }
     th:first-child { background: #fff; left: 0; position: sticky; }
     td:last-child { font-weight: 700; }
 }
