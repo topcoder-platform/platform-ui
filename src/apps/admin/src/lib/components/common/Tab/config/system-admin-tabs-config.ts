@@ -1,6 +1,5 @@
 import _ from 'lodash'
 
-import { machineAccessEnabled } from '~/apps/admin/src/machine-access/config'
 import { TabsNavItem } from '~/libs/ui'
 import { isAdministrator } from '~/apps/admin/src/lib/utils/access'
 import {
@@ -111,12 +110,10 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
         id: websitePublicationRouteId,
         title: 'Website Publishing',
     },
-    ...(machineAccessEnabled ? [{ id: 'machine-access', title: 'M2M' }] : []),
 ]
 
 /**
- * Returns administrator tabs for the supplied roles, including the M2M (Machine Access) tab only on DEV hosts.
- * Returns an empty array for other roles; performs no I/O and throws no errors.
+ * Returns the visible system-admin tabs for the current user.
  */
 export function getSystemAdminTabs(roles?: string[]): TabsNavItem[] {
     if (isAdministrator(roles)) {
