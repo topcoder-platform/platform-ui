@@ -158,17 +158,17 @@ function headlineValue(value: number | null, unit: MonthlySalesChart['unit']): s
 }
 
 /**
- * Extends Highcharts' shared tooltip with the net total of the visible stacked series.
+ * Places the net total of visible series before category details in Highcharts' shared tooltip.
  * @param unit Chart unit, used for currency/count formatting.
  * @returns A formatter retaining Highcharts' escaped labels and default point formatting.
  * @throws Does not throw for missing or empty points; unknown totals remain dashes.
  */
-export function stackedTooltip(unit: MonthlySalesChart['unit']): Highcharts.TooltipFormatterCallbackFunction {
+export function chartTooltip(unit: MonthlySalesChart['unit']): Highcharts.TooltipFormatterCallbackFunction {
     return function formatter(tooltip: Highcharts.Tooltip) {
         const content = tooltip.defaultFormatter.call(this, tooltip)
-        const total = salesChartTotal((this.points ?? []).map(point => point.y))
-        const body = Array.isArray(content) ? content.join('') : content
-        return `${body}<br/><b>Total: ${salesChartValue(total, unit)}</b>`
+        const total = salesChartTotal((this.points ?? [this]).map(point => point.y))
+        const totalLine = `<b>Total: ${salesChartValue(total, unit)}</b><br/>`
+        return Array.isArray(content) ? [content[0], totalLine, ...content.slice(1)].join('') : totalLine + content
     }
 }
 
@@ -183,7 +183,11 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boole
     const chart = props.chart
     const headline = useMemo(() => chartHeadline(chart, props.expectedCloses), [chart, props.expectedCloses])
     const labels = useMemo(() => chart.months.map(month => salesMonthLabel(month.month)), [chart.months])
-    const showTotal = chart.stacked && chart.series.length > 1 && chart.unit !== 'percent'
+    const hasTotals = chart.unit !== 'percent'
+    const showTotal = hasTotals && chart.series.length > 1
+    const annual = useMemo(() => chart.series.map(series => salesChartTotal(chart.months.map(month => (
+        month.values[series.key]
+    )))), [chart])
     const options = useMemo<Highcharts.Options>(() => ({
         chart: { backgroundColor: 'transparent', height: 320, type: 'column' },
         colors,
@@ -197,7 +201,7 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boole
         })),
         title: { text: undefined },
         tooltip: {
-            formatter: showTotal ? stackedTooltip(chart.unit) : undefined,
+            formatter: hasTotals ? chartTooltip(chart.unit) : undefined,
             shared: true,
             valueDecimals: chart.unit === 'count' ? 0 : 2,
             valuePrefix: chart.unit === 'currency' ? '$' : '',
@@ -209,7 +213,7 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boole
             labels: { formatter: context => axisLabel(Number(context.value), chart.unit) },
             title: { text: chart.unit === 'currency' ? 'USD' : chart.unit === 'percent' ? 'Markup (%)' : 'Members' },
         },
-    }), [chart, labels, showTotal])
+    }), [chart, labels, hasTotals])
 
     return (
         <article className={styles.card}>
@@ -240,6 +244,9 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boole
             </figure>
             <details>
                 <summary>View monthly data</summary>
+                {chart.unit === 'count' && (
+                    <p>Counts are summed across months and categories; totals are not unique member counts.</p>
+                )}
                 <div className={styles.tableScroll}>
                     <table>
                         <caption>{chart.title}</caption>
@@ -251,6 +258,15 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boole
                             </tr>
                         </thead>
                         <tbody>
+                            {hasTotals && (
+                                <tr className={styles.annual}>
+                                    <th scope='row'>Annual</th>
+                                    {chart.series.map((series, index) => (
+                                        <td key={series.key}>{salesChartValue(annual[index], chart.unit)}</td>
+                                    ))}
+                                    {showTotal && <td>{salesChartValue(salesChartTotal(annual), chart.unit)}</td>}
+                                </tr>
+                            )}
                             {chart.months.map((month, index) => (
                                 <tr key={month.month}>
                                     <th scope='row'>{labels[index]}</th>
