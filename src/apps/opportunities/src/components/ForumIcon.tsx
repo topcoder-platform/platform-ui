@@ -6,6 +6,7 @@ import author from '../assets/forums/1bd8b.svg'
 import bold from '../assets/forums/8f583.svg'
 import center from '../assets/forums/714f6.svg'
 import code from '../assets/forums/c7811.svg'
+import copyLink from '../assets/forums/copy-link.svg'
 import deleteIcon from '../assets/forums/41360.svg'
 import down from '../assets/forums/1e461.svg'
 import downVote from '../assets/forums/54374.svg'
@@ -43,6 +44,7 @@ const icons = {
     bold,
     center,
     code,
+    copyLink,
     delete: deleteIcon,
     down,
     downVote,
@@ -74,7 +76,8 @@ const icons = {
     watched,
 }
 
-/** Displays an original Figma forum icon at its intrinsic size (`watched` is the filled eye for active watches).
+/** Displays an original Figma forum icon at its intrinsic size (`watched` is the filled eye for active watches;
+ * `copyLink` is the Material link glyph from the `link` toolbar icon, without its plus, in the action teal).
  * @param props Named action icon. @returns Decorative image; the parent supplies its accessible label.
  * @throws Never.
  */

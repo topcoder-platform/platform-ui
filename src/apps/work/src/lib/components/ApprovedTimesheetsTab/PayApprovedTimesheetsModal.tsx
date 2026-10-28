@@ -10,10 +10,15 @@ import {
 import {
     BaseModal,
     Button,
+    Tooltip,
 } from '~/libs/ui'
 
 import { ApprovedTimesheetRow } from '../../models'
-import { getApprovedTimesheetPaymentAmount } from '../../utils/approved-timesheet.utils'
+import {
+    ApprovedTimesheetAssigneeSummary,
+    getApprovedTimesheetPaymentAmount,
+    summarizeApprovedTimesheetsByEngagement,
+} from '../../utils/approved-timesheet.utils'
 import { formatCurrency } from '../../utils/payment.utils'
 
 import styles from './ApprovedTimesheetsTab.module.scss'
@@ -24,6 +29,31 @@ interface PayApprovedTimesheetsModalProps {
     onConfirm: (remarks: string) => Promise<void> | void
     open: boolean
     rows: ApprovedTimesheetRow[]
+}
+
+function isOverAgreedHours(assignee: ApprovedTimesheetAssigneeSummary): boolean {
+    return assignee.agreedHours !== undefined
+        && Math.round(assignee.hours * 100) > Math.round(assignee.agreedHours * 100)
+}
+
+function renderAssigneeHours(assignee: ApprovedTimesheetAssigneeSummary): JSX.Element {
+    if (!isOverAgreedHours(assignee)) {
+        return <span>{assignee.hours}</span>
+    }
+
+    return (
+        <Tooltip
+            content={`${assignee.hours} hours is above the ${assignee.agreedHours} agreed hours `
+                + 'for the selected period'}
+            place='top'
+            strategy='fixed'
+            triggerOn='click-hover'
+        >
+            <span className={styles.overAgreedHours}>
+                {assignee.hours}
+            </span>
+        </Tooltip>
+    )
 }
 
 export const PayApprovedTimesheetsModal: FC<PayApprovedTimesheetsModalProps> = (
@@ -40,6 +70,10 @@ export const PayApprovedTimesheetsModal: FC<PayApprovedTimesheetsModalProps> = (
         }),
         { amountCents: 0, hoursHundredths: 0 },
     ), [props.rows])
+    const engagements = useMemo(
+        () => summarizeApprovedTimesheetsByEngagement(props.rows),
+        [props.rows],
+    )
 
     const handleCancel = useCallback((): void => {
         if (isProcessing) {
@@ -60,7 +94,7 @@ export const PayApprovedTimesheetsModal: FC<PayApprovedTimesheetsModalProps> = (
             open={props.open}
             onClose={handleCancel}
             title='Create Payments'
-            size='md'
+            size='body'
             buttons={(
                 <div className={styles.modalActions}>
                     <Button
@@ -90,6 +124,58 @@ export const PayApprovedTimesheetsModal: FC<PayApprovedTimesheetsModalProps> = (
                     <span>{`${totals.hoursHundredths / 100} hours`}</span>
                     <span>{formatCurrency(totals.amountCents / 100)}</span>
                 </div>
+
+                {engagements.length
+                    ? (
+                        <div className={styles.modalBreakdown}>
+                            <table className={styles.modalBreakdownTable}>
+                                <thead>
+                                    <tr>
+                                        <th>Assignee</th>
+                                        <th className={styles.numericCell}>Hours</th>
+                                        <th className={styles.numericCell}>Amount</th>
+                                    </tr>
+                                </thead>
+                                {engagements.map(engagement => (
+                                    <tbody key={engagement.engagementId}>
+                                        <tr>
+                                            <th className={styles.modalEngagementRow} colSpan={3} scope='colgroup'>
+                                                {engagement.engagementTitle ? (
+                                                    <a
+                                                        href={
+                                                            `/projects/${
+                                                                engagement.projectId
+                                                            }/engagements/${
+                                                                engagement.engagementId
+                                                            }/view`
+                                                        }
+                                                        target='_blank'
+                                                        rel='noopener noreferrer'
+                                                    >
+                                                        {engagement.engagementTitle}
+                                                    </a>
+                                                ) : (
+                                                    '-'
+                                                )}
+                                            </th>
+                                        </tr>
+                                        {engagement.assignees.map(assignee => (
+                                            <tr key={assignee.assignmentId}>
+                                                <td>{assignee.assigneeHandle || '-'}</td>
+                                                <td className={styles.numericCell}>
+                                                    {renderAssigneeHours(assignee)}
+                                                </td>
+                                                <td className={styles.numericCell}>
+                                                    {formatCurrency(assignee.amount)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                ))}
+                            </table>
+                        </div>
+                    )
+                    : undefined}
 
                 <label className={styles.modalLabel} htmlFor='approved-timesheets-remarks'>
                     Remarks (optional)

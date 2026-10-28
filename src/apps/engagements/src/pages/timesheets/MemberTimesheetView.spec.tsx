@@ -8,7 +8,11 @@ import userEvent from '@testing-library/user-event'
 
 import type { TimesheetEntry, TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus, TimesheetViewerRole } from '../../lib/models'
-import { saveTimesheetEntries, submitTimesheetEntries } from '../../lib/services'
+import {
+    deleteTimesheetEntries,
+    saveTimesheetEntries,
+    submitTimesheetEntries,
+} from '../../lib/services'
 
 import MemberTimesheetView from './MemberTimesheetView'
 
@@ -76,15 +80,59 @@ jest.mock('~/libs/ui', () => ({
             />
         </label>
     ),
+    // confirm() opens a dialog and resolves with the button pressed.
+    useConfirmationModal: () => {
+        // jest.mock factories cannot close over imports, so React is required here.
+        // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+        const mockReact: typeof import('react') = require('react')
+
+        const [pending, setPending] = mockReact.useState<{
+            content: string
+            resolve:(confirmed: boolean) => void
+            title: string
+        } | undefined>()
+
+        return {
+            confirm: (props: { content: string, title: string }) => new Promise<boolean>(resolve => {
+                setPending({ ...props, resolve })
+            }),
+            modal: pending && (
+                <div role='alertdialog'>
+                    <h2>{pending.title}</h2>
+                    <p>{pending.content}</p>
+                    <button
+                        onClick={function onConfirm() {
+                            setPending(undefined)
+                            pending.resolve(true)
+                        }}
+                        type='button'
+                    >
+                        Confirm
+                    </button>
+                    <button
+                        onClick={function onCancel() {
+                            setPending(undefined)
+                            pending.resolve(false)
+                        }}
+                        type='button'
+                    >
+                        Cancel
+                    </button>
+                </div>
+            ),
+        }
+    },
 }), { virtual: true })
 
 jest.mock('../../lib/services', () => ({
+    deleteTimesheetEntries: jest.fn(),
     saveTimesheetEntries: jest.fn(),
     submitTimesheetEntries: jest.fn(),
 }))
 
 const mockSave = saveTimesheetEntries as jest.MockedFunction<typeof saveTimesheetEntries>
 const mockSubmit = submitTimesheetEntries as jest.MockedFunction<typeof submitTimesheetEntries>
+const mockDelete = deleteTimesheetEntries as jest.MockedFunction<typeof deleteTimesheetEntries>
 
 const entry = (overrides: Partial<TimesheetEntry> = {}): TimesheetEntry => ({
     approvalComment: null,
@@ -210,6 +258,68 @@ describe('MemberTimesheetView', () => {
             .toBeInTheDocument()
         expect(screen.getAllByText('08-09-2026'))
             .toHaveLength(1)
+    })
+
+    it('deletes a selected draft once the member confirms', async () => {
+        const user = userEvent.setup()
+        mockDelete.mockResolvedValue(timesheet([]))
+        const { onTimesheetChange }: { onTimesheetChange: jest.Mock } = renderView([
+            entry({ id: 'e1', workDate: '2026-09-07' }),
+        ])
+
+        await pickRange('2026-09-07', '2026-09-08')
+        await user.click(await screen.findByLabelText('Select 07-09-2026'))
+        // A blank generated row has nothing to delete, so it neither counts nor blocks the delete.
+        await user.click(screen.getByLabelText('Select 08-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Delete (1)' }))
+
+        const dialog = screen.getByRole('alertdialog')
+        expect(within(dialog)
+            .getByText('The draft entry will be permanently deleted.'))
+            .toBeInTheDocument()
+        expect(mockDelete).not.toHaveBeenCalled()
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Confirm' }))
+
+        await waitFor(() => {
+            expect(mockDelete)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', { entryIds: ['e1'] })
+        })
+        expect(onTimesheetChange)
+            .toHaveBeenCalledWith(timesheet([]))
+    })
+
+    it('does not delete when the member cancels', async () => {
+        const user = userEvent.setup()
+        renderView([entry({ id: 'e1', workDate: '2026-09-07' })])
+
+        await pickRange('2026-09-07', '2026-09-07')
+        await user.click(await screen.findByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Delete (1)' }))
+        await user.click(within(screen.getByRole('alertdialog'))
+            .getByRole('button', { name: 'Cancel' }))
+
+        expect(mockDelete).not.toHaveBeenCalled()
+    })
+
+    it('offers delete only when every saved row selected is an unpaid draft', async () => {
+        const user = userEvent.setup()
+        renderView([
+            entry({ id: 'e1', workDate: '2026-09-07' }),
+            entry({ id: 'e2', status: TimesheetEntryStatus.SUBMITTED, workDate: '2026-09-08' }),
+            entry({ id: 'e3', isPaid: true, reopenedAt: '2026-09-20T00:00:00.000Z', workDate: '2026-09-09' }),
+        ])
+
+        await pickRange('2026-09-07', '2026-09-09')
+        await user.click(await screen.findByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByLabelText('Select 08-09-2026'))
+
+        expect(screen.queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument()
+
+        await user.click(screen.getByLabelText('Select 08-09-2026'))
+        await user.click(screen.getByLabelText('Select 09-09-2026'))
+
+        expect(screen.queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument()
     })
 
     it('shows the selection summary with a counted submit button', async () => {

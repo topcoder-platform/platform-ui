@@ -69,6 +69,21 @@ jest.mock('~/libs/ui', () => ({
         PencilIcon: () => <span>pencil-icon</span>,
         UserIcon: () => <span>user-icon</span>,
     },
+    InputCheckbox: (props: {
+        checked?: boolean
+        label: string
+        onClick?: () => void
+    }) => (
+        <label>
+            <input
+                checked={!!props.checked}
+                onClick={props.onClick}
+                readOnly
+                type='checkbox'
+            />
+            {props.label}
+        </label>
+    ),
 }), {
     virtual: true,
 })
@@ -83,6 +98,12 @@ jest.mock('../../../config/routes.config', () => ({
     rootRoute: '/work',
 }))
 jest.mock('../../../lib/components', () => ({
+    ApprovedTimesheetsTab: (props: { excludeTestProjects?: boolean }) => (
+        <div
+            data-exclude-test-projects={props.excludeTestProjects ? 'true' : 'false'}
+            data-testid='approved-timesheets-tab'
+        />
+    ),
     ConfirmationModal: (props: {
         cancelText?: string
         confirmDisabled?: boolean
@@ -111,6 +132,7 @@ jest.mock('../../../lib/components', () => ({
         backUrl: string
         rows: Array<{
             assignment: { id: number | string; memberHandle: string }
+            customerName: string
             engagement: { title?: string }
             projectId: string
             projectName: string
@@ -118,7 +140,11 @@ jest.mock('../../../lib/components', () => ({
     }) => (
         <div data-testid='assignments-table' data-back-url={props.backUrl}>
             {props.rows.map(row => (
-                <div key={row.assignment.id} data-testid='assignment-row'>
+                <div
+                    key={row.assignment.id}
+                    data-customer-name={row.customerName}
+                    data-testid='assignment-row'
+                >
                     {`${row.assignment.memberHandle} | ${row.engagement.title} | ${row.projectName}`}
                 </div>
             ))}
@@ -814,6 +840,72 @@ describe('EngagementsListPage', () => {
             })
         })
 
+        it('passes the project customer to the assignment rows', () => {
+            mockedUseFetchEngagements.mockReturnValue({
+                engagements: [{
+                    ...engagementWithAssignments,
+                    project: {
+                        customer: 'Acme Corp',
+                        id: '200',
+                        name: 'Payment Testing',
+                    },
+                }],
+                error: undefined,
+                isLoading: false,
+                mutate: jest.fn(),
+            })
+
+            renderPage('/engagements?tab=assignments', '/engagements')
+
+            expect(screen.getAllByTestId('assignment-row')
+                .map(row => row.getAttribute('data-customer-name')))
+                .toEqual(['Acme Corp', 'Acme Corp'])
+        })
+
+        it('asks for last paid dates only on the assignments tab', async () => {
+            renderPage('/engagements', '/engagements')
+
+            expect(mockedUseFetchEngagements.mock.lastCall?.[1].includeLastPaidAt)
+                .toBeUndefined()
+
+            fireEvent.click(screen.getByRole('tab', { name: 'Assignments' }))
+
+            await waitFor(() => {
+                expect(mockedUseFetchEngagements.mock.lastCall?.[1])
+                    .toEqual(expect.objectContaining({ includeLastPaidAt: true }))
+            })
+        })
+
+        it('hides test projects on every tab once checked', async () => {
+            renderPage('/engagements', '/engagements')
+
+            expect(mockedUseFetchEngagements.mock.lastCall?.[1].excludeTestProjects)
+                .toBeUndefined()
+
+            fireEvent.click(screen.getByRole('checkbox', { name: 'Hide test projects' }))
+
+            await waitFor(() => {
+                expect(mockedUseFetchEngagements.mock.lastCall?.[1])
+                    .toEqual(expect.objectContaining({ excludeTestProjects: true }))
+            })
+
+            fireEvent.click(screen.getByRole('tab', { name: 'Assignments' }))
+
+            await waitFor(() => {
+                expect(mockedUseFetchEngagements.mock.lastCall?.[1])
+                    .toEqual(expect.objectContaining({
+                        excludeTestProjects: true,
+                        includeLastPaidAt: true,
+                    }))
+            })
+
+            fireEvent.click(screen.getByRole('tab', { name: 'Approved Timesheets' }))
+
+            expect(screen.getByTestId('approved-timesheets-tab')
+                .getAttribute('data-exclude-test-projects'))
+                .toBe('true')
+        })
+
         it('does not offer the tabs on project engagement routes', () => {
             renderPage(
                 '/projects/200/engagements?tab=assignments',
@@ -826,6 +918,8 @@ describe('EngagementsListPage', () => {
                 .toBeNull()
             expect(screen.getByText('Project Tabs'))
                 .toBeTruthy()
+            expect(screen.queryByRole('checkbox', { name: 'Hide test projects' }))
+                .toBeNull()
         })
     })
 

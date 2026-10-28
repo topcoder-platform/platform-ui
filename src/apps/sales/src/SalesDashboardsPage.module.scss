@@ -39,6 +39,46 @@
     th:first-child { text-align: left; white-space: nowrap; }
 }
 
+.headline {
+    display: grid;
+    gap: 4px;
+    margin: 16px 0 8px;
+}
+
+.figures {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 32px;
+}
+
+.figure {
+    display: grid;
+    gap: 2px;
+}
+
+.figureLabel, .caption {
+    color: #4a5577;
+    font-size: 14px;
+}
+
+.figureValue {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+
+    strong {
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+}
+
+.change { font-size: 14px; }
+.up { color: #0a7a3e; }
+.down { color: #b42318; }
+.flat { color: #4a5577; }
+
 .annual {
     background: #f4f6fa;
     font-weight: 700;

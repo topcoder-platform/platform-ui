@@ -102,6 +102,7 @@ const phases: ChallengePhase[] = [
 
 const defaults: MarathonMatchDefaults = {
     compileTimeout: 300000,
+    memoryLimit: 2048,
     reviewScorecardId: 'scorecard-1',
     taskDefinitionName: 'runner-task',
     taskDefinitionVersion: '1',
@@ -147,6 +148,7 @@ function buildSavedConfig(
         createdAt: '2026-06-24T00:00:00.000Z',
         example: input.example || null,
         id: 'config-1',
+        memoryLimit: input.memoryLimit ?? null,
         name: input.name,
         provisional: input.provisional || null,
         relativeScoringEnabled: input.relativeScoringEnabled !== false,
@@ -221,6 +223,85 @@ describe('MarathonMatchScorerSection', () => {
                         testerId: testerSummary.id,
                     }),
                 )
+        })
+    })
+
+    it('defaults the memory limit to the API default and saves an edited value', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <MarathonMatchScorerSection
+                challengeId={CHALLENGE_ID}
+                onScorerConfigChange={jest.fn()}
+                phases={phases}
+            />,
+        )
+
+        const memoryLimitInput = await screen.findByRole('spinbutton', {
+            name: 'Memory Limit (MB)',
+        })
+
+        expect(memoryLimitInput)
+            .toHaveValue(2048)
+
+        await user.selectOptions(
+            screen.getByRole('combobox', { name: /Scorer/ }),
+            testerSummary.id,
+        )
+        await user.clear(memoryLimitInput)
+
+        expect(within(memoryLimitInput.closest('label') as HTMLElement)
+            .getByText('Memory limit must be an integer.'))
+            .toBeInTheDocument()
+
+        await user.type(memoryLimitInput, '4096')
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Save Scorer Config' }))
+                .toBeEnabled()
+        })
+
+        await user.click(screen.getByRole('button', { name: 'Save Scorer Config' }))
+
+        await waitFor(() => {
+            expect(mockCreateMarathonMatchConfig)
+                .toHaveBeenCalledWith(
+                    CHALLENGE_ID,
+                    expect.objectContaining({
+                        memoryLimit: 4096,
+                        testerId: testerSummary.id,
+                    }),
+                )
+        })
+    })
+
+    it('shows the default memory limit for a saved config without one', async () => {
+        const onScorerConfigChange = jest.fn()
+        const savedConfig = buildSavedConfig(CHALLENGE_ID, {
+            compileTimeout: defaults.compileTimeout,
+            name: 'Marathon Match Scorer',
+            reviewScorecardId: defaults.reviewScorecardId,
+            taskDefinitionName: defaults.taskDefinitionName,
+            taskDefinitionVersion: defaults.taskDefinitionVersion,
+            testerId: tester.id,
+            testTimeout: defaults.testTimeout,
+        })
+
+        mockFetchMarathonMatchConfig.mockResolvedValue(savedConfig)
+
+        render(
+            <MarathonMatchScorerSection
+                challengeId={CHALLENGE_ID}
+                onScorerConfigChange={onScorerConfigChange}
+                phases={phases}
+            />,
+        )
+
+        expect(await screen.findByRole('spinbutton', { name: 'Memory Limit (MB)' }))
+            .toHaveValue(2048)
+        await waitFor(() => {
+            expect(onScorerConfigChange)
+                .toHaveBeenLastCalledWith(false, expect.any(Boolean))
         })
     })
 

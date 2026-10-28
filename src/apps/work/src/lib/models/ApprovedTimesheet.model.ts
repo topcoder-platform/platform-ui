@@ -36,6 +36,8 @@ export interface ApprovedTimesheetRow {
 export interface ApprovedTimesheetQuery {
     assignee?: string
     engagement?: string
+    /** Leaves out the test projects the API is configured with. */
+    excludeTestProjects?: boolean
     page?: number
     perPage?: number
 }

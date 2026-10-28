@@ -236,6 +236,14 @@ function createQuery(
         query.set('includePrivate', 'true')
     }
 
+    if (filters.includePrivate && filters.includeLastPaidAt) {
+        query.set('includeLastPaidAt', 'true')
+    }
+
+    if (filters.excludeTestProjects) {
+        query.set('excludeTestProjects', 'true')
+    }
+
     if (Array.isArray(filters.projectIds)) {
         filters.projectIds
             .map(projectId => String(projectId)
@@ -988,6 +996,10 @@ export async function fetchApprovedTimesheets(
 
         if (query.assignee?.trim()) {
             params.set('assignee', query.assignee.trim())
+        }
+
+        if (query.excludeTestProjects) {
+            params.set('excludeTestProjects', 'true')
         }
 
         if (query.page) {

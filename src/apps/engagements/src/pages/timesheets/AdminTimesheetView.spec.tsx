@@ -11,6 +11,7 @@ import type { TimesheetEntry, TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus, TimesheetViewerRole } from '../../lib/models'
 import {
     approveTimesheetEntries,
+    deleteTimesheetEntries,
     getTimesheet,
     getTimesheetEntryAudit,
     reopenTimesheetEntries,
@@ -161,6 +162,7 @@ jest.mock('~/config', () => ({
 
 jest.mock('../../lib/services', () => ({
     approveTimesheetEntries: jest.fn(),
+    deleteTimesheetEntries: jest.fn(),
     getTimesheet: jest.fn(),
     getTimesheetEntryAudit: jest.fn()
         .mockResolvedValue([]),
@@ -171,6 +173,7 @@ jest.mock('../../lib/services', () => ({
 
 const mockApprove = approveTimesheetEntries as jest.MockedFunction<typeof approveTimesheetEntries>
 const mockGetTimesheet = getTimesheet as jest.MockedFunction<typeof getTimesheet>
+const mockDelete = deleteTimesheetEntries as jest.MockedFunction<typeof deleteTimesheetEntries>
 const mockReopen = reopenTimesheetEntries as jest.MockedFunction<typeof reopenTimesheetEntries>
 const mockSave = saveTimesheetEntries as jest.MockedFunction<typeof saveTimesheetEntries>
 const mockSubmit = submitTimesheetEntries as jest.MockedFunction<typeof submitTimesheetEntries>
@@ -333,6 +336,119 @@ describe('AdminTimesheetView', () => {
                     overrideReason: undefined,
                 })
         })
+    })
+
+    it('switches to Pending Approval when entries are added from the Approved view', async () => {
+        const user = userEvent.setup()
+        const approved = entry({ id: 'approved-1', status: TimesheetEntryStatus.APPROVED })
+        const submitted = entry({
+            id: 'submitted-1',
+            status: TimesheetEntryStatus.SUBMITTED,
+            workDate: '2026-09-08',
+        })
+        mockGetTimesheet.mockImplementation(async (engagementId, assignmentId, filters) => (
+            timesheet(filters?.status === TimesheetEntryStatus.APPROVED
+                ? [approved]
+                : [approved, submitted])
+        ))
+        // Feeds reloads back in the way the page does, so the view sees what each filter loads.
+        const StatefulView: React.FC = () => {
+            const [view, setView] = React.useState<TimesheetView>(timesheet([approved]))
+
+            return (
+                <AdminTimesheetView
+                    initialStatus={TimesheetEntryStatus.APPROVED}
+                    onTimesheetChange={setView}
+                    timesheet={view}
+                />
+            )
+        }
+
+        render(<StatefulView />)
+        await screen.findByLabelText('Hours worked on 07-09-2026')
+
+        await user.click(screen.getByRole('button', { name: 'Add entries' }))
+        const dialog = screen.getByRole('dialog')
+        expect(within(dialog)
+            .getByText('New entries are added in the Pending Approval view.'))
+            .toBeInTheDocument()
+        await user.clear(within(dialog)
+            .getByLabelText('From Date'))
+        await user.type(within(dialog)
+            .getByLabelText('From Date'), '2026-09-08')
+        await user.clear(within(dialog)
+            .getByLabelText('To Date'))
+        await user.type(within(dialog)
+            .getByLabelText('To Date'), '2026-09-09')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Confirm' }))
+
+        expect(await screen.findByLabelText('Hours worked on 09-09-2026'))
+            .toBeInTheDocument()
+        expect(screen.getByLabelText('Status'))
+            .toHaveValue(TimesheetEntryStatus.SUBMITTED)
+        // The submitted entry loaded with the Pending Approval view is kept, not duplicated.
+        expect(screen.getAllByLabelText('Hours worked on 08-09-2026'))
+            .toHaveLength(1)
+        expect(screen.queryByLabelText('Hours worked on 07-09-2026')).not.toBeInTheDocument()
+        expect(screen.getByLabelText('Select 09-09-2026'))
+            .toBeChecked()
+    })
+
+    it('deletes a member\'s draft once the administrator confirms', async () => {
+        const user = userEvent.setup()
+        mockDelete.mockResolvedValue(timesheet([]))
+        const { onTimesheetChange }: { onTimesheetChange: jest.Mock } = renderView([entry()])
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Delete (1)' }))
+
+        const dialog = screen.getByRole('alertdialog')
+        expect(within(dialog)
+            .getByText('The member\'s draft entry will be permanently deleted.'))
+            .toBeInTheDocument()
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Continue' }))
+
+        await waitFor(() => {
+            expect(mockDelete)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', { entryIds: ['entry-1'] })
+        })
+        expect(onTimesheetChange)
+            .toHaveBeenCalledWith(timesheet([]))
+    })
+
+    it('drops rows added but never saved without calling the API', async () => {
+        const user = userEvent.setup()
+        renderView([])
+
+        await user.click(screen.getByRole('button', { name: 'Add entries' }))
+        await user.clear(screen.getByLabelText('From Date'))
+        await user.type(screen.getByLabelText('From Date'), '2026-09-08')
+        await user.clear(screen.getByLabelText('To Date'))
+        await user.type(screen.getByLabelText('To Date'), '2026-09-08')
+        await user.click(screen.getByRole('button', { name: 'Confirm' }))
+        await screen.findByLabelText('Hours worked on 08-09-2026')
+
+        await user.click(screen.getByRole('button', { name: 'Delete (1)' }))
+
+        expect(screen.queryByLabelText('Hours worked on 08-09-2026')).not.toBeInTheDocument()
+        expect(mockDelete).not.toHaveBeenCalled()
+    })
+
+    it('does not offer delete for a submitted or paid entry', async () => {
+        const user = userEvent.setup()
+        renderView([
+            entry({ id: 'submitted', status: TimesheetEntryStatus.SUBMITTED }),
+            entry({ id: 'paid', isPaid: true, workDate: '2026-09-08' }),
+        ])
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        expect(screen.queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument()
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByLabelText('Select 08-09-2026'))
+        expect(screen.queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument()
     })
 
     it('keeps an approved row editable so a correction can be typed', async () => {

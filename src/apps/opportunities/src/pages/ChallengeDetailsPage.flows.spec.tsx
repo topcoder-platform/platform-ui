@@ -151,12 +151,18 @@ jest.mock('../components', () => ({
     ChallengeForum: (props: {
         canCreateAnnouncements?: boolean
         canDeleteTopics?: boolean
+        onTopicChange?: (topicId?: string) => void
+        postId?: string
+        topicId?: string
     }): JSX.Element => {
         mockChallengeForumRender()
         return (
             <div>
                 {props.canCreateAnnouncements ? 'Announcement forum content' : 'Forum content'}
                 {props.canDeleteTopics ? ' with topic deletion' : ''}
+                <span>{`Forum link: ${props.topicId ?? 'none'} / ${props.postId ?? 'none'}`}</span>
+                <button onClick={() => props.onTopicChange?.('topic-2')} type='button'>Open forum topic-2</button>
+                <button onClick={() => props.onTopicChange?.()} type='button'>Show forum topics</button>
             </div>
         )
     },
@@ -959,6 +965,30 @@ describe('ChallengeDetailsPage member flows', () => {
             )
         expect(screen.getByRole('tab', { name: /^Registrants/ }))
             .toHaveAttribute('aria-selected', 'true')
+    })
+
+    it('opens a shared forum topic link and keeps the open topic in the URL until Forum is left', () => {
+        mockProfile = { handle: 'coder', userId: 123 }
+        mockRegistration = { id: 'resource-id' }
+        const route = (): string | null => screen.getByRole('status', { name: 'Current route' }).textContent
+
+        renderPage('/opportunities/challenge/challenge-id?tab=forum&topicId=topic-1&postId=post-2')
+
+        expect(screen.getByText('Forum link: topic-1 / post-2'))
+            .toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Open forum topic-2' }))
+        expect(route())
+            .toBe('/opportunities/challenge/challenge-id?tab=forum&topicId=topic-2')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Show forum topics' }))
+        expect(route())
+            .toBe('/opportunities/challenge/challenge-id?tab=forum')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Open forum topic-2' }))
+        fireEvent.click(screen.getByRole('tab', { name: /^Registrants/ }))
+        expect(route())
+            .toBe('/opportunities/challenge/challenge-id?tab=registrants')
     })
 
     it('retains a gated deep link while profile and resource access are resolving', () => {

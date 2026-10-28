@@ -49,6 +49,8 @@ const mockUseSWR = jest.fn()
 const mockUpdateForumPost = jest.fn()
 const mockUpdateForumTopic = jest.fn()
 const mockUploadForumAttachment = jest.fn()
+const mockToastError = jest.fn()
+const mockToastSuccess = jest.fn()
 let listError: Error | undefined
 let memberProfiles: MemberProfileSummary[] | undefined
 let topicCollection: ForumTopicCollection | undefined
@@ -58,6 +60,13 @@ jest.mock('~/libs/core', () => ({
     getRatingColor: jest.requireActual('../../../../libs/core/lib/profile/profile-functions/rating.functions')
         .getRatingColor,
 }), { virtual: true })
+
+jest.mock('react-toastify', () => ({
+    toast: {
+        error: (...args: unknown[]) => mockToastError(...args),
+        success: (...args: unknown[]) => mockToastSuccess(...args),
+    },
+}))
 
 jest.mock('../services/forum-attachments.service', () => ({
     uploadForumAttachment: (...args: unknown[]) => mockUploadForumAttachment(...args),
@@ -495,6 +504,120 @@ describe('ChallengeForum', () => {
         } finally {
             scrollTo.mockRestore()
         }
+    })
+
+    describe('shared links', () => {
+        const writeText = jest.fn()
+
+        beforeEach(() => {
+            writeText.mockResolvedValue(undefined)
+            Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
+            window.history.replaceState(
+                {},
+                '',
+                '/opportunities/challenge/challenge-id?source=listing&tab=forum#challenge',
+            )
+        })
+
+        afterEach(() => {
+            delete (navigator as { clipboard?: Clipboard }).clipboard
+            window.history.replaceState({}, '', '/')
+        })
+
+        it('copies topic and message links for the current challenge page', async () => {
+            render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+            const card = screen.getByRole('button', { name: announcement.title })
+                .closest('article') as HTMLElement
+            await act(async () => fireEvent.click(within(card)
+                .getByRole('button', { name: 'Copy link' })))
+
+            expect(writeText)
+                .toHaveBeenCalledWith(
+                    'http://localhost/opportunities/challenge/challenge-id?tab=forum&topicId=topic-1',
+                )
+            expect(mockToastSuccess)
+                .toHaveBeenCalledWith('Topic link copied.')
+
+            await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+            const reply = screen.getByText('Thanks for the clarification.')
+                .closest('article') as HTMLElement
+            await act(async () => fireEvent.click(within(reply)
+                .getByRole('button', { name: 'Copy link' })))
+
+            expect(writeText)
+                .toHaveBeenLastCalledWith(
+                    'http://localhost/opportunities/challenge/challenge-id?tab=forum&topicId=topic-1&postId=post-2',
+                )
+            expect(mockToastSuccess)
+                .toHaveBeenLastCalledWith('Message link copied.')
+        })
+
+        it('reports a rejected or unavailable clipboard without leaving the forum', async () => {
+            writeText.mockRejectedValue(new Error('Denied'))
+            render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+            await act(async () => fireEvent.click(screen.getAllByRole('button', { name: 'Copy link' })[0]))
+
+            expect(mockToastError)
+                .toHaveBeenCalledWith('Unable to copy the link.')
+
+            delete (navigator as { clipboard?: Clipboard }).clipboard
+            await act(async () => fireEvent.click(screen.getAllByRole('button', { name: 'Copy link' })[0]))
+
+            expect(mockToastError)
+                .toHaveBeenLastCalledWith('Clipboard access is unavailable in this browser.')
+            expect(mockToastSuccess).not.toHaveBeenCalled()
+        })
+
+        it('opens a linked topic, then scrolls to and highlights its linked message', async () => {
+            const scrollIntoView = jest.fn()
+            Element.prototype.scrollIntoView = scrollIntoView
+            const onTopicChange = jest.fn()
+
+            try {
+                render(
+                    <ChallengeForum
+                        challenge={{ id: 'challenge-id', name: 'Challenge' }}
+                        memberId='10'
+                        onTopicChange={onTopicChange}
+                        postId='post-2'
+                        topicId='topic-1'
+                    />,
+                )
+                const reply = screen.getByText('Thanks for the clarification.')
+                    .closest('article') as HTMLElement
+
+                expect(reply)
+                    .toHaveClass('linkedPost')
+                expect(screen.getByText('Welcome **competitors**.')
+                    .closest('article'))
+                    .not.toHaveClass('linkedPost')
+                expect(scrollIntoView)
+                    .toHaveBeenCalledTimes(1)
+                expect(scrollIntoView.mock.instances[0])
+                    .toBe(reply)
+                expect(mockMarkForumTopicRead)
+                    .toHaveBeenCalledWith('topic-1')
+                await waitFor(() => expect(mockMutateTopics)
+                    .toHaveBeenCalled())
+                expect(onTopicChange).not.toHaveBeenCalled()
+
+                // Inside a discussion the topic title belongs to the back control.
+                await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+                expect(onTopicChange)
+                    .toHaveBeenLastCalledWith(undefined)
+
+                await act(async () => fireEvent.click(screen.getByRole('button', { name: announcement.title })))
+                expect(onTopicChange)
+                    .toHaveBeenLastCalledWith('topic-1')
+                expect(screen.getByText('Thanks for the clarification.')
+                    .closest('article'))
+                    .not.toHaveClass('linkedPost')
+                expect(scrollIntoView)
+                    .toHaveBeenCalledTimes(1)
+            } finally {
+                delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView
+            }
+        })
     })
 
     it('creates a challenge topic without leaving Opportunities', async () => {

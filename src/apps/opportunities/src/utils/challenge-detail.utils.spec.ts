@@ -3,6 +3,8 @@ import {
     challengeAllowsStockArt,
     challengeFileTypes,
     challengeForumUrl,
+    challengeManualReviewScorecardId,
+    challengeManualReviewScorecardUrl,
     challengeReviewAppUrl,
     challengeScorecardUrl,
     challengeSidebarLinks,
@@ -209,5 +211,74 @@ describe('challenge detail utilities', () => {
             .toBeUndefined()
         expect(challengeScorecardUrl(123, 'javascript:alert(1)'))
             .toBeUndefined()
+    })
+
+    describe('manual review scorecard', () => {
+        const reviewPhaseId = 'aa5a3f78-79e0-4bf7-93ff-b11e8f5b398b'
+        const screeningPhaseId = '2d7d3d85-0b29-4989-b3b4-be7f2b1d0aa6'
+        const iterativeReviewPhaseId = '003a4b14-de5d-43fc-9e35-835dbeb6af1f'
+        const phases = [
+            { id: 'screening-instance', name: 'Screening', phaseId: screeningPhaseId },
+            { id: 'review-instance', name: 'Review', phaseId: reviewPhaseId },
+        ]
+
+        it('selects the member reviewer scorecard on the Review phase', () => {
+            const challenge = {
+                id: 'manual',
+                name: 'Manual review',
+                phases,
+                reviewers: [
+                    { isMemberReview: true, phaseId: screeningPhaseId, scorecardId: 'screening-scorecard' },
+                    {
+                        aiWorkflowId: 'awsH45_SAST_01',
+                        isMemberReview: false,
+                        phaseId: reviewPhaseId,
+                        scorecardId: 'ai-scorecard',
+                    },
+                    { isMemberReview: true, phaseId: reviewPhaseId, scorecardId: ' hFU73Ve2XlYCK- ' },
+                ],
+            }
+
+            expect(challengeManualReviewScorecardId(challenge))
+                .toBe('hFU73Ve2XlYCK-')
+            expect(challengeManualReviewScorecardUrl(challenge))
+                .toBe('https://review.topcoder-dev.com/scorecard/hFU73Ve2XlYCK-')
+            expect(challengeManualReviewScorecardUrl(challenge, 'https://review.example/'))
+                .toBe('https://review.example/scorecard/hFU73Ve2XlYCK-')
+        })
+
+        it('falls back to the Iterative Review member reviewer and encodes the id', () => {
+            expect(challengeManualReviewScorecardUrl({
+                id: 'f2f',
+                name: 'First2Finish',
+                phases: [{ id: 'ir-instance', name: 'Iterative Review', phaseId: iterativeReviewPhaseId }],
+                reviewers: [{ isMemberReview: true, phaseId: iterativeReviewPhaseId, scorecardId: 'f2f/score' }],
+            }))
+                .toBe('https://review.topcoder-dev.com/scorecard/f2f%2Fscore')
+        })
+
+        it('returns undefined without a manual Review phase reviewer', () => {
+            expect(challengeManualReviewScorecardUrl({
+                id: 'ai-only',
+                name: 'AI only',
+                phases,
+                reviewers: [{
+                    aiWorkflowId: 'awsH45_SAST_01',
+                    isMemberReview: false,
+                    phaseId: reviewPhaseId,
+                    scorecardId: 'ai-scorecard',
+                }],
+            }))
+                .toBeUndefined()
+            expect(challengeManualReviewScorecardId({
+                id: 'screening-only',
+                name: 'Screening only',
+                phases,
+                reviewers: [{ isMemberReview: true, phaseId: screeningPhaseId, scorecardId: 'screening-scorecard' }],
+            }))
+                .toBeUndefined()
+            expect(challengeManualReviewScorecardId({ id: 'none', name: 'No reviewers', phases }))
+                .toBeUndefined()
+        })
     })
 })

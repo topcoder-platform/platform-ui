@@ -107,6 +107,9 @@ import {
 import {
     ChallengeDetailTab,
     challengeDetailTabFromSearch,
+    challengeForumLinkTargetFromSearch,
+    FORUM_POST_QUERY_PARAM,
+    FORUM_TOPIC_QUERY_PARAM,
 } from '../utils/challenge-detail-route.utils'
 import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
 import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
@@ -550,8 +553,9 @@ export const ChallengeDetailsPage: FC = () => {
 
     /**
      * Selects a challenge tab in the URL and closes the transient submission form.
-     * Existing query parameters and the current hash are retained. Replacing the
-     * current history entry matches the legacy challenge-listing tab behavior.
+     * Existing query parameters and the current hash are retained, except that the
+     * forum topic and post parameters are dropped when leaving the Forum tab.
+     * Replacing the current history entry matches the legacy challenge-listing tab behavior.
      *
      * @param tab destination tab identifier.
      * @returns void after updating the visible panel.
@@ -563,6 +567,11 @@ export const ChallengeDetailsPage: FC = () => {
         const nextSearchParams = new URLSearchParams(searchParams)
         if (tab === 'requirements') nextSearchParams.delete('tab')
         else nextSearchParams.set('tab', tab)
+        if (tab !== 'forum') {
+            nextSearchParams.delete(FORUM_TOPIC_QUERY_PARAM)
+            nextSearchParams.delete(FORUM_POST_QUERY_PARAM)
+        }
+
         const nextSearch = nextSearchParams.toString()
         navigate({
             hash: location.hash,
@@ -2296,6 +2305,10 @@ const SubmissionPreview: FC<{
 /**
  * Renders the authenticated in-page Challenge Discussion workflow.
  *
+ * The `topicId` and `postId` query parameters from a copied forum link open that
+ * topic and scroll to that post. The open topic is written back to `topicId`, so
+ * the address bar also links to it.
+ *
  * @param props challenge context, forum announcement/delete access, and optional authenticated member ID.
  * @returns topic list, creation, threaded detail, and mutation workflows.
  * @throws Does not throw.
@@ -2305,14 +2318,43 @@ const ForumTab: FC<{
     canDeleteTopics: boolean
     challenge: ChallengeOpportunity
     memberId?: string
-}> = props => (
-    <ChallengeForum
-        canCreateAnnouncements={props.canCreateAnnouncements}
-        canDeleteTopics={props.canDeleteTopics}
-        challenge={props.challenge}
-        memberId={props.memberId}
-    />
-)
+}> = props => {
+    const location = useLocation()
+    const navigate = useNavigate()
+    const linkTarget = challengeForumLinkTargetFromSearch(new URLSearchParams(location.search))
+
+    /**
+     * Replaces the topic query parameter with the open topic and drops the shared-link post.
+     *
+     * @param topicId open topic, or undefined when the topic list is shown.
+     * @returns void after replacing the current history entry.
+     * @throws Does not throw.
+     */
+    const changeTopic = (topicId?: string): void => {
+        const nextSearchParams = new URLSearchParams(location.search)
+        nextSearchParams.delete(FORUM_POST_QUERY_PARAM)
+        if (topicId) nextSearchParams.set(FORUM_TOPIC_QUERY_PARAM, topicId)
+        else nextSearchParams.delete(FORUM_TOPIC_QUERY_PARAM)
+        const nextSearch = nextSearchParams.toString()
+        navigate({
+            hash: location.hash,
+            pathname: location.pathname,
+            search: nextSearch ? `?${nextSearch}` : '',
+        }, { replace: true })
+    }
+
+    return (
+        <ChallengeForum
+            canCreateAnnouncements={props.canCreateAnnouncements}
+            canDeleteTopics={props.canDeleteTopics}
+            challenge={props.challenge}
+            memberId={props.memberId}
+            onTopicChange={changeTopic}
+            postId={linkTarget.postId}
+            topicId={linkTarget.topicId}
+        />
+    )
+}
 
 type ChallengeWinner = NonNullable<ChallengeOpportunity['winners']>[number]
 

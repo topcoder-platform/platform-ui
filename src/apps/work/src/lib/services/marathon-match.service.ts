@@ -179,7 +179,8 @@ function normalizePhaseConfig(
 
 /**
  * Normalizes a raw marathon match config API response into a typed config object.
- * Returns `undefined` when required config fields are missing.
+ * Returns `undefined` when required config fields are missing. A missing or invalid
+ * `memoryLimit` is returned as `null` so the editor can fall back to the API default.
  */
 // eslint-disable-next-line complexity
 function normalizeMarathonMatchConfig(
@@ -233,6 +234,7 @@ function normalizeMarathonMatchConfig(
             ? null
             : normalizePhaseConfig(typedConfig.example) || null,
         id,
+        memoryLimit: normalizeNumber(typedConfig.memoryLimit) ?? null,
         name,
         provisional: typedConfig.provisional === null
             ? null
@@ -321,6 +323,12 @@ function normalizeTester(
     }
 }
 
+/**
+ * Normalizes the GET /challenge/defaults response used to pre-fill a new scorer config.
+ * @param defaults Raw defaults API response.
+ * @returns Typed defaults, or `undefined` when the review scorecard or timeouts are missing.
+ * `memoryLimit` stays `undefined` when the API does not return it, so older API builds still load.
+ */
 function normalizeMarathonMatchDefaults(
     defaults: unknown,
 ): MarathonMatchDefaults | undefined {
@@ -332,6 +340,7 @@ function normalizeMarathonMatchDefaults(
     const reviewScorecardId = normalizeText(typedDefaults.reviewScorecardId)
     const testTimeout = normalizeNumber(typedDefaults.testTimeout)
     const compileTimeout = normalizeNumber(typedDefaults.compileTimeout)
+    const memoryLimit = normalizeNumber(typedDefaults.memoryLimit)
     const taskDefinitionName = typeof typedDefaults.taskDefinitionName === 'string'
         ? typedDefaults.taskDefinitionName.trim()
         : ''
@@ -345,6 +354,7 @@ function normalizeMarathonMatchDefaults(
 
     return {
         compileTimeout,
+        memoryLimit,
         reviewScorecardId,
         taskDefinitionName,
         taskDefinitionVersion,
@@ -375,6 +385,9 @@ function serializeCreateInput(
         active: input.active,
         compileTimeout: Number(input.compileTimeout),
         example: serializePhaseConfig(input.example),
+        memoryLimit: input.memoryLimit === undefined
+            ? undefined
+            : Number(input.memoryLimit),
         name: String(input.name || '')
             .trim(),
         provisional: serializePhaseConfig(input.provisional),
@@ -403,6 +416,9 @@ function serializeUpdateInput(
             ? undefined
             : Number(input.compileTimeout),
         example: serializePhaseConfig(input.example),
+        memoryLimit: input.memoryLimit === undefined
+            ? undefined
+            : Number(input.memoryLimit),
         name: normalizeText(input.name),
         provisional: serializePhaseConfig(input.provisional),
         relativeScoringEnabled: input.relativeScoringEnabled,

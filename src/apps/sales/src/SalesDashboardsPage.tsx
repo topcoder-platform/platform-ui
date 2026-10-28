@@ -32,7 +32,7 @@ const SourceContent: FC<{ source: SalesDashboardSource; title: string; children:
  * @returns One chart or its source loading, empty or retry state. Does not throw.
  */
 const DashboardCard: FC<{
-    source: SalesDashboardSource; chartId: string; title: string; children?: ReactNode
+    source: SalesDashboardSource; chartId: string; title: string; children?: ReactNode; expectedCloses?: boolean
 }> = props => {
     const chart = props.source.data?.charts.find(item => item.id === props.chartId)
     const controls = (
@@ -45,6 +45,7 @@ const DashboardCard: FC<{
         <SalesDashboardChart
             chart={{ ...chart, title: props.title }}
             controls={controls}
+            expectedCloses={props.expectedCloses}
         />
     ) : (
         <article className={styles.card} aria-label={props.title}>
@@ -139,6 +140,7 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
             </header>
             <p className={styles.notice}>
                 Current fiscal year: April through March in UTC, including the current month in progress.
+                {' Headlines compare the current month with the full previous month.'}
                 {' All charts cover the same 12 months.'}
                 {' Pipeline charts include expected closes within the fiscal year.'}
             </p>
@@ -158,6 +160,7 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
                         source={pipeline}
                         chartId={pipelineMeasure === 'Amount' ? 'pipeline-stage' : 'expected-revenue'}
                         title='Bookings in Pipeline'
+                        expectedCloses={dateBasis === 'close'}
                     >
                         <GroupBy value={pipelineGroup} onChange={setPipelineGroup} pipeline />
                         <MeasureToggle

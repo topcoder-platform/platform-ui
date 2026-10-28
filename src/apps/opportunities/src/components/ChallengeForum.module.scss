@@ -1466,6 +1466,12 @@
     margin-left: 48px;
 }
 
+// The post opened from a copied message link keeps the card hover teal so members can spot it.
+.linkedPost {
+    border-color: #007d79;
+    scroll-margin-top: 24px;
+}
+
 .postIdentity {
     align-items: center;
     display: flex;
