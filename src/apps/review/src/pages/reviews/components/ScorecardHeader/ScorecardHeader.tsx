@@ -143,7 +143,7 @@ const ScorecardHeader: FC = () => {
                             </span>
                         </span>
                     )}
-                    {isAdmin && workflowRun.usage?.cacheCreationInputTokens && (
+                    {isAdmin && !!workflowRun.usage?.cacheCreationInputTokens && (
                         <span>
                             <ArrowCircleUpIcon className={styles.md} />
                             <span>
@@ -153,7 +153,7 @@ const ScorecardHeader: FC = () => {
                             </span>
                         </span>
                     )}
-                    {isAdmin && workflowRun.usage?.cacheCreationInputTokens && (
+                    {isAdmin && !!workflowRun.usage?.cacheCreationInputTokens && (
                         <span>
                             <ArrowCircleUpIcon className={styles.md} />
                             <span>

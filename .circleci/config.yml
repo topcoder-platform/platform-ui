@@ -150,10 +150,13 @@ jobs:
 
     build-prod:
         <<: *defaults
+        # 16 GB leaves room for build workers alongside the 8 GB Node heap.
+        resource_class: xlarge
         environment:
             DEPLOY_ENV: "PROD"
             LOGICAL_ENV: "prod"
             APPNAME: "platform-ui-mvp"
+            NODE_OPTIONS: "--max-old-space-size=8192"
         steps: *build_steps
 
     # Just tests commited code.
