@@ -421,6 +421,53 @@ class AnalyticsHandlerTests(unittest.TestCase):
         )
         cancel.assert_not_called()
 
+    def test_pending_query_resumes_after_multiple_freshness_windows(self) -> None:
+        """Warehouse startup can span minutes without creating another statement."""
+
+        with patch.object(self.module.time, "time", return_value=6_000):
+            token = self.module._query_client_token("SELECT 1", [], 0)
+        with (
+            patch.object(self.module.time, "time", return_value=6_600),
+            patch.object(self.module, "_query_wait_seconds", return_value=0),
+            patch.object(
+                self.module._redshift_data,
+                "execute_statement",
+                return_value={"Id": "original-query"},
+            ) as execute,
+            self.assertRaises(self.module.QueryTimeout),
+        ):
+            self.module._execute_query("SELECT 1", [], None, token)
+        self.assertEqual(token, execute.call_args.kwargs["ClientToken"])
+
+    def test_expired_resume_token_does_not_reach_redshift(self) -> None:
+        """Polling older than the fifteen-minute allowance fails before provider access."""
+
+        with patch.object(self.module.time, "time", return_value=6_000):
+            token = self.module._query_client_token("SELECT 1", [], 0)
+        with (
+            patch.object(self.module.time, "time", return_value=6_960),
+            patch.object(self.module._redshift_data, "execute_statement") as execute,
+            self.assertRaisesRegex(ValueError, "invalid or expired"),
+        ):
+            self.module._execute_query("SELECT 1", [], None, token)
+        execute.assert_not_called()
+
+    def test_new_report_request_refreshes_after_one_minute(self) -> None:
+        """A completed report is queried again after a minute instead of four hours."""
+
+        with (
+            patch.object(self.module._redshift_data, "execute_statement", return_value={"Id": "result"}) as execute,
+            patch.object(self.module._redshift_data, "describe_statement", return_value={"Status": "FINISHED"}),
+            patch.object(self.module, "_statement_rows", side_effect=[[{"count": 1}], [{"count": 20}]]),
+        ):
+            with patch.object(self.module.time, "time", return_value=6_000):
+                first = self.module._execute_query("SELECT COUNT(*) FROM events", [], None)
+            with patch.object(self.module.time, "time", return_value=6_060):
+                second = self.module._execute_query("SELECT COUNT(*) FROM events", [], None)
+        self.assertEqual([{"count": 1}], first)
+        self.assertEqual([{"count": 20}], second)
+        self.assertNotEqual(execute.call_args_list[0].kwargs["ClientToken"], execute.call_args_list[1].kwargs["ClientToken"])
+
     def test_resume_token_cannot_be_reused_for_another_query(self) -> None:
         """A server token is bound to the fixed SQL and validated parameter set."""
 

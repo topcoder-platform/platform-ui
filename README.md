@@ -42,6 +42,19 @@ NODE_OPTIONS=--max-old-space-size=8192 LOGICAL_ENV=dev yarn build
 
 The `master` branch is auto-deployed to the production environment: https://platform-ui.topcoder.com.
 
+The production build job uses CircleCI's `xlarge` Docker resource class (16 GB RAM)
+and `NODE_OPTIONS=--max-old-space-size=8192` to allow an 8 GB Node heap. The optimized
+build can exceed Node's default heap limit; the remaining container memory is
+reserved for build workers and other process overhead. Keep the container memory
+and heap limit sized together when changing these settings in `.circleci/config.yml`.
+
+To run the same production build locally on a machine with sufficient memory:
+
+```bash
+nvm use
+NODE_OPTIONS=--max-old-space-size=8192 LOGICAL_ENV=prod yarn build
+```
+
 ## Pull Requests
 
 If a Jira ticket requires any code changes, it should have its own pull request.
