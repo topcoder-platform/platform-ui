@@ -4,10 +4,10 @@ import { FC, ReactNode, useCallback, useState } from 'react'
 
 import { Button, LoadingSpinner, PageTitle } from '~/libs/ui'
 
-import { SalesDashboardFilters, SalesDashboardPortal } from './sales-dashboard.service'
+import { SalesDashboardGroupBy, SalesDashboardPortal } from './sales-dashboard.service'
 import { salesFiscalYearLabel, salesFiscalYearPeriod } from './sales-fiscal-year'
 import { SalesDashboardSource, useSalesDashboard } from './useSalesDashboard'
-import CategoryFilters from './SalesDashboardFilters'
+import GroupBy from './SalesDashboardGroupBy'
 import SalesCustomerTable from './SalesCustomerTable'
 import SalesDashboardChart from './SalesDashboardChart'
 import styles from './SalesDashboardsPage.module.scss'
@@ -101,24 +101,21 @@ const CustomerDashboard: FC<{
 /**
  * Shares the executive monthly dashboards between the Reports and Sales portals.
  * @param props Portal scope; Reports retains its existing scope; Sales payments and talent include only customer work.
- * @returns Consolidated sales/revenue cards with independent filters, payment measures, TaaS and customer matrices.
+ * @returns Consolidated sales/revenue cards with independent breakdowns, payment measures, TaaS and customer matrices.
  * @throws Does not throw; sections manage their source failures independently.
  */
 const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
     const [refreshKey, setRefreshKey] = useState(0)
     const [dateBasis, setDateBasis] = useState<'close' | 'created'>('close')
     const portal = props.portal ?? 'reports'
-    const [wonFilters, setWonFilters] = useState<SalesDashboardFilters>({})
-    const [pipelineFilters, setPipelineFilters] = useState<SalesDashboardFilters>({})
-    const [revenueFilters, setRevenueFilters] = useState<SalesDashboardFilters>({})
+    const [wonGroup, setWonGroup] = useState<SalesDashboardGroupBy>('offeringType')
+    const [pipelineGroup, setPipelineGroup] = useState<SalesDashboardGroupBy>('stage')
+    const [revenueGroup, setRevenueGroup] = useState<SalesDashboardGroupBy>('offeringType')
     const [pipelineMeasure, setPipelineMeasure] = useState('Amount')
     const [paymentMeasure, setPaymentMeasure] = useState('Amount')
-    const bookings = useSalesDashboard('bookings', portal, dateBasis, refreshKey, wonFilters)
-    const pipeline = useSalesDashboard('pipeline', portal, dateBasis, refreshKey, pipelineFilters)
-    const revenue = useSalesDashboard('revenue', portal, dateBasis, refreshKey)
-    const filteringRevenue = Object.keys(revenueFilters).length > 0
-    const filtered = useSalesDashboard('revenue', portal, dateBasis, refreshKey, revenueFilters, filteringRevenue)
-    const revenueCard = filteringRevenue ? filtered : revenue
+    const bookings = useSalesDashboard('bookings', portal, dateBasis, refreshKey, wonGroup)
+    const pipeline = useSalesDashboard('pipeline', portal, dateBasis, refreshKey, pipelineGroup)
+    const revenue = useSalesDashboard('revenue', portal, dateBasis, refreshKey, revenueGroup)
     const payments = useSalesDashboard('payments', portal, dateBasis, refreshKey)
     const taas = useSalesDashboard('taas-payments', portal, dateBasis, refreshKey)
     const talent = useSalesDashboard('talent', portal, dateBasis, refreshKey)
@@ -145,7 +142,7 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
                 {' All charts cover the same 12 months.'}
                 {' Pipeline charts include expected closes within the fiscal year.'}
             </p>
-            {props.portal === 'sales' && <p>Member payments and flexible talent include customer work only.</p>}
+            {props.portal === 'sales' && <p>Topcoder payments and flexible talent include customer work only.</p>}
             <div className={styles.controls} aria-label='Sales date basis' role='group'>
                 <span>Group sales by</span>
                 <Button secondary onClick={chooseClose} disabled={dateBasis === 'close'}>Close date</Button>
@@ -155,18 +152,14 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
                 <h2 id='monthly-sales'>Sales</h2>
                 <div className={styles.grid}>
                     <DashboardCard source={bookings} chartId='closed-won' title='Bookings Won'>
-                        <CategoryFilters value={wonFilters} options={bookings.filterOptions} onChange={setWonFilters} />
+                        <GroupBy value={wonGroup} onChange={setWonGroup} />
                     </DashboardCard>
                     <DashboardCard
                         source={pipeline}
                         chartId={pipelineMeasure === 'Amount' ? 'pipeline-stage' : 'expected-revenue'}
                         title='Bookings in Pipeline'
                     >
-                        <CategoryFilters
-                            value={pipelineFilters}
-                            options={pipeline.filterOptions}
-                            onChange={setPipelineFilters}
-                        />
+                        <GroupBy value={pipelineGroup} onChange={setPipelineGroup} pipeline />
                         <MeasureToggle
                             label='Pipeline measure'
                             options={['Amount', 'Expected Amount']}
@@ -178,12 +171,8 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
             </section>
             <section aria-labelledby='monthly-revenue' className={styles.section}>
                 <h2 id='monthly-revenue'>Revenue</h2>
-                <DashboardCard source={revenueCard} chartId='revenue' title='Revenue Closed'>
-                    <CategoryFilters
-                        value={revenueFilters}
-                        options={revenueCard.filterOptions ?? revenue.filterOptions}
-                        onChange={setRevenueFilters}
-                    />
+                <DashboardCard source={revenue} chartId='revenue' title='Revenue Closed'>
+                    <GroupBy value={revenueGroup} onChange={setRevenueGroup} />
                 </DashboardCard>
             </section>
             <section aria-labelledby='monthly-payments' className={styles.section}>

@@ -22,7 +22,7 @@
 .grid {
     display: grid;
     gap: 24px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
 }
 
 .card {
@@ -69,7 +69,6 @@
 }
 
 @media (max-width: 1000px) {
-    .grid { grid-template-columns: minmax(0, 1fr); }
     .page { padding: 16px; }
 }
 
@@ -79,6 +78,19 @@
     gap: 12px;
     margin: 16px 0;
 
-    label { display: flex; flex: 1 1 160px; flex-direction: column; gap: 6px; min-width: 0; }
+    label { display: flex; flex: 0 1 320px; flex-direction: column; gap: 6px; min-width: 0; }
     select { background: #fff; border: 1px solid #aab3c5; border-radius: 6px; min-height: 40px; padding: 8px; width: 100%; }
+}
+
+.tableToggle {
+    background: #fff;
+    border: 1px solid #aab3c5;
+    border-radius: 6px;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    margin-top: 16px;
+    padding: 8px 16px;
+
+    &:focus-visible { outline: 2px solid #0f62fe; outline-offset: 4px; }
 }

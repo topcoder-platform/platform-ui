@@ -1,19 +1,23 @@
 /* The horizontally scrolling table region must be focusable for keyboard scrolling. */
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex */
-import { FC } from 'react'
+import { FC, useCallback, useId, useState } from 'react'
 
 import { MonthlySalesChart } from './sales-dashboard.service'
 import { salesChartTotal, salesChartValue, salesMonthLabel } from './sales-dashboard.utils'
 import styles from './SalesDashboardsPage.module.scss'
 
 /**
- * Shows all customers as rows and fiscal-year months as columns in the bottom Customer section.
+ * Shows five customer rows initially, expandable to the full fiscal-year customer matrix.
  * @param props Complete customer dataset, report title and source notices; no top-five/Other grouping.
- * @returns A scrollable matrix with Total first and Annual before the months, or an empty state.
+ * @returns A scrollable matrix with full-data totals, Annual before the months and an accessible expand control.
  * @throws Does not throw for empty datasets. Unknown amounts stay distinct from zero.
  */
 const SalesCustomerTable: FC<{ data: MonthlySalesChart; title: string; notices?: string[] }> = props => {
     const data = props.data
+    const [expanded, setExpanded] = useState(false)
+    const toggle = useCallback(() => setExpanded(value => !value), [])
+    const tableId = useId()
+    const visible = expanded ? data.series : data.series.slice(0, 5)
     const monthlyTotals = data.months.map(month => salesChartTotal(data.series.map(series => month.values[series.key])))
     return (
         <article className={`${styles.card} ${styles.customerTable}`}>
@@ -26,7 +30,7 @@ const SalesCustomerTable: FC<{ data: MonthlySalesChart; title: string; notices?:
                     aria-label={props.title}
                     tabIndex={0}
                 >
-                    <table>
+                    <table id={tableId}>
                         <caption>{`${props.title} (USD)`}</caption>
                         <thead>
                             <tr>
@@ -45,7 +49,7 @@ const SalesCustomerTable: FC<{ data: MonthlySalesChart; title: string; notices?:
                                     <td key={month.month}>{salesChartValue(monthlyTotals[index], 'currency')}</td>
                                 ))}
                             </tr>
-                            {data.series.map(series => (
+                            {visible.map(series => (
                                 <tr key={series.key}>
                                     <th scope='row'>{series.label}</th>
                                     <td>
@@ -64,6 +68,17 @@ const SalesCustomerTable: FC<{ data: MonthlySalesChart; title: string; notices?:
                     </table>
                 </div>
             ) : <p>No customer data in this fiscal year.</p>}
+            {data.series.length > 5 && (
+                <button
+                    type='button'
+                    className={styles.tableToggle}
+                    aria-expanded={expanded}
+                    aria-controls={tableId}
+                    onClick={toggle}
+                >
+                    {expanded ? 'Show fewer customers' : `Show all ${data.series.length} customers`}
+                </button>
+            )}
         </article>
     )
 }
