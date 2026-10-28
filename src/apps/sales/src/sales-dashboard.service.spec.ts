@@ -72,19 +72,15 @@ describe('Sales dashboard fiscal year requests', () => {
             .toBe(`${Number(fiscalYear) + 1}-04-01T00:00:00.000Z`)
     })
 
-    it('serializes independent category choices as repeated query parameters', () => {
-        fetchSalesDashboard('bookings', 'sales', 'close', new AbortController().signal, {
-            customerType: ['New Project at Existing Customer'],
-            dealCategory: ['Wipro Direct'],
-            offeringType: ['Flexible Talent', 'AI Training'],
-        })
+    it('serializes the breakdown dimension without narrowing category values', () => {
+        fetchSalesDashboard('bookings', 'sales', 'close', new AbortController().signal, 'offeringType')
         const params = new URL(String(jest.mocked(xhrGetAsync).mock.calls[0][0])).searchParams
-        expect(params.getAll('offeringType'))
-            .toEqual(['Flexible Talent', 'AI Training'])
-        expect(params.getAll('customerType'))
-            .toEqual(['New Project at Existing Customer'])
-        expect(params.get('dealCategory'))
-            .toBe('Wipro Direct')
+        expect(params.get('groupBy'))
+            .toBe('offeringType')
+        expect(params.has('offeringType'))
+            .toBe(false)
+        expect(params.has('customerType'))
+            .toBe(false)
     })
 
     it('rolls over to the next fiscal year on a subsequent request without reloading the app', () => {

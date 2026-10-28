@@ -296,19 +296,25 @@ failure/retry and pending-source states. Refresh reloads every active source; ch
 Close date / Created date reloads bookings and pipeline only. Requests are aborted
 on unmount or control changes.
 
-Bookings Won, Bookings in Pipeline and Revenue Closed each have independent Offering
-Type, Deal Category and Customer Type dropdowns. ALL clears that filter. The API filters
-rows before computing both the chart and its expandable table, combines fields with
-AND, and retains the unfiltered choices. Customer Type has the same four options as
-Pipeline, including the corrected **New Project at Existing Customer**; the API accepts
-the previous “to” spelling as an alias. Revenue reads this category from its linked
-Opportunity, not the Yes/No New Customer field. Unlinked rows remain in ALL totals.
+Bookings Won, Bookings in Pipeline and Revenue Closed each have one independent
+**Filter by** dropdown. It selects the dimension shown as stacked chart series and
+monthly table columns: **Offering Type**, **Deal Category** or **Customer Type**.
+Pipeline also offers **Stage**. Bookings Won and Revenue default to Offering Type;
+Pipeline defaults to Stage. Every category in the selected dimension is visible together,
+including Unknown values; the dropdown does not select individual category values.
+The API's `groupBy` parameter groups the same full-period amounts without changing totals.
+A missing source dimension produces an explicit notice while the selector remains usable.
+
+Customer Type uses Pipeline's four categories, including **New Project at Existing
+Customer**. Legacy “to” values aggregate into that same category. Revenue resolves these
+categories through its linked Opportunity; missing classifications appear as Unknown.
+All dashboard cards occupy one full-width row, including Sales and Payments.
 
 Bookings in Pipeline switches between Amount and Expected Amount, and Topcoder Payments
 between Amount and Count, without refetching. TaaS Payments is a separate monthly amount
-chart based on platform payment creation date. The Customer section shares unfiltered
-revenue and payment responses, including loading/error/retry states. Filtering Revenue
-Closed starts a separate request, so customer totals keep the full fiscal-year scope.
+chart based on platform payment creation date. The Customer section shares the revenue
+and payment responses, including loading/error/retry states. Changing Revenue's breakdown
+preserves the full fiscal-year customer totals and does not add a seventh source request.
 
 All charts cover the current fiscal year's 12 UTC calendar months, April through
 March. `fetchSalesDashboard` sends an inclusive April 1 `startDate` and exclusive
@@ -360,7 +366,10 @@ months and categories. Percentages are not summed; gross margin remains on hold.
 The bottom **Customer** section replaces the Member payments by customer chart
 with two always-visible tables: **Revenue Customer-Wise**, from the optional API
 `customerRevenue` dataset, and **Goods Sold Customer-Wise**, from `customerPayments`.
-Each shows all customer names as rows and fiscal-year months as columns, with an
+Each initially shows five customers, with **Show all N customers** / **Show fewer customers**
+controls for longer tables. Total always remains first and sums every customer, including
+hidden rows. The expand button exposes its state and associated table to assistive technology.
+Fiscal-year months appear as columns, with an
 **Annual** column immediately after Customer, before the month columns, and a
 **Total** row directly below the header,
 containing monthly totals and a grand total. No top-five/Other grouping is
@@ -369,10 +378,9 @@ scrolling, keep customer names visible while scrolling and show explicit empty
 states. Missing datasets and source notices are displayed beside the affected
 table; a failed source can be retried independently from either place it appears.
 
-Deploy the PM-6672 Reports API companion before the UI. It adds the bookings and TaaS
-sections, category filtering and filter options, revenue Opportunity-based customer
-categories, Reporting Account priority for customer revenue, and Client.name fallback
-for goods-sold customers. See reports-api-v6/SALES.md for field configuration. Both Sales
+Deploy the PM-6672 breakdown follow-up API before the UI. It adds `groupBy` to bookings,
+pipeline and revenue while preserving the prior Opportunity customer categories,
+Reporting Account grouping, payment names and TaaS source. See reports-api-v6/SALES.md for field configuration. Both Sales
 pages show the fiscal-year title and full April–March date range; Close Date remains the
 default pipeline filter. The Total-first customer rows from the previous fix are retained.
 
@@ -383,6 +391,7 @@ monthly table, fiscal-year notice, portal scope, gross margin remaining
 hidden and unrequested in both portals, independent failures,
 retry, refresh, date-basis changes, request cancellation, keyboard navigation,
 accessible percentage/missing-value tables, compact axis labels, total-first tooltips, currency annual totals, count totals being omitted,
-independent category filters, measure switches, consolidated card rendering, both customer matrices and their totals/missing values/empty
+independent dimension selectors, breakdown cancellation, measure switches, customer-table
+expansion with full-data totals, consolidated card rendering, both customer matrices and their totals/missing values/empty
 states, shared-source retries and cancellation. Reports route/navigation tests
 cover the entry point.

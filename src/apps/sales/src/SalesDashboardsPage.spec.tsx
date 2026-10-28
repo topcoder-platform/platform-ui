@@ -75,7 +75,7 @@ it.each(['reports', 'sales'] as SalesDashboardPortal[])(
         await waitFor(() => expect(fetchDashboard)
             .toHaveBeenCalledTimes(8))
         expect(fetchDashboard)
-            .toHaveBeenLastCalledWith('pipeline', portal, 'created', expect.any(AbortSignal))
+            .toHaveBeenLastCalledWith('pipeline', portal, 'created', expect.any(AbortSignal), 'stage')
         fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
         await waitFor(() => expect(fetchDashboard)
             .toHaveBeenCalledTimes(14))
@@ -278,6 +278,7 @@ it.each(['Goods Sold Customer-Wise', 'Revenue Customer-Wise'])(
                 .getByRole('row', { name: /^Total/ }))
         expect(screen.getByRole('region'))
             .toHaveAttribute('tabindex', '0')
+        expect(screen.queryByRole('button', { name: /Show all/ })).not.toBeInTheDocument()
     },
 )
 
@@ -378,7 +379,7 @@ it('shows customer-source failures independently and retries the shared source o
     expect(fetchDashboard)
         .toHaveBeenCalledTimes(7)
     expect(fetchDashboard)
-        .toHaveBeenLastCalledWith('revenue', 'sales', 'close', expect.any(AbortSignal))
+        .toHaveBeenLastCalledWith('revenue', 'sales', 'close', expect.any(AbortSignal), 'offeringType')
 })
 
 it('clears both customer tables on refresh and ignores superseded source responses', async () => {
@@ -453,96 +454,153 @@ it('adds an Annual row before all months for single-series charts without treati
         .toHaveTextContent('Annual—')
 })
 
-/** @returns Complete independent card sources with deterministic amount/count/filter results. Does not throw. */
+/** @returns Independent card sources with category breakdowns and amount/count measures. Does not throw. */
 function mockConsolidatedDashboards(): void {
-    fetchDashboard.mockImplementation(async (section, portal, basis, signal, filters) => {
-        const total = Object.values(filters ?? {})
-            .some(values => values?.length) ? 100 : 1000
+    fetchDashboard.mockImplementation(async (section, portal, basis, signal, groupBy) => {
+        const labels = groupBy === 'stage' ? ['Proposal', 'Negotiation']
+            : groupBy === 'dealCategory' ? ['Wipro Direct', 'Topcoder Direct']
+                : groupBy === 'customerType' ? ['New Customer', 'Extension to Existing Project']
+                    : ['AI Training', 'Flexible Talent']
         const chart = (id: string, value: number, unit: MonthlySalesChart['unit'] = 'currency'): MonthlySalesChart => ({
-            ...response.charts[0], id, months: [{ month: '2026-09-01', values: { amount: value } }], unit,
+            ...response.charts[0],
+            id,
+            months: [{ month: '2026-09-01', values: groupBy ? { a: value * 0.3, b: value * 0.7 } : { amount: value } }],
+            series: groupBy ? labels.map((label, i) => ({ key: i ? 'b' : 'a', label }))
+                : [{ key: 'amount', label: 'Amount' }],
+            stacked: !!groupBy,
+            unit,
         })
-        const charts = section === 'bookings' ? [chart('closed-won', total)]
-            : section === 'pipeline' ? [chart('pipeline-stage', total), chart('expected-revenue', total / 2)]
-                : section === 'revenue' ? [chart('revenue', total)]
-                    : section === 'payments' ? [chart('payment-type', total), chart('members-paid', 2, 'count')]
+        const charts = section === 'bookings' ? [chart('closed-won', 1000)]
+            : section === 'pipeline' ? [chart('pipeline-stage', 1000), chart('expected-revenue', 500)]
+                : section === 'revenue' ? [chart('revenue', 1000)]
+                    : section === 'payments' ? [chart('payment-type', 1000), chart('members-paid', 2, 'count')]
                         : section === 'taas-payments' ? [chart('taas-payments', 75)]
                             : [chart('flexible-talent', 3, 'count')]
         return { charts,
             customerPayments: section === 'payments' ? customerPayments : undefined,
             customerRevenue: section === 'revenue' ? customerPayments : undefined,
-            filterOptions: {
-                customerType: ['New Customer', 'New Project at Existing Customer'],
-                dealCategory: ['Wipro Direct', 'Topcoder Direct'],
-                offeringType: ['Flexible Talent', 'AI Training'],
-            },
             notices: [] }
     })
 }
 
-it('filters the three cards independently and preserves the full customer report', async () => {
+it('selects independent breakdown dimensions and displays every category in the chart and table', async () => {
     mockConsolidatedDashboards()
     render(<SalesDashboardsPage portal='sales' />)
     const card = (title: string): ReturnType<typeof within> => within(screen.getByRole('article', { name: title }))
     await waitFor(() => expect(card('Bookings Won')
-        .getByLabelText('Offering Type'))
-        .toBeEnabled())
-    fireEvent.change(card('Bookings Won')
-        .getByLabelText('Offering Type'), { target: { value: 'Flexible Talent' } })
-    await waitFor(() => expect(fetchDashboard)
-        .toHaveBeenLastCalledWith(
-            'bookings',
-            'sales',
-            'close',
-            expect.any(AbortSignal),
-            { offeringType: ['Flexible Talent'] },
-        ))
-    await waitFor(() => expect(card('Bookings Won')
-        .getAllByRole('cell', { hidden: true, name: '$100.00' }))
-        .toHaveLength(2))
-    fireEvent.change(
-        card('Bookings in Pipeline')
-            .getByLabelText('Customer Type'),
-        { target: { value: 'New Project at Existing Customer' } },
-    )
-    await waitFor(() => expect(fetchDashboard)
-        .toHaveBeenLastCalledWith(
-            'pipeline',
-            'sales',
-            'close',
-            expect.any(AbortSignal),
-            { customerType: ['New Project at Existing Customer'] },
-        ))
-    fireEvent.change(card('Revenue Closed')
-        .getByLabelText('Deal Category'), { target: { value: 'Wipro Direct' } })
-    await waitFor(() => expect(fetchDashboard)
-        .toHaveBeenLastCalledWith(
-            'revenue',
-            'sales',
-            'close',
-            expect.any(AbortSignal),
-            { dealCategory: ['Wipro Direct'] },
-        ))
-    await waitFor(() => expect(card('Revenue Closed')
-        .getByLabelText('Deal Category'))
-        .toHaveValue('Wipro Direct'))
+        .getByRole('columnheader', { hidden: true, name: 'AI Training' }))
+        .toBeInTheDocument())
+    expect(within(card('Bookings Won')
+        .getByLabelText('Filter by'))
+        .getAllByRole('option')
+        .map(option => option.textContent))
+        .toEqual(['Offering Type', 'Deal Category', 'Customer Type'])
+    expect(within(card('Bookings in Pipeline')
+        .getByLabelText('Filter by'))
+        .getAllByRole('option')
+        .map(option => option.textContent))
+        .toEqual(['Stage', 'Offering Type', 'Deal Category', 'Customer Type'])
+    expect(card('Bookings in Pipeline')
+        .getByLabelText('Filter by'))
+        .toHaveValue('stage')
+    for (const [title, section, groupBy, label] of [
+        ['Bookings Won', 'bookings', 'dealCategory', 'Wipro Direct'],
+        ['Bookings in Pipeline', 'pipeline', 'customerType', 'New Customer'],
+        ['Revenue Closed', 'revenue', 'customerType', 'New Customer'],
+    ]) {
+        fireEvent.change(card(title)
+            .getByLabelText('Filter by'), { target: { value: groupBy } })
+        // eslint-disable-next-line no-await-in-loop -- Exercise each card in sequence to verify independent state.
+        await waitFor(() => expect(fetchDashboard)
+            .toHaveBeenLastCalledWith(section, 'sales', 'close', expect.any(AbortSignal), groupBy))
+        // eslint-disable-next-line no-await-in-loop -- The selected card must finish loading before checking its table.
+        await waitFor(() => expect(card(title)
+            .getByRole('columnheader', { hidden: true, name: label }))
+            .toBeInTheDocument())
+        expect(card(title)
+            .getByRole('row', { hidden: true, name: /^Annual/ }))
+            .toHaveTextContent('$300.00$700.00$1,000.00')
+        expect(jest.mocked(HighchartsReact).mock.calls.map(call => call[0].options.series))
+            .toContainEqual(expect.arrayContaining([expect.objectContaining({ data: [300], name: label })]))
+    }
+
     expect(within(screen.getByRole('table', { name: 'Revenue Customer-Wise (USD)' }))
         .getByRole('row', { name: /^Total/ }))
         .toHaveTextContent('$45,000.00')
     expect(card('Bookings Won')
-        .getByLabelText('Offering Type'))
-        .toHaveValue('Flexible Talent')
-    fireEvent.change(card('Bookings Won')
-        .getByLabelText('Offering Type'), { target: { value: '' } })
-    await waitFor(() => expect(fetchDashboard)
-        .toHaveBeenLastCalledWith('bookings', 'sales', 'close', expect.any(AbortSignal)))
-    expect(card('Bookings in Pipeline')
-        .getByLabelText('Customer Type'))
-        .toHaveValue('New Project at Existing Customer')
+        .getByLabelText('Filter by'))
+        .toHaveValue('dealCategory')
     fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
-    await waitFor(() => expect(fetchDashboard.mock.calls.slice(-7)
-        .filter(call => call[4]))
-        .toHaveLength(2))
+    await waitFor(() => expect(fetchDashboard.mock.calls.slice(-6)
+        .slice(0, 3)
+        .map(call => call[4]))
+        .toEqual(['dealCategory', 'customerType', 'customerType']))
 })
+
+it('cancels an obsolete breakdown request and ignores its late response', async () => {
+    let resolveOld: (data: SalesDashboardResponse) => void = () => undefined
+    fetchDashboard.mockImplementation(async (section, portal, basis, signal, groupBy) => {
+        if (section === 'bookings' && groupBy === 'offeringType') {
+            return new Promise(resolve => { resolveOld = resolve })
+        }
+
+        return { charts: [], notices: ['Current breakdown'] }
+    })
+    render(<SalesDashboardsPage />)
+    const old = fetchDashboard.mock.calls.find(call => call[0] === 'bookings')?.[3]
+    fireEvent.change(within(screen.getByRole('article', { name: 'Bookings Won' }))
+        .getByLabelText('Filter by'), { target: { value: 'dealCategory' } })
+    expect(old?.aborted)
+        .toBe(true)
+    resolveOld({ charts: [], notices: ['Obsolete breakdown'] })
+    await waitFor(() => expect(within(screen.getByRole('article', { name: 'Bookings Won' }))
+        .getByText('Current breakdown'))
+        .toBeInTheDocument())
+    expect(screen.queryByText('Obsolete breakdown')).not.toBeInTheDocument()
+})
+
+it.each(['Goods Sold Customer-Wise', 'Revenue Customer-Wise'])(
+    'collapses %s to five customers while retaining all-customer totals',
+    title => {
+        const series = Array.from({ length: 7 }, (_, index) => ({ key: `c${index}`, label: `Client ${index + 1}` }))
+        const data: MonthlySalesChart = {
+            ...customerPayments,
+            months: [{
+                month: '2026-04-01',
+                values: Object.fromEntries(series.map((item, index) => [item.key, index + 1])),
+            }],
+            series,
+        }
+        render(<SalesCustomerTable title={title} data={data} />)
+        const table = screen.getByRole('table')
+        expect(within(table)
+            .getAllByRole('row'))
+            .toHaveLength(7)
+        expect(within(table)
+            .queryByRole('row', { name: /Client 6/ })).not.toBeInTheDocument()
+        expect(within(table)
+            .getByRole('row', { name: /^Total/ }))
+            .toHaveTextContent('Total$28.00$28.00')
+        const button = screen.getByRole('button', { name: 'Show all 7 customers' })
+        expect(button)
+            .toHaveAttribute('aria-expanded', 'false')
+        expect(button)
+            .toHaveAttribute('aria-controls', table.id)
+        fireEvent.click(button)
+        expect(button)
+            .toHaveAttribute('aria-expanded', 'true')
+        expect(within(table)
+            .getAllByRole('row'))
+            .toHaveLength(9)
+        fireEvent.click(screen.getByRole('button', { name: 'Show fewer customers' }))
+        expect(within(table)
+            .getAllByRole('row'))
+            .toHaveLength(7)
+        expect(within(table)
+            .getByRole('row', { name: /^Total/ }))
+            .toHaveTextContent('Total$28.00$28.00')
+    },
+)
 
 it('switches pipeline and payment measures without refetching and never sums member counts annually', async () => {
     mockConsolidatedDashboards()
@@ -551,8 +609,8 @@ it('switches pipeline and payment measures without refetching and never sums mem
         .toHaveLength(6))
     const pipeline = within(screen.getByRole('article', { name: 'Bookings in Pipeline' }))
     fireEvent.click(pipeline.getByRole('button', { name: 'Expected Amount' }))
-    expect(pipeline.getByRole('row', { hidden: true, name: 'Annual $500.00' }))
-        .toBeInTheDocument()
+    expect(pipeline.getByRole('row', { hidden: true, name: /^Annual/ }))
+        .toHaveTextContent('$150.00$350.00$500.00')
     const payments = within(screen.getByRole('article', { name: 'Topcoder Payments' }))
     fireEvent.click(payments.getByRole('button', { name: 'Count' }))
     expect(payments.queryByRole('rowheader', { hidden: true, name: 'Annual' })).not.toBeInTheDocument()
