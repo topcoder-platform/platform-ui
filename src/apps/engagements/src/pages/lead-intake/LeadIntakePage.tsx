@@ -32,6 +32,7 @@ import {
 import type { CreateEngagementLeadIntakeRequest } from '../../lib/models'
 import { submitEngagementLeadIntake } from '../../lib/services/engagement-leads.service'
 
+import { SMU_OPTIONS } from './lead-intake.constants'
 import { leadIntakeSchema } from './lead-intake.schema'
 import type { LeadIntakeFormData } from './lead-intake.types'
 import styles from './LeadIntakePage.module.scss'
@@ -45,17 +46,14 @@ const MIN_PREFERRED_START_DATE = ((): Date => {
 
 const DEFAULT_VALUES: LeadIntakeFormData = {
     accountName: '',
-    additionalRequirements: '',
     billRateAmount: '',
     billRateCurrency: '',
     engagementDuration: '',
     engagementModel: '',
     experienceLevel: '',
-    industryDomain: '',
     jobDescription: '',
     minYearsExperience: 0,
     preferredStartDate: '',
-    priority: '',
     remoteWorkAccepted: 'yes',
     requiredSkills: [],
     resourcesRequired: 1,
@@ -70,25 +68,22 @@ const DEFAULT_VALUES: LeadIntakeFormData = {
 function buildIntakeRequest(values: LeadIntakeFormData): CreateEngagementLeadIntakeRequest {
     return {
         accountName: values.accountName.trim(),
-        additionalRequirements: values.additionalRequirements.trim() || undefined,
         billRateAmount: values.billRateAmount.trim(),
         billRateCurrency: values.billRateCurrency.trim(),
         engagementDuration: values.engagementDuration.trim(),
         engagementModel: values.engagementModel,
         experienceLevel: values.experienceLevel,
-        industryDomain: values.industryDomain.trim() || undefined,
         jobDescription: values.jobDescription.trim(),
         minYearsExperience: values.minYearsExperience ?? 0,
         preferredStartDate: new Date(values.preferredStartDate)
             .toISOString(),
-        priority: values.priority,
         remoteWorkAccepted: values.remoteWorkAccepted === 'yes',
         requiredSkills: values.requiredSkills
             .map(skill => skill.name.trim())
             .filter(Boolean),
         resourcesRequired: values.resourcesRequired ?? 1,
         roleTitle: values.roleTitle.trim(),
-        smu: values.smu.trim(),
+        smu: values.smu,
         timeZoneRequirement: values.timeZoneRequirement.trim(),
         workEmail: values.workEmail.trim(),
         workingHoursPerDay: values.workingHoursPerDay ?? 8,
@@ -115,7 +110,7 @@ const FieldLabel: FC<FieldProps> = props => (
             {props.label}
             {props.required && <span className={styles.requiredIndicator}>*</span>}
         </label>
-        <p className={styles.fieldHint}>{props.hint}</p>
+        {props.hint && <p className={styles.fieldHint}>{props.hint}</p>}
     </div>
 )
 
@@ -256,7 +251,7 @@ const LeadIntakeNumberField: FC<NumberFieldProps> = (props: NumberFieldProps) =>
 }
 
 interface TextareaFieldProps extends BaseFieldComponentProps {
-    name: 'jobDescription' | 'additionalRequirements'
+    name: 'jobDescription'
 }
 
 const LeadIntakeTextareaField: FC<TextareaFieldProps> = (props: TextareaFieldProps) => {
@@ -653,16 +648,18 @@ const LeadIntakePage: FC = () => {
                                         }}
                                         name='accountName'
                                     />
-                                    <LeadIntakeTextField
+                                    <LeadIntakeSelectField
                                         control={control}
                                         disabled={submitting}
                                         errors={errors}
                                         fieldProps={{
-                                            hint: 'Examples: APMEA, AMERICAS1, Chief Operating Office',
+                                            hint: '',
                                             label: 'Strategic Market Unit (SMU)',
                                             required: true,
                                         }}
                                         name='smu'
+                                        options={SMU_OPTIONS}
+                                        placeholder='Select SMU'
                                     />
                                 </div>
                             </section>
@@ -748,16 +745,6 @@ const LeadIntakePage: FC = () => {
                                         }}
                                         name='minYearsExperience'
                                     />
-                                    <LeadIntakeTextField
-                                        control={control}
-                                        disabled={submitting}
-                                        errors={errors}
-                                        fieldProps={{
-                                            hint: 'Optional. Examples: Banking, Insurance, Healthcare, Telecom',
-                                            label: 'Industry Domain Experience',
-                                        }}
-                                        name='industryDomain'
-                                    />
                                 </div>
                             </section>
 
@@ -823,14 +810,16 @@ const LeadIntakePage: FC = () => {
                                         disabled={submitting}
                                         errors={errors}
                                         fieldProps={{
-                                            hint: 'Topcoder Flexi-Talent resources operate remotely.',
+                                            hint: [
+                                                'Topcoder Flexi-Talent resources operate remotely.',
+                                                'Please confirm whether a fully remote engagement is acceptable',
+                                            ].join(' '),
                                             label: 'Remote Work Acceptance',
                                             required: true,
                                         }}
                                         name='remoteWorkAccepted'
                                         options={[
                                             { label: 'Yes', value: 'yes' },
-                                            { label: 'No', value: 'no' },
                                         ]}
                                     />
                                     <LeadIntakeTextField
@@ -878,37 +867,6 @@ const LeadIntakePage: FC = () => {
                                             required: true,
                                         }}
                                         name='billRateAmount'
-                                    />
-                                    <LeadIntakeSelectField
-                                        control={control}
-                                        disabled={submitting}
-                                        errors={errors}
-                                        fieldProps={{
-                                            hint: 'Select how urgently this requirement needs to be fulfilled.',
-                                            label: 'Priority of Request',
-                                            required: true,
-                                        }}
-                                        name='priority'
-                                        options={[
-                                            { label: 'Critical — immediate fulfilment required', value: 'CRITICAL' },
-                                            { label: 'High', value: 'HIGH' },
-                                            { label: 'Medium', value: 'MEDIUM' },
-                                            { label: 'Low', value: 'LOW' },
-                                        ]}
-                                        placeholder='Select priority'
-                                    />
-                                    <LeadIntakeTextareaField
-                                        control={control}
-                                        disabled={submitting}
-                                        errors={errors}
-                                        fieldProps={{
-                                            hint: [
-                                                'Optional. Examples: client-facing experience,',
-                                                'overlap hours, certifications, languages',
-                                            ].join(' '),
-                                            label: 'Additional Requirements or Constraints',
-                                        }}
-                                        name='additionalRequirements'
                                     />
                                 </div>
                             </section>

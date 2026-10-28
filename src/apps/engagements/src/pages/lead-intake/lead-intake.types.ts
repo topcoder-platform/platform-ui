@@ -10,7 +10,6 @@ export interface LeadIntakeFormData {
     requiredSkills: SearchUserSkill[]
     experienceLevel: string
     minYearsExperience: number
-    industryDomain: string
     resourcesRequired: number
     preferredStartDate: string
     engagementDuration: string
@@ -20,6 +19,4 @@ export interface LeadIntakeFormData {
     workLocationRestrictions: string
     billRateCurrency: string
     billRateAmount: string
-    priority: string
-    additionalRequirements: string
 }

@@ -1,5 +1,6 @@
 import * as yup from 'yup'
 
+import { SMU_OPTIONS } from './lead-intake.constants'
 import type { LeadIntakeFormData } from './lead-intake.types'
 
 const requiredMessage = 'Field cannot be empty or contain only whitespace'
@@ -19,10 +20,6 @@ export const leadIntakeSchema: yup.ObjectSchema<LeadIntakeFormData> = yup.object
         .trim()
         .required(requiredMessage)
         .max(255),
-    additionalRequirements: yup
-        .string()
-        .max(5000)
-        .default(''),
     billRateAmount: yup
         .string()
         .trim()
@@ -46,10 +43,6 @@ export const leadIntakeSchema: yup.ObjectSchema<LeadIntakeFormData> = yup.object
         .string()
         .oneOf(['JUNIOR', 'MID', 'SENIOR', 'LEAD_ARCHITECT'])
         .required(requiredMessage),
-    industryDomain: yup
-        .string()
-        .max(255)
-        .default(''),
     jobDescription: yup
         .string()
         .trim()
@@ -64,13 +57,9 @@ export const leadIntakeSchema: yup.ObjectSchema<LeadIntakeFormData> = yup.object
     preferredStartDate: yup
         .string()
         .required(requiredMessage),
-    priority: yup
-        .string()
-        .oneOf(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'])
-        .required(requiredMessage),
     remoteWorkAccepted: yup
         .string()
-        .oneOf(['yes', 'no'])
+        .oneOf(['yes'])
         .required(requiredMessage),
     requiredSkills: yup
         .array()
@@ -90,9 +79,8 @@ export const leadIntakeSchema: yup.ObjectSchema<LeadIntakeFormData> = yup.object
         .max(255),
     smu: yup
         .string()
-        .trim()
-        .required(requiredMessage)
-        .max(255),
+        .oneOf(SMU_OPTIONS.map(option => option.value))
+        .required(requiredMessage),
     timeZoneRequirement: yup
         .string()
         .trim()

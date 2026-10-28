@@ -46,7 +46,7 @@ export interface EngagementLead {
     workLocationRestrictions?: string | null
     billRateCurrency: string
     billRateAmount: string
-    priority: LeadPriority | string
+    priority?: LeadPriority | string | null
     additionalRequirements?: string | null
     status: EngagementLeadStatus | string
     convertedEngagementId?: string | null

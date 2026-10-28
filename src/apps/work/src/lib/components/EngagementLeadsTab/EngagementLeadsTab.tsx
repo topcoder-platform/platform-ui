@@ -421,7 +421,7 @@ export const EngagementLeadsTab: FC = () => {
                                         <td>{formatLeadDate(lead.preferredStartDate)}</td>
                                         <td className={styles.compactCell}>{lead.engagementDuration}</td>
                                         <td className={getPriorityClassName(String(lead.priority))}>
-                                            {formatLeadLabel(String(lead.priority))}
+                                            {lead.priority ? formatLeadLabel(String(lead.priority)) : '—'}
                                         </td>
                                         <td>
                                             <span
