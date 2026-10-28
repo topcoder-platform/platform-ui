@@ -470,6 +470,7 @@ function normalizeAssignment(
             assignment.assignmentId,
             assignment.assignment_id,
         ),
+        lastPaidAt: toIsoString(assignment.lastPaidAt) || undefined,
         memberHandle: normalizeString(
             assignment.memberHandle
             ?? assignment.member_handle
@@ -579,6 +580,7 @@ export function normalizeEngagement(data: Partial<Engagement> = {}): Engagement 
 
     const rawProject = (data as {
         project?: {
+            customer?: string
             id?: number | string
             name?: string
         }
@@ -586,6 +588,7 @@ export function normalizeEngagement(data: Partial<Engagement> = {}): Engagement 
 
     const project = rawProject
         ? {
+            customer: normalizeString(rawProject.customer) || undefined,
             id: rawProject.id,
             name: normalizeString(rawProject.name),
         }

@@ -36,6 +36,11 @@ export interface Assignment {
     endDate: string
     engagementId: number | string
     id: number | string
+    /**
+     * When the assignment's latest payment was created. Absent when it was never paid, was not
+     * requested, or finance could not be read.
+     */
+    lastPaidAt?: string
     memberHandle: string
     memberId: number | string
     otherRemarks: string
@@ -121,6 +126,8 @@ export interface Engagement {
     isPrivate: boolean
     managers?: EngagementManager[]
     project?: {
+        /** Customer from the project details; only on privileged listings. */
+        customer?: string
         id?: number | string
         name?: string
     }
@@ -171,6 +178,10 @@ export interface TimesheetPaymentEntry {
 
 export interface EngagementFilters {
     countries?: string[]
+    /** Leaves out the test projects the API is configured with. */
+    excludeTestProjects?: boolean
+    /** Adds `lastPaidAt` to every assignment; needs `includePrivate`. */
+    includeLastPaidAt?: boolean
     includePrivate?: boolean
     page?: number
     perPage?: number
