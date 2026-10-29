@@ -415,6 +415,7 @@ function getDefaultValues(
                 ? String(leadPrefill.requiredMemberCount)
                 : '',
             roleLevel: leadPrefill.roleLevel || '',
+            skills: leadPrefill.requiredSkills || [],
             smu: leadPrefill.smu || '',
             spoc: leadPrefill.spoc || '',
             timezones: leadPrefill.timeZones || [],
@@ -447,7 +448,7 @@ function getDefaultValues(
             : (leadDefaults.requiredMemberCount || ''),
         role: defaultEngagement?.role || ENGAGEMENT_ROLES[0],
         roleLevel: defaultEngagement?.roleLevel || leadDefaults.roleLevel || '',
-        skills: defaultEngagement?.skills || [],
+        skills: defaultEngagement?.skills || leadDefaults.skills || [],
         smu: defaultEngagement?.smu || leadDefaults.smu || '',
         spoc: defaultEngagement?.spoc || leadDefaults.spoc || '',
         status: defaultEngagement?.status
@@ -1020,6 +1021,12 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
         }
     }, [getValues, isGeneratingDescription, setValue])
 
+    // Matched skills are prefilled, so only the misses need the TM's attention. An API that does
+    // not match skills yet leaves `requiredSkills` unset, and then every name is still listed.
+    const unmatchedLeadSkillNames = props.leadPrefill?.requiredSkills
+        ? props.leadPrefill.unresolvedSkillNames || []
+        : props.leadPrefill?.requiredSkillNames || []
+
     const onSubmit = useCallback(async (nextValues: EngagementEditorFormData): Promise<void> => {
         await saveEngagement(nextValues)
     }, [saveEngagement])
@@ -1027,12 +1034,12 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
     return (
         <FormProvider {...formMethods}>
             <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
-                {props.leadPrefill?.requiredSkillNames?.length ? (
+                {unmatchedLeadSkillNames.length ? (
                     <div className={styles.leadPrefillNotice}>
-                        <strong>Skills from intake form:</strong>
+                        <strong>Skills from intake form not found on the platform:</strong>
                         {' '}
-                        {props.leadPrefill.requiredSkillNames.join(', ')}
-                        . Please map these to platform skills below.
+                        {unmatchedLeadSkillNames.join(', ')}
+                        . Please add matching platform skills below.
                     </div>
                 ) : undefined}
 

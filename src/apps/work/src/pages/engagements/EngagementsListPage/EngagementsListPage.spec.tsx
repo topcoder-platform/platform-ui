@@ -150,6 +150,7 @@ jest.mock('../../../lib/components', () => ({
             ))}
         </div>
     ),
+    EngagementLeadsPanel: () => <div data-testid='engagement-leads-panel' />,
     EngagementsFilter: function MockEngagementsFilter(props: {
         filters: { memberHandle?: string; status?: string[]; title?: string }
         onFiltersChange: (nextFilters: { memberHandle?: string; status?: string[]; title?: string }) => void
@@ -776,6 +777,28 @@ describe('EngagementsListPage', () => {
                 .toBe('/work/engagements?tab=assignments')
         })
 
+        it('shows engagement leads on the leads tab without loading engagements', () => {
+            renderPage('/engagements', '/engagements')
+            fireEvent.click(screen.getByRole('tab', { name: 'Leads' }))
+
+            expect(screen.getByRole('tab', { name: 'Leads' })
+                .getAttribute('aria-selected'))
+                .toBe('true')
+            expect(screen.getByRole('heading', { name: 'Leads' }))
+                .toBeTruthy()
+            expect(screen.getByTestId('engagement-leads-panel'))
+                .toBeTruthy()
+            expect(mockedUseFetchEngagements.mock.calls.at(-1)?.[2])
+                .toEqual(expect.objectContaining({ enabled: false }))
+        })
+
+        it('opens the leads tab from the url', () => {
+            renderPage('/engagements?tab=leads&leadType=wipro-direct', '/engagements')
+
+            expect(screen.getByTestId('engagement-leads-panel'))
+                .toBeTruthy()
+        })
+
         it('opens the assignments tab from the url', () => {
             mockedUseFetchEngagements.mockReturnValue({
                 engagements: [engagementWithAssignments],
@@ -904,6 +927,15 @@ describe('EngagementsListPage', () => {
             expect(screen.getByTestId('approved-timesheets-tab')
                 .getAttribute('data-exclude-test-projects'))
                 .toBe('true')
+        })
+
+        it('does not offer the leads tab on project engagement routes', () => {
+            renderPage('/projects/100/engagements?tab=leads', '/projects/:projectId/engagements')
+
+            expect(screen.queryByRole('tab', { name: 'Leads' }))
+                .toBeNull()
+            expect(screen.queryByTestId('engagement-leads-panel'))
+                .toBeNull()
         })
 
         it('does not offer the tabs on project engagement routes', () => {

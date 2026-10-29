@@ -26,26 +26,30 @@
 }
 
 .tabs {
-    display: flex;
-    align-items: flex-end;
-    gap: 24px;
-    border-bottom: 1px solid #d5d5d5;
+    display: inline-flex;
+    justify-self: start;
+    border: 1px solid #d5d5d5;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .tab {
     appearance: none;
-    background: transparent;
+    background: #fff;
     border: none;
-    border-bottom: 2px solid transparent;
     color: $black-100;
     cursor: pointer;
     font: inherit;
     font-size: 14px;
-    padding: 10px 0;
+    padding: 8px 16px;
+
+    & + & {
+        border-left: 1px solid #d5d5d5;
+    }
 
     &.active {
-        color: var(--tc-2026-teal, #00797a);
-        border-bottom-color: var(--tc-2026-teal, #00797a);
+        background: var(--tc-2026-teal, #00797a);
+        color: #fff;
         font-weight: 700;
     }
 }

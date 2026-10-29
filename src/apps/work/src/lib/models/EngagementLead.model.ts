@@ -1,3 +1,5 @@
+import type { Skill } from './Skill.model'
+
 export enum EngagementLeadStatus {
     SUBMITTED = 'SUBMITTED',
     UNDER_REVIEW = 'UNDER_REVIEW',
@@ -77,6 +79,9 @@ export interface EngagementLeadPrefill {
     title: string
     description: string
     requiredSkillNames: string[]
+    // Standardized skills matched to `requiredSkillNames`; older API versions leave both unset.
+    requiredSkills?: Skill[]
+    unresolvedSkillNames?: string[]
     roleLevel?: string | null
     requiredMemberCount?: number | null
     durationStartDate?: string | null

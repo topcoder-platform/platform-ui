@@ -104,16 +104,31 @@ export function getEngagementLeadsListUrl(rootRoutePath: string, engagementLeads
     return `${rootRoutePath}/${engagementLeadsRoute}`
 }
 
-export const LEAD_TYPE_TAB_PARAM = 'tab'
+// Leads are a tab of the Engagements page (`?tab=leads`), so the lead type tab needs its own param.
+export const ENGAGEMENTS_LEADS_TAB = 'leads'
+export const LEAD_TYPE_QUERY_PARAM = 'leadType'
 
-const WIPRO_DIRECT_TAB = 'wipro-direct'
+const WIPRO_DIRECT_QUERY_VALUE = 'wipro-direct'
 
-export function getLeadTypeTabParam(leadType?: string | null): string {
-    return leadType === EngagementLeadType.WIPRO_DIRECT ? WIPRO_DIRECT_TAB : 'wipro-consumption'
+export function getLeadTypeQueryValue(leadType?: string | null): string {
+    return leadType === EngagementLeadType.WIPRO_DIRECT ? WIPRO_DIRECT_QUERY_VALUE : 'wipro-consumption'
 }
 
-export function getLeadTypeFromTabParam(tab?: string | null): EngagementLeadType {
-    return tab === WIPRO_DIRECT_TAB
+export function getLeadTypeFromQueryValue(value?: string | null): EngagementLeadType {
+    return value === WIPRO_DIRECT_QUERY_VALUE
         ? EngagementLeadType.WIPRO_DIRECT
         : EngagementLeadType.WIPRO_CONSUMPTION
+}
+
+/**
+ * Path of the Leads tab on the Engagements page, relative to the Work app root.
+ * @param leadType Lead type whose tab should open; defaults to Wipro Consumption.
+ * @returns `/engagements?tab=leads&leadType=...`.
+ */
+export function getEngagementLeadsTabPath(leadType?: string | null): string {
+    const params = new URLSearchParams()
+    params.set('tab', ENGAGEMENTS_LEADS_TAB)
+    params.set(LEAD_TYPE_QUERY_PARAM, getLeadTypeQueryValue(leadType))
+
+    return `/engagements?${params.toString()}`
 }

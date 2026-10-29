@@ -301,16 +301,26 @@ jest.mock('./EngagementSkillsField', () => ({
     EngagementSkillsField: function EngagementSkillsField() {
         const React: typeof import('react') = jest.requireActual('react')
         const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
-        const setValue = reactHookForm.useFormContext().setValue
+        const formContext = reactHookForm.useFormContext()
+        const getValues = formContext.getValues
+        const setValue = formContext.setValue
+        const skills = reactHookForm.useWatch({ name: 'skills' }) as Array<{ name: string }> | undefined
 
         React.useEffect(() => {
-            setValue('skills', [{
-                id: 'skill-1',
-                name: 'React',
-            }])
-        }, [setValue])
+            // Stand in for a picked skill, but keep skills that were prefilled from a lead.
+            if (!getValues('skills')?.length) {
+                setValue('skills', [{
+                    id: 'skill-1',
+                    name: 'React',
+                }])
+            }
+        }, [getValues, setValue])
 
-        return <></>
+        const skillNames = (skills || [])
+            .map(skill => skill.name)
+            .join(', ')
+
+        return <div data-testid='selected-skills'>{skillNames}</div>
     },
 }))
 jest.mock('./EngagementStartDateField', () => ({
@@ -512,6 +522,83 @@ describe('EngagementEditorForm', () => {
 
         expect(midOption?.text)
             .toBe('Mid')
+    })
+
+    describe('when created from a lead', () => {
+        const leadPrefill = {
+            account: 'ABC Bank',
+            countries: ['ANY'],
+            description: 'Build the product.',
+            requiredSkillNames: ['Java', 'Spring Boot', 'Legacy Skill'],
+            smu: 'AMR1',
+            spoc: 'jane.doe@customer.com',
+            timeZones: ['IST'],
+            title: 'Backend Developer',
+        }
+
+        it('prefills the skills matched from the lead and lists only the unmatched ones', () => {
+            render(
+                <MemoryRouter>
+                    <EngagementEditorForm
+                        isEditMode={false}
+                        leadPrefill={{
+                            ...leadPrefill,
+                            requiredSkills: [
+                                { id: 'skill-java', name: 'Java' },
+                                { id: 'skill-spring', name: 'Spring Boot' },
+                            ],
+                            unresolvedSkillNames: ['Legacy Skill'],
+                        }}
+                        projectId='123'
+                    />
+                </MemoryRouter>,
+            )
+
+            expect(screen.getByTestId('selected-skills').textContent)
+                .toBe('Java, Spring Boot')
+            expect(screen.getByText(/Skills from intake form not found on the platform/).parentElement?.textContent)
+                .toContain('Legacy Skill')
+            expect(screen.getByText(/Skills from intake form not found on the platform/).parentElement?.textContent)
+                .not
+                .toContain('Spring Boot')
+        })
+
+        it('hides the skills notice when every lead skill was matched', () => {
+            render(
+                <MemoryRouter>
+                    <EngagementEditorForm
+                        isEditMode={false}
+                        leadPrefill={{
+                            ...leadPrefill,
+                            requiredSkillNames: ['Java'],
+                            requiredSkills: [{ id: 'skill-java', name: 'Java' }],
+                            unresolvedSkillNames: [],
+                        }}
+                        projectId='123'
+                    />
+                </MemoryRouter>,
+            )
+
+            expect(screen.getByTestId('selected-skills').textContent)
+                .toBe('Java')
+            expect(screen.queryByText(/Skills from intake form not found on the platform/))
+                .toBeNull()
+        })
+
+        it('lists every lead skill when the API did not match them', () => {
+            render(
+                <MemoryRouter>
+                    <EngagementEditorForm
+                        isEditMode={false}
+                        leadPrefill={leadPrefill}
+                        projectId='123'
+                    />
+                </MemoryRouter>,
+            )
+
+            expect(screen.getByText(/Skills from intake form not found on the platform/).parentElement?.textContent)
+                .toContain('Java, Spring Boot, Legacy Skill')
+        })
     })
 
     it('renders the selected parent project on the create page', () => {

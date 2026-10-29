@@ -48,6 +48,7 @@ import {
     ConfirmationModal,
     EngagementAssignmentRow,
     EngagementAssignmentsTable,
+    EngagementLeadsPanel,
     EngagementsFilter,
     EngagementsListFilters,
     ErrorMessage,
@@ -70,18 +71,20 @@ import {
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
+import { ENGAGEMENTS_LEADS_TAB } from '../../../lib/utils/engagement-leads.utils'
 
 import styles from './EngagementsListPage.module.scss'
 
 type SortOrder = 'asc' | 'desc'
 
-type EngagementsPageTab = 'approved-timesheets' | 'assignments' | 'engagements'
+type EngagementsPageTab = 'approved-timesheets' | 'assignments' | 'engagements' | 'leads'
 
 const TAB_QUERY_PARAM = 'tab'
 
 const noopCheckboxChange = (() => undefined) as (event: Event) => void
 const ASSIGNMENTS_TAB: EngagementsPageTab = 'assignments'
 const APPROVED_TIMESHEETS_TAB: EngagementsPageTab = 'approved-timesheets'
+const LEADS_TAB: EngagementsPageTab = ENGAGEMENTS_LEADS_TAB
 
 type EngagementSortField =
     | 'createdAt'
@@ -438,12 +441,19 @@ export const EngagementsListPage: FC = () => {
     // The tab lives in the URL so the assignment pages can link straight back to it.
     const requestedTab = searchParams.get(TAB_QUERY_PARAM)
     const activeTab: EngagementsPageTab = isAllEngagementsPage
-        && (requestedTab === ASSIGNMENTS_TAB || requestedTab === APPROVED_TIMESHEETS_TAB)
+        && (
+            requestedTab === ASSIGNMENTS_TAB
+            || requestedTab === APPROVED_TIMESHEETS_TAB
+            || requestedTab === LEADS_TAB
+        )
         ? requestedTab
         : 'engagements'
     const isAssignmentsTab = activeTab === ASSIGNMENTS_TAB
     // The approved timesheets tab loads and scopes its own rows, so the engagement fetches are skipped.
     const isApprovedTimesheetsTab = activeTab === APPROVED_TIMESHEETS_TAB
+    // The leads tab loads its own rows from the leads API, so it skips the engagement fetches too.
+    const isLeadsTab = activeTab === LEADS_TAB
+    const skipsEngagementFetches = isApprovedTimesheetsTab || isLeadsTab
 
     const workAppContext = useContext(WorkAppContext)
     const contextValue = workAppContext as WorkAppContextModel
@@ -456,7 +466,7 @@ export const EngagementsListPage: FC = () => {
     const canCreateProjectEngagement = canCreateEngagement(contextValue.userRoles)
     const canEditEngagement = canCreateProjectEngagement
     const memberProjectsResult = useFetchProjects({
-        enabled: isAllEngagementsPage && isTalentManagerOnly && !isApprovedTimesheetsTab,
+        enabled: isAllEngagementsPage && isTalentManagerOnly && !skipsEngagementFetches,
         memberOnly: true,
     })
 
@@ -530,7 +540,7 @@ export const EngagementsListPage: FC = () => {
         {
             enabled: canViewEngagements
                 && (isAllEngagementsPage || !!projectId)
-                && !isApprovedTimesheetsTab
+                && !skipsEngagementFetches
                 && !isScopedProjectsLoading,
         },
     )
@@ -775,9 +785,11 @@ export const EngagementsListPage: FC = () => {
 
     const pageTitle = isAllEngagementsPage
         ? (
-            isApprovedTimesheetsTab
-                ? 'Approved Timesheets'
-                : (isAssignmentsTab ? 'All Assignments' : 'All Engagements')
+            isLeadsTab
+                ? 'Leads'
+                : isApprovedTimesheetsTab
+                    ? 'Approved Timesheets'
+                    : (isAssignmentsTab ? 'All Assignments' : 'All Engagements')
         )
         : (
             projectResult.project?.name
@@ -877,6 +889,15 @@ export const EngagementsListPage: FC = () => {
                 >
                     Approved Timesheets
                 </button>
+                <button
+                    aria-selected={isLeadsTab}
+                    className={classNames(styles.tab, isLeadsTab ? styles.activeTab : undefined)}
+                    onClick={() => handleTabChange(LEADS_TAB)}
+                    role='tab'
+                    type='button'
+                >
+                    Leads
+                </button>
             </div>
         )
     const testProjectsToggle = isAllEngagementsPage
@@ -920,6 +941,18 @@ export const EngagementsListPage: FC = () => {
                 {billingAccountExpiredNotice}
                 {pageTabs}
                 <ErrorMessage message={accessDeniedMessage} />
+            </PageWrapper>
+        )
+    }
+
+    if (isLeadsTab) {
+        return (
+            <PageWrapper
+                pageTitle={pageTitle}
+                breadCrumb={[]}
+            >
+                {pageTabs}
+                <EngagementLeadsPanel />
             </PageWrapper>
         )
     }
