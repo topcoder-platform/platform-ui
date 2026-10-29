@@ -78,6 +78,23 @@ export interface CreateEngagementLeadIntakeRequest {
     additionalRequirements?: string
 }
 
+export type CreateWiproDirectEngagementLeadIntakeRequest = Pick<
+    CreateEngagementLeadIntakeRequest,
+    | 'workEmail'
+    | 'accountName'
+    | 'smu'
+    | 'jobDescription'
+    | 'requiredSkills'
+    | 'resourcesRequired'
+    | 'engagementDuration'
+    | 'workingHoursPerDay'
+    | 'timeZoneRequirement'
+    | 'remoteWorkAccepted'
+    | 'workLocationRestrictions'
+> & {
+    preferredStartDate?: string
+}
+
 export interface EngagementLeadIntakeResponse {
     id: string
     message: string

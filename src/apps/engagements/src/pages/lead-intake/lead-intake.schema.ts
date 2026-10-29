@@ -1,7 +1,7 @@
 import * as yup from 'yup'
 
 import { SMU_OPTIONS } from './lead-intake.constants'
-import type { LeadIntakeFormData } from './lead-intake.types'
+import type { LeadIntakeFormData, WiproDirectLeadIntakeFormData } from './lead-intake.types'
 
 const requiredMessage = 'Field cannot be empty or contain only whitespace'
 
@@ -102,3 +102,23 @@ export const leadIntakeSchema: yup.ObjectSchema<LeadIntakeFormData> = yup.object
         .max(500)
         .default(''),
 })
+
+export const wiproDirectLeadIntakeSchema: yup.ObjectSchema<WiproDirectLeadIntakeFormData> = leadIntakeSchema
+    .pick([
+        'accountName',
+        'engagementDuration',
+        'jobDescription',
+        'remoteWorkAccepted',
+        'requiredSkills',
+        'resourcesRequired',
+        'smu',
+        'timeZoneRequirement',
+        'workEmail',
+        'workingHoursPerDay',
+        'workLocationRestrictions',
+    ])
+    .shape({
+        preferredStartDate: yup
+            .string()
+            .default(''),
+    })
