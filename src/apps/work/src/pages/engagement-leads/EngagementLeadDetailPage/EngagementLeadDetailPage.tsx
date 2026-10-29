@@ -33,6 +33,7 @@ import {
     showSuccessToast,
 } from '../../../lib/utils'
 import { fetchEngagement } from '../../../lib/services/engagements.service'
+import { formatLeadType } from '../../../lib/utils/engagement-leads.utils'
 import { withQueryParams } from '../../../lib/utils/navigation.utils'
 
 import styles from './EngagementLeadDetailPage.module.scss'
@@ -273,6 +274,7 @@ export const EngagementLeadDetailPage: FC = () => {
                                 <DetailField label='Work Email (SPOC)' value={lead.workEmail} />
                                 <DetailField label='Account / Customer' value={lead.accountName} />
                                 <DetailField label='SMU' value={lead.smu} />
+                                <DetailField label='Lead Type' value={formatLeadType(lead.leadType)} />
                                 <DetailField label='Submitted' value={formatDate(lead.createdAt)} />
                             </div>
                         </section>
@@ -282,7 +284,7 @@ export const EngagementLeadDetailPage: FC = () => {
                             <div className={styles.grid}>
                                 <DetailField
                                     label='Engagement Model'
-                                    value={formatLabel(String(lead.engagementModel))}
+                                    value={lead.engagementModel ? formatLabel(String(lead.engagementModel)) : undefined}
                                 />
                                 <DetailField label='Role Title' value={lead.roleTitle} />
                                 <DetailField
@@ -297,7 +299,7 @@ export const EngagementLeadDetailPage: FC = () => {
                                 />
                                 <DetailField
                                     label='Experience Level'
-                                    value={formatLabel(String(lead.experienceLevel))}
+                                    value={lead.experienceLevel ? formatLabel(String(lead.experienceLevel)) : undefined}
                                 />
                                 <DetailField label='Min Years Experience' value={lead.minYearsExperience} />
                                 <DetailField label='Industry Domain' value={lead.industryDomain} />
@@ -308,7 +310,10 @@ export const EngagementLeadDetailPage: FC = () => {
                             <h3 className={styles.sectionTitle}>Engagement Details</h3>
                             <div className={styles.grid}>
                                 <DetailField label='Resources Required' value={lead.resourcesRequired} />
-                                <DetailField label='Preferred Start Date' value={formatDate(lead.preferredStartDate)} />
+                                <DetailField
+                                    label='Preferred Start Date'
+                                    value={lead.preferredStartDate ? formatDate(lead.preferredStartDate) : undefined}
+                                />
                                 <DetailField label='Duration' value={lead.engagementDuration} />
                                 <DetailField label='Working Hours / Day' value={lead.workingHoursPerDay} />
                                 <DetailField label='Time Zone' value={lead.timeZoneRequirement} />
@@ -322,9 +327,14 @@ export const EngagementLeadDetailPage: FC = () => {
                             <div className={styles.grid}>
                                 <DetailField
                                     label='Client Bill Rate'
-                                    value={`${lead.billRateCurrency} ${lead.billRateAmount}/hour`}
+                                    value={lead.billRateCurrency && lead.billRateAmount
+                                        ? `${lead.billRateCurrency} ${lead.billRateAmount}/hour`
+                                        : undefined}
                                 />
-                                <DetailField label='Priority' value={formatLabel(String(lead.priority))} />
+                                <DetailField
+                                    label='Priority'
+                                    value={lead.priority ? formatLabel(String(lead.priority)) : undefined}
+                                />
                                 <DetailField
                                     fullWidth
                                     label='Additional Requirements'

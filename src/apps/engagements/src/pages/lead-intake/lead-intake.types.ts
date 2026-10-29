@@ -10,7 +10,6 @@ export interface LeadIntakeFormData {
     requiredSkills: SearchUserSkill[]
     experienceLevel: string
     minYearsExperience: number
-    industryDomain: string
     resourcesRequired: number
     preferredStartDate: string
     engagementDuration: string
@@ -20,6 +19,22 @@ export interface LeadIntakeFormData {
     workLocationRestrictions: string
     billRateCurrency: string
     billRateAmount: string
-    priority: string
-    additionalRequirements: string
 }
+
+export type LeadIntakeVariant = 'wiproConsumption' | 'wiproDirect'
+
+export type WiproDirectLeadIntakeFormData = Pick<
+    LeadIntakeFormData,
+    | 'workEmail'
+    | 'accountName'
+    | 'smu'
+    | 'jobDescription'
+    | 'requiredSkills'
+    | 'resourcesRequired'
+    | 'preferredStartDate'
+    | 'engagementDuration'
+    | 'workingHoursPerDay'
+    | 'timeZoneRequirement'
+    | 'remoteWorkAccepted'
+    | 'workLocationRestrictions'
+>

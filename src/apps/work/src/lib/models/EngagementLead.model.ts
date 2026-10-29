@@ -18,6 +18,11 @@ export enum ExperienceLevel {
     LEAD_ARCHITECT = 'LEAD_ARCHITECT',
 }
 
+export enum EngagementLeadType {
+    WIPRO_CONSUMPTION = 'WIPRO_CONSUMPTION',
+    WIPRO_DIRECT = 'WIPRO_DIRECT',
+}
+
 export enum LeadPriority {
     CRITICAL = 'CRITICAL',
     HIGH = 'HIGH',
@@ -27,26 +32,27 @@ export enum LeadPriority {
 
 export interface EngagementLead {
     id: string
+    leadType: EngagementLeadType | string
     workEmail: string
     accountName: string
     smu: string
-    engagementModel: EngagementModel | string
-    roleTitle: string
+    engagementModel?: EngagementModel | string | null
+    roleTitle?: string | null
     jobDescription: string
     requiredSkills: string[]
-    experienceLevel: ExperienceLevel | string
-    minYearsExperience: number
+    experienceLevel?: ExperienceLevel | string | null
+    minYearsExperience?: number | null
     industryDomain?: string | null
     resourcesRequired: number
-    preferredStartDate: string
+    preferredStartDate?: string | null
     engagementDuration: string
     workingHoursPerDay: number
     timeZoneRequirement: string
     remoteWorkAccepted: boolean
     workLocationRestrictions?: string | null
-    billRateCurrency: string
-    billRateAmount: string
-    priority: LeadPriority | string
+    billRateCurrency?: string | null
+    billRateAmount?: string | null
+    priority?: LeadPriority | string | null
     additionalRequirements?: string | null
     status: EngagementLeadStatus | string
     convertedEngagementId?: string | null

@@ -10,6 +10,7 @@ import {
     Controller,
     ControllerRenderProps,
     FieldErrors,
+    Resolver,
     useForm,
 } from 'react-hook-form'
 import { format, isValid as isValidDate, parseISO } from 'date-fns'
@@ -29,11 +30,18 @@ import {
     LoadingSpinner,
 } from '~/libs/ui'
 
-import type { CreateEngagementLeadIntakeRequest } from '../../lib/models'
-import { submitEngagementLeadIntake } from '../../lib/services/engagement-leads.service'
+import type {
+    CreateEngagementLeadIntakeRequest,
+    CreateWiproDirectEngagementLeadIntakeRequest,
+} from '../../lib/models'
+import {
+    submitEngagementLeadIntake,
+    submitWiproDirectEngagementLeadIntake,
+} from '../../lib/services/engagement-leads.service'
 
-import { leadIntakeSchema } from './lead-intake.schema'
-import type { LeadIntakeFormData } from './lead-intake.types'
+import { SMU_OPTIONS } from './lead-intake.constants'
+import { leadIntakeSchema, wiproDirectLeadIntakeSchema } from './lead-intake.schema'
+import type { LeadIntakeFormData, LeadIntakeVariant } from './lead-intake.types'
 import styles from './LeadIntakePage.module.scss'
 
 const MIN_PREFERRED_START_DATE = ((): Date => {
@@ -45,17 +53,14 @@ const MIN_PREFERRED_START_DATE = ((): Date => {
 
 const DEFAULT_VALUES: LeadIntakeFormData = {
     accountName: '',
-    additionalRequirements: '',
     billRateAmount: '',
     billRateCurrency: '',
     engagementDuration: '',
     engagementModel: '',
     experienceLevel: '',
-    industryDomain: '',
     jobDescription: '',
     minYearsExperience: 0,
     preferredStartDate: '',
-    priority: '',
     remoteWorkAccepted: 'yes',
     requiredSkills: [],
     resourcesRequired: 1,
@@ -70,30 +75,64 @@ const DEFAULT_VALUES: LeadIntakeFormData = {
 function buildIntakeRequest(values: LeadIntakeFormData): CreateEngagementLeadIntakeRequest {
     return {
         accountName: values.accountName.trim(),
-        additionalRequirements: values.additionalRequirements.trim() || undefined,
         billRateAmount: values.billRateAmount.trim(),
         billRateCurrency: values.billRateCurrency.trim(),
         engagementDuration: values.engagementDuration.trim(),
         engagementModel: values.engagementModel,
         experienceLevel: values.experienceLevel,
-        industryDomain: values.industryDomain.trim() || undefined,
         jobDescription: values.jobDescription.trim(),
         minYearsExperience: values.minYearsExperience ?? 0,
         preferredStartDate: new Date(values.preferredStartDate)
             .toISOString(),
-        priority: values.priority,
         remoteWorkAccepted: values.remoteWorkAccepted === 'yes',
         requiredSkills: values.requiredSkills
             .map(skill => skill.name.trim())
             .filter(Boolean),
         resourcesRequired: values.resourcesRequired ?? 1,
         roleTitle: values.roleTitle.trim(),
-        smu: values.smu.trim(),
+        smu: values.smu,
         timeZoneRequirement: values.timeZoneRequirement.trim(),
         workEmail: values.workEmail.trim(),
         workingHoursPerDay: values.workingHoursPerDay ?? 8,
         workLocationRestrictions: values.workLocationRestrictions.trim() || undefined,
     }
+}
+
+function buildWiproDirectIntakeRequest(
+    values: LeadIntakeFormData,
+): CreateWiproDirectEngagementLeadIntakeRequest {
+    return {
+        accountName: values.accountName.trim(),
+        engagementDuration: values.engagementDuration.trim(),
+        jobDescription: values.jobDescription.trim(),
+        preferredStartDate: values.preferredStartDate
+            ? new Date(values.preferredStartDate)
+                .toISOString()
+            : undefined,
+        remoteWorkAccepted: values.remoteWorkAccepted === 'yes',
+        requiredSkills: values.requiredSkills
+            .map(skill => skill.name.trim())
+            .filter(Boolean),
+        resourcesRequired: values.resourcesRequired ?? 1,
+        smu: values.smu,
+        timeZoneRequirement: values.timeZoneRequirement.trim(),
+        workEmail: values.workEmail.trim(),
+        workingHoursPerDay: values.workingHoursPerDay ?? 8,
+        workLocationRestrictions: values.workLocationRestrictions.trim() || undefined,
+    }
+}
+
+// The Wipro Direct form collects a subset of the consumption fields, so it shares the
+// consumption form state and only validates the fields it renders.
+const RESOLVERS: Record<LeadIntakeVariant, Resolver<LeadIntakeFormData>> = {
+    wiproConsumption: yupResolver(leadIntakeSchema),
+    wiproDirect: yupResolver(wiproDirectLeadIntakeSchema) as unknown as Resolver<LeadIntakeFormData>,
+}
+
+function submitLeadIntake(variant: LeadIntakeVariant, values: LeadIntakeFormData): Promise<unknown> {
+    return variant === 'wiproDirect'
+        ? submitWiproDirectEngagementLeadIntake(buildWiproDirectIntakeRequest(values))
+        : submitEngagementLeadIntake(buildIntakeRequest(values))
 }
 
 interface FieldProps {
@@ -115,7 +154,7 @@ const FieldLabel: FC<FieldProps> = props => (
             {props.label}
             {props.required && <span className={styles.requiredIndicator}>*</span>}
         </label>
-        <p className={styles.fieldHint}>{props.hint}</p>
+        {props.hint && <p className={styles.fieldHint}>{props.hint}</p>}
     </div>
 )
 
@@ -256,7 +295,7 @@ const LeadIntakeNumberField: FC<NumberFieldProps> = (props: NumberFieldProps) =>
 }
 
 interface TextareaFieldProps extends BaseFieldComponentProps {
-    name: 'jobDescription' | 'additionalRequirements'
+    name: 'jobDescription'
 }
 
 const LeadIntakeTextareaField: FC<TextareaFieldProps> = (props: TextareaFieldProps) => {
@@ -507,14 +546,21 @@ const LeadIntakeSkillsField: FC<SkillsFieldProps> = (props: SkillsFieldProps) =>
     )
 }
 
-const LeadIntakePage: FC = () => {
+interface LeadIntakePageProps {
+    variant?: LeadIntakeVariant
+}
+
+const LeadIntakePage: FC<LeadIntakePageProps> = (props: LeadIntakePageProps) => {
+    const variant: LeadIntakeVariant = props.variant ?? 'wiproConsumption'
+    const isWiproConsumption = variant === 'wiproConsumption'
+
     const [submitted, setSubmitted] = useState<boolean>(false)
     const [submitError, setSubmitError] = useState<string | undefined>(undefined)
 
     const form = useForm<LeadIntakeFormData>({
         defaultValues: DEFAULT_VALUES,
         mode: 'all',
-        resolver: yupResolver(leadIntakeSchema),
+        resolver: RESOLVERS[variant],
     })
 
     const control = form.control
@@ -535,7 +581,7 @@ const LeadIntakePage: FC = () => {
         setSubmitError(undefined)
 
         try {
-            await submitEngagementLeadIntake(buildIntakeRequest(values))
+            await submitLeadIntake(variant, values)
             setSubmitted(true)
         } catch (err: any) {
             const message = err?.response?.data?.message
@@ -545,7 +591,7 @@ const LeadIntakePage: FC = () => {
         } finally {
             setSubmitting(false)
         }
-    }, [submitting])
+    }, [submitting, variant])
 
     const handleClear = useCallback((): void => {
         reset(DEFAULT_VALUES)
@@ -653,16 +699,18 @@ const LeadIntakePage: FC = () => {
                                         }}
                                         name='accountName'
                                     />
-                                    <LeadIntakeTextField
+                                    <LeadIntakeSelectField
                                         control={control}
                                         disabled={submitting}
                                         errors={errors}
                                         fieldProps={{
-                                            hint: 'Examples: APMEA, AMERICAS1, Chief Operating Office',
+                                            hint: '',
                                             label: 'Strategic Market Unit (SMU)',
                                             required: true,
                                         }}
                                         name='smu'
+                                        options={SMU_OPTIONS}
+                                        placeholder='Select SMU'
                                     />
                                 </div>
                             </section>
@@ -670,33 +718,40 @@ const LeadIntakePage: FC = () => {
                             <section className={styles.section}>
                                 <h5 className={styles.sectionTitle}>2. Role Requirements</h5>
                                 <div className={styles.fieldGrid}>
-                                    <LeadIntakeSelectField
-                                        control={control}
-                                        disabled={submitting}
-                                        errors={errors}
-                                        fieldProps={{
-                                            hint: 'Select the commercial model for this requirement.',
-                                            label: 'Engagement Model',
-                                            required: true,
-                                        }}
-                                        name='engagementModel'
-                                        options={[
-                                            { label: 'Time & Material (T&M)', value: 'TIME_AND_MATERIAL' },
-                                            { label: 'Fixed Price Project (FPP)', value: 'FIXED_PRICE' },
-                                        ]}
-                                        placeholder='Select model'
-                                    />
-                                    <LeadIntakeTextField
-                                        control={control}
-                                        disabled={submitting}
-                                        errors={errors}
-                                        fieldProps={{
-                                            hint: 'Examples: Full Stack Developer, Product Manager, QA Engineer',
-                                            label: 'Role Title',
-                                            required: true,
-                                        }}
-                                        name='roleTitle'
-                                    />
+                                    {isWiproConsumption && (
+                                        <>
+                                            <LeadIntakeSelectField
+                                                control={control}
+                                                disabled={submitting}
+                                                errors={errors}
+                                                fieldProps={{
+                                                    hint: 'Select the commercial model for this requirement.',
+                                                    label: 'Engagement Model',
+                                                    required: true,
+                                                }}
+                                                name='engagementModel'
+                                                options={[
+                                                    { label: 'Time & Material (T&M)', value: 'TIME_AND_MATERIAL' },
+                                                    { label: 'Fixed Price Project (FPP)', value: 'FIXED_PRICE' },
+                                                ]}
+                                                placeholder='Select model'
+                                            />
+                                            <LeadIntakeTextField
+                                                control={control}
+                                                disabled={submitting}
+                                                errors={errors}
+                                                fieldProps={{
+                                                    hint: [
+                                                        'Examples: Full Stack Developer,',
+                                                        'Product Manager, QA Engineer',
+                                                    ].join(' '),
+                                                    label: 'Role Title',
+                                                    required: true,
+                                                }}
+                                                name='roleTitle'
+                                            />
+                                        </>
+                                    )}
                                     <LeadIntakeTextareaField
                                         control={control}
                                         disabled={submitting}
@@ -719,45 +774,39 @@ const LeadIntakePage: FC = () => {
                                         }}
                                         onSkillsChange={handleSkillsChange}
                                     />
-                                    <LeadIntakeSelectField
-                                        control={control}
-                                        disabled={submitting}
-                                        errors={errors}
-                                        fieldProps={{
-                                            hint: 'Select the required level of experience.',
-                                            label: 'Experience Level Required',
-                                            required: true,
-                                        }}
-                                        name='experienceLevel'
-                                        options={[
-                                            { label: 'Junior', value: 'JUNIOR' },
-                                            { label: 'Mid-Level', value: 'MID' },
-                                            { label: 'Senior', value: 'SENIOR' },
-                                            { label: 'Lead / Architect', value: 'LEAD_ARCHITECT' },
-                                        ]}
-                                        placeholder='Select level'
-                                    />
-                                    <LeadIntakeNumberField
-                                        control={control}
-                                        disabled={submitting}
-                                        errors={errors}
-                                        fieldProps={{
-                                            hint: 'Specify the minimum years of relevant experience required.',
-                                            label: 'Minimum Years of Experience',
-                                            required: true,
-                                        }}
-                                        name='minYearsExperience'
-                                    />
-                                    <LeadIntakeTextField
-                                        control={control}
-                                        disabled={submitting}
-                                        errors={errors}
-                                        fieldProps={{
-                                            hint: 'Optional. Examples: Banking, Insurance, Healthcare, Telecom',
-                                            label: 'Industry Domain Experience',
-                                        }}
-                                        name='industryDomain'
-                                    />
+                                    {isWiproConsumption && (
+                                        <>
+                                            <LeadIntakeSelectField
+                                                control={control}
+                                                disabled={submitting}
+                                                errors={errors}
+                                                fieldProps={{
+                                                    hint: 'Select the required level of experience.',
+                                                    label: 'Experience Level Required',
+                                                    required: true,
+                                                }}
+                                                name='experienceLevel'
+                                                options={[
+                                                    { label: 'Junior', value: 'JUNIOR' },
+                                                    { label: 'Mid-Level', value: 'MID' },
+                                                    { label: 'Senior', value: 'SENIOR' },
+                                                    { label: 'Lead / Architect', value: 'LEAD_ARCHITECT' },
+                                                ]}
+                                                placeholder='Select level'
+                                            />
+                                            <LeadIntakeNumberField
+                                                control={control}
+                                                disabled={submitting}
+                                                errors={errors}
+                                                fieldProps={{
+                                                    hint: 'Specify the minimum years of relevant experience required.',
+                                                    label: 'Minimum Years of Experience',
+                                                    required: true,
+                                                }}
+                                                name='minYearsExperience'
+                                            />
+                                        </>
+                                    )}
                                 </div>
                             </section>
 
@@ -782,7 +831,7 @@ const LeadIntakePage: FC = () => {
                                         fieldProps={{
                                             hint: 'Indicate the date on which the resource(s) are expected to begin.',
                                             label: 'Preferred Start Date',
-                                            required: true,
+                                            required: isWiproConsumption,
                                         }}
                                     />
                                     <LeadIntakeTextField
@@ -823,14 +872,16 @@ const LeadIntakePage: FC = () => {
                                         disabled={submitting}
                                         errors={errors}
                                         fieldProps={{
-                                            hint: 'Topcoder Flexi-Talent resources operate remotely.',
+                                            hint: [
+                                                'Topcoder Flexi-Talent resources operate remotely.',
+                                                'Please confirm whether a fully remote engagement is acceptable',
+                                            ].join(' '),
                                             label: 'Remote Work Acceptance',
                                             required: true,
                                         }}
                                         name='remoteWorkAccepted'
                                         options={[
                                             { label: 'Yes', value: 'yes' },
-                                            { label: 'No', value: 'no' },
                                         ]}
                                     />
                                     <LeadIntakeTextField
@@ -846,72 +897,43 @@ const LeadIntakePage: FC = () => {
                                 </div>
                             </section>
 
-                            <section className={styles.section}>
-                                <h5 className={styles.sectionTitle}>4. Commercial & Priority</h5>
-                                <div className={styles.fieldGrid}>
-                                    <LeadIntakeSelectField
-                                        control={control}
-                                        disabled={submitting}
-                                        errors={errors}
-                                        fieldProps={{
-                                            hint: 'Select the currency for the approved hourly bill rate.',
-                                            label: 'Bill Rate Currency',
-                                            required: true,
-                                        }}
-                                        name='billRateCurrency'
-                                        options={[
-                                            { label: 'USD', value: 'USD' },
-                                            { label: 'GBP', value: 'GBP' },
-                                            { label: 'EUR', value: 'EUR' },
-                                            { label: 'INR', value: 'INR' },
-                                            { label: 'Other', value: 'OTHER' },
-                                        ]}
-                                        placeholder='Select currency'
-                                    />
-                                    <LeadIntakeTextField
-                                        control={control}
-                                        disabled={submitting}
-                                        errors={errors}
-                                        fieldProps={{
-                                            hint: 'Hourly amount, e.g. 100',
-                                            label: 'Approved Client Bill Rate (Hourly)',
-                                            required: true,
-                                        }}
-                                        name='billRateAmount'
-                                    />
-                                    <LeadIntakeSelectField
-                                        control={control}
-                                        disabled={submitting}
-                                        errors={errors}
-                                        fieldProps={{
-                                            hint: 'Select how urgently this requirement needs to be fulfilled.',
-                                            label: 'Priority of Request',
-                                            required: true,
-                                        }}
-                                        name='priority'
-                                        options={[
-                                            { label: 'Critical — immediate fulfilment required', value: 'CRITICAL' },
-                                            { label: 'High', value: 'HIGH' },
-                                            { label: 'Medium', value: 'MEDIUM' },
-                                            { label: 'Low', value: 'LOW' },
-                                        ]}
-                                        placeholder='Select priority'
-                                    />
-                                    <LeadIntakeTextareaField
-                                        control={control}
-                                        disabled={submitting}
-                                        errors={errors}
-                                        fieldProps={{
-                                            hint: [
-                                                'Optional. Examples: client-facing experience,',
-                                                'overlap hours, certifications, languages',
-                                            ].join(' '),
-                                            label: 'Additional Requirements or Constraints',
-                                        }}
-                                        name='additionalRequirements'
-                                    />
-                                </div>
-                            </section>
+                            {isWiproConsumption && (
+                                <section className={styles.section}>
+                                    <h5 className={styles.sectionTitle}>4. Commercial & Priority</h5>
+                                    <div className={styles.fieldGrid}>
+                                        <LeadIntakeSelectField
+                                            control={control}
+                                            disabled={submitting}
+                                            errors={errors}
+                                            fieldProps={{
+                                                hint: 'Select the currency for the approved hourly bill rate.',
+                                                label: 'Bill Rate Currency',
+                                                required: true,
+                                            }}
+                                            name='billRateCurrency'
+                                            options={[
+                                                { label: 'USD', value: 'USD' },
+                                                { label: 'GBP', value: 'GBP' },
+                                                { label: 'EUR', value: 'EUR' },
+                                                { label: 'INR', value: 'INR' },
+                                                { label: 'Other', value: 'OTHER' },
+                                            ]}
+                                            placeholder='Select currency'
+                                        />
+                                        <LeadIntakeTextField
+                                            control={control}
+                                            disabled={submitting}
+                                            errors={errors}
+                                            fieldProps={{
+                                                hint: 'Hourly amount, e.g. 100',
+                                                label: 'Approved Client Bill Rate (Hourly)',
+                                                required: true,
+                                            }}
+                                            name='billRateAmount'
+                                        />
+                                    </div>
+                                </section>
+                            )}
 
                             <div className={styles.submitSection}>
                                 <Button

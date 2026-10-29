@@ -3,6 +3,7 @@ import { xhrPostAsync } from '~/libs/core'
 
 import type {
     CreateEngagementLeadIntakeRequest,
+    CreateWiproDirectEngagementLeadIntakeRequest,
     EngagementLeadIntakeResponse,
 } from '../models'
 
@@ -13,6 +14,15 @@ export const submitEngagementLeadIntake = async (
 ): Promise<EngagementLeadIntakeResponse> => (
     xhrPostAsync<CreateEngagementLeadIntakeRequest, EngagementLeadIntakeResponse>(
         `${LEADS_URL}/intake`,
+        data,
+    )
+)
+
+export const submitWiproDirectEngagementLeadIntake = async (
+    data: CreateWiproDirectEngagementLeadIntakeRequest,
+): Promise<EngagementLeadIntakeResponse> => (
+    xhrPostAsync<CreateWiproDirectEngagementLeadIntakeRequest, EngagementLeadIntakeResponse>(
+        `${LEADS_URL}/intake/wipro-direct`,
         data,
     )
 )

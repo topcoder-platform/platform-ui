@@ -1,5 +1,6 @@
 import {
     EngagementLeadStatus,
+    EngagementLeadType,
 } from '../models/EngagementLead.model'
 
 export type LeadDisplayStatus = 'New' | 'Converted' | 'Declined'
@@ -77,6 +78,18 @@ export function canCreateEngagementFromLead(status: string): boolean {
 
 export function getLeadIntakeUrl(engagementsAppUrl: string): string {
     return `${engagementsAppUrl}/intake`
+}
+
+export function getWiproDirectLeadIntakeUrl(engagementsAppUrl: string): string {
+    return `${engagementsAppUrl}/intake/wipro-direct`
+}
+
+export function formatLeadType(leadType?: string | null): string {
+    if (leadType === EngagementLeadType.WIPRO_DIRECT) {
+        return 'Wipro Direct'
+    }
+
+    return 'Wipro Consumption'
 }
 
 export function getEngagementLeadsListUrl(rootRoutePath: string, engagementLeadsRoute: string): string {

@@ -49,9 +49,11 @@ import {
     formatLeadAge,
     formatLeadDate,
     formatLeadLabel,
+    formatLeadType,
     getLeadDisplayStatus,
     getLeadDisplayStatusClassName,
     getLeadIntakeUrl,
+    getWiproDirectLeadIntakeUrl,
 } from '../../utils/engagement-leads.utils'
 import {
     extractErrorMessage,
@@ -76,6 +78,7 @@ const columns: LeadColumnDefinition[] = [
     { label: 'Account' },
     { label: 'SPOC' },
     { label: 'SMU' },
+    { label: 'Lead Type' },
     { label: 'Role Title' },
     { label: 'Experience Level' },
     { compact: true, label: 'No. of Resources' },
@@ -165,6 +168,7 @@ function areLeadFiltersEqual(
 export const EngagementLeadsTab: FC = () => {
     const navigate = useNavigate()
     const intakeUrl = useMemo(() => getLeadIntakeUrl(ENGAGEMENTS_APP_URL), [])
+    const wiproDirectIntakeUrl = useMemo(() => getWiproDirectLeadIntakeUrl(ENGAGEMENTS_APP_URL), [])
 
     const [leads, setLeads] = useState<EngagementLead[]>([])
     const [loading, setLoading] = useState<boolean>(true)
@@ -267,14 +271,14 @@ export const EngagementLeadsTab: FC = () => {
         handleSort(fieldName)
     }, [handleSort])
 
-    const handleCopyIntakeLink = useCallback(async (): Promise<void> => {
+    const handleCopyIntakeLink = useCallback(async (url: string): Promise<void> => {
         try {
-            await copyTextToClipboard(intakeUrl)
+            await copyTextToClipboard(url)
             showSuccessToast('Lead intake form link copied to clipboard.')
         } catch (err: unknown) {
             showErrorToast(extractErrorMessage(err, 'Unable to copy link.'))
         }
-    }, [intakeUrl])
+    }, [])
 
     const handleCreateEngagementOpen = useCallback((lead: EngagementLead): void => {
         setSelectedLead(lead)
@@ -331,17 +335,28 @@ export const EngagementLeadsTab: FC = () => {
         <div className={styles.container}>
             <div className={styles.header}>
                 <p className={styles.description}>
-                    Review engagement requirements submitted through the public intake form.
+                    Review engagement requirements submitted through the public intake forms.
                 </p>
-                <Button
-                    label='Copy Lead Form Link'
-                    onClick={() => {
-                        handleCopyIntakeLink()
-                            .catch(() => undefined)
-                    }}
-                    primary
-                    size='md'
-                />
+                <div className={styles.headerActions}>
+                    <Button
+                        label='Copy Wipro Consumption Form Link'
+                        onClick={() => {
+                            handleCopyIntakeLink(intakeUrl)
+                                .catch(() => undefined)
+                        }}
+                        primary
+                        size='md'
+                    />
+                    <Button
+                        label='Copy Wipro Direct Form Link'
+                        onClick={() => {
+                            handleCopyIntakeLink(wiproDirectIntakeUrl)
+                                .catch(() => undefined)
+                        }}
+                        primary
+                        size='md'
+                    />
+                </div>
             </div>
 
             <EngagementLeadsFilter
@@ -415,13 +430,22 @@ export const EngagementLeadsTab: FC = () => {
                                         <td>{lead.accountName}</td>
                                         <td>{lead.workEmail}</td>
                                         <td>{lead.smu}</td>
-                                        <td>{lead.roleTitle}</td>
-                                        <td>{formatLeadLabel(String(lead.experienceLevel))}</td>
+                                        <td>{formatLeadType(lead.leadType)}</td>
+                                        <td>{lead.roleTitle || '—'}</td>
+                                        <td>
+                                            {lead.experienceLevel
+                                                ? formatLeadLabel(String(lead.experienceLevel))
+                                                : '—'}
+                                        </td>
                                         <td className={styles.compactCell}>{lead.resourcesRequired}</td>
-                                        <td>{formatLeadDate(lead.preferredStartDate)}</td>
+                                        <td>
+                                            {lead.preferredStartDate
+                                                ? formatLeadDate(lead.preferredStartDate)
+                                                : '—'}
+                                        </td>
                                         <td className={styles.compactCell}>{lead.engagementDuration}</td>
                                         <td className={getPriorityClassName(String(lead.priority))}>
-                                            {formatLeadLabel(String(lead.priority))}
+                                            {lead.priority ? formatLeadLabel(String(lead.priority)) : '—'}
                                         </td>
                                         <td>
                                             <span
