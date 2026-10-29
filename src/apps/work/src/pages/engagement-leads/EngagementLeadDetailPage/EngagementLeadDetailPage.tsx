@@ -12,7 +12,6 @@ import { PageWrapper } from '~/apps/review/src/lib'
 import { Button } from '~/libs/ui'
 
 import {
-    engagementLeadsRouteId,
     rootRoute,
 } from '../../../config/routes.config'
 import {
@@ -35,8 +34,7 @@ import {
 import { fetchEngagement } from '../../../lib/services/engagements.service'
 import {
     formatLeadType,
-    getLeadTypeTabParam,
-    LEAD_TYPE_TAB_PARAM,
+    getEngagementLeadsTabPath,
 } from '../../../lib/utils/engagement-leads.utils'
 import { withQueryParams } from '../../../lib/utils/navigation.utils'
 
@@ -87,10 +85,7 @@ export const EngagementLeadDetailPage: FC = () => {
     const [projectId, setProjectId] = useState<string>('')
     const [viewingEngagement, setViewingEngagement] = useState<boolean>(false)
 
-    const leadsBackUrl = withQueryParams(
-        `${rootRoute}/${engagementLeadsRouteId}`,
-        { [LEAD_TYPE_TAB_PARAM]: getLeadTypeTabParam(lead?.leadType) },
-    )
+    const leadsBackUrl = `${rootRoute}${getEngagementLeadsTabPath(lead?.leadType)}`
 
     const loadLead = useCallback(async (): Promise<void> => {
         if (!leadId) {

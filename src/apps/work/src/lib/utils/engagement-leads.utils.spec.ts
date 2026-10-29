@@ -1,9 +1,10 @@
 import { EngagementLeadStatus, EngagementLeadType } from '../models/EngagementLead.model'
 
 import {
+    getEngagementLeadsTabPath,
     getLeadDisplayStatus,
-    getLeadTypeFromTabParam,
-    getLeadTypeTabParam,
+    getLeadTypeFromQueryValue,
+    getLeadTypeQueryValue,
 } from './engagement-leads.utils'
 
 describe('getLeadDisplayStatus', () => {
@@ -19,18 +20,27 @@ describe('getLeadDisplayStatus', () => {
     })
 })
 
-describe('lead type tab param', () => {
+describe('lead type query value', () => {
     it('round-trips both lead types', () => {
-        expect(getLeadTypeFromTabParam(getLeadTypeTabParam(EngagementLeadType.WIPRO_DIRECT)))
+        expect(getLeadTypeFromQueryValue(getLeadTypeQueryValue(EngagementLeadType.WIPRO_DIRECT)))
             .toBe(EngagementLeadType.WIPRO_DIRECT)
-        expect(getLeadTypeFromTabParam(getLeadTypeTabParam(EngagementLeadType.WIPRO_CONSUMPTION)))
+        expect(getLeadTypeFromQueryValue(getLeadTypeQueryValue(EngagementLeadType.WIPRO_CONSUMPTION)))
             .toBe(EngagementLeadType.WIPRO_CONSUMPTION)
     })
 
     it('falls back to the Wipro Consumption tab', () => {
-        expect(getLeadTypeFromTabParam(undefined))
+        expect(getLeadTypeFromQueryValue(undefined))
             .toBe(EngagementLeadType.WIPRO_CONSUMPTION)
-        expect(getLeadTypeFromTabParam('unknown'))
+        expect(getLeadTypeFromQueryValue('unknown'))
             .toBe(EngagementLeadType.WIPRO_CONSUMPTION)
+    })
+})
+
+describe('getEngagementLeadsTabPath', () => {
+    it('opens the Leads tab of the Engagements page on the lead type tab', () => {
+        expect(getEngagementLeadsTabPath(EngagementLeadType.WIPRO_DIRECT))
+            .toBe('/engagements?tab=leads&leadType=wipro-direct')
+        expect(getEngagementLeadsTabPath(undefined))
+            .toBe('/engagements?tab=leads&leadType=wipro-consumption')
     })
 })
