@@ -44,6 +44,7 @@ export const fetchEngagementLeads = async (
 
     appendFilterParam(params, 'page', filters.page)
     appendFilterParam(params, 'perPage', filters.perPage)
+    appendFilterParam(params, 'leadType', filters.leadType)
     appendFilterParam(params, 'accountName', filters.accountName)
     appendFilterParam(params, 'smu', filters.smu)
     appendFilterParam(params, 'engagementModel', filters.engagementModel)
@@ -90,6 +91,16 @@ export const updateEngagementLeadStatus = async (
     xhrPatchAsync<{ status: string }, EngagementLead>(
         `${LEADS_URL}/${leadId}/status`,
         { status },
+    )
+)
+
+export const updateEngagementLeadNotes = async (
+    leadId: string,
+    notes: string,
+): Promise<EngagementLead> => (
+    xhrPatchAsync<{ notes: string }, EngagementLead>(
+        `${LEADS_URL}/${leadId}/notes`,
+        { notes },
     )
 )
 

@@ -18,6 +18,13 @@ export enum ExperienceLevel {
     LEAD_ARCHITECT = 'LEAD_ARCHITECT',
 }
 
+export enum EngagementLeadStatusGroup {
+    NEW = 'NEW',
+    IN_PROGRESS = 'IN_PROGRESS',
+    CONVERTED = 'CONVERTED',
+    DECLINED = 'DECLINED',
+}
+
 export enum EngagementLeadType {
     WIPRO_CONSUMPTION = 'WIPRO_CONSUMPTION',
     WIPRO_DIRECT = 'WIPRO_DIRECT',
@@ -54,6 +61,9 @@ export interface EngagementLead {
     billRateAmount?: string | null
     priority?: LeadPriority | string | null
     additionalRequirements?: string | null
+    notes?: string | null
+    notesUpdatedAt?: string | null
+    notesUpdatedBy?: string | null
     status: EngagementLeadStatus | string
     convertedEngagementId?: string | null
     createdAt: string
@@ -82,6 +92,7 @@ export interface EngagementLeadFilters {
     accountName?: string
     engagementModel?: EngagementModel | string
     experienceLevel?: ExperienceLevel | string
+    leadType?: EngagementLeadType | string
     page?: number
     perPage?: number
     priority?: LeadPriority | string
@@ -90,7 +101,7 @@ export interface EngagementLeadFilters {
     sortBy?: 'createdAt' | 'preferredStartDate' | 'priority'
     sortOrder?: 'asc' | 'desc'
     status?: EngagementLeadStatus | string
-    statusGroup?: 'CONVERTED' | 'DECLINED' | 'NEW' | string
+    statusGroup?: EngagementLeadStatusGroup | string
 }
 
 export interface EngagementLeadListResponse {

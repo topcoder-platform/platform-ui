@@ -3,7 +3,7 @@ import {
     EngagementLeadType,
 } from '../models/EngagementLead.model'
 
-export type LeadDisplayStatus = 'New' | 'Converted' | 'Declined'
+export type LeadDisplayStatus = 'New' | 'In Progress' | 'Converted' | 'Declined'
 
 export function formatLeadLabel(value: string): string {
     return value
@@ -18,6 +18,10 @@ export function getLeadDisplayStatus(status: string): LeadDisplayStatus {
 
     if (status === EngagementLeadStatus.REJECTED) {
         return 'Declined'
+    }
+
+    if (status === EngagementLeadStatus.UNDER_REVIEW || status === EngagementLeadStatus.QUALIFIED) {
+        return 'In Progress'
     }
 
     return 'New'
@@ -35,6 +39,10 @@ export function getLeadDisplayStatusClassName(
 
     if (displayStatus === 'Declined') {
         return styles.statusDeclined
+    }
+
+    if (displayStatus === 'In Progress') {
+        return styles.statusInProgress
     }
 
     return styles.statusNew
@@ -94,4 +102,18 @@ export function formatLeadType(leadType?: string | null): string {
 
 export function getEngagementLeadsListUrl(rootRoutePath: string, engagementLeadsRoute: string): string {
     return `${rootRoutePath}/${engagementLeadsRoute}`
+}
+
+export const LEAD_TYPE_TAB_PARAM = 'tab'
+
+const WIPRO_DIRECT_TAB = 'wipro-direct'
+
+export function getLeadTypeTabParam(leadType?: string | null): string {
+    return leadType === EngagementLeadType.WIPRO_DIRECT ? WIPRO_DIRECT_TAB : 'wipro-consumption'
+}
+
+export function getLeadTypeFromTabParam(tab?: string | null): EngagementLeadType {
+    return tab === WIPRO_DIRECT_TAB
+        ? EngagementLeadType.WIPRO_DIRECT
+        : EngagementLeadType.WIPRO_CONSUMPTION
 }

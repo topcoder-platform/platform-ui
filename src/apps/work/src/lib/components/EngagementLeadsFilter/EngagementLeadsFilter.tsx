@@ -8,29 +8,26 @@ import {
 
 import { Button } from '~/libs/ui'
 
+import { LEAD_SMU_OPTIONS } from '../../constants'
 import {
-    EngagementLeadStatus,
-    EngagementModel,
-    ExperienceLevel,
-    LeadPriority,
+    EngagementLeadStatusGroup,
+    EngagementLeadType,
 } from '../../models/EngagementLead.model'
 
 import styles from './EngagementLeadsFilter.module.scss'
 
 export interface EngagementLeadsListFilters {
     accountName?: string
-    engagementModel?: string
-    experienceLevel?: string
-    priority?: string
     roleTitle?: string
     smu?: string
-    sortBy?: 'createdAt' | 'preferredStartDate' | 'priority'
+    sortBy?: 'createdAt' | 'preferredStartDate'
     sortOrder?: 'asc' | 'desc'
     statusGroup?: string
 }
 
 interface EngagementLeadsFilterProps {
     filters: EngagementLeadsListFilters
+    leadType: EngagementLeadType
     onFiltersChange: (patch: Partial<EngagementLeadsListFilters>) => void
 }
 
@@ -39,13 +36,12 @@ export const EngagementLeadsFilter: FC<EngagementLeadsFilterProps> = (
 ) => {
     const filters = props.filters
     const onFiltersChange = props.onFiltersChange
+    // Wipro Direct leads have no role title, so filtering on it would only ever hide them.
+    const showRoleTitle = props.leadType === EngagementLeadType.WIPRO_CONSUMPTION
 
     const [accountNameInput, setAccountNameInput] = useState<string>(filters.accountName || '')
-    const [smuInput, setSmuInput] = useState<string>(filters.smu || '')
+    const [smu, setSmu] = useState<string>(filters.smu || '')
     const [roleTitleInput, setRoleTitleInput] = useState<string>(filters.roleTitle || '')
-    const [engagementModel, setEngagementModel] = useState<string>(filters.engagementModel || '')
-    const [experienceLevel, setExperienceLevel] = useState<string>(filters.experienceLevel || '')
-    const [priority, setPriority] = useState<string>(filters.priority || '')
     const [statusGroup, setStatusGroup] = useState<string>(filters.statusGroup || '')
 
     useEffect(() => {
@@ -53,7 +49,7 @@ export const EngagementLeadsFilter: FC<EngagementLeadsFilterProps> = (
     }, [filters.accountName])
 
     useEffect(() => {
-        setSmuInput(filters.smu || '')
+        setSmu(filters.smu || '')
     }, [filters.smu])
 
     useEffect(() => {
@@ -61,78 +57,32 @@ export const EngagementLeadsFilter: FC<EngagementLeadsFilterProps> = (
     }, [filters.roleTitle])
 
     useEffect(() => {
-        setEngagementModel(filters.engagementModel || '')
-    }, [filters.engagementModel])
-
-    useEffect(() => {
-        setExperienceLevel(filters.experienceLevel || '')
-    }, [filters.experienceLevel])
-
-    useEffect(() => {
-        setPriority(filters.priority || '')
-    }, [filters.priority])
-
-    useEffect(() => {
         setStatusGroup(filters.statusGroup || '')
     }, [filters.statusGroup])
-
-    const handleSelectChange = useCallback((
-        field: 'engagementModel' | 'experienceLevel' | 'priority' | 'statusGroup',
-    ) => (event: ChangeEvent<HTMLSelectElement>): void => {
-        const nextValue = event.target.value
-
-        switch (field) {
-            case 'engagementModel':
-                setEngagementModel(nextValue)
-                break
-            case 'experienceLevel':
-                setExperienceLevel(nextValue)
-                break
-            case 'priority':
-                setPriority(nextValue)
-                break
-            case 'statusGroup':
-                setStatusGroup(nextValue)
-                break
-            default:
-                break
-        }
-    }, [])
 
     const handleApplyFilters = useCallback((): void => {
         onFiltersChange({
             accountName: accountNameInput.trim() || undefined,
-            engagementModel: engagementModel || undefined,
-            experienceLevel: experienceLevel || undefined,
-            priority: priority || undefined,
-            roleTitle: roleTitleInput.trim() || undefined,
-            smu: smuInput.trim() || undefined,
+            roleTitle: showRoleTitle ? roleTitleInput.trim() || undefined : undefined,
+            smu: smu || undefined,
             statusGroup: statusGroup || undefined,
         })
     }, [
         accountNameInput,
-        engagementModel,
-        experienceLevel,
         onFiltersChange,
-        priority,
         roleTitleInput,
-        smuInput,
+        showRoleTitle,
+        smu,
         statusGroup,
     ])
 
     const handleClearFilters = useCallback((): void => {
         setAccountNameInput('')
-        setSmuInput('')
+        setSmu('')
         setRoleTitleInput('')
-        setEngagementModel('')
-        setExperienceLevel('')
-        setPriority('')
         setStatusGroup('')
         onFiltersChange({
             accountName: undefined,
-            engagementModel: undefined,
-            experienceLevel: undefined,
-            priority: undefined,
             roleTitle: undefined,
             smu: undefined,
             statusGroup: undefined,
@@ -143,50 +93,45 @@ export const EngagementLeadsFilter: FC<EngagementLeadsFilterProps> = (
         setAccountNameInput(event.target.value)
     }, [])
 
-    const handleSmuChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-        setSmuInput(event.target.value)
+    const handleSmuChange = useCallback((event: ChangeEvent<HTMLSelectElement>): void => {
+        setSmu(event.target.value)
     }, [])
 
     const handleRoleTitleChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
         setRoleTitleInput(event.target.value)
     }, [])
 
+    const handleStatusGroupChange = useCallback((event: ChangeEvent<HTMLSelectElement>): void => {
+        setStatusGroup(event.target.value)
+    }, [])
+
     return (
         <div className={styles.container}>
-            <div className={styles.grid}>
-                <label className={styles.field}>
-                    <span className={styles.label}>Account / Customer</span>
-                    <input
-                        className={styles.input}
-                        placeholder='Search account name'
-                        value={accountNameInput}
-                        onChange={handleAccountNameChange}
-                    />
-                </label>
+            <label className={styles.field}>
+                <span className={styles.label}>Account / Customer</span>
+                <input
+                    className={styles.input}
+                    placeholder='Search account name'
+                    value={accountNameInput}
+                    onChange={handleAccountNameChange}
+                />
+            </label>
 
-                <label className={styles.field}>
-                    <span className={styles.label}>SMU</span>
-                    <input
-                        className={styles.input}
-                        placeholder='Search SMU'
-                        value={smuInput}
-                        onChange={handleSmuChange}
-                    />
-                </label>
+            <label className={styles.field}>
+                <span className={styles.label}>SMU</span>
+                <select
+                    className={styles.select}
+                    value={smu}
+                    onChange={handleSmuChange}
+                >
+                    <option value=''>All SMUs</option>
+                    {LEAD_SMU_OPTIONS.map(option => (
+                        <option key={option} value={option}>{option}</option>
+                    ))}
+                </select>
+            </label>
 
-                <label className={styles.field}>
-                    <span className={styles.label}>Engagement Model</span>
-                    <select
-                        className={styles.select}
-                        value={engagementModel}
-                        onChange={handleSelectChange('engagementModel')}
-                    >
-                        <option value=''>All models</option>
-                        <option value={EngagementModel.TIME_AND_MATERIAL}>Time & Material</option>
-                        <option value={EngagementModel.FIXED_PRICE}>Fixed Price</option>
-                    </select>
-                </label>
-
+            {showRoleTitle && (
                 <label className={styles.field}>
                     <span className={styles.label}>Role Title</span>
                     <input
@@ -196,51 +141,22 @@ export const EngagementLeadsFilter: FC<EngagementLeadsFilterProps> = (
                         onChange={handleRoleTitleChange}
                     />
                 </label>
+            )}
 
-                <label className={styles.field}>
-                    <span className={styles.label}>Experience Level</span>
-                    <select
-                        className={styles.select}
-                        value={experienceLevel}
-                        onChange={handleSelectChange('experienceLevel')}
-                    >
-                        <option value=''>All levels</option>
-                        <option value={ExperienceLevel.JUNIOR}>Junior</option>
-                        <option value={ExperienceLevel.MID}>Mid</option>
-                        <option value={ExperienceLevel.SENIOR}>Senior</option>
-                        <option value={ExperienceLevel.LEAD_ARCHITECT}>Lead / Architect</option>
-                    </select>
-                </label>
-
-                <label className={styles.field}>
-                    <span className={styles.label}>Priority</span>
-                    <select
-                        className={styles.select}
-                        value={priority}
-                        onChange={handleSelectChange('priority')}
-                    >
-                        <option value=''>All priorities</option>
-                        <option value={LeadPriority.CRITICAL}>Critical</option>
-                        <option value={LeadPriority.HIGH}>High</option>
-                        <option value={LeadPriority.MEDIUM}>Medium</option>
-                        <option value={LeadPriority.LOW}>Low</option>
-                    </select>
-                </label>
-
-                <label className={styles.field}>
-                    <span className={styles.label}>Status</span>
-                    <select
-                        className={styles.select}
-                        value={statusGroup}
-                        onChange={handleSelectChange('statusGroup')}
-                    >
-                        <option value=''>All statuses</option>
-                        <option value='NEW'>New</option>
-                        <option value={EngagementLeadStatus.CONVERTED}>Converted</option>
-                        <option value='DECLINED'>Declined</option>
-                    </select>
-                </label>
-            </div>
+            <label className={styles.field}>
+                <span className={styles.label}>Status</span>
+                <select
+                    className={styles.select}
+                    value={statusGroup}
+                    onChange={handleStatusGroupChange}
+                >
+                    <option value=''>All statuses</option>
+                    <option value={EngagementLeadStatusGroup.NEW}>New</option>
+                    <option value={EngagementLeadStatusGroup.IN_PROGRESS}>In Progress</option>
+                    <option value={EngagementLeadStatusGroup.CONVERTED}>Converted</option>
+                    <option value={EngagementLeadStatusGroup.DECLINED}>Declined</option>
+                </select>
+            </label>
 
             <div className={styles.actions}>
                 <Button label='Apply Filters' onClick={handleApplyFilters} primary size='md' />

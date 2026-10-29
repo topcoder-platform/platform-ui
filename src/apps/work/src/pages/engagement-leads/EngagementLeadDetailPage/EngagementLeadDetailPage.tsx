@@ -33,7 +33,11 @@ import {
     showSuccessToast,
 } from '../../../lib/utils'
 import { fetchEngagement } from '../../../lib/services/engagements.service'
-import { formatLeadType } from '../../../lib/utils/engagement-leads.utils'
+import {
+    formatLeadType,
+    getLeadTypeTabParam,
+    LEAD_TYPE_TAB_PARAM,
+} from '../../../lib/utils/engagement-leads.utils'
 import { withQueryParams } from '../../../lib/utils/navigation.utils'
 
 import styles from './EngagementLeadDetailPage.module.scss'
@@ -83,7 +87,10 @@ export const EngagementLeadDetailPage: FC = () => {
     const [projectId, setProjectId] = useState<string>('')
     const [viewingEngagement, setViewingEngagement] = useState<boolean>(false)
 
-    const leadsBackUrl = `${rootRoute}/${engagementLeadsRouteId}`
+    const leadsBackUrl = withQueryParams(
+        `${rootRoute}/${engagementLeadsRouteId}`,
+        { [LEAD_TYPE_TAB_PARAM]: getLeadTypeTabParam(lead?.leadType) },
+    )
 
     const loadLead = useCallback(async (): Promise<void> => {
         if (!leadId) {
