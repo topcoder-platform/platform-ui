@@ -12,19 +12,19 @@ import {
 import { Link, useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { copyTextToClipboard } from '~/libs/shared'
-import { Button, IconOutline, Tooltip } from '~/libs/ui'
+import { IconOutline, Tooltip } from '~/libs/ui'
 
 import {
     engagementLeadsRouteId,
     rootRoute,
 } from '../../../config/routes.config'
 import {
-    ENGAGEMENTS_APP_URL,
     PAGE_SIZE,
 } from '../../constants'
 import {
     EngagementLead,
+    EngagementLeadStatusGroup,
+    EngagementLeadType,
 } from '../../models/EngagementLead.model'
 import {
     fetchEngagementLeads,
@@ -45,26 +45,24 @@ import {
     EngagementLeadsListFilters,
 } from '../EngagementLeadsFilter'
 import {
+    EngagementLeadNotesModal,
+} from '../EngagementLeadNotesModal'
+import {
     canCreateEngagementFromLead,
     formatLeadAge,
     formatLeadDate,
-    formatLeadLabel,
-    formatLeadType,
     getLeadDisplayStatus,
     getLeadDisplayStatusClassName,
-    getLeadIntakeUrl,
-    getWiproDirectLeadIntakeUrl,
 } from '../../utils/engagement-leads.utils'
 import {
     extractErrorMessage,
     showErrorToast,
-    showSuccessToast,
 } from '../../utils'
 import { withQueryParams } from '../../utils/navigation.utils'
 
 import styles from './EngagementLeadsTab.module.scss'
 
-type LeadSortField = 'createdAt' | 'preferredStartDate' | 'priority'
+type LeadSortField = 'createdAt' | 'preferredStartDate'
 
 interface LeadColumnDefinition {
     compact?: boolean
@@ -73,34 +71,37 @@ interface LeadColumnDefinition {
     sortable?: boolean
 }
 
-const columns: LeadColumnDefinition[] = [
-    { label: 'Lead ID' },
-    { label: 'Account' },
-    { label: 'SPOC' },
-    { label: 'SMU' },
-    { label: 'Lead Type' },
-    { label: 'Role Title' },
-    { label: 'Experience Level' },
-    { compact: true, label: 'No. of Resources' },
-    {
-        fieldName: 'preferredStartDate',
-        label: 'Expected Start Date',
-        sortable: true,
-    },
-    { compact: true, label: 'Expected Duration' },
-    {
-        fieldName: 'priority',
-        label: 'Priority',
-        sortable: true,
-    },
-    { label: 'Status' },
-    {
-        fieldName: 'createdAt',
-        label: 'Created Date',
-        sortable: true,
-    },
-    { label: 'Actions' },
-]
+const DEFAULT_FILTERS: EngagementLeadsListFilters = {
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+    statusGroup: EngagementLeadStatusGroup.NEW,
+}
+
+function getColumns(leadType: EngagementLeadType): LeadColumnDefinition[] {
+    return [
+        { label: 'Lead ID' },
+        { label: 'Account' },
+        { label: 'SPOC' },
+        { label: 'SMU' },
+        ...(leadType === EngagementLeadType.WIPRO_CONSUMPTION
+            ? [{ label: 'Role Title' }]
+            : []),
+        { compact: true, label: 'No. of Resources' },
+        {
+            fieldName: 'preferredStartDate',
+            label: 'Expected Start Date',
+            sortable: true,
+        },
+        { compact: true, label: 'Expected Duration' },
+        { label: 'Status' },
+        {
+            fieldName: 'createdAt',
+            label: 'Created Date',
+            sortable: true,
+        },
+        { label: 'Actions' },
+    ]
+}
 
 function getColumnHeaderContent(column: LeadColumnDefinition): ReactNode {
     if (column.label === 'No. of Resources') {
@@ -138,37 +139,27 @@ function getSortIndicator(
     return currentSortOrder === 'asc' ? ' \u2191' : ' \u2193'
 }
 
-function getPriorityClassName(priority: string): string {
-    if (priority === 'CRITICAL') {
-        return styles.priorityCritical
-    }
-
-    if (priority === 'HIGH') {
-        return styles.priorityHigh
-    }
-
-    return ''
-}
-
 function areLeadFiltersEqual(
     left: EngagementLeadsListFilters,
     right: EngagementLeadsListFilters,
 ): boolean {
     return left.accountName === right.accountName
         && left.smu === right.smu
-        && left.engagementModel === right.engagementModel
         && left.roleTitle === right.roleTitle
-        && left.experienceLevel === right.experienceLevel
-        && left.priority === right.priority
         && left.statusGroup === right.statusGroup
         && left.sortBy === right.sortBy
         && left.sortOrder === right.sortOrder
 }
 
-export const EngagementLeadsTab: FC = () => {
+interface EngagementLeadsTabProps {
+    leadType: EngagementLeadType
+}
+
+export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: EngagementLeadsTabProps) => {
+    const leadType: EngagementLeadType = props.leadType
+    const isWiproConsumption = leadType === EngagementLeadType.WIPRO_CONSUMPTION
     const navigate = useNavigate()
-    const intakeUrl = useMemo(() => getLeadIntakeUrl(ENGAGEMENTS_APP_URL), [])
-    const wiproDirectIntakeUrl = useMemo(() => getWiproDirectLeadIntakeUrl(ENGAGEMENTS_APP_URL), [])
+    const columns = useMemo(() => getColumns(leadType), [leadType])
 
     const [leads, setLeads] = useState<EngagementLead[]>([])
     const [loading, setLoading] = useState<boolean>(true)
@@ -176,11 +167,9 @@ export const EngagementLeadsTab: FC = () => {
     const [page, setPage] = useState<number>(1)
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
     const [totalCount, setTotalCount] = useState<number>(0)
-    const [filters, setFilters] = useState<EngagementLeadsListFilters>({
-        sortBy: 'createdAt',
-        sortOrder: 'desc',
-    })
+    const [filters, setFilters] = useState<EngagementLeadsListFilters>(DEFAULT_FILTERS)
     const [selectedLead, setSelectedLead] = useState<EngagementLead | undefined>(undefined)
+    const [notesLead, setNotesLead] = useState<EngagementLead | undefined>(undefined)
     const [viewingEngagementId, setViewingEngagementId] = useState<string | undefined>(undefined)
 
     const loadLeads = useCallback(async (): Promise<void> => {
@@ -190,11 +179,9 @@ export const EngagementLeadsTab: FC = () => {
         try {
             const response = await fetchEngagementLeads({
                 accountName: filters.accountName,
-                engagementModel: filters.engagementModel,
-                experienceLevel: filters.experienceLevel,
+                leadType,
                 page,
                 perPage,
-                priority: filters.priority,
                 roleTitle: filters.roleTitle,
                 smu: filters.smu,
                 sortBy: filters.sortBy,
@@ -211,14 +198,12 @@ export const EngagementLeadsTab: FC = () => {
         }
     }, [
         filters.accountName,
-        filters.engagementModel,
-        filters.experienceLevel,
-        filters.priority,
         filters.roleTitle,
         filters.smu,
         filters.sortBy,
         filters.sortOrder,
         filters.statusGroup,
+        leadType,
         page,
         perPage,
     ])
@@ -271,13 +256,15 @@ export const EngagementLeadsTab: FC = () => {
         handleSort(fieldName)
     }, [handleSort])
 
-    const handleCopyIntakeLink = useCallback(async (url: string): Promise<void> => {
-        try {
-            await copyTextToClipboard(url)
-            showSuccessToast('Lead intake form link copied to clipboard.')
-        } catch (err: unknown) {
-            showErrorToast(extractErrorMessage(err, 'Unable to copy link.'))
-        }
+    const handleNotesClose = useCallback((): void => {
+        setNotesLead(undefined)
+    }, [])
+
+    const handleNotesSaved = useCallback((updatedLead: EngagementLead): void => {
+        setLeads(currentLeads => currentLeads.map(lead => (
+            lead.id === updatedLead.id ? updatedLead : lead
+        )))
+        setNotesLead(undefined)
     }, [])
 
     const handleCreateEngagementOpen = useCallback((lead: EngagementLead): void => {
@@ -333,34 +320,9 @@ export const EngagementLeadsTab: FC = () => {
 
     return (
         <div className={styles.container}>
-            <div className={styles.header}>
-                <p className={styles.description}>
-                    Review engagement requirements submitted through the public intake forms.
-                </p>
-                <div className={styles.headerActions}>
-                    <Button
-                        label='Copy Wipro Consumption Form Link'
-                        onClick={() => {
-                            handleCopyIntakeLink(intakeUrl)
-                                .catch(() => undefined)
-                        }}
-                        primary
-                        size='md'
-                    />
-                    <Button
-                        label='Copy Wipro Direct Form Link'
-                        onClick={() => {
-                            handleCopyIntakeLink(wiproDirectIntakeUrl)
-                                .catch(() => undefined)
-                        }}
-                        primary
-                        size='md'
-                    />
-                </div>
-            </div>
-
             <EngagementLeadsFilter
                 filters={filters}
+                leadType={leadType}
                 onFiltersChange={handleFiltersChange}
             />
 
@@ -430,13 +392,7 @@ export const EngagementLeadsTab: FC = () => {
                                         <td>{lead.accountName}</td>
                                         <td>{lead.workEmail}</td>
                                         <td>{lead.smu}</td>
-                                        <td>{formatLeadType(lead.leadType)}</td>
-                                        <td>{lead.roleTitle || '—'}</td>
-                                        <td>
-                                            {lead.experienceLevel
-                                                ? formatLeadLabel(String(lead.experienceLevel))
-                                                : '—'}
-                                        </td>
+                                        {isWiproConsumption && <td>{lead.roleTitle || '—'}</td>}
                                         <td className={styles.compactCell}>{lead.resourcesRequired}</td>
                                         <td>
                                             {lead.preferredStartDate
@@ -444,9 +400,6 @@ export const EngagementLeadsTab: FC = () => {
                                                 : '—'}
                                         </td>
                                         <td className={styles.compactCell}>{lead.engagementDuration}</td>
-                                        <td className={getPriorityClassName(String(lead.priority))}>
-                                            {lead.priority ? formatLeadLabel(String(lead.priority)) : '—'}
-                                        </td>
                                         <td>
                                             <span
                                                 className={classNames(
@@ -470,6 +423,27 @@ export const EngagementLeadsTab: FC = () => {
                                         </td>
                                         <td>
                                             <div className={styles.actions}>
+                                                <Tooltip
+                                                    content='Notes'
+                                                    triggerOn='click-hover'
+                                                >
+                                                    <button
+                                                        aria-label='Notes'
+                                                        className={classNames(
+                                                            styles.actionIconButton,
+                                                            lead.notes && styles.actionIconActive,
+                                                        )}
+                                                        type='button'
+                                                        onClick={() => {
+                                                            setNotesLead(lead)
+                                                        }}
+                                                    >
+                                                        <IconOutline.DocumentAddIcon
+                                                            aria-hidden
+                                                            className={styles.actionIcon}
+                                                        />
+                                                    </button>
+                                                </Tooltip>
                                                 {lead.convertedEngagementId
                                                     ? (
                                                         <Tooltip
@@ -554,6 +528,14 @@ export const EngagementLeadsTab: FC = () => {
                     roleTitle={selectedLead.roleTitle}
                     onCancel={handleCreateEngagementCancel}
                     onConfirm={handleCreateEngagementConfirm}
+                />
+            )}
+
+            {notesLead && (
+                <EngagementLeadNotesModal
+                    lead={notesLead}
+                    onClose={handleNotesClose}
+                    onSaved={handleNotesSaved}
                 />
             )}
         </div>
