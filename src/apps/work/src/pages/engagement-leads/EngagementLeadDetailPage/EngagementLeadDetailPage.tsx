@@ -322,15 +322,6 @@ export const EngagementLeadDetailPage: FC = () => {
                                         ? `${lead.billRateCurrency} ${lead.billRateAmount}/hour`
                                         : undefined}
                                 />
-                                <DetailField
-                                    label='Priority'
-                                    value={lead.priority ? formatLabel(String(lead.priority)) : undefined}
-                                />
-                                <DetailField
-                                    fullWidth
-                                    label='Additional Requirements'
-                                    value={lead.additionalRequirements}
-                                />
                             </div>
                         </section>
                     </>
