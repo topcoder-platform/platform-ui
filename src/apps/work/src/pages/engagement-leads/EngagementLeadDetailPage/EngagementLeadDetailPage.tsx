@@ -285,11 +285,6 @@ export const EngagementLeadDetailPage: FC = () => {
                             <h3 className={styles.sectionTitle}>Role Requirements</h3>
                             <div className={styles.grid}>
                                 <DetailField
-                                    label='Engagement Model'
-                                    value={lead.engagementModel ? formatLabel(String(lead.engagementModel)) : undefined}
-                                />
-                                <DetailField label='Role Title' value={lead.roleTitle} />
-                                <DetailField
                                     fullWidth
                                     label='Job Description'
                                     value={lead.jobDescription}
@@ -299,12 +294,6 @@ export const EngagementLeadDetailPage: FC = () => {
                                     label='Required Skills'
                                     value={lead.requiredSkills.join(', ')}
                                 />
-                                <DetailField
-                                    label='Experience Level'
-                                    value={lead.experienceLevel ? formatLabel(String(lead.experienceLevel)) : undefined}
-                                />
-                                <DetailField label='Min Years Experience' value={lead.minYearsExperience} />
-                                <DetailField label='Industry Domain' value={lead.industryDomain} />
                             </div>
                         </section>
 
