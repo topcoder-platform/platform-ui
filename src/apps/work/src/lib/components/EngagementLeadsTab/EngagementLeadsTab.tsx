@@ -41,6 +41,7 @@ import {
     CreateEngagementFromLeadModal,
 } from '../CreateEngagementFromLeadModal'
 import {
+    DEFAULT_FILTERS,
     EngagementLeadsFilter,
     EngagementLeadsListFilters,
 } from '../EngagementLeadsFilter'
@@ -69,12 +70,6 @@ interface LeadColumnDefinition {
     fieldName?: LeadSortField
     label: string
     sortable?: boolean
-}
-
-const DEFAULT_FILTERS: EngagementLeadsListFilters = {
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
-    statusGroup: EngagementLeadStatusGroup.NEW,
 }
 
 function getColumns(leadType: EngagementLeadType): LeadColumnDefinition[] {
