@@ -1,0 +1,48 @@
+@import '@libs/ui/styles/includes';
+
+.content {
+    display: grid;
+    gap: 16px;
+}
+
+.title {
+    margin: 0;
+    font-size: 1.05rem;
+    color: $black-100;
+}
+
+.metaGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+    margin: 0;
+}
+
+.metaItem {
+    display: grid;
+    gap: 6px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid $black-10;
+    background: $black-5;
+}
+
+.metaLabel {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $black-60;
+}
+
+.metaValue {
+    margin: 0;
+    font-size: 0.9rem;
+    color: $black-80;
+    word-break: break-word;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+}

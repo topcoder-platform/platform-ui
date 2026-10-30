@@ -36,28 +36,6 @@
     overflow: hidden;
 }
 
-.meta {
-    display: grid;
-    gap: 8px;
-    color: $black-60;
-    font-size: 0.85rem;
-}
-
-.metaItem {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.metaIcon {
-    width: 16px;
-    height: 16px;
-    color: $teal-100;
-    flex-shrink: 0;
-    min-width: 16px;
-    min-height: 16px;
-}
-
 .skills {
     display: flex;
     flex-wrap: wrap;
@@ -88,6 +66,11 @@
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 12px;
     margin-top: auto;
+}
+
+.detailsButton {
+    padding: $sp-1 $sp-3;
+    line-height: 1.4;
 }
 
 .actionButton {

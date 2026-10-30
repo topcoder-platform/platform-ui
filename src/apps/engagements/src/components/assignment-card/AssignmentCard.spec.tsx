@@ -2,7 +2,7 @@
 import '@testing-library/jest-dom'
 
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import type { Engagement, EngagementAssignment } from '../../lib/models'
@@ -39,6 +39,17 @@ jest.mock('~/config', () => ({
 }), { virtual: true })
 
 jest.mock('~/libs/ui', () => ({
+    BaseModal: (props: {
+        buttons?: React.ReactNode
+        children?: React.ReactNode
+        open: boolean
+        title?: string
+    }) => (props.open ? (
+        <div role='dialog' aria-label={props.title}>
+            {props.children}
+            {props.buttons}
+        </div>
+    ) : undefined),
     Button: (props: {
         className?: string
         disabled?: boolean
@@ -54,13 +65,6 @@ jest.mock('~/libs/ui', () => ({
             {props.label}
         </button>
     ),
-    IconSolid: {
-        CalendarIcon: () => <span />,
-        ClockIcon: () => <span />,
-        CurrencyDollarIcon: () => <span />,
-        GlobeAltIcon: () => <span />,
-        LocationMarkerIcon: () => <span />,
-    },
 }), { virtual: true })
 
 const engagement: Engagement = {
@@ -146,20 +150,84 @@ describe('AssignmentCard', () => {
         expect(screen.queryByRole('button', { name: 'Timesheet' })).not.toBeInTheDocument()
     })
 
-    it('formats the hourly rate with two decimal places and displays daily standard hours', () => {
+    it('keeps the assignment details off the card until they are asked for', () => {
         render(
             <AssignmentCard
                 engagement={engagement}
-                assignment={assignment}
+                assignment={{ ...assignment, paymentCycle: 'MONTHLY' }}
                 onViewPayments={jest.fn()}
                 onDocumentExperience={jest.fn()}
                 onContactTalentManager={jest.fn()}
             />,
         )
 
-        expect(screen.getByText('Rate / hr: $20.30'))
+        expect(screen.getByText('QA Assignment'))
             .toBeInTheDocument()
-        expect(screen.getByText('Std hrs / day: 7.5 hrs'))
+        expect(screen.getByText('Test description'))
             .toBeInTheDocument()
+        expect(screen.getByText('Testing'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Assignment Details' }))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Rate / hr'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('MONTHLY'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('dialog'))
+            .not.toBeInTheDocument()
+    })
+
+    it('shows every assignment detail in the popup and closes it', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <AssignmentCard
+                engagement={engagement}
+                assignment={{
+                    ...assignment,
+                    durationMonths: 6,
+                    paymentCycle: 'MONTHLY',
+                    startDate: '2026-11-02T00:00:00.000Z',
+                }}
+                onViewPayments={jest.fn()}
+                onDocumentExperience={jest.fn()}
+                onContactTalentManager={jest.fn()}
+            />,
+        )
+
+        await user.click(screen.getByRole('button', { name: 'Assignment Details' }))
+
+        const dialog = screen.getByRole('dialog', { name: 'Assignment Details' })
+        const detailLabels = within(dialog)
+            .getAllByRole('term')
+            .map(term => term.textContent)
+        expect(detailLabels)
+            .toEqual([
+                'Billing start',
+                'Duration',
+                'Timezone',
+                'Location',
+                'Rate / hr',
+                'Std hrs / day',
+                'Payment cycle',
+            ])
+        expect(within(dialog)
+            .getByText('6 months'))
+            .toBeInTheDocument()
+        expect(within(dialog)
+            .getByText('$20.30'))
+            .toBeInTheDocument()
+        expect(within(dialog)
+            .getByText('7.5 hrs'))
+            .toBeInTheDocument()
+        expect(within(dialog)
+            .getByText('MONTHLY'))
+            .toBeInTheDocument()
+
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Close' }))
+
+        expect(screen.queryByRole('dialog'))
+            .not.toBeInTheDocument()
     })
 })

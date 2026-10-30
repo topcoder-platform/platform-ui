@@ -31,6 +31,12 @@ interface EngagementLeadsFilterProps {
     onFiltersChange: (patch: Partial<EngagementLeadsListFilters>) => void
 }
 
+export const DEFAULT_FILTERS: EngagementLeadsListFilters = {
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+    statusGroup: EngagementLeadStatusGroup.NEW,
+}
+
 export const EngagementLeadsFilter: FC<EngagementLeadsFilterProps> = (
     props: EngagementLeadsFilterProps,
 ) => {
@@ -77,15 +83,15 @@ export const EngagementLeadsFilter: FC<EngagementLeadsFilterProps> = (
     ])
 
     const handleClearFilters = useCallback((): void => {
-        setAccountNameInput('')
-        setSmu('')
-        setRoleTitleInput('')
-        setStatusGroup('')
+        setAccountNameInput(DEFAULT_FILTERS.accountName || '')
+        setRoleTitleInput(DEFAULT_FILTERS.roleTitle || '')
+        setSmu(DEFAULT_FILTERS.smu || '')
+        setStatusGroup(DEFAULT_FILTERS.statusGroup || '')
         onFiltersChange({
-            accountName: undefined,
-            roleTitle: undefined,
-            smu: undefined,
-            statusGroup: undefined,
+            accountName: DEFAULT_FILTERS.accountName || undefined,
+            roleTitle: DEFAULT_FILTERS.roleTitle || undefined,
+            smu: DEFAULT_FILTERS.smu || undefined,
+            statusGroup: DEFAULT_FILTERS.statusGroup || undefined,
         })
     }, [onFiltersChange])
 

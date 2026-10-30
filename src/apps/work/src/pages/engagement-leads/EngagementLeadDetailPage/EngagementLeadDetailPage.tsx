@@ -285,11 +285,6 @@ export const EngagementLeadDetailPage: FC = () => {
                             <h3 className={styles.sectionTitle}>Role Requirements</h3>
                             <div className={styles.grid}>
                                 <DetailField
-                                    label='Engagement Model'
-                                    value={lead.engagementModel ? formatLabel(String(lead.engagementModel)) : undefined}
-                                />
-                                <DetailField label='Role Title' value={lead.roleTitle} />
-                                <DetailField
                                     fullWidth
                                     label='Job Description'
                                     value={lead.jobDescription}
@@ -299,12 +294,6 @@ export const EngagementLeadDetailPage: FC = () => {
                                     label='Required Skills'
                                     value={lead.requiredSkills.join(', ')}
                                 />
-                                <DetailField
-                                    label='Experience Level'
-                                    value={lead.experienceLevel ? formatLabel(String(lead.experienceLevel)) : undefined}
-                                />
-                                <DetailField label='Min Years Experience' value={lead.minYearsExperience} />
-                                <DetailField label='Industry Domain' value={lead.industryDomain} />
                             </div>
                         </section>
 
@@ -332,15 +321,6 @@ export const EngagementLeadDetailPage: FC = () => {
                                     value={lead.billRateCurrency && lead.billRateAmount
                                         ? `${lead.billRateCurrency} ${lead.billRateAmount}/hour`
                                         : undefined}
-                                />
-                                <DetailField
-                                    label='Priority'
-                                    value={lead.priority ? formatLabel(String(lead.priority)) : undefined}
-                                />
-                                <DetailField
-                                    fullWidth
-                                    label='Additional Requirements'
-                                    value={lead.additionalRequirements}
                                 />
                             </div>
                         </section>
