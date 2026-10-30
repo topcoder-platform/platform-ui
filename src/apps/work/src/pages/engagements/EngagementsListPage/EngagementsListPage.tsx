@@ -486,7 +486,7 @@ export const EngagementsListPage: FC = () => {
     const [page, setPage] = useState<number>(1)
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
     // Shared by all three tabs, so it stays set while the user switches between them.
-    const [hideTestProjects, setHideTestProjects] = useState<boolean>(false)
+    const [hideTestProjects, setHideTestProjects] = useState<boolean>(true)
     const [engagementToDelete, setEngagementToDelete] = useState<Engagement | undefined>(undefined)
     const [isDeletingEngagement, setIsDeletingEngagement] = useState<boolean>(false)
     const scopedProjectIds = useMemo(
