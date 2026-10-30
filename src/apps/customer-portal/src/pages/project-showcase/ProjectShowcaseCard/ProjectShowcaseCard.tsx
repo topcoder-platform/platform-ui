@@ -25,9 +25,17 @@ const ProjectShowcaseCard: FC<ProjectShowcaseCardProps> = props => {
 
     return (
         <article className={styles.wrap}>
-            <div className={styles.tags}>
+            <div
+                className={styles.tags}
+                title={props.post.categories.map(category => category.name)
+                    .join(', ')}
+            >
                 {props.post.categories.map(category => (
-                    <span className={classNames(styles.tag, toClassName(category.name))} id={category.id}>
+                    <span
+                        key={category.id}
+                        className={classNames(styles.tag, toClassName(category.name))}
+                        id={category.id}
+                    >
                         {category.name}
                     </span>
                 ))}
