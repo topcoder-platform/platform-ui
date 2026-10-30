@@ -69,6 +69,8 @@ const STATUS_OPTIONS: SelectOption[] = [
     })),
 ]
 
+const DEFAULT_STATUS = 'ASSIGNED'
+
 type SortField = 'endDate' | 'lastPaidAt' | 'paymentCycle' | 'startDate'
 
 type SortOrder = 'asc' | 'desc'
@@ -265,7 +267,8 @@ function renderRow(row: EngagementAssignmentRow, backUrl: string): JSX.Element {
 export const EngagementAssignmentsTable: FC<EngagementAssignmentsTableProps> = (
     props: EngagementAssignmentsTableProps,
 ) => {
-    const [status, setStatus] = useState<string>(ALL_STATUSES_VALUE)
+    // Active assignments are what this view is checked for most, so it opens on them.
+    const [status, setStatus] = useState<string>(DEFAULT_STATUS)
     const [projectNameInput, setProjectNameInput] = useState<string>('')
     const [engagementTitleInput, setEngagementTitleInput] = useState<string>('')
     const [page, setPage] = useState<number>(1)
