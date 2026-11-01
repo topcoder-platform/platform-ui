@@ -4,7 +4,12 @@ import { FC, ReactNode, useCallback, useState } from 'react'
 
 import { Button, LoadingSpinner, PageTitle } from '~/libs/ui'
 
-import { SalesDashboardGroupBy, SalesDashboardPortal } from './sales-dashboard.service'
+import {
+    SalesAccountCategory,
+    SalesDashboardGroupBy,
+    SalesDashboardPeriod,
+    SalesDashboardPortal,
+} from './sales-dashboard.service'
 import { salesFiscalYearLabel, salesFiscalYearPeriod } from './sales-fiscal-year'
 import { SalesDashboardSource, useSalesDashboard } from './useSalesDashboard'
 import GroupBy from './SalesDashboardGroupBy'
@@ -33,6 +38,7 @@ const SourceContent: FC<{ source: SalesDashboardSource; title: string; children:
  */
 const DashboardCard: FC<{
     source: SalesDashboardSource; chartId: string; title: string; children?: ReactNode; expectedCloses?: boolean
+    period?: SalesDashboardPeriod
 }> = props => {
     const chart = props.source.data?.charts.find(item => item.id === props.chartId)
     const controls = (
@@ -46,6 +52,7 @@ const DashboardCard: FC<{
             chart={{ ...chart, title: props.title }}
             controls={controls}
             expectedCloses={props.expectedCloses}
+            period={props.period}
         />
     ) : (
         <article className={styles.card} aria-label={props.title}>
@@ -82,10 +89,20 @@ const MeasureToggle: FC<{
  */
 const CustomerDashboard: FC<{
     source: SalesDashboardSource; field: 'customerRevenue' | 'customerPayments'; title: string
+    period: SalesDashboardPeriod; accountCategory?: SalesAccountCategory
 }> = props => {
-    const data = props.source.data?.[props.field]
+    const data = props.accountCategory
+        ? props.source.data?.customerRevenueByAccountCategory?.[props.accountCategory]
+        : props.source.data?.[props.field]
     if (data) {
-        return <SalesCustomerTable data={data} title={props.title} notices={props.source.data?.notices} />
+        return (
+            <SalesCustomerTable
+                data={data}
+                title={props.title}
+                notices={props.source.data?.notices}
+                period={props.period}
+            />
+        )
     }
 
     return (
@@ -93,7 +110,11 @@ const CustomerDashboard: FC<{
             <h3>{props.title}</h3>
             <SourceContent source={props.source} title={props.title}>
                 {props.source.data?.notices.map(notice => <p key={notice} role='status'>{notice}</p>)}
-                <p>Customer details are unavailable for this source.</p>
+                <p>
+                    {props.accountCategory
+                        ? 'Revenue account category details are unavailable for this source.'
+                        : 'Customer details are unavailable for this source.'}
+                </p>
             </SourceContent>
         </article>
     )
@@ -110,10 +131,13 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
     const [dateBasis, setDateBasis] = useState<'close' | 'created'>('close')
     const portal = props.portal ?? 'reports'
     const [wonGroup, setWonGroup] = useState<SalesDashboardGroupBy>('offeringType')
-    const [pipelineGroup, setPipelineGroup] = useState<SalesDashboardGroupBy>('stage')
+    const [pipelineGroup, setPipelineGroup] = useState<SalesDashboardGroupBy>('offeringType')
     const [revenueGroup, setRevenueGroup] = useState<SalesDashboardGroupBy>('offeringType')
     const [pipelineMeasure, setPipelineMeasure] = useState('Amount')
     const [paymentMeasure, setPaymentMeasure] = useState('Amount')
+    const [taasMeasure, setTaasMeasure] = useState('Amount')
+    const [period, setPeriod] = useState<SalesDashboardPeriod>('Monthly')
+    const [accountCategory, setAccountCategory] = useState<SalesAccountCategory | ''>('')
     const bookings = useSalesDashboard('bookings', portal, dateBasis, refreshKey, wonGroup)
     const pipeline = useSalesDashboard('pipeline', portal, dateBasis, refreshKey, pipelineGroup)
     const revenue = useSalesDashboard('revenue', portal, dateBasis, refreshKey, revenueGroup)
@@ -140,7 +164,9 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
             </header>
             <p className={styles.notice}>
                 Current fiscal year: April through March in UTC, including the current month in progress.
-                {' Headlines compare the current month with the full previous month.'}
+                {period === 'Monthly'
+                    ? ' Headlines compare the current month with the full previous month.'
+                    : ' Quarterly headlines compare the current quarter with the full previous quarter.'}
                 {' All charts cover the same 12 months.'}
                 {' Pipeline charts include expected closes within the fiscal year.'}
             </p>
@@ -150,14 +176,24 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
                 <Button secondary onClick={chooseClose} disabled={dateBasis === 'close'}>Close date</Button>
                 <Button secondary onClick={chooseCreated} disabled={dateBasis === 'created'}>Created date</Button>
             </div>
+            <MeasureToggle
+                label='Dashboard period'
+                options={['Monthly', 'Quarterly']}
+                value={period}
+                onChange={value => setPeriod(value as SalesDashboardPeriod)}
+            />
+            {period === 'Quarterly' && (
+                <p>Fiscal quarters: Q1 April–June, Q2 July–September, Q3 October–December, Q4 January–March.</p>
+            )}
             <section aria-labelledby='monthly-sales' className={styles.section}>
                 <h2 id='monthly-sales'>Sales</h2>
                 <div className={styles.grid}>
-                    <DashboardCard source={bookings} chartId='closed-won' title='Bookings Won'>
+                    <DashboardCard source={bookings} period={period} chartId='closed-won' title='Bookings Won'>
                         <GroupBy value={wonGroup} onChange={setWonGroup} />
                     </DashboardCard>
                     <DashboardCard
                         source={pipeline}
+                        period={period}
                         chartId={pipelineMeasure === 'Amount' ? 'pipeline-stage' : 'expected-revenue'}
                         title='Bookings in Pipeline'
                         expectedCloses={dateBasis === 'close'}
@@ -174,7 +210,7 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
             </section>
             <section aria-labelledby='monthly-revenue' className={styles.section}>
                 <h2 id='monthly-revenue'>Revenue</h2>
-                <DashboardCard source={revenue} chartId='revenue' title='Revenue Closed'>
+                <DashboardCard source={revenue} period={period} chartId='revenue' title='Revenue Closed'>
                     <GroupBy value={revenueGroup} onChange={setRevenueGroup} />
                 </DashboardCard>
             </section>
@@ -183,6 +219,7 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
                 <div className={styles.grid}>
                     <DashboardCard
                         source={payments}
+                        period={period}
                         chartId={paymentMeasure === 'Amount' ? 'payment-type' : 'members-paid'}
                         title='Topcoder Payments'
                     >
@@ -193,7 +230,19 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
                             onChange={setPaymentMeasure}
                         />
                     </DashboardCard>
-                    <DashboardCard source={taas} chartId='taas-payments' title='TaaS Payments' />
+                    <DashboardCard
+                        source={taas}
+                        period={period}
+                        chartId={taasMeasure === 'Amount' ? 'taas-payments' : 'taas-members-paid'}
+                        title='TaaS Payments'
+                    >
+                        <MeasureToggle
+                            label='TaaS payment measure'
+                            options={['Amount', 'Count']}
+                            value={taasMeasure}
+                            onChange={setTaasMeasure}
+                        />
+                    </DashboardCard>
                 </div>
             </section>
             <section aria-labelledby='monthly-talent' className={styles.section}>
@@ -202,8 +251,33 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
             </section>
             <section aria-labelledby='monthly-customer' className={styles.section}>
                 <h2 id='monthly-customer'>Customer</h2>
-                <CustomerDashboard source={revenue} field='customerRevenue' title='Revenue Customer-Wise' />
-                <CustomerDashboard source={payments} field='customerPayments' title='Goods Sold Customer-Wise' />
+                <div className={styles.filters}>
+                    <label>
+                        Revenue account category
+                        <select
+                            value={accountCategory}
+                            onChange={event => setAccountCategory(event.target.value as SalesAccountCategory | '')}
+                        >
+                            <option value=''>ALL</option>
+                            {['External Revenue', 'Through Wipro', 'Wipro Internal'].map(category => (
+                                <option key={category} value={category}>{category}</option>
+                            ))}
+                        </select>
+                    </label>
+                </div>
+                <CustomerDashboard
+                    source={revenue}
+                    field='customerRevenue'
+                    title='Revenue Customer-Wise'
+                    period={period}
+                    accountCategory={accountCategory || undefined}
+                />
+                <CustomerDashboard
+                    source={payments}
+                    field='customerPayments'
+                    title='Goods Sold Customer-Wise'
+                    period={period}
+                />
             </section>
         </div>
     )

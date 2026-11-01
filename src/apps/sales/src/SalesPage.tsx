@@ -29,6 +29,7 @@ import {
     wonSowSignedTotal,
 } from './sales.utils'
 import { salesFiscalYearLabel, salesFiscalYearPeriod } from './sales-fiscal-year'
+import { salesStageLabel } from './sales-dashboard.utils'
 import styles from './SalesPage.module.scss'
 import './sales.scss'
 
@@ -458,7 +459,7 @@ const SalesPage: FC = () => {
                                         onClick={() => toggleStage(breakdown.columnId, tile.label)}
                                         type='button'
                                     >
-                                        <span className={styles.stageName}>{tile.label || '—'}</span>
+                                        <span className={styles.stageName}>{salesStageLabel(tile.label) || '—'}</span>
                                         <span className={styles.stageMetrics}>
                                             <span>
                                                 <span className={styles.stageValue}>
@@ -598,7 +599,8 @@ const SalesPage: FC = () => {
                         <h2>{report?.reportName || 'Sales report'}</h2>
                         <p className={styles.panelHint}>
                             {stage
-                                ? `Showing stages: ${stage.labels.join(' OR ')}. Salesforce is the source of truth.`
+                                ? `Showing stages: ${stage.labels.map(salesStageLabel)
+                                    .join(' OR ')}. Salesforce is the source of truth.`
                                 : 'Salesforce is the source of truth. Changes are made there.'}
                         </p>
                     </div>
@@ -762,7 +764,7 @@ const SalesPage: FC = () => {
                                             {columns.map(entry => {
                                                 const cell = row.cells[entry.index]
                                                 const opportunityId = cell && toOpportunityId(cell.value)
-                                                const label = cell?.label || '—'
+                                                const label = salesStageLabel(cell?.label || '—')
 
                                                 return (
                                                     <td
