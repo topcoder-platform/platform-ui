@@ -660,7 +660,7 @@ describe('Sales page', () => {
         expect(stages.map(button => button.textContent))
             .toEqual([
                 expect.stringContaining('Proposal'),
-                expect.stringContaining('Won - SOW Signed'),
+                expect.stringContaining('Won'),
             ])
         expect(stages[0].textContent)
             .toContain('$450,000')
@@ -672,19 +672,19 @@ describe('Sales page', () => {
         render(<SalesPage />)
         await screen.findByText('Example opportunity')
         const stage = screen.getAllByRole('button', { pressed: false })
-            .find(button => button.textContent?.includes('Won - SOW Signed')) as HTMLElement
+            .find(button => button.textContent?.includes('Won')) as HTMLElement
         fireEvent.click(stage)
         await waitFor(() => expect(fetchReport)
             .toHaveBeenLastCalledWith(expect.objectContaining({
                 drilldownColumn: 'STAGE_NAME', drilldownValue: 'Won - SOW Signed', page: 1,
             }), expect.any(AbortSignal)))
-        expect(await screen.findByRole('button', { name: /Won - SOW Signed/, pressed: true }))
+        expect(await screen.findByRole('button', { name: /Won/, pressed: true }))
             .toBeInTheDocument()
         // The breakdown is still complete, because the drilldown never narrows the summary.
         expect(screen.getAllByRole('button', { pressed: false })
             .some(button => button.textContent?.includes('Proposal')))
             .toBe(true)
-        fireEvent.click(screen.getByRole('button', { name: /Won - SOW Signed/, pressed: true }))
+        fireEvent.click(screen.getByRole('button', { name: /Won/, pressed: true }))
         await waitFor(() => expect(fetchReport)
             .toHaveBeenLastCalledWith(expect.objectContaining({
                 drilldownColumn: undefined, drilldownValue: undefined,
@@ -695,7 +695,7 @@ describe('Sales page', () => {
         render(<SalesPage />)
         await screen.findByText('Example opportunity')
         fireEvent.click(screen.getByRole('button', { name: /Proposal.*Opportunities/ }))
-        fireEvent.click(screen.getByRole('button', { name: /Won - SOW Signed.*Opportunities/ }))
+        fireEvent.click(screen.getByRole('button', { name: /Won.*Opportunities/ }))
         await waitFor(() => expect(fetchReport)
             .toHaveBeenLastCalledWith(expect.objectContaining({
                 drilldownColumn: 'STAGE_NAME', drilldownValue: ['Proposal', 'Won - SOW Signed'], page: 1,
