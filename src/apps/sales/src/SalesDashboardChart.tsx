@@ -4,8 +4,17 @@ import { FC, ReactNode, useMemo } from 'react'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
-import { MonthlySalesChart } from './sales-dashboard.service'
-import { salesChartTotal, salesChartValue, salesMonthLabel } from './sales-dashboard.utils'
+import { MonthlySalesChart, SalesDashboardPeriod } from './sales-dashboard.service'
+import {
+    salesChartTotal,
+    salesChartValue,
+    salesDisplayChart,
+    salesPeriodChart,
+    salesPeriodLabel,
+    salesQuarterStart,
+} from './sales-dashboard.utils'
+import { salesFiscalYearLabel } from './sales-fiscal-year'
+import SalesDashboardTable from './SalesDashboardTable'
 import styles from './SalesDashboardsPage.module.scss'
 
 const colors = ['#0d8984', '#0f62fe', '#6c5ce7', '#ff8a00', '#6aae3f', '#d7476f']
@@ -91,7 +100,8 @@ function monthChange(
  * @param chart API chart.
  * @param expectedCloses Whether the current month includes opportunities expected to close later in it
  * (pipeline charts by close date).
- * @param now Current time. Charts without the current month headline their latest month instead.
+ * @param now Current time. Charts without the current period headline their latest period instead.
+ * @param period Monthly or fiscal-quarter comparison, matching the supplied chart data.
  * @returns The headline, or undefined for a chart with no months.
  * @throws Does not throw.
  */
@@ -99,9 +109,12 @@ export function chartHeadline(
     chart: MonthlySalesChart,
     expectedCloses: boolean = false,
     now: Date = new Date(),
+    period: SalesDashboardPeriod = 'Monthly',
 ): ChartHeadline | undefined {
-    const currentMonth = `${now.toISOString()
+    const monthStart = `${now.toISOString()
         .slice(0, 7)}-01`
+    const currentMonth = period === 'Quarterly' ? salesQuarterStart(monthStart) : monthStart
+    const periodName = period === 'Quarterly' ? 'quarter' : 'month'
     const groups: Array<{ keys: string[]; label?: string }> = chart.stacked || chart.series.length === 1
         ? [{ keys: chart.series.map(series => series.key) }]
         : chart.series.map(series => ({ keys: [series.key], label: series.label }))
@@ -121,19 +134,21 @@ export function chartHeadline(
                 value,
                 monthTotal(chart.months[index - 1], group.keys),
                 chart.unit,
-                index === currentIndex ? 'last month' : 'previous month',
+                index === currentIndex ? `last ${periodName}` : `previous ${periodName}`,
             ),
             label: group.label,
             value,
         }
     })
-    const monthName = new Date(`${chart.months[index].month}T00:00:00Z`)
-        .toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC', year: 'numeric' })
+    const monthName = period === 'Quarterly'
+        ? `${salesPeriodLabel(chart.months[index].month, period)}, ${salesFiscalYearLabel(chart.months[index].month)}`
+        : new Date(`${chart.months[index].month}T00:00:00Z`)
+            .toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC', year: 'numeric' })
     const caption = currentIndex < 0 ? monthName
-        : index !== currentIndex ? `${monthName}, the latest month with data`
+        : index !== currentIndex ? `${monthName}, the latest ${periodName} with data`
             : expectedCloses && chart.months.some(month => month.month > currentMonth)
-                ? 'Current month, including expected closes'
-                : 'Current month to date'
+                ? `Current ${periodName}, including expected closes`
+                : `Current ${periodName} to date`
     return {
         caption: chart.stacked && chart.unit === 'count' ? `${caption} · sums the stacked series` : caption,
         figures,
@@ -179,15 +194,21 @@ export function chartTooltip(unit: MonthlySalesChart['unit']): Highcharts.Toolti
  * @returns A responsive chart card; unknown percentages remain gaps and table dashes.
  * @throws Does not throw for empty month or series arrays.
  */
-const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boolean; controls?: ReactNode }> = props => {
-    const chart = props.chart
-    const headline = useMemo(() => chartHeadline(chart, props.expectedCloses), [chart, props.expectedCloses])
-    const labels = useMemo(() => chart.months.map(month => salesMonthLabel(month.month)), [chart.months])
+const SalesDashboardChart: FC<{
+    chart: MonthlySalesChart; expectedCloses?: boolean; controls?: ReactNode; period?: SalesDashboardPeriod
+}> = props => {
+    const period = props.period ?? 'Monthly'
+    const monthlyChart = useMemo(() => salesDisplayChart(props.chart), [props.chart])
+    const chart = useMemo(() => salesPeriodChart(monthlyChart, period), [monthlyChart, period])
+    const headline = useMemo(
+        () => chartHeadline(chart, props.expectedCloses, new Date(), period),
+        [chart, props.expectedCloses, period],
+    )
+    const labels = useMemo(
+        () => chart.months.map(month => salesPeriodLabel(month.month, period)),
+        [chart.months, period],
+    )
     const hasTotals = chart.unit === 'currency'
-    const showTotal = hasTotals && chart.series.length > 1
-    const annual = useMemo(() => chart.series.map(series => salesChartTotal(chart.months.map(month => (
-        month.values[series.key]
-    )))), [chart])
     const options = useMemo<Highcharts.Options>(() => ({
         chart: { backgroundColor: 'transparent', height: 320, type: 'column' },
         colors,
@@ -244,53 +265,15 @@ const SalesDashboardChart: FC<{ chart: MonthlySalesChart; expectedCloses?: boole
                 <HighchartsReact highcharts={Highcharts} options={options} />
             </figure>
             <details>
-                <summary>View monthly data</summary>
+                <summary>{`View ${period.toLowerCase()} data`}</summary>
                 {chart.unit === 'count' && (
                     <p>
-                        Counts are unique within each category and month.
-                        Members may appear in more than one category or month.
+                        Counts are unique within each category and period.
+                        Members may appear in more than one category.
+                        Unavailable annual or quarterly counts are shown as a dash.
                     </p>
                 )}
-                <div className={styles.tableScroll}>
-                    <table>
-                        <caption>{chart.title}</caption>
-                        <thead>
-                            <tr>
-                                <th scope='col'>Month</th>
-                                {chart.series.map(series => <th key={series.key} scope='col'>{series.label}</th>)}
-                                {showTotal && <th scope='col'>Total</th>}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {hasTotals && (
-                                <tr className={styles.annual}>
-                                    <th scope='row'>Annual</th>
-                                    {chart.series.map((series, index) => (
-                                        <td key={series.key}>{salesChartValue(annual[index], chart.unit)}</td>
-                                    ))}
-                                    {showTotal && <td>{salesChartValue(salesChartTotal(annual), chart.unit)}</td>}
-                                </tr>
-                            )}
-                            {chart.months.map((month, index) => (
-                                <tr key={month.month}>
-                                    <th scope='row'>{labels[index]}</th>
-                                    {chart.series.map(series => (
-                                        <td key={series.key}>
-                                            {salesChartValue(month.values[series.key], chart.unit)}
-                                        </td>
-                                    ))}
-                                    {showTotal && (
-                                        <td>
-                                            {salesChartValue(salesChartTotal(chart.series.map(series => (
-                                                month.values[series.key]
-                                            ))), chart.unit)}
-                                        </td>
-                                    )}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <SalesDashboardTable chart={chart} period={period} caption={chart.title} />
             </details>
         </article>
     )
