@@ -641,6 +641,34 @@ describe('ChallengeForum', () => {
             }))
     })
 
+    it('includes an uploaded XML download link when creating a topic', async () => {
+        const markdown = '[document.xml](<https://cdn.example/document>)'
+        mockUploadForumAttachment.mockResolvedValue(markdown)
+        render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='10' />)
+        fireEvent.click(screen.getByRole('button', { name: /Create new topic/ }))
+        fireEvent.change(screen.getByLabelText('Topic Title'), { target: { value: 'XML attachment' } })
+        fireEvent.change(screen.getByLabelText('Topic Content'), { target: { value: 'See attached.' } })
+
+        const file = new File(['<document>test</document>'], 'document.xml', { type: 'application/xml' })
+        await act(async () => fireEvent.change(screen.getByLabelText('Choose attachment'), {
+            target: { files: [file] },
+        }))
+
+        expect(mockUploadForumAttachment)
+            .toHaveBeenCalledWith(file)
+        expect(screen.getByLabelText('Topic Content'))
+            .toHaveValue(`See attached.\n${markdown}`)
+        expect(screen.queryByRole('alert'))
+            .not.toBeInTheDocument()
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Create topic' })))
+        expect(mockCreateForumTopic)
+            .toHaveBeenCalledWith({
+                challengeId: 'challenge-id',
+                content: `See attached.\n${markdown}`,
+                title: 'XML attachment',
+            })
+    })
+
     it('edits topic titles and starter content in an in-app modal', async () => {
         render(<ChallengeForum challenge={{ id: 'challenge-id', name: 'Challenge' }} memberId='1' />)
 
