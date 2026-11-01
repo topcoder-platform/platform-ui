@@ -17,7 +17,13 @@ export async function uploadForumAttachment(file: File): Promise<string> {
             ? { policy: config.SECURITY.POLICY, signature: config.SECURITY.SIGNATURE }
             : undefined,
     })
-    const result = await client.upload(file, { retry: config.RETRY, timeout: config.TIMEOUT })
+    // Filestack rejects XML MIME types; store XML attachments as binary downloads.
+    const xml = /\.xml$/i.test(file.name) || /^(application|text)\/xml$/i.test(file.type)
+    const result = await client.upload(
+        file,
+        { retry: config.RETRY, timeout: config.TIMEOUT },
+        xml ? { mimetype: 'application/octet-stream' } : undefined,
+    )
     const url = new URL(result.url)
     if (url.protocol !== 'https:') throw new Error('The upload service returned an invalid attachment URL.')
     const label = file.name.replace(/[\\[\]<>]/g, '')
