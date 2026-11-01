@@ -134,3 +134,15 @@
 
     &:focus-visible { outline: 2px solid #0f62fe; outline-offset: 4px; }
 }
+
+.sortButton {
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    padding: 4px 0;
+    white-space: nowrap;
+
+    &:focus-visible { outline: 2px solid #0f62fe; outline-offset: 4px; }
+}
