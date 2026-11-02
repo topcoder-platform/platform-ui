@@ -39,6 +39,13 @@ export enum LeadPriority {
     LOW = 'LOW',
 }
 
+export interface EngagementLeadNote {
+    id: string
+    content: string
+    createdAt: string
+    createdBy?: string | null
+}
+
 export interface EngagementLead {
     id: string
     leadType: EngagementLeadType | string
@@ -63,9 +70,8 @@ export interface EngagementLead {
     billRateAmount?: string | null
     priority?: LeadPriority | string | null
     additionalRequirements?: string | null
-    notes?: string | null
-    notesUpdatedAt?: string | null
-    notesUpdatedBy?: string | null
+    /** Oldest first. */
+    notes?: EngagementLeadNote[]
     status: EngagementLeadStatus | string
     convertedEngagementId?: string | null
     createdAt: string

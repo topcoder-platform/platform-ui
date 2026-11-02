@@ -9,6 +9,13 @@
     margin: 0;
 }
 
+.totals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin: 0;
+}
+
 .field {
     display: grid;
     gap: 6px;

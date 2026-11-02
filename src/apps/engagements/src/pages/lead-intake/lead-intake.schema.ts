@@ -39,10 +39,6 @@ export const leadIntakeSchema: yup.ObjectSchema<LeadIntakeFormData> = yup.object
         .string()
         .oneOf(['TIME_AND_MATERIAL', 'FIXED_PRICE'])
         .required(requiredMessage),
-    experienceLevel: yup
-        .string()
-        .oneOf(['JUNIOR', 'MID', 'SENIOR', 'LEAD_ARCHITECT'])
-        .required(requiredMessage),
     jobDescription: yup
         .string()
         .trim()

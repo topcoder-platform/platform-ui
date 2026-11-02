@@ -8,7 +8,6 @@ export interface LeadIntakeFormData {
     roleTitle: string
     jobDescription: string
     requiredSkills: SearchUserSkill[]
-    experienceLevel: string
     minYearsExperience: number
     resourcesRequired: number
     preferredStartDate: string

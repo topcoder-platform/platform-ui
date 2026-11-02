@@ -2,13 +2,14 @@ import {
     ChangeEvent,
     FC,
     useCallback,
+    useMemo,
     useState,
 } from 'react'
 
 import { EngagementLead, EngagementLeadStatus } from '../../models/EngagementLead.model'
-import { updateEngagementLeadNotes } from '../../services/engagement-leads.service'
+import { addEngagementLeadNote } from '../../services/engagement-leads.service'
 import { extractErrorMessage, showErrorToast, showSuccessToast } from '../../utils'
-import { formatLeadDate } from '../../utils/engagement-leads.utils'
+import { formatLeadDateTime } from '../../utils/engagement-leads.utils'
 import { ConfirmationModal } from '../ConfirmationModal'
 
 import styles from './EngagementLeadNotesModal.module.scss'
@@ -21,34 +22,46 @@ export interface EngagementLeadNotesModalProps {
     onSaved: (lead: EngagementLead) => void
 }
 
+/**
+ * Lists a lead's notes, oldest first, and adds new ones. Notes are read-only once added, so the list
+ * keeps a record of who said what and when.
+ */
 export const EngagementLeadNotesModal: FC<EngagementLeadNotesModalProps> = (
     props: EngagementLeadNotesModalProps,
 ) => {
     const lead = props.lead
     const onSaved = props.onSaved
-    // Notes are frozen once the lead becomes an engagement, so they still record what led to it.
+    // Nothing can be added once the lead becomes an engagement, so the notes still record what led to it.
     const readOnly = lead.status === EngagementLeadStatus.CONVERTED
 
-    const [notes, setNotes] = useState<string>(lead.notes || '')
+    const [newNote, setNewNote] = useState<string>('')
     const [saving, setSaving] = useState<boolean>(false)
 
-    const handleNotesChange = useCallback((event: ChangeEvent<HTMLTextAreaElement>): void => {
-        setNotes(event.target.value)
+    // The API already sends them oldest first; sorting again keeps the order if that ever changes.
+    const notes = useMemo(
+        () => [...(lead.notes ?? [])].sort((a, b) => (
+            Date.parse(a.createdAt) - Date.parse(b.createdAt)
+        )),
+        [lead.notes],
+    )
+
+    const handleNoteChange = useCallback((event: ChangeEvent<HTMLTextAreaElement>): void => {
+        setNewNote(event.target.value)
     }, [])
 
     const handleSave = useCallback(async (): Promise<void> => {
         setSaving(true)
 
         try {
-            const updated = await updateEngagementLeadNotes(lead.id, notes)
-            showSuccessToast('Lead notes saved.')
+            const updated = await addEngagementLeadNote(lead.id, newNote.trim())
+            showSuccessToast('Lead note added.')
             onSaved(updated)
         } catch (err: unknown) {
-            showErrorToast(extractErrorMessage(err, 'Unable to save lead notes.'))
+            showErrorToast(extractErrorMessage(err, 'Unable to add the lead note.'))
         } finally {
             setSaving(false)
         }
-    }, [lead.id, notes, onSaved])
+    }, [lead.id, newNote, onSaved])
 
     const handleConfirm = useCallback((): void => {
         if (readOnly) {
@@ -62,31 +75,42 @@ export const EngagementLeadNotesModal: FC<EngagementLeadNotesModalProps> = (
 
     return (
         <ConfirmationModal
-            confirmDisabled={!readOnly && (saving || notes === (lead.notes || ''))}
-            confirmText={readOnly ? 'Close' : 'Save'}
+            confirmDisabled={!readOnly && (saving || !newNote.trim())}
+            confirmText={readOnly ? 'Close' : 'Add Note'}
             message={readOnly
-                ? 'This lead has been converted, so its notes can no longer be edited.'
-                : `Add notes for lead ${lead.id}.`}
+                ? 'This lead has been converted, so no more notes can be added.'
+                : `Notes for lead ${lead.id}.`}
             onCancel={props.onClose}
             onConfirm={handleConfirm}
             showCancelButton={!readOnly}
             title='Notes'
         >
-            <textarea
-                aria-label='Notes'
-                className={styles.textarea}
-                disabled={saving}
-                maxLength={NOTES_MAX_LENGTH}
-                placeholder={readOnly ? 'No notes were added.' : 'Enter notes'}
-                readOnly={readOnly}
-                value={notes}
-                onChange={handleNotesChange}
-            />
-            {lead.notesUpdatedAt && (
-                <p className={styles.meta}>
-                    {`Last updated ${formatLeadDate(lead.notesUpdatedAt)}`}
-                    {lead.notesUpdatedBy ? ` by ${lead.notesUpdatedBy}` : ''}
-                </p>
+            {notes.length
+                ? (
+                    <ul aria-label='Existing notes' className={styles.list}>
+                        {notes.map(note => (
+                            <li className={styles.note} key={note.id}>
+                                <p className={styles.meta}>
+                                    {formatLeadDateTime(note.createdAt)}
+                                    {note.createdBy ? ` by ${note.createdBy}` : ''}
+                                </p>
+                                <p className={styles.content}>{note.content}</p>
+                            </li>
+                        ))}
+                    </ul>
+                )
+                : <p className={styles.empty}>No notes were added.</p>}
+
+            {!readOnly && (
+                <textarea
+                    aria-label='New note'
+                    className={styles.textarea}
+                    disabled={saving}
+                    maxLength={NOTES_MAX_LENGTH}
+                    placeholder='Enter a new note'
+                    value={newNote}
+                    onChange={handleNoteChange}
+                />
             )}
         </ConfirmationModal>
     )

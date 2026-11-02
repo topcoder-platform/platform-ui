@@ -266,7 +266,7 @@ export const validateHours = (
 
     const hours = Number(trimmed)
 
-    if (hours <= 0) {
+    if (hours < 0) {
         return { error: 'Hours must be greater than zero.' }
     }
 

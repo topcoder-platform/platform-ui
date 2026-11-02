@@ -302,7 +302,7 @@ describe('MemberTimesheetView', () => {
         expect(mockDelete).not.toHaveBeenCalled()
     })
 
-    it('offers delete only when every saved row selected is an unpaid draft', async () => {
+    it('enables delete only when every saved row selected is an unpaid draft', async () => {
         const user = userEvent.setup()
         renderView([
             entry({ id: 'e1', workDate: '2026-09-07' }),
@@ -314,12 +314,34 @@ describe('MemberTimesheetView', () => {
         await user.click(await screen.findByLabelText('Select 07-09-2026'))
         await user.click(screen.getByLabelText('Select 08-09-2026'))
 
-        expect(screen.queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /^Delete/ }))
+            .toBeDisabled()
 
         await user.click(screen.getByLabelText('Select 08-09-2026'))
         await user.click(screen.getByLabelText('Select 09-09-2026'))
 
-        expect(screen.queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /^Delete/ }))
+            .toBeDisabled()
+    })
+
+    it('shows submit and delete disabled before any row is selected', async () => {
+        const user = userEvent.setup()
+        renderView([entry({ hoursWorked: '8', id: 'e1', workDate: '2026-09-07' })])
+
+        await pickRange('2026-09-07', '2026-09-07')
+        await screen.findByLabelText('Select 07-09-2026')
+
+        expect(screen.getByRole('button', { name: 'Submit' }))
+            .toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Delete' }))
+            .toBeDisabled()
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+
+        expect(screen.getByRole('button', { name: 'Submit (1)' }))
+            .toBeEnabled()
+        expect(screen.getByRole('button', { name: 'Delete (1)' }))
+            .toBeEnabled()
     })
 
     it('shows the selection summary with a counted submit button', async () => {
@@ -350,7 +372,7 @@ describe('MemberTimesheetView', () => {
             .toBeInTheDocument()
     })
 
-    it('hides submit when the selection is already submitted and unchanged', async () => {
+    it('disables submit when the selection is already submitted and unchanged', async () => {
         const user = userEvent.setup()
         renderView([
             entry({
@@ -371,8 +393,8 @@ describe('MemberTimesheetView', () => {
 
         await user.click(screen.getByLabelText('Select 07-09-2026'))
 
-        expect(screen.queryByRole('button', { name: 'Submit (1)' }))
-            .not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Submit (1)' }))
+            .toBeDisabled()
     })
 
     it('states the count and total in the confirmation, and submits nothing on cancel', async () => {

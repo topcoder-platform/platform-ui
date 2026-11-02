@@ -448,22 +448,19 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
                                     onClick={handleSave}
                                     secondary
                                 />
-                                {canDelete && (
-                                    <Button
-                                        disabled={isDeleting || isSubmitting}
-                                        label={`Delete (${deletableRows.length})`}
-                                        onClick={handleDelete}
-                                        secondary
-                                    />
-                                )}
-                                {selectedRows.length > 0 && !hasOnlyUnchangedSubmittedSelected && (
-                                    <Button
-                                        disabled={isSubmitting}
-                                        label={`Submit (${selectedRows.length})`}
-                                        onClick={handleOpenConfirm}
-                                        primary
-                                    />
-                                )}
+                                {/* Always shown, so members find Submit before they select rows. */}
+                                <Button
+                                    disabled={!canDelete || isDeleting || isSubmitting}
+                                    label={deletableRows.length ? `Delete (${deletableRows.length})` : 'Delete'}
+                                    onClick={handleDelete}
+                                    secondary
+                                />
+                                <Button
+                                    disabled={!selectedRows.length || hasOnlyUnchangedSubmittedSelected || isSubmitting}
+                                    label={selectedRows.length ? `Submit (${selectedRows.length})` : 'Submit'}
+                                    onClick={handleOpenConfirm}
+                                    primary
+                                />
                             </section>
                         )}
                     </>

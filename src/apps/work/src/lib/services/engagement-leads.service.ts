@@ -1,6 +1,7 @@
 import {
     xhrGetAsync,
     xhrPatchAsync,
+    xhrPostAsync,
 } from '~/libs/core'
 
 import {
@@ -94,13 +95,13 @@ export const updateEngagementLeadStatus = async (
     )
 )
 
-export const updateEngagementLeadNotes = async (
+export const addEngagementLeadNote = async (
     leadId: string,
-    notes: string,
+    content: string,
 ): Promise<EngagementLead> => (
-    xhrPatchAsync<{ notes: string }, EngagementLead>(
+    xhrPostAsync<{ content: string }, EngagementLead>(
         `${LEADS_URL}/${leadId}/notes`,
-        { notes },
+        { content },
     )
 )
 

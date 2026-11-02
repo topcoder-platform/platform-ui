@@ -73,7 +73,6 @@ const baseLead: EngagementLead = {
 const CONSUMPTION_ONLY_LABELS = [
     'Engagement Model',
     'Role Title',
-    'Experience Level',
     'Min Years Experience',
     'Commercial & Priority',
     'Client Bill Rate',
@@ -119,6 +118,10 @@ describe('EngagementLeadDetailPage', () => {
             minYearsExperience: 5,
             roleTitle: 'Backend Developer',
         })
+
+        expect(screen.queryByText('Experience Level'))
+            .not
+            .toBeInTheDocument()
 
         const labels = [...SHARED_LABELS, ...CONSUMPTION_ONLY_LABELS]
         labels.forEach(label => {
