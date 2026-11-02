@@ -216,7 +216,12 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
                     <DashboardCard source={revenue} period={period} chartId='revenue' title='Revenue Closed'>
                         <GroupBy value={revenueGroup} onChange={setRevenueGroup} revenue />
                     </DashboardCard>
-                    <DashboardCard source={forecast} period={period} chartId='revenue-forecast' title='Revenue Forecast'>
+                    <DashboardCard
+                        source={forecast}
+                        period={period}
+                        chartId='revenue-forecast'
+                        title='Revenue Forecast'
+                    >
                         <GroupBy value={forecastGroup} onChange={setForecastGroup} revenue />
                     </DashboardCard>
                 </div>
