@@ -310,15 +310,7 @@ export const EngagementLeadDetailPage: FC = () => {
                                     value={lead.requiredSkills.join(', ')}
                                 />
                                 {isWiproConsumption && (
-                                    <>
-                                        <DetailField
-                                            label='Experience Level'
-                                            value={lead.experienceLevel
-                                                ? formatLabel(String(lead.experienceLevel))
-                                                : undefined}
-                                        />
-                                        <DetailField label='Min Years Experience' value={lead.minYearsExperience} />
-                                    </>
+                                    <DetailField label='Min Years Experience' value={lead.minYearsExperience} />
                                 )}
                             </div>
                         </section>

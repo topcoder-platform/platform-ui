@@ -57,7 +57,6 @@ const DEFAULT_VALUES: LeadIntakeFormData = {
     billRateCurrency: '',
     engagementDuration: '',
     engagementModel: '',
-    experienceLevel: '',
     jobDescription: '',
     minYearsExperience: 0,
     preferredStartDate: '',
@@ -79,7 +78,6 @@ function buildIntakeRequest(values: LeadIntakeFormData): CreateEngagementLeadInt
         billRateCurrency: values.billRateCurrency.trim(),
         engagementDuration: values.engagementDuration.trim(),
         engagementModel: values.engagementModel,
-        experienceLevel: values.experienceLevel,
         jobDescription: values.jobDescription.trim(),
         minYearsExperience: values.minYearsExperience ?? 0,
         preferredStartDate: new Date(values.preferredStartDate)
@@ -775,37 +773,17 @@ const LeadIntakePage: FC<LeadIntakePageProps> = (props: LeadIntakePageProps) => 
                                         onSkillsChange={handleSkillsChange}
                                     />
                                     {isWiproConsumption && (
-                                        <>
-                                            <LeadIntakeSelectField
-                                                control={control}
-                                                disabled={submitting}
-                                                errors={errors}
-                                                fieldProps={{
-                                                    hint: 'Select the required level of experience.',
-                                                    label: 'Experience Level Required',
-                                                    required: true,
-                                                }}
-                                                name='experienceLevel'
-                                                options={[
-                                                    { label: 'Junior', value: 'JUNIOR' },
-                                                    { label: 'Mid-Level', value: 'MID' },
-                                                    { label: 'Senior', value: 'SENIOR' },
-                                                    { label: 'Lead / Architect', value: 'LEAD_ARCHITECT' },
-                                                ]}
-                                                placeholder='Select level'
-                                            />
-                                            <LeadIntakeNumberField
-                                                control={control}
-                                                disabled={submitting}
-                                                errors={errors}
-                                                fieldProps={{
-                                                    hint: 'Specify the minimum years of relevant experience required.',
-                                                    label: 'Minimum Years of Experience',
-                                                    required: true,
-                                                }}
-                                                name='minYearsExperience'
-                                            />
-                                        </>
+                                        <LeadIntakeNumberField
+                                            control={control}
+                                            disabled={submitting}
+                                            errors={errors}
+                                            fieldProps={{
+                                                hint: 'Specify the minimum years of relevant experience required.',
+                                                label: 'Minimum Years of Experience',
+                                                required: true,
+                                            }}
+                                            name='minYearsExperience'
+                                        />
                                     )}
                                 </div>
                             </section>

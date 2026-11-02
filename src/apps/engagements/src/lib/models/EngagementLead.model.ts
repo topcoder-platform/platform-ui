@@ -34,7 +34,7 @@ export interface EngagementLead {
     roleTitle: string
     jobDescription: string
     requiredSkills: string[]
-    experienceLevel: ExperienceLevel | string
+    experienceLevel?: ExperienceLevel | string | null
     minYearsExperience: number
     industryDomain?: string | null
     resourcesRequired: number
@@ -62,7 +62,6 @@ export interface CreateEngagementLeadIntakeRequest {
     roleTitle: string
     jobDescription: string
     requiredSkills: string[]
-    experienceLevel: ExperienceLevel | string
     minYearsExperience: number
     industryDomain?: string
     resourcesRequired: number
