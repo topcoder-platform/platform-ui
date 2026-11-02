@@ -71,10 +71,12 @@ const TimesheetApproveModal: FC<TimesheetApproveModalProps> = (props: TimesheetA
         >
             <div className={styles.body}>
                 <p className={styles.summary}>
-                    {`You are about to approve ${props.entryCount} timesheet `}
-                    {props.entryCount === 1 ? 'entry' : 'entries'}
-                    {` totaling ${formatHoursLabel(props.totalHours)} hours. `}
-                    Please enter an approval comment and confirm the action.
+                    You are about to approve below timesheet entries. Please enter an approval comment and
+                    confirm the action.
+                </p>
+                <p className={styles.totals}>
+                    <strong>{`Total Hours: ${formatHoursLabel(props.totalHours)}`}</strong>
+                    <strong>{`Number of Entries: ${props.entryCount}`}</strong>
                 </p>
 
                 <label className={styles.field} htmlFor='timesheet-approval-comment'>
