@@ -17,6 +17,7 @@ import {
 import {
     EngagementLead,
     EngagementLeadStatus,
+    EngagementLeadType,
 } from '../../../lib/models/EngagementLead.model'
 import {
     fetchEngagementLeadById,
@@ -86,6 +87,9 @@ export const EngagementLeadDetailPage: FC = () => {
     const [viewingEngagement, setViewingEngagement] = useState<boolean>(false)
 
     const leadsBackUrl = `${rootRoute}${getEngagementLeadsTabPath(lead?.leadType)}`
+    // Each lead shows only what its intake form asks for. The Wipro Direct form has no role,
+    // experience, or commercial fields, so those stay off its view.
+    const isWiproConsumption = lead?.leadType !== EngagementLeadType.WIPRO_DIRECT
 
     const loadLead = useCallback(async (): Promise<void> => {
         if (!leadId) {
@@ -284,6 +288,17 @@ export const EngagementLeadDetailPage: FC = () => {
                         <section className={styles.section}>
                             <h3 className={styles.sectionTitle}>Role Requirements</h3>
                             <div className={styles.grid}>
+                                {isWiproConsumption && (
+                                    <>
+                                        <DetailField
+                                            label='Engagement Model'
+                                            value={lead.engagementModel
+                                                ? formatLabel(String(lead.engagementModel))
+                                                : undefined}
+                                        />
+                                        <DetailField label='Role Title' value={lead.roleTitle} />
+                                    </>
+                                )}
                                 <DetailField
                                     fullWidth
                                     label='Job Description'
@@ -294,6 +309,17 @@ export const EngagementLeadDetailPage: FC = () => {
                                     label='Required Skills'
                                     value={lead.requiredSkills.join(', ')}
                                 />
+                                {isWiproConsumption && (
+                                    <>
+                                        <DetailField
+                                            label='Experience Level'
+                                            value={lead.experienceLevel
+                                                ? formatLabel(String(lead.experienceLevel))
+                                                : undefined}
+                                        />
+                                        <DetailField label='Min Years Experience' value={lead.minYearsExperience} />
+                                    </>
+                                )}
                             </div>
                         </section>
 
@@ -313,17 +339,19 @@ export const EngagementLeadDetailPage: FC = () => {
                             </div>
                         </section>
 
-                        <section className={styles.section}>
-                            <h3 className={styles.sectionTitle}>Commercial & Priority</h3>
-                            <div className={styles.grid}>
-                                <DetailField
-                                    label='Client Bill Rate'
-                                    value={lead.billRateCurrency && lead.billRateAmount
-                                        ? `${lead.billRateCurrency} ${lead.billRateAmount}/hour`
-                                        : undefined}
-                                />
-                            </div>
-                        </section>
+                        {isWiproConsumption && (
+                            <section className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Commercial & Priority</h3>
+                                <div className={styles.grid}>
+                                    <DetailField
+                                        label='Client Bill Rate'
+                                        value={lead.billRateCurrency && lead.billRateAmount
+                                            ? `${lead.billRateCurrency} ${lead.billRateAmount}/hour`
+                                            : undefined}
+                                    />
+                                </div>
+                            </section>
+                        )}
                     </>
                 )}
             </div>
