@@ -133,6 +133,7 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
     const [wonGroup, setWonGroup] = useState<SalesDashboardGroupBy>('offeringType')
     const [pipelineGroup, setPipelineGroup] = useState<SalesDashboardGroupBy>('offeringType')
     const [revenueGroup, setRevenueGroup] = useState<SalesDashboardGroupBy>('offeringType')
+    const [forecastGroup, setForecastGroup] = useState<SalesDashboardGroupBy>('offeringType')
     const [pipelineMeasure, setPipelineMeasure] = useState('Amount')
     const [paymentMeasure, setPaymentMeasure] = useState('Amount')
     const [taasMeasure, setTaasMeasure] = useState('Amount')
@@ -141,6 +142,7 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
     const bookings = useSalesDashboard('bookings', portal, dateBasis, refreshKey, wonGroup)
     const pipeline = useSalesDashboard('pipeline', portal, dateBasis, refreshKey, pipelineGroup)
     const revenue = useSalesDashboard('revenue', portal, dateBasis, refreshKey, revenueGroup)
+    const forecast = useSalesDashboard('revenue-forecast', portal, dateBasis, refreshKey, forecastGroup)
     const payments = useSalesDashboard('payments', portal, dateBasis, refreshKey)
     const taas = useSalesDashboard('taas-payments', portal, dateBasis, refreshKey)
     const talent = useSalesDashboard('talent', portal, dateBasis, refreshKey)
@@ -210,9 +212,14 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
             </section>
             <section aria-labelledby='monthly-revenue' className={styles.section}>
                 <h2 id='monthly-revenue'>Revenue</h2>
-                <DashboardCard source={revenue} period={period} chartId='revenue' title='Revenue Closed'>
-                    <GroupBy value={revenueGroup} onChange={setRevenueGroup} />
-                </DashboardCard>
+                <div className={styles.grid}>
+                    <DashboardCard source={revenue} period={period} chartId='revenue' title='Revenue Closed'>
+                        <GroupBy value={revenueGroup} onChange={setRevenueGroup} revenue />
+                    </DashboardCard>
+                    <DashboardCard source={forecast} period={period} chartId='revenue-forecast' title='Revenue Forecast'>
+                        <GroupBy value={forecastGroup} onChange={setForecastGroup} revenue />
+                    </DashboardCard>
+                </div>
             </section>
             <section aria-labelledby='monthly-payments' className={styles.section}>
                 <h2 id='monthly-payments'>Payments</h2>

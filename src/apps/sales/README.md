@@ -448,3 +448,22 @@ Quarterly and annual counts are distinct members over the corresponding period, 
 monthly unique counts. Older APIs show unavailable values/datasets explicitly. Regression tests
 cover fiscal boundaries, numeric sorting, count aggregation, category selection, measure/period
 switches and preserving the raw Won stage drilldown.
+
+## Revenue forecast and closure fiscal years (PM-6700, PM-6697)
+
+The Revenue section also includes **Revenue Forecast**, loaded independently from
+`/sales-dashboard/revenue-forecast`. Both revenue cards offer **Offering Type**,
+**Deal Category**, **Customer Type** and **FY Closure** in **Filter by**. Each
+selection changes only its own card, persists on refresh and applies to both
+monthly and quarterly charts/tables.
+
+FY Closure breaks the revenue amounts down by the opportunity/project's close
+date, using April–March fiscal years labelled with the ending year (for example,
+April 2025–March 2026 is FY26). The monthly axis still uses the recognition or
+forecast line-item date, so current-year revenue from earlier closures stays
+included. Missing close dates appear as Unknown rather than disappearing from
+totals. The forecast uses Salesforce report `00OUN000008sJ4H2AU`; recognised
+revenue keeps report `00O1K000009GxBtUAK` and the customer matrices.
+
+Deploy the companion Reports API changes before the UI. The same shared dashboard
+also appears in the Reports portal. No browser Salesforce credentials are needed.

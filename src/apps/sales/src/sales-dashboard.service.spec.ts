@@ -20,7 +20,7 @@ describe('Sales dashboard fiscal year requests', () => {
     })
 
     it.each([
-        'bookings', 'pipeline', 'revenue', 'payments', 'taas-payments', 'talent', 'gross-margin',
+        'bookings', 'pipeline', 'revenue', 'revenue-forecast', 'payments', 'taas-payments', 'talent', 'gross-margin',
     ] as SalesDashboardSection[])(
         'requests the full fiscal year for %s in both portals and date bases',
         section => {
@@ -72,11 +72,13 @@ describe('Sales dashboard fiscal year requests', () => {
             .toBe(`${Number(fiscalYear) + 1}-04-01T00:00:00.000Z`)
     })
 
-    it('serializes the breakdown dimension without narrowing category values', () => {
-        fetchSalesDashboard('bookings', 'sales', 'close', new AbortController().signal, 'offeringType')
+    it.each([
+        'offeringType', 'dealCategory', 'customerType', 'fyClosure',
+    ] as const)('serializes the forecast breakdown %s without narrowing category values', groupBy => {
+        fetchSalesDashboard('revenue-forecast', 'sales', 'close', new AbortController().signal, groupBy)
         const params = new URL(String(jest.mocked(xhrGetAsync).mock.calls[0][0])).searchParams
         expect(params.get('groupBy'))
-            .toBe('offeringType')
+            .toBe(groupBy)
         expect(params.has('offeringType'))
             .toBe(false)
         expect(params.has('customerType'))

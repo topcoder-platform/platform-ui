@@ -14,6 +14,7 @@ export const dashboardTitles = {
     payments: 'Member payments',
     pipeline: 'Sales pipeline',
     revenue: 'Revenue',
+    'revenue-forecast': 'Revenue forecast',
     'taas-payments': 'TaaS payments',
     talent: 'Flexible talent',
 }
