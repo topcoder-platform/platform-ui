@@ -425,7 +425,7 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
                                                         aria-label='Notes'
                                                         className={classNames(
                                                             styles.actionIconButton,
-                                                            lead.notes && styles.actionIconActive,
+                                                            !!lead.notes?.length && styles.actionIconActive,
                                                         )}
                                                         type='button'
                                                         onClick={() => {
