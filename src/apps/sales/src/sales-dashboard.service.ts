@@ -4,13 +4,13 @@ import { xhrGetAsync } from '~/libs/core'
 import { salesFiscalYear } from './sales-fiscal-year'
 
 export type SalesDashboardSection =
-    'bookings' | 'pipeline' | 'revenue' | 'payments' | 'taas-payments' | 'talent' | 'gross-margin'
+    'bookings' | 'pipeline' | 'revenue' | 'revenue-forecast' | 'payments' | 'taas-payments' | 'talent' | 'gross-margin'
 export type SalesDashboardPortal = 'reports' | 'sales'
 export type SalesDashboardPeriod = 'Monthly' | 'Quarterly'
 export type SalesAccountCategory = 'External Revenue' | 'Through Wipro' | 'Wipro Internal'
 
 /** Dimension whose categories become chart series and monthly table columns. */
-export type SalesDashboardGroupBy = 'offeringType' | 'dealCategory' | 'customerType' | 'stage'
+export type SalesDashboardGroupBy = 'offeringType' | 'dealCategory' | 'customerType' | 'stage' | 'fyClosure'
 
 /** One monthly API chart. Undefined markup is represented as null by the API. */
 export interface MonthlySalesChart {
