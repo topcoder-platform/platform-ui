@@ -503,6 +503,47 @@ describe('MemberTimesheetView', () => {
             .toBeInTheDocument()
     })
 
+    it('saves a day with zero hours', async () => {
+        const user = userEvent.setup()
+        mockSave.mockResolvedValue(timesheet([entry({ hoursWorked: '0.00', remarks: null })]))
+        renderView()
+
+        await pickRange('2026-09-07', '2026-09-07')
+        await user.type(await screen.findByLabelText('Hours worked on 07-09-2026'), '0')
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+
+        await waitFor(() => {
+            expect(mockSave)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    entries: [{ hoursWorked: '0', remarks: undefined, workDate: '2026-09-07' }],
+                })
+        })
+        expect(screen.queryByRole('alert'))
+            .not
+            .toBeInTheDocument()
+    })
+
+    it('submits a selection whose only hours are zero', async () => {
+        const user = userEvent.setup()
+        const zeroDay = entry({ hoursWorked: '0.00', id: 'e1', remarks: 'Public holiday', workDate: '2026-09-07' })
+        mockSave.mockResolvedValue(timesheet([zeroDay]))
+        mockSubmit.mockResolvedValue(timesheet([{ ...zeroDay, status: TimesheetEntryStatus.SUBMITTED }]))
+        renderView([zeroDay])
+
+        await pickRange('2026-09-07', '2026-09-07')
+        await user.click(await screen.findByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Submit (1)' }))
+        await user.click(
+            within(await screen.findByRole('dialog'))
+                .getByRole('button', { name: 'Submit' }),
+        )
+
+        await waitFor(() => {
+            expect(mockSubmit)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', { entryIds: ['e1'] })
+        })
+    })
+
     it('saves a draft without remarks', async () => {
         const user = userEvent.setup()
         mockSave.mockResolvedValue(timesheet([entry({ hoursWorked: '8.00', remarks: null })]))
