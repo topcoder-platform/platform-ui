@@ -23,6 +23,7 @@ export interface Application {
     resumeUrl?: string
     /** URL of the CV file uploaded to S3 through Filestack. */
     cvFileUrl?: string
+    /** Only present on applications submitted before the field was removed from the form. Not shown. */
     portfolioUrls?: string[]
     yearsOfExperience?: number
     availability: string
