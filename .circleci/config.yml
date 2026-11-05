@@ -67,6 +67,9 @@ jobs:
     - checkout
     - *id001
     - run:
+        name: Verify streaming S3 commands with the pinned AWS CLI
+        command: python3 -m unittest discover -s deploy/tests -p test_aws_cli.py -v
+    - run:
         name: Fetch pinned browser configuration using read-only OIDC
         command: python3 -I deploy/site.py config --manifest deploy/<< parameters.environment >>.json
     - persist_to_workspace:

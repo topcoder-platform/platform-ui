@@ -106,9 +106,21 @@ class SiteAWS:
 
     def call(self, service, operation, extra=(), **parameters):
         d.require(operation in OPERATIONS.get(service, set()), 'Unreviewed AWS operation')
-        command = ['aws', service, operation, '--region', 'us-east-1', '--output', 'json',
-                   '--no-cli-pager', '--cli-input-json', 'file:///dev/stdin', *extra]
-        result = d.execute(command, self.env, d.compact(parameters))
+        command = ['aws', service, operation, '--region', 'us-east-1', '--output', 'json', '--no-cli-pager']
+        input_text = d.compact(parameters)
+        if service == 's3api' and operation == 'get-object':
+            # The CLI streaming download does not support cli-input-json.
+            # Only reviewed, public object coordinates may enter its argv.
+            d.require({'Bucket', 'Key'} <= set(parameters) <= {'Bucket', 'Key', 'VersionId'},
+                      'Unreviewed S3 download parameters')
+            for name, option in (('Bucket', '--bucket'), ('Key', '--key'), ('VersionId', '--version-id')):
+                if name in parameters:
+                    command.extend((option, parameters[name]))
+            input_text = None
+        else:
+            command.extend(('--cli-input-json', 'file:///dev/stdin'))
+        command.extend(extra)
+        result = d.execute(command, self.env, input_text)
         return json.loads(result) if result.strip() else {}
 
     def sync(self, root, bucket, patterns, cache):
