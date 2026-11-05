@@ -44,7 +44,8 @@ def read_manifest(path):
                 'deployRoleArn', 'bucket', 'distributionId', 'publicUrl', 'buildConfig'}
     d.require(set(m) == expected and m['schemaVersion'] == 1, 'Invalid site manifest')
     env = m['environment']
-    d.require(env in ('dev', 'prod') and m['branch'] == env, 'Expected dev/prod branch')
+    d.require(env in ('dev', 'prod') and m['branch'] == {'dev': 'dev', 'prod': 'master'}[env],
+              'Expected dev branch for development or master branch for production')
     account = {'dev': '811668436784', 'prod': '409275337247'}[env]
     d.require(m['accountId'] == account and m['region'] == 'us-east-1', 'Wrong AWS target')
     d.require(m['repository'] == 'github.com/topcoder-platform/platform-ui', 'Wrong repository')
