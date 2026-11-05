@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "environment": "dev",
+  "branch": "dev",
+  "region": "us-east-1",
+  "accountId": "811668436784",
+  "repository": "github.com/topcoder-platform/platform-ui",
+  "circleciOrgId": "947bef5e-1669-415d-b83c-4fc85155b7df",
+  "circleciProjectId": "444cff42-4443-4f44-a0df-29da98e46ed3",
+  "buildRoleArn": "arn:aws:iam::811668436784:role/platform-ui-dev-build",
+  "deployRoleArn": "arn:aws:iam::811668436784:role/platform-ui-dev-deploy",
+  "bucket": "platform-mvp.topcoder-dev.com",
+  "distributionId": "EFA7R1KH3UX5M",
+  "publicUrl": "https://platform-ui.topcoder-dev.com",
+  "buildConfig": {
+    "bucket": "tc-platform-dev",
+    "key": "deployment/platform-ui/dev-browser-config.json",
+    "versionId": "p16HdKng2Lf1jl_n0AxpivN_0M4Qx6zy",
+    "sha256": "98c7aac22cd70c95eda5810364cd38921ccd9f824e206207f22f0b409707ee3f"
+  }
+}

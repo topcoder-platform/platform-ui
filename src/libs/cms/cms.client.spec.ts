@@ -8,6 +8,30 @@ import {
 } from './cms.client'
 
 describe('Payload CMS client', () => {
+    it('selects production origins and rejects dev media for production builds', () => {
+        const previousHost: string | undefined = process.env.REACT_APP_HOST_ENV
+        process.env.REACT_APP_HOST_ENV = 'prod'
+        try {
+            jest.isolateModules(() => {
+                const production: typeof import('./cms.client') = jest.requireActual('./cms.client')
+                expect(production.PAYLOAD_CMS_ORIGIN)
+                    .toBe('https://cms.topcoder.com')
+                expect(production.PAYLOAD_ASSET_ORIGIN)
+                    .toBe('https://assets.topcoder.com')
+                expect(production.getPayloadAssetUrl('https://assets.topcoder-dev.com/media/test.png'))
+                    .toBeUndefined()
+                expect(production.getPayloadAssetUrl('https://assets.topcoder.com/media/test.png'))
+                    .toBe('https://assets.topcoder.com/media/test.png')
+            })
+        } finally {
+            if (previousHost === undefined) {
+                delete process.env.REACT_APP_HOST_ENV
+            } else {
+                process.env.REACT_APP_HOST_ENV = previousHost
+            }
+        }
+    })
+
     it('serializes stable compatibility query parameters', () => {
         expect(serializeCmsQuery({
             limit: 5,
