@@ -10,6 +10,7 @@ import { AuthenticationRegistrationSource } from './authentication-reg-source.en
 import { authentication as authenticationUrl } from './authentication-url.config'
 import { CookieKeys } from './cookie-keys.enum'
 import { AuthUser } from './auth-user.model'
+import { hasVerifiedEmail } from './email-verification'
 
 interface TokenData {
     tokenV2?: string
@@ -43,6 +44,10 @@ export function getRegistrationSource(
 export async function initializeAsync(): Promise<string | undefined> {
     return getFreshToken()
         .then((tokenV3: string) => {
+            if (!tokenV3 || !hasVerifiedEmail(decodeToken(tokenV3))) {
+                return {}
+            }
+
             const tokenV2: string | null = cookies.get(CookieKeys.tcjwt)
             return {
                 tokenV2,
