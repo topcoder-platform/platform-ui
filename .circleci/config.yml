@@ -1,263 +1,172 @@
 version: 2.1
-
-defaults: &defaults
-    docker:
-        - image: node:22.13
-
-deploy_defaults: &deploy_defaults
-    docker:
-        - image: cimg/python:3.12.1-browsers
-
-install_build_dependency: &install_build_dependency
-    name: Installation of build and deployment dependencies.
-    command: |
-        apt update
-        apt install jq -y
-        apt install python3-pip python-is-python3 python3.11-venv -y
-        curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-        unzip awscli-bundle.zip
-        ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
-
-install_dependency: &install_dependency
-    name: Installation of build and deployment dependencies.
-    command: |
-        pip3 install awscli --upgrade
-
-install_deploysuite: &install_deploysuite
-    name: Installation of install_deploysuite.
-    command: |
-        git clone --branch v1.4.17 https://github.com/topcoder-platform/tc-deploy-scripts ../buildscript
-        cp ./../buildscript/master_deploy.sh .
-        cp ./../buildscript/buildenv.sh .
-        cp ./../buildscript/awsconfiguration.sh .
-        cp ./../buildscript/psvar-processor.sh .
-
-restore_cache_settings_for_build: &restore_cache_settings_for_build
-    key: connect-node-modules-{{ checksum "yarn.lock" }}
-
-save_cache_settings: &save_cache_settings
-    key: connect-node-modules-{{ checksum "yarn.lock" }}
-    paths:
-        - node_modules
-
-running_yarn_eslint: &running_yarn_eslint
-    name: Running Yarn eslint
-    command: |
-        yarn add eslint@8.57.0 -g
-        yarn lint
-
-running_yarn_build: &running_yarn_build
-    name: Running Yarn Build
-    command: |
-        # source buildenvvar
-        source buildvar_env
-        yarn install
-        yarn build
-
-running_yarn_sb_build: &running_yarn_sb_build
-    name: Running Yarn Storybook Build
-    command: |
-        # source buildenvvar
-        source buildvar_env
-        yarn sb:build
-
-workspace_persist: &workspace_persist
-    root: .
-    paths:
-        - build
-
-workspace_attach: &workspace_attach
-    at: ./workspace
-
-build_configuration_fetch: &build_configuration_fetch
-    name: "configuring environment"
-    command: |
-        ./awsconfiguration.sh $DEPLOY_ENV
-        # ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-buildvar
-        ./psvar-processor.sh -t appenv -p /config/${APPNAME}/buildvar
-        source buildvar_env
-        aws s3 cp s3://tc-platform-${LOGICAL_ENV}/securitymanager/${LOGICAL_ENV}-platform-ui.env ./.environments/.env.${LOGICAL_ENV}.local
-
-lint_steps: &lint_steps # Initialization.
-    - checkout
-    - setup_remote_docker
-    - run: *running_yarn_eslint
-
-build_steps: &build_steps # Initialization.
-    - checkout
-    - setup_remote_docker
-    - run: *install_build_dependency
-    - run: *install_deploysuite
-    - run: *build_configuration_fetch
-    - run: *running_yarn_build
-    # - run: *running_yarn_sb_build
-    - persist_to_workspace: *workspace_persist
-
-deploy_steps: &deploy_steps
-    - checkout
-    - attach_workspace: *workspace_attach
-    - run: *install_dependency
-    - run: *install_deploysuite
-    - deploy:
-          name: Running MasterScript
-          command: |
-              ./awsconfiguration.sh $DEPLOY_ENV
-              source awsenvconf
-              # ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-deployvar
-              # source buildenvvar
-              ./psvar-processor.sh -t appenv -p /config/${APPNAME}/deployvar
-              source deployvar_env
-              ./master_deploy.sh -d CFRONT -e $DEPLOY_ENV -c $ENABLE_CACHE
-              # Switch the uncached Gigs shell only after all referenced assets are deployed.
-              aws s3 cp "${AWS_S3_SOURCE_SYNC_PATH%/}/index.html" "s3://${AWS_S3_BUCKET%/}/gigs/index.html" \
-                --content-type text/html --cache-control 'no-cache,no-store,max-age=0'
-
 jobs:
-    lint-dev:
-        <<: *defaults
-        environment:
-            DEPLOY_ENV: "DEV"
-            LOGICAL_ENV: "dev"
-            APPNAME: "platform-ui-mvp"
-        steps: *lint_steps
+  validate:
+    docker: &id002
+    - image: node:22.23.4-bookworm@sha256:18a6d90fd60542269850c80ca03b29b1d9b14d6b221ac7ee8e35b0d33ef904bd
+    resource_class: xlarge
+    environment: &id003
+      NODE_OPTIONS: --max-old-space-size=8192
+      YARN_CACHE_FOLDER: /tmp/yarn-cache
+    steps:
+    - checkout
+    - &id001
+      run:
+        name: Verify deployment helpers v2.0.8
+        command: 'set -euo pipefail
 
-    # lint-prod:
-    #   <<: *defaults
-    #   environment:
-    #     DEPLOY_ENV: "PROD"
-    #     LOGICAL_ENV: "prod"
-    #     APPNAME: "platform-ui-mvp"
-    #   steps: *lint_steps
+          git init --quiet /tmp/tc-deploy-scripts
 
-    build-dev:
-        <<: *defaults
-        # 16 GB leaves room for build workers alongside the 8 GB Node heap.
-        resource_class: xlarge
-        environment:
-            DEPLOY_ENV: "DEV"
-            LOGICAL_ENV: "dev"
-            APPNAME: "platform-ui-mvp"
-            NODE_OPTIONS: "--max-old-space-size=8192"
-        steps: *build_steps
+          git -C /tmp/tc-deploy-scripts remote add origin https://github.com/topcoder-platform/tc-deploy-scripts.git
 
-    build-qa:
-        <<: *defaults
-        environment:
-            DEPLOY_ENV: "QA"
-            LOGICAL_ENV: "qa"
-            APPNAME: "platform-ui-mvp"
-        steps: *build_steps
+          git -C /tmp/tc-deploy-scripts fetch --quiet --depth 1 origin refs/tags/v2.0.8
 
-    build-prod:
-        <<: *defaults
-        # 16 GB leaves room for build workers alongside the 8 GB Node heap.
-        resource_class: xlarge
-        environment:
-            DEPLOY_ENV: "PROD"
-            LOGICAL_ENV: "prod"
-            APPNAME: "platform-ui-mvp"
-            NODE_OPTIONS: "--max-old-space-size=8192"
-        steps: *build_steps
+          git -C /tmp/tc-deploy-scripts checkout --quiet --detach FETCH_HEAD
 
-    # Just tests commited code.
-    deployDev:
-        <<: *deploy_defaults
-        environment:
-            DEPLOY_ENV: "DEV"
-            LOGICAL_ENV: "dev"
-            ENABLE_CACHE: true
-            APPNAME: "platform-ui-mvp"
-        steps: *deploy_steps
+          test "$(git -C /tmp/tc-deploy-scripts rev-parse HEAD)" = 75bf839e1b4fa4b8dcd5ce36dad0a4d080e9a73d
 
-    deployQa:
-        <<: *deploy_defaults
-        environment:
-            DEPLOY_ENV: "QA"
-            LOGICAL_ENV: "qa"
-            ENABLE_CACHE: true
-            APPNAME: "platform-ui-mvp"
-        steps: *deploy_steps
+          '
+    - &id005
+      restore_cache:
+        keys:
+        - platform-ui-yarn-v1-{{ arch }}-{{ checksum "yarn.lock" }}
+    - &id006
+      run:
+        name: Install locked dependencies
+        command: 'test "$(node --version)" = v22.23.4
 
-    deployProd:
-        <<: *deploy_defaults
-        environment:
-            DEPLOY_ENV: "PROD"
-            LOGICAL_ENV: "prod"
-            ENABLE_CACHE: true
-            APPNAME: "platform-ui-mvp"
-        steps: *deploy_steps
+          test "$(yarn --version)" = 1.22.22
 
+          yarn install --frozen-lockfile --non-interactive'
+        no_output_timeout: 15m
+    - &id007
+      save_cache:
+        key: platform-ui-yarn-v1-{{ arch }}-{{ checksum "yarn.lock" }}
+        paths:
+        - /tmp/yarn-cache
+    - run:
+        name: Validate deployment boundaries and application
+        command: 'python3 -m unittest discover -s deploy/tests -v
+
+          yarn lint
+
+          CI=true yarn test:no-watch --runInBand --watch=false --runTestsByPath src/libs/cms/cms.client.spec.ts
+          src/config/environments/react-env.spec.ts
+
+          '
+        no_output_timeout: 20m
+  prepare-config:
+    docker:
+    - image: cimg/aws@sha256:4cf3768db00ddf9bc439b8c84e8a60c11a14edf81c8baf76f74132144f8340d5
+    parameters: &id004
+      environment:
+        type: enum
+        enum:
+        - dev
+        - prod
+    steps:
+    - checkout
+    - *id001
+    - run:
+        name: Fetch pinned browser configuration using read-only OIDC
+        command: python3 -I deploy/site.py config --manifest deploy/<< parameters.environment >>.json
+    - persist_to_workspace:
+        root: /tmp/release
+        paths:
+        - browser-config.json
+  build:
+    docker: *id002
+    resource_class: xlarge
+    environment: *id003
+    parameters: *id004
+    steps:
+    - checkout
+    - *id001
+    - *id005
+    - *id006
+    - *id007
+    - attach_workspace:
+        at: /tmp/release
+    - run:
+        name: Build without AWS credentials and record artifact provenance
+        command: python3 -I deploy/site.py build --manifest deploy/<< parameters.environment >>.json
+        no_output_timeout: 45m
+    - run: cp -a build /tmp/release/build
+    - persist_to_workspace:
+        root: /tmp/release
+        paths:
+        - build
+        - artifact.json
+  deploy:
+    docker:
+    - image: cimg/aws@sha256:4cf3768db00ddf9bc439b8c84e8a60c11a14edf81c8baf76f74132144f8340d5
+    parameters: *id004
+    steps:
+    - checkout
+    - *id001
+    - attach_workspace:
+        at: /tmp/release
+    - run:
+        name: Publish verified assets, promote HTML, and verify CloudFront
+        command: python3 -I deploy/site.py deploy --manifest deploy/<< parameters.environment >>.json
+        no_output_timeout: 45m
+    - store_artifacts:
+        path: /tmp/release/deployment-receipt.json
 workflows:
-    version: 2
-    build:
-        jobs:
-            - lint-dev:
-                  context: org-global
-                  filters:
-                      branches:
-                          ignore:
-                              - master
-
-            # - lint-prod:
-            #     context : org-global
-            #     filters:
-            #       branches:
-            #         only:
-            #           - master
-
-            - build-dev:
-                  context: org-global
-                  filters:
-                      branches:
-                          ignore:
-                              - master
-                              - qa
-                      tags:
-                          only: /^dev-.*/
-
-            - build-qa:
-                  context: org-global
-                  filters:
-                      branches:
-                          only:
-                              - qa
-
-            - build-prod:
-                  context: org-global
-                  filters:
-                      branches:
-                          only:
-                              - master
-
-            - deployDev:
-                  context: org-global
-                  requires:
-                      - build-dev
-                  filters:
-                      branches:
-                          only:
-                              - dev
-                              - copilot_reviewer
-                              - PM-5460
-                              - aws_analytics
-                      tags:
-                          only: /^dev-.*/
-
-            - deployQa:
-                  context: org-global
-                  requires:
-                      - build-qa
-                  filters:
-                      branches:
-                          only:
-                              - qa
-                              - profiles-app
-
-            - deployProd:
-                  context: org-global
-                  requires:
-                      - build-prod
-                  filters: &filters-prod
-                      branches:
-                          only:
-                              - master
+  release:
+    jobs:
+    - validate
+    - prepare-config:
+        name: config-dev
+        environment: dev
+        requires:
+        - validate
+        context: platform-ui-dev-build
+        filters: &id008
+          branches:
+            only: dev
+          tags:
+            ignore: /.*/
+    - build:
+        name: build-dev
+        environment: dev
+        requires:
+        - config-dev
+        filters: *id008
+    - deploy:
+        name: deploy-dev
+        environment: dev
+        requires:
+        - build-dev
+        context: platform-ui-dev-deploy
+        serial-group: << pipeline.project.slug >>/deploy-dev
+        filters: *id008
+    - prepare-config:
+        name: config-prod
+        environment: prod
+        requires:
+        - validate
+        context: platform-ui-prod-build
+        filters: &id009
+          branches:
+            only: prod
+          tags:
+            ignore: /.*/
+    - build:
+        name: build-prod
+        environment: prod
+        requires:
+        - config-prod
+        filters: *id009
+    - approve-prod:
+        type: approval
+        requires:
+        - build-prod
+        filters: *id009
+    - deploy:
+        name: deploy-prod
+        environment: prod
+        requires:
+        - approve-prod
+        context: platform-ui-prod-deploy
+        serial-group: << pipeline.project.slug >>/deploy-prod
+        filters: *id009

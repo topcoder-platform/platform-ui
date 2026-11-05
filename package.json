@@ -16,8 +16,7 @@
     "report:coverage": "nyc report --reporter=html",
     "report:coverage:text": "nyc report --reporter=text",
     "sb": "storybook dev -p 6006",
-    "sb:build": "storybook build -o build/storybook",
-    "deploy:dev": "BRANCH=$(git rev-parse --abbrev-ref HEAD) && TAG=\"dev-${BRANCH}\" && git tag -d \"$TAG\" 2>/dev/null; git push origin \":refs/tags/$TAG\" 2>/dev/null; git tag \"$TAG\" && git push origin \"$TAG\""
+    "sb:build": "storybook build -o build/storybook"
   },
   "dependencies": {
     "@ai-sdk/react": "4.0.82",
@@ -276,7 +275,7 @@
     ]
   },
   "volta": {
-    "node": "22.13.0",
+    "node": "22.23.4",
     "yarn": "1.22.22"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
