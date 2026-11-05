@@ -27,8 +27,8 @@ IAM templates, permissions boundaries, and installation evidence live in the
 private [v6-services-iac repository](https://github.com/topcoder-platform/v6-services-iac/tree/main/services/platform-ui).
 
 Node, the AWS executor, and deployment helpers are pinned. The helpers use
-`tc-deploy-scripts` v2.0.8, verified against commit
-`75bf839e1b4fa4b8dcd5ce36dad0a4d080e9a73d`. `site.py` adds the static-site flow;
+`tc-deploy-scripts` v2.0.9, verified against commit
+`dc06de730f068a230efa9d5f4d4d9c80782d3bfb`. `site.py` adds the static-site flow;
 it does not invoke the ECS deployment command.
 
 ## Publishing and rollback
