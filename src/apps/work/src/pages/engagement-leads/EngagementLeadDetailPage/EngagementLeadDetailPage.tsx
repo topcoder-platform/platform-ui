@@ -90,6 +90,11 @@ export const EngagementLeadDetailPage: FC = () => {
     // Each lead shows only what its intake form asks for. The Wipro Direct form has no role,
     // experience, or commercial fields, so those stay off its view.
     const isWiproConsumption = lead?.leadType !== EngagementLeadType.WIPRO_DIRECT
+    // Consumption leads submitted before the form switched to a maximum cost still carry
+    // an engagement model and bill rate, so those show only when present.
+    const legacyBillRate = lead?.billRateCurrency && lead.billRateAmount
+        ? `${lead.billRateCurrency} ${lead.billRateAmount}/hour`
+        : undefined
 
     const loadLead = useCallback(async (): Promise<void> => {
         if (!leadId) {
@@ -290,12 +295,12 @@ export const EngagementLeadDetailPage: FC = () => {
                             <div className={styles.grid}>
                                 {isWiproConsumption && (
                                     <>
-                                        <DetailField
-                                            label='Engagement Model'
-                                            value={lead.engagementModel
-                                                ? formatLabel(String(lead.engagementModel))
-                                                : undefined}
-                                        />
+                                        {lead.engagementModel && (
+                                            <DetailField
+                                                label='Engagement Model'
+                                                value={formatLabel(String(lead.engagementModel))}
+                                            />
+                                        )}
                                         <DetailField label='Role Title' value={lead.roleTitle} />
                                     </>
                                 )}
@@ -326,21 +331,19 @@ export const EngagementLeadDetailPage: FC = () => {
                                 <DetailField label='Duration' value={lead.engagementDuration} />
                                 <DetailField label='Working Hours / Day' value={lead.workingHoursPerDay} />
                                 <DetailField label='Time Zone' value={lead.timeZoneRequirement} />
-                                <DetailField label='Remote Accepted' value={formatBoolean(lead.remoteWorkAccepted)} />
                                 <DetailField label='Location Restrictions' value={lead.workLocationRestrictions} />
+                                <DetailField label='Remote Accepted' value={formatBoolean(lead.remoteWorkAccepted)} />
                             </div>
                         </section>
 
                         {isWiproConsumption && (
                             <section className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Commercial & Priority</h3>
+                                <h3 className={styles.sectionTitle}>Commercials</h3>
                                 <div className={styles.grid}>
-                                    <DetailField
-                                        label='Client Bill Rate'
-                                        value={lead.billRateCurrency && lead.billRateAmount
-                                            ? `${lead.billRateCurrency} ${lead.billRateAmount}/hour`
-                                            : undefined}
-                                    />
+                                    <DetailField label='Maximum Cost' value={lead.maximumCost} />
+                                    {legacyBillRate && (
+                                        <DetailField label='Client Bill Rate' value={legacyBillRate} />
+                                    )}
                                 </div>
                             </section>
                         )}
