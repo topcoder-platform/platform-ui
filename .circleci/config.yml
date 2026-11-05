@@ -151,7 +151,7 @@ workflows:
         context: platform-ui-prod-build
         filters: &id009
           branches:
-            only: prod
+            only: master
           tags:
             ignore: /.*/
     - build:

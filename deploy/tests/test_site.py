@@ -96,6 +96,30 @@ class ReleaseTests(unittest.TestCase):
                 with self.assertRaises(site.d.DeployError):
                     site.check_job(self.m)
 
+    def test_production_accepts_master_and_rejects_other_branches_and_tags(self):
+        manifest = site.read_manifest(Path(__file__).parents[1] / 'prod.json')
+        env = {'CIRCLE_BRANCH': 'master', 'CIRCLE_PROJECT_USERNAME': 'topcoder-platform',
+               'CIRCLE_PROJECT_REPONAME': 'platform-ui', 'CIRCLE_SHA1': 'a' * 40}
+        with patch.dict(os.environ, env, clear=True), patch.object(site.subprocess, 'check_output', return_value='a' * 40 + '\n'):
+            self.assertEqual(site.check_job(manifest), 'a' * 40)
+            for branch in ('dev', 'prod', 'feature'):
+                with self.subTest(branch=branch), patch.dict(os.environ, {'CIRCLE_BRANCH': branch}):
+                    with self.assertRaises(site.d.DeployError):
+                        site.check_job(manifest)
+            with patch.dict(os.environ, {'CIRCLE_TAG': 'release-test'}):
+                with self.assertRaises(site.d.DeployError):
+                    site.check_job(manifest)
+
+    def test_manifest_cannot_redirect_production_to_a_different_branch(self):
+        manifest = site.read_manifest(Path(__file__).parents[1] / 'prod.json')
+        for branch in ('dev', 'prod', 'feature'):
+            with self.subTest(branch=branch):
+                manifest['branch'] = branch
+                path = self.root / 'prod.json'
+                path.write_text(json.dumps(manifest))
+                with self.assertRaises(site.d.DeployError):
+                    site.read_manifest(path)
+
     def test_build_identity_cannot_write_site_and_deployer_cannot_read_build_config(self):
         build = site.policy(self.m, 'build')
         deploy = site.policy(self.m, 'deploy')

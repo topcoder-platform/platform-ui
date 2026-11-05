@@ -1,9 +1,9 @@
 # Platform UI deployment
 
 CircleCI validates every branch. Merges to `dev` build and publish the development
-site. Merges to `prod` build the production artifact and stop at `approve-prod`;
+site. Merges to `master` build the production artifact and stop at `approve-prod`;
 an operator must approve that workflow before `deploy-prod` can publish it.
-Other branches and tags do not deploy. Production uses `prod`, not `master`.
+Other branches and tags do not deploy. The production environment is named `prod`; its source branch is `master`.
 
 ## Authentication and configuration
 
@@ -52,16 +52,14 @@ retrying; a failed job is not evidence of a healthy site.
 
 1. Merge this change to `dev` and verify the CircleCI release, login, CMS-backed
    pages, and `/gigs` routing at the development site.
-2. Before the first production promotion, create `prod` from the current production
-   baseline on `master`. Review that baseline's workflow before creating the branch
-   so branch creation cannot publish through the legacy path. Do not initialize
-   `prod` from `dev`, which would bypass review of the promotion diff.
-3. Open and review a `dev` → `prod` PR, including application changes since the
-   production baseline. Merge it only after dev validation, then approve the
-   resulting `approve-prod` job when ready to publish.
-4. Stop using the legacy workflow still present on `master`; merging this PR to
-   `dev` does not rewrite other branches. Retire its shared credentials as part of
-   the coordinated legacy-role removal.
+2. Open and review a `dev` → `master` PR, including application changes since the
+   production baseline. Merge it only after dev validation. This replaces the
+   legacy workflow on `master` with the approved OIDC workflow.
+3. The production build stops at `approve-prod`. Approve that job when ready to
+   publish the reviewed artifact; merging alone does not publish production.
+4. Retire shared credentials as part of the coordinated legacy-role removal.
+   No separate `prod` branch is needed. Production OIDC trust, CircleCI context
+   restrictions, the manifest and runtime branch validation all require `master`.
 
 The new workflow replaces the old QA, arbitrary branch, and `dev-*` tag deployment
 paths; `yarn deploy:dev` is removed. CMS and asset origins now follow
