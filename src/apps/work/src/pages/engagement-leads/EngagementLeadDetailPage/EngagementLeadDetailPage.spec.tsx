@@ -71,11 +71,10 @@ const baseLead: EngagementLead = {
 }
 
 const CONSUMPTION_ONLY_LABELS = [
-    'Engagement Model',
     'Role Title',
     'Min Years Experience',
-    'Commercial & Priority',
-    'Client Bill Rate',
+    'Commercials',
+    'Maximum Cost',
 ]
 
 const SHARED_LABELS = [
@@ -111,26 +110,40 @@ describe('EngagementLeadDetailPage', () => {
     it('shows every Wipro Consumption form field', async () => {
         await renderLead({
             ...baseLead,
-            billRateAmount: '100',
-            billRateCurrency: 'USD',
-            engagementModel: 'TIME_AND_MATERIAL',
             experienceLevel: 'SENIOR',
+            maximumCost: 'USD 100/hour',
             minYearsExperience: 5,
             roleTitle: 'Backend Developer',
         })
 
-        expect(screen.queryByText('Experience Level'))
-            .not
-            .toBeInTheDocument()
+        const removedLabels = ['Experience Level', 'Engagement Model', 'Client Bill Rate', 'Commercial & Priority']
+        removedLabels.forEach(label => {
+            expect(screen.queryByText(label))
+                .not
+                .toBeInTheDocument()
+        })
 
         const labels = [...SHARED_LABELS, ...CONSUMPTION_ONLY_LABELS]
         labels.forEach(label => {
             expect(screen.getByText(label))
                 .toBeInTheDocument()
         })
+        expect(screen.getByText('USD 100/hour'))
+            .toBeInTheDocument()
+    })
+
+    it('still shows the engagement model and bill rate of older consumption leads', async () => {
+        await renderLead({
+            ...baseLead,
+            billRateAmount: '90',
+            billRateCurrency: 'USD',
+            engagementModel: 'TIME_AND_MATERIAL',
+            roleTitle: 'Backend Developer',
+        })
+
         expect(screen.getByText('time and material'))
             .toBeInTheDocument()
-        expect(screen.getByText('USD 100/hour'))
+        expect(screen.getByText('USD 90/hour'))
             .toBeInTheDocument()
     })
 

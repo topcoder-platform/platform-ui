@@ -2,6 +2,7 @@ import {
     ChangeEvent,
     FC,
     forwardRef,
+    ReactNode,
     useCallback,
     useState,
 } from 'react'
@@ -14,12 +15,14 @@ import {
     useForm,
 } from 'react-hook-form'
 import { format, isValid as isValidDate, parseISO } from 'date-fns'
+import { MultiValue, StylesConfig } from 'react-select'
+import AsyncCreatableSelect from 'react-select/async-creatable'
 import DatePicker from 'react-datepicker'
 import classNames from 'classnames'
 
 import { SearchUserSkill } from '~/libs/core'
 import { TOPCODER_URL } from '~/config/environments/default.env'
-import { InputSkillSelector } from '~/libs/shared'
+import { autoCompleteSkills, InputSkillSelector } from '~/libs/shared'
 import { yupResolver } from '@hookform/resolvers/yup'
 import {
     Button,
@@ -44,6 +47,11 @@ import { leadIntakeSchema, wiproDirectLeadIntakeSchema } from './lead-intake.sch
 import type { LeadIntakeFormData, LeadIntakeVariant } from './lead-intake.types'
 import styles from './LeadIntakePage.module.scss'
 
+const REMOTE_WORK_HINT = [
+    'Topcoder Flexi-Talent resources operate remotely.',
+    'Please confirm whether a fully remote engagement is acceptable',
+].join(' ')
+
 const MIN_PREFERRED_START_DATE = ((): Date => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -51,13 +59,11 @@ const MIN_PREFERRED_START_DATE = ((): Date => {
     return today
 })()
 
-const DEFAULT_VALUES: LeadIntakeFormData = {
+const BASE_DEFAULT_VALUES: LeadIntakeFormData = {
     accountName: '',
-    billRateAmount: '',
-    billRateCurrency: '',
     engagementDuration: '',
-    engagementModel: '',
     jobDescription: '',
+    maximumCost: '',
     minYearsExperience: 0,
     preferredStartDate: '',
     remoteWorkAccepted: 'yes',
@@ -71,14 +77,18 @@ const DEFAULT_VALUES: LeadIntakeFormData = {
     workLocationRestrictions: '',
 }
 
+// The consumption form asks for remote work acceptance as a checkbox the submitter has to tick.
+const DEFAULT_VALUES: Record<LeadIntakeVariant, LeadIntakeFormData> = {
+    wiproConsumption: { ...BASE_DEFAULT_VALUES, remoteWorkAccepted: '' },
+    wiproDirect: BASE_DEFAULT_VALUES,
+}
+
 function buildIntakeRequest(values: LeadIntakeFormData): CreateEngagementLeadIntakeRequest {
     return {
         accountName: values.accountName.trim(),
-        billRateAmount: values.billRateAmount.trim(),
-        billRateCurrency: values.billRateCurrency.trim(),
         engagementDuration: values.engagementDuration.trim(),
-        engagementModel: values.engagementModel,
         jobDescription: values.jobDescription.trim(),
+        maximumCost: values.maximumCost.trim(),
         minYearsExperience: values.minYearsExperience ?? 0,
         preferredStartDate: new Date(values.preferredStartDate)
             .toISOString(),
@@ -134,7 +144,7 @@ function submitLeadIntake(variant: LeadIntakeVariant, values: LeadIntakeFormData
 }
 
 interface FieldProps {
-    hint: string
+    hint: ReactNode
     label: string
     required?: boolean
 }
@@ -502,6 +512,56 @@ const LeadIntakeRadioGroupField: FC<RadioGroupFieldProps> = (props: RadioGroupFi
     )
 }
 
+interface CheckboxFieldProps extends BaseFieldComponentProps {
+    checkboxLabel: string
+    name: 'remoteWorkAccepted'
+}
+
+// Stores 'yes' when checked so it validates like the radio group the Wipro Direct form uses.
+const LeadIntakeCheckboxField: FC<CheckboxFieldProps> = (props: CheckboxFieldProps) => {
+    const name: CheckboxFieldProps['name'] = props.name
+
+    const handleChange = useCallback(
+        (field: ControllerRenderProps<LeadIntakeFormData, typeof name>) => (
+            (event: ChangeEvent<HTMLInputElement>): void => {
+                field.onChange(event.target.checked ? 'yes' : '')
+            }
+        ),
+        [],
+    )
+
+    const renderCheckbox = useCallback(
+        (renderProps: { field: ControllerRenderProps<LeadIntakeFormData, typeof name> }): JSX.Element => (
+            <label className={styles.checkboxOption}>
+                <input
+                    checked={renderProps.field.value === 'yes'}
+                    disabled={props.disabled}
+                    name={name}
+                    type='checkbox'
+                    onBlur={renderProps.field.onBlur}
+                    onChange={handleChange(renderProps.field)}
+                />
+                {props.checkboxLabel}
+            </label>
+        ),
+        [handleChange, name, props.checkboxLabel, props.disabled],
+    )
+
+    return (
+        <div className={styles.fieldGroupFull}>
+            <FieldLabel {...props.fieldProps} />
+            <Controller
+                control={props.control}
+                name={name}
+                render={renderCheckbox}
+            />
+            {props.errors[name]?.message && (
+                <p className={styles.fieldError}>{String(props.errors[name]?.message)}</p>
+            )}
+        </div>
+    )
+}
+
 interface SkillsFieldProps extends BaseFieldComponentProps {
     onSkillsChange: (
         fieldOnChange: (value: SearchUserSkill[]) => void,
@@ -544,6 +604,114 @@ const LeadIntakeSkillsField: FC<SkillsFieldProps> = (props: SkillsFieldProps) =>
     )
 }
 
+interface SkillOption {
+    label: string
+    value: string
+}
+
+// Keeps the menu above the page when it is portalled to the body.
+const SKILL_SELECT_STYLES: StylesConfig<SkillOption, true> = {
+    menuPortal: base => ({ ...base, zIndex: 9999 }),
+}
+
+// Standardized skills are offered as suggestions only; any typed skill can be added.
+function fetchSkillSuggestions(queryTerm: string): Promise<SkillOption[]> {
+    return autoCompleteSkills(queryTerm.trim())
+        .then(skills => skills.map(skill => ({ label: skill.name, value: skill.name })))
+        .catch(() => [])
+}
+
+function formatCreateSkillLabel(inputValue: string): string {
+    return `Add "${inputValue.trim()}"`
+}
+
+// react-select only hides the "no options" message for a `null` result.
+function hideNoOptionsMessage(): null {
+    // eslint-disable-next-line unicorn/no-null
+    return null
+}
+
+function toSkillOptions(skills: SearchUserSkill[]): SkillOption[] {
+    return skills.map(skill => ({ label: skill.name, value: skill.name }))
+}
+
+function toRequiredSkills(options: MultiValue<SkillOption>): SearchUserSkill[] {
+    const seenNames = new Set<string>()
+
+    return options.reduce<SearchUserSkill[]>((skills, option) => {
+        const name = String(option.label)
+            .trim()
+        const key = name.toLowerCase()
+
+        if (name && !seenNames.has(key)) {
+            seenNames.add(key)
+            skills.push({ id: name, name })
+        }
+
+        return skills
+    }, [])
+}
+
+/**
+ * Free-form skills input for the Wipro Consumption form, like the Tags field in the Work app:
+ * the submitter types a skill and presses Enter, so skills missing from the standardized list
+ * can still be added. Skills are saved by name.
+ */
+const LeadIntakeCreatableSkillsField: FC<BaseFieldComponentProps> = (props: BaseFieldComponentProps) => {
+    const menuPortalTarget = typeof document === 'undefined' ? undefined : document.body
+
+    const handleChange = useCallback(
+        (field: ControllerRenderProps<LeadIntakeFormData, 'requiredSkills'>) => (
+            (selected: MultiValue<SkillOption>): void => {
+                field.onChange(toRequiredSkills(selected))
+            }
+        ),
+        [],
+    )
+
+    const renderSelect = useCallback(
+        (renderProps: { field: ControllerRenderProps<LeadIntakeFormData, 'requiredSkills'> }): JSX.Element => (
+            <AsyncCreatableSelect<SkillOption, true>
+                cacheOptions
+                className={classNames(
+                    styles.skillsSelector,
+                    props.errors.requiredSkills && styles.skillsSelectorError,
+                )}
+                classNamePrefix='lead-skills'
+                formatCreateLabel={formatCreateSkillLabel}
+                inputId='requiredSkills'
+                isDisabled={props.disabled}
+                isMulti
+                loadOptions={fetchSkillSuggestions}
+                menuPortalTarget={menuPortalTarget}
+                noOptionsMessage={hideNoOptionsMessage}
+                placeholder='Type a skill and press Enter'
+                styles={SKILL_SELECT_STYLES}
+                value={toSkillOptions(renderProps.field.value)}
+                onBlur={renderProps.field.onBlur}
+                onChange={handleChange(renderProps.field)}
+            />
+        ),
+        [handleChange, menuPortalTarget, props.disabled, props.errors.requiredSkills],
+    )
+
+    return (
+        <div className={styles.fieldGroupFull}>
+            <FieldLabel {...props.fieldProps} />
+            <Controller
+                control={props.control}
+                name='requiredSkills'
+                render={renderSelect}
+            />
+            {props.errors.requiredSkills?.message && (
+                <p className={styles.fieldError}>
+                    {String(props.errors.requiredSkills.message)}
+                </p>
+            )}
+        </div>
+    )
+}
+
 interface LeadIntakePageProps {
     variant?: LeadIntakeVariant
 }
@@ -556,7 +724,7 @@ const LeadIntakePage: FC<LeadIntakePageProps> = (props: LeadIntakePageProps) => 
     const [submitError, setSubmitError] = useState<string | undefined>(undefined)
 
     const form = useForm<LeadIntakeFormData>({
-        defaultValues: DEFAULT_VALUES,
+        defaultValues: DEFAULT_VALUES[variant],
         mode: 'all',
         resolver: RESOLVERS[variant],
     })
@@ -592,9 +760,9 @@ const LeadIntakePage: FC<LeadIntakePageProps> = (props: LeadIntakePageProps) => 
     }, [submitting, variant])
 
     const handleClear = useCallback((): void => {
-        reset(DEFAULT_VALUES)
+        reset(DEFAULT_VALUES[variant])
         setSubmitError(undefined)
-    }, [reset])
+    }, [reset, variant])
 
     const handleSkillsChange = useCallback((
         fieldOnChange: (value: SearchUserSkill[]) => void,
@@ -717,38 +885,20 @@ const LeadIntakePage: FC<LeadIntakePageProps> = (props: LeadIntakePageProps) => 
                                 <h5 className={styles.sectionTitle}>2. Role Requirements</h5>
                                 <div className={styles.fieldGrid}>
                                     {isWiproConsumption && (
-                                        <>
-                                            <LeadIntakeSelectField
-                                                control={control}
-                                                disabled={submitting}
-                                                errors={errors}
-                                                fieldProps={{
-                                                    hint: 'Select the commercial model for this requirement.',
-                                                    label: 'Engagement Model',
-                                                    required: true,
-                                                }}
-                                                name='engagementModel'
-                                                options={[
-                                                    { label: 'Time & Material (T&M)', value: 'TIME_AND_MATERIAL' },
-                                                    { label: 'Fixed Price Project (FPP)', value: 'FIXED_PRICE' },
-                                                ]}
-                                                placeholder='Select model'
-                                            />
-                                            <LeadIntakeTextField
-                                                control={control}
-                                                disabled={submitting}
-                                                errors={errors}
-                                                fieldProps={{
-                                                    hint: [
-                                                        'Examples: Full Stack Developer,',
-                                                        'Product Manager, QA Engineer',
-                                                    ].join(' '),
-                                                    label: 'Role Title',
-                                                    required: true,
-                                                }}
-                                                name='roleTitle'
-                                            />
-                                        </>
+                                        <LeadIntakeTextField
+                                            control={control}
+                                            disabled={submitting}
+                                            errors={errors}
+                                            fieldProps={{
+                                                hint: [
+                                                    'Examples: Full Stack Developer,',
+                                                    'Product Manager, QA Engineer',
+                                                ].join(' '),
+                                                label: 'Role Title',
+                                                required: true,
+                                            }}
+                                            name='roleTitle'
+                                        />
                                     )}
                                     <LeadIntakeTextareaField
                                         control={control}
@@ -761,17 +911,33 @@ const LeadIntakePage: FC<LeadIntakePageProps> = (props: LeadIntakePageProps) => 
                                         }}
                                         name='jobDescription'
                                     />
-                                    <LeadIntakeSkillsField
-                                        control={control}
-                                        disabled={submitting}
-                                        errors={errors}
-                                        fieldProps={{
-                                            hint: 'Type to search and select the mandatory skills for this role.',
-                                            label: 'Required Skills',
-                                            required: true,
-                                        }}
-                                        onSkillsChange={handleSkillsChange}
-                                    />
+                                    {isWiproConsumption ? (
+                                        <LeadIntakeCreatableSkillsField
+                                            control={control}
+                                            disabled={submitting}
+                                            errors={errors}
+                                            fieldProps={{
+                                                hint: [
+                                                    'Type each mandatory skill for this role and press Enter',
+                                                    'to add it. Skills not in the suggestions can be added too.',
+                                                ].join(' '),
+                                                label: 'Required Skills',
+                                                required: true,
+                                            }}
+                                        />
+                                    ) : (
+                                        <LeadIntakeSkillsField
+                                            control={control}
+                                            disabled={submitting}
+                                            errors={errors}
+                                            fieldProps={{
+                                                hint: 'Type to search and select the mandatory skills for this role.',
+                                                label: 'Required Skills',
+                                                required: true,
+                                            }}
+                                            onSkillsChange={handleSkillsChange}
+                                        />
+                                    )}
                                     {isWiproConsumption && (
                                         <LeadIntakeNumberField
                                             control={control}
@@ -845,23 +1011,22 @@ const LeadIntakePage: FC<LeadIntakePageProps> = (props: LeadIntakePageProps) => 
                                         }}
                                         name='timeZoneRequirement'
                                     />
-                                    <LeadIntakeRadioGroupField
-                                        control={control}
-                                        disabled={submitting}
-                                        errors={errors}
-                                        fieldProps={{
-                                            hint: [
-                                                'Topcoder Flexi-Talent resources operate remotely.',
-                                                'Please confirm whether a fully remote engagement is acceptable',
-                                            ].join(' '),
-                                            label: 'Remote Work Acceptance',
-                                            required: true,
-                                        }}
-                                        name='remoteWorkAccepted'
-                                        options={[
-                                            { label: 'Yes', value: 'yes' },
-                                        ]}
-                                    />
+                                    {!isWiproConsumption && (
+                                        <LeadIntakeRadioGroupField
+                                            control={control}
+                                            disabled={submitting}
+                                            errors={errors}
+                                            fieldProps={{
+                                                hint: REMOTE_WORK_HINT,
+                                                label: 'Remote Work Acceptance',
+                                                required: true,
+                                            }}
+                                            name='remoteWorkAccepted'
+                                            options={[
+                                                { label: 'Yes', value: 'yes' },
+                                            ]}
+                                        />
+                                    )}
                                     <LeadIntakeTextField
                                         control={control}
                                         disabled={submitting}
@@ -872,42 +1037,45 @@ const LeadIntakePage: FC<LeadIntakePageProps> = (props: LeadIntakePageProps) => 
                                         }}
                                         name='workLocationRestrictions'
                                     />
+                                    {isWiproConsumption && (
+                                        <LeadIntakeCheckboxField
+                                            checkboxLabel='Yes, a fully remote engagement is acceptable'
+                                            control={control}
+                                            disabled={submitting}
+                                            errors={errors}
+                                            fieldProps={{
+                                                hint: REMOTE_WORK_HINT,
+                                                label: 'Remote Work Acceptance',
+                                                required: true,
+                                            }}
+                                            name='remoteWorkAccepted'
+                                        />
+                                    )}
                                 </div>
                             </section>
 
                             {isWiproConsumption && (
                                 <section className={styles.section}>
-                                    <h5 className={styles.sectionTitle}>4. Commercial & Priority</h5>
+                                    <h5 className={styles.sectionTitle}>4. Commercials</h5>
                                     <div className={styles.fieldGrid}>
-                                        <LeadIntakeSelectField
-                                            control={control}
-                                            disabled={submitting}
-                                            errors={errors}
-                                            fieldProps={{
-                                                hint: 'Select the currency for the approved hourly bill rate.',
-                                                label: 'Bill Rate Currency',
-                                                required: true,
-                                            }}
-                                            name='billRateCurrency'
-                                            options={[
-                                                { label: 'USD', value: 'USD' },
-                                                { label: 'GBP', value: 'GBP' },
-                                                { label: 'EUR', value: 'EUR' },
-                                                { label: 'INR', value: 'INR' },
-                                                { label: 'Other', value: 'OTHER' },
-                                            ]}
-                                            placeholder='Select currency'
-                                        />
                                         <LeadIntakeTextField
                                             control={control}
                                             disabled={submitting}
                                             errors={errors}
                                             fieldProps={{
-                                                hint: 'Hourly amount, e.g. 100',
-                                                label: 'Approved Client Bill Rate (Hourly)',
+                                                hint: (
+                                                    <>
+                                                        What is your maximum hourly rate for the resource?
+                                                        <br />
+                                                        Topcoder will bill you based on the actual hours worked.
+                                                        <br />
+                                                        Example: USD 100/hour
+                                                    </>
+                                                ),
+                                                label: 'Maximum Cost',
                                                 required: true,
                                             }}
-                                            name='billRateAmount'
+                                            name='maximumCost'
                                         />
                                     </div>
                                 </section>

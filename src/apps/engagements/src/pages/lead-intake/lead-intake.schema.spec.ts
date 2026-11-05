@@ -43,3 +43,32 @@ describe('wiproDirectLeadIntakeSchema', () => {
             .toBe(false)
     })
 })
+
+const consumptionValues = {
+    ...wiproDirectValues,
+    maximumCost: 'USD 100/hour',
+    minYearsExperience: 3,
+    preferredStartDate: '2026-12-01',
+    requiredSkills: [{ id: 'Custom Framework', name: 'Custom Framework' }],
+    roleTitle: 'QA Engineer',
+}
+
+describe('leadIntakeSchema', () => {
+    it('accepts the consumption fields without an engagement model or bill rate', async () => {
+        await expect(leadIntakeSchema.isValid(consumptionValues))
+            .resolves
+            .toBe(true)
+    })
+
+    it('requires the maximum cost', async () => {
+        await expect(leadIntakeSchema.isValid({ ...consumptionValues, maximumCost: ' ' }))
+            .resolves
+            .toBe(false)
+    })
+
+    it('requires the remote work checkbox to be checked', async () => {
+        await expect(leadIntakeSchema.isValid({ ...consumptionValues, remoteWorkAccepted: '' }))
+            .resolves
+            .toBe(false)
+    })
+})

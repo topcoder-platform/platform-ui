@@ -30,7 +30,7 @@ export interface EngagementLead {
     workEmail: string
     accountName: string
     smu: string
-    engagementModel: EngagementModel | string
+    engagementModel?: EngagementModel | string | null
     roleTitle: string
     jobDescription: string
     requiredSkills: string[]
@@ -44,8 +44,9 @@ export interface EngagementLead {
     timeZoneRequirement: string
     remoteWorkAccepted: boolean
     workLocationRestrictions?: string | null
-    billRateCurrency: string
-    billRateAmount: string
+    billRateCurrency?: string | null
+    billRateAmount?: string | null
+    maximumCost?: string | null
     priority?: LeadPriority | string | null
     additionalRequirements?: string | null
     status: EngagementLeadStatus | string
@@ -58,7 +59,6 @@ export interface CreateEngagementLeadIntakeRequest {
     workEmail: string
     accountName: string
     smu: string
-    engagementModel: EngagementModel | string
     roleTitle: string
     jobDescription: string
     requiredSkills: string[]
@@ -71,8 +71,7 @@ export interface CreateEngagementLeadIntakeRequest {
     timeZoneRequirement: string
     remoteWorkAccepted: boolean
     workLocationRestrictions?: string
-    billRateCurrency: string
-    billRateAmount: string
+    maximumCost: string
     priority?: LeadPriority | string
     additionalRequirements?: string
 }
