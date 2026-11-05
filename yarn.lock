@@ -5149,9 +5149,9 @@
     remark-stringify "^11.0.0"
     unified "^11.0.0"
 
-"@topcoder-platform/tc-auth-lib@topcoder-platform/tc-auth-lib#56996006ee5918b3e77fc5a8ab005ae738b4de12":
+"@topcoder-platform/tc-auth-lib@topcoder-platform/tc-auth-lib#8515025aeb24f983c61fd92eda143851d808ad43":
   version "1.0.2"
-  resolved "https://codeload.github.com/topcoder-platform/tc-auth-lib/tar.gz/56996006ee5918b3e77fc5a8ab005ae738b4de12"
+  resolved "https://codeload.github.com/topcoder-platform/tc-auth-lib/tar.gz/8515025aeb24f983c61fd92eda143851d808ad43"
   dependencies:
     lodash "^4.17.19"
 
