@@ -2,6 +2,7 @@ import {
     ChangeEvent,
     FC,
     forwardRef,
+    ReactNode,
     useCallback,
     useState,
 } from 'react'
@@ -143,7 +144,7 @@ function submitLeadIntake(variant: LeadIntakeVariant, values: LeadIntakeFormData
 }
 
 interface FieldProps {
-    hint: string
+    hint: ReactNode
     label: string
     required?: boolean
 }
@@ -1062,11 +1063,13 @@ const LeadIntakePage: FC<LeadIntakePageProps> = (props: LeadIntakePageProps) => 
                                             disabled={submitting}
                                             errors={errors}
                                             fieldProps={{
-                                                hint: [
-                                                    'What is your maximum hourly rate for the resource?',
-                                                    'Topcoder will bill you based on the actual hours worked.',
-                                                    'Example: USD 100/hour',
-                                                ].join(' '),
+                                                hint: (
+                                                    <>
+                                                        What is your maximum hourly rate for the resource?<br />
+                                                        Topcoder will bill you based on the actual hours worked.<br />
+                                                        Example: USD 100/hour
+                                                    </>
+                                                ),
                                                 label: 'Maximum Cost',
                                                 required: true,
                                             }}
