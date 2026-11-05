@@ -98,10 +98,6 @@ export function getLeadIntakeUrl(engagementsAppUrl: string): string {
     return `${engagementsAppUrl}/intake`
 }
 
-export function getWiproDirectLeadIntakeUrl(engagementsAppUrl: string): string {
-    return `${engagementsAppUrl}/intake/wipro-direct`
-}
-
 export function formatLeadType(leadType?: string | null): string {
     if (leadType === EngagementLeadType.WIPRO_DIRECT) {
         return 'Wipro Direct'
