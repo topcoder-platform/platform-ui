@@ -33,10 +33,7 @@ import {
     showSuccessToast,
 } from '../../../lib/utils'
 import { fetchEngagement } from '../../../lib/services/engagements.service'
-import {
-    formatLeadType,
-    getEngagementLeadsTabPath,
-} from '../../../lib/utils/engagement-leads.utils'
+import { getEngagementLeadsTabPath } from '../../../lib/utils/engagement-leads.utils'
 import { withQueryParams } from '../../../lib/utils/navigation.utils'
 
 import styles from './EngagementLeadDetailPage.module.scss'

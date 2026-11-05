@@ -1065,8 +1065,10 @@ const LeadIntakePage: FC<LeadIntakePageProps> = (props: LeadIntakePageProps) => 
                                             fieldProps={{
                                                 hint: (
                                                     <>
-                                                        What is your maximum hourly rate for the resource?<br />
-                                                        Topcoder will bill you based on the actual hours worked.<br />
+                                                        What is your maximum hourly rate for the resource?
+                                                        <br />
+                                                        Topcoder will bill you based on the actual hours worked.
+                                                        <br />
                                                         Example: USD 100/hour
                                                     </>
                                                 ),
