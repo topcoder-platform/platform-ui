@@ -799,13 +799,14 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
             const listRequest: Promise<
                 BackendReviewItem | BackendAppealResponse
             >[] = []
+            const finalAnswer = updatedResponse || reviewItem.finalAnswer || reviewItem.initialAnswer
             listRequest.push(
                 new Promise<BackendAppealResponse>((resolve, reject) => {
                     const updateData = {
                         appealId: appeal.id,
                         content,
                         resourceId,
-                        success: !!updatedResponse,
+                        success: finalAnswer !== reviewItem.initialAnswer,
                     }
                     const updateRequest = appeal.appealResponse
                         ? updateAppealResponse(

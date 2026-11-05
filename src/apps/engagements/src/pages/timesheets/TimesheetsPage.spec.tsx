@@ -18,7 +18,12 @@ const mockParams = {
 }
 
 jest.mock('react-router-dom', () => ({
+    useNavigate: () => jest.fn(),
     useParams: () => mockParams,
+    useSearchParams: () => [new URLSearchParams(), jest.fn()],
+}))
+jest.mock('../../engagements.routes', () => ({
+    rootRoute: '',
 }))
 
 jest.mock('~/libs/ui', () => ({
@@ -62,6 +67,10 @@ jest.mock('./AdminTimesheetView', () => ({
     __esModule: true,
     default: () => <div>admin-view</div>,
 }))
+jest.mock('./ManagersAuditModal', () => ({
+    __esModule: true,
+    default: () => <></>,
+}))
 jest.mock('./ManagerTimesheetView', () => ({
     __esModule: true,
     default: () => <div>manager-view</div>,
@@ -90,6 +99,11 @@ jest.mock('./TimesheetHeader', () => ({
 jest.mock('../../lib/services', () => ({
     getTimesheet: jest.fn(),
 }))
+const mockAuth = { isTm: false }
+
+jest.mock('../../lib/utils/auth', () => ({
+    useAuth: () => mockAuth,
+}))
 
 const mockGetTimesheet = getTimesheet as jest.MockedFunction<typeof getTimesheet>
 
@@ -116,6 +130,33 @@ const timesheet = (viewerRole: TimesheetViewerRole): TimesheetView => ({
 describe('TimesheetsPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        mockAuth.isTm = false
+    })
+
+    it('treats a talent manager viewing their own assignment as the member', async () => {
+        mockAuth.isTm = true
+        mockGetTimesheet.mockResolvedValue(timesheet(TimesheetViewerRole.MEMBER))
+
+        render(<TimesheetsPage />)
+
+        expect(await screen.findByText('member-view'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('admin-view'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'edit-managers' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('still lets a talent manager edit managers on someone else\'s timesheet', async () => {
+        mockAuth.isTm = true
+        mockGetTimesheet.mockResolvedValue(timesheet(TimesheetViewerRole.MANAGER))
+
+        render(<TimesheetsPage />)
+
+        expect(await screen.findByText('manager-view'))
+            .toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'edit-managers' }))
+            .toBeInTheDocument()
     })
 
     it('renders the TM view when the API returns TM', async () => {

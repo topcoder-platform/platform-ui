@@ -15,7 +15,7 @@ export interface CreateEngagementFromLeadModalProps {
     leadId: string
     onCancel: () => void
     onConfirm: (projectId: string) => void
-    roleTitle: string
+    roleTitle?: string | null
 }
 
 export const CreateEngagementFromLeadModal: FC<CreateEngagementFromLeadModalProps> = (
@@ -40,7 +40,7 @@ export const CreateEngagementFromLeadModal: FC<CreateEngagementFromLeadModalProp
             confirmDisabled={!projectId.trim()}
             confirmText='Create Engagement'
             message={
-                `Create an engagement for "${props.roleTitle}" at ${props.accountName}. `
+                `Create an engagement ${props.roleTitle ? `for "${props.roleTitle}" ` : ''}at ${props.accountName}. `
                 + 'Enter the project ID where this engagement should be created.'
             }
             onCancel={props.onCancel}

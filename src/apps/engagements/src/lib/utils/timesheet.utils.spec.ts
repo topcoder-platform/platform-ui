@@ -275,13 +275,6 @@ describe('timesheet.utils', () => {
                 .toBe('Hours must be a number.')
         })
 
-        it('rejects zero hours', () => {
-            expect(validateHours('0').error)
-                .toBe('Hours must be greater than zero.')
-            expect(validateHours('0.0').error)
-                .toBe('Hours must be greater than zero.')
-        })
-
         it('blocks more than 24 hours in a day', () => {
             expect(validateHours('24.01').error)
                 .toBe('Hours cannot exceed 24 for a single day.')
@@ -360,8 +353,12 @@ describe('timesheet.utils', () => {
             expect(hasEnteredHours(row({ hoursWorked: '8' })))
                 .toBe(true)
             expect(hasEnteredHours(row({ hoursWorked: '0' })))
-                .toBe(false)
+                .toBe(true)
+            expect(hasEnteredHours(row({ hoursWorked: '0.00' })))
+                .toBe(true)
             expect(hasEnteredHours(row({ hoursWorked: '' })))
+                .toBe(false)
+            expect(hasEnteredHours(row({ hoursWorked: '  ' })))
                 .toBe(false)
         })
     })

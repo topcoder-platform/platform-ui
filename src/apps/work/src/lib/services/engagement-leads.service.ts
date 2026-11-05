@@ -1,6 +1,7 @@
 import {
     xhrGetAsync,
     xhrPatchAsync,
+    xhrPostAsync,
 } from '~/libs/core'
 
 import {
@@ -44,6 +45,7 @@ export const fetchEngagementLeads = async (
 
     appendFilterParam(params, 'page', filters.page)
     appendFilterParam(params, 'perPage', filters.perPage)
+    appendFilterParam(params, 'leadType', filters.leadType)
     appendFilterParam(params, 'accountName', filters.accountName)
     appendFilterParam(params, 'smu', filters.smu)
     appendFilterParam(params, 'engagementModel', filters.engagementModel)
@@ -90,6 +92,16 @@ export const updateEngagementLeadStatus = async (
     xhrPatchAsync<{ status: string }, EngagementLead>(
         `${LEADS_URL}/${leadId}/status`,
         { status },
+    )
+)
+
+export const addEngagementLeadNote = async (
+    leadId: string,
+    content: string,
+): Promise<EngagementLead> => (
+    xhrPostAsync<{ content: string }, EngagementLead>(
+        `${LEADS_URL}/${leadId}/notes`,
+        { content },
     )
 )
 

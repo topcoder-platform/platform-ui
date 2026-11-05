@@ -137,7 +137,10 @@ const TimesheetsPage: FC = () => {
         }
     }, [isDirty])
 
+    // A TM or administrator viewing their own assignment gets the member view, and a member does not
+    // choose who approves their own hours.
     const canEditManagers = timesheet
+        && timesheet.viewerRole !== TimesheetViewerRole.MEMBER
         && ([TimesheetViewerRole.ADMINISTRATOR, TimesheetViewerRole.TM]
             .includes(timesheet.viewerRole) || authCtx.isTm)
     const canRenderContent = !isLoading && !error && timesheet

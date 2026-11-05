@@ -400,3 +400,6 @@ export const ASSIGNMENT_SOURCE_LABELS: Record<(typeof ASSIGNMENT_SOURCES)[number
     VENDOR: 'Vendor',
     WIPRO_REFERRAL: 'Wipro Referral',
 }
+
+// Must match the SMU dropdown on the public lead intake forms.
+export const LEAD_SMU_OPTIONS: ReadonlyArray<string> = ['AMPE', 'EURP', 'AMR1', 'AMR2', 'Others']

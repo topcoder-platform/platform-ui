@@ -1,12 +1,12 @@
 /* eslint-disable react/no-unused-prop-types */
 import type { FC, ReactNode } from 'react'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import ReactMarkdown, { type Components, type Options as ReactMarkdownOptions } from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 
-import { Button, IconSolid } from '~/libs/ui'
+import { Button } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 
 import {
@@ -21,6 +21,7 @@ import {
 import { formatDate } from '../../lib/utils/date.utils'
 import { formatLocation } from '../../lib/utils/api.utils'
 import { truncateText } from '../../lib/utils/application.utils'
+import { AssignmentDetail, AssignmentDetailsModal } from '../assignment-details-modal'
 import { StatusBadge } from '../status-badge'
 
 import styles from './AssignmentCard.module.scss'
@@ -142,9 +143,16 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         engagement.countries ?? [],
         engagement.timeZones ?? [],
     )
+    const [detailsOpen, setDetailsOpen] = useState<boolean>(false)
     const handleContactTalentManagerClick = useCallback(() => {
         props.onContactTalentManager(contactEmail)
     }, [contactEmail, props.onContactTalentManager])
+    const handleOpenDetails = useCallback(() => {
+        setDetailsOpen(true)
+    }, [])
+    const handleCloseDetails = useCallback(() => {
+        setDetailsOpen(false)
+    }, [])
 
     const descriptionSnippet = useMemo(() => (
         truncateText(renderRichTextToPlainText(engagement.description), DESCRIPTION_MAX_LENGTH)
@@ -174,6 +182,23 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         () => formatStandardHoursPerDay(assignment?.standardHoursPerDay, FALLBACK_VALUE_LABEL),
         [assignment?.standardHoursPerDay],
     )
+    const assignmentDetails = useMemo<AssignmentDetail[]>(() => [
+        { label: 'Billing start', value: startDateLabel },
+        { label: 'Duration', value: durationMonthsLabel },
+        { label: 'Timezone', value: timeZoneLabel },
+        { label: 'Location', value: locationLabel },
+        { label: 'Rate / hr', value: ratePerHourLabel },
+        { label: 'Std hrs / day', value: standardHoursPerDayLabel },
+        { label: 'Payment cycle', value: assignment?.paymentCycle ?? FALLBACK_VALUE_LABEL },
+    ], [
+        assignment?.paymentCycle,
+        durationMonthsLabel,
+        locationLabel,
+        ratePerHourLabel,
+        standardHoursPerDayLabel,
+        startDateLabel,
+        timeZoneLabel,
+    ])
     const assignmentStatus = assignment?.status?.toLowerCase()
     // Experience remains available for the original assignment after it ends.
     const showExperienceAction = ['assigned', 'completed', 'terminated'].includes(assignmentStatus ?? '')
@@ -234,35 +259,6 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                     {sanitizeRichTextSource(descriptionSnippet || 'Description not available.')}
                 </Markdown>
             </div>
-            <div className={styles.meta}>
-                <div className={styles.metaItem}>
-                    <IconSolid.CalendarIcon className={styles.metaIcon} />
-                    <span>{`Billing start: ${startDateLabel}`}</span>
-                </div>
-                <div className={styles.metaItem}>
-                    <IconSolid.CalendarIcon className={styles.metaIcon} />
-                    <span>{`Duration: ${durationMonthsLabel}`}</span>
-                </div>
-                <div className={styles.metaItem}>
-                    <IconSolid.GlobeAltIcon className={styles.metaIcon} />
-                    <span>{`Timezone: ${timeZoneLabel}`}</span>
-                </div>
-                <div className={styles.metaItem}>
-                    <IconSolid.LocationMarkerIcon className={styles.metaIcon} />
-                    <span>{`Location: ${locationLabel}`}</span>
-                </div>
-                <div className={styles.metaItem}>
-                    <IconSolid.CurrencyDollarIcon className={styles.metaIcon} />
-                    <span>{`Rate / hr: ${ratePerHourLabel}`}</span>
-                </div>
-                <div className={styles.metaItem}>
-                    <IconSolid.ClockIcon className={styles.metaIcon} />
-                    <span>{`Std hrs / day: ${standardHoursPerDayLabel}`}</span>
-                </div>
-                <div className={styles.metaItem}>
-                    <span>{`Payment cycle: ${assignment?.paymentCycle ?? 'TBD'}`}</span>
-                </div>
-            </div>
             <div className={styles.skills}>
                 {skills.length > 0 ? visibleSkills.map(skill => (
                     <span key={`${engagement.nanoId}-${skill}`} className={styles.skillPill}>
@@ -274,6 +270,15 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                 {extraSkillsCount > 0 && (
                     <span className={styles.moreSkills}>{`+${extraSkillsCount} more`}</span>
                 )}
+            </div>
+            <div>
+                <Button
+                    label='Assignment Details'
+                    onClick={handleOpenDetails}
+                    secondary
+                    textWrap
+                    className={styles.detailsButton}
+                />
             </div>
             <div>
                 { props.profileGateError && (
@@ -335,6 +340,14 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                     disabled={!canContactTalentManager}
                 />
             </div>
+            {detailsOpen && (
+                <AssignmentDetailsModal
+                    details={assignmentDetails}
+                    onClose={handleCloseDetails}
+                    open
+                    title={engagement.title || 'Untitled engagement'}
+                />
+            )}
         </div>
     )
 }

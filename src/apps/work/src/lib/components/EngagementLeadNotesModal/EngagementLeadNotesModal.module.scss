@@ -1,0 +1,47 @@
+.list {
+    display: grid;
+    gap: 8px;
+    max-height: 280px;
+    margin: 12px 0 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.note {
+    border: 1px solid var(--black-20, #ddd);
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: #f7f8fa;
+}
+
+.meta {
+    margin: 0 0 4px;
+    font-size: 12px;
+    color: var(--black-60, #666);
+}
+
+.content {
+    margin: 0;
+    font-size: 14px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.empty {
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--black-60, #666);
+}
+
+.textarea {
+    width: 100%;
+    min-height: 100px;
+    margin-top: 12px;
+    border: 1px solid var(--black-20, #ddd);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font: inherit;
+    font-size: 14px;
+    resize: vertical;
+}

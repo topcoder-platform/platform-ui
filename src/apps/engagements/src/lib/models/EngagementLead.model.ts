@@ -34,7 +34,7 @@ export interface EngagementLead {
     roleTitle: string
     jobDescription: string
     requiredSkills: string[]
-    experienceLevel: ExperienceLevel | string
+    experienceLevel?: ExperienceLevel | string | null
     minYearsExperience: number
     industryDomain?: string | null
     resourcesRequired: number
@@ -46,7 +46,7 @@ export interface EngagementLead {
     workLocationRestrictions?: string | null
     billRateCurrency: string
     billRateAmount: string
-    priority: LeadPriority | string
+    priority?: LeadPriority | string | null
     additionalRequirements?: string | null
     status: EngagementLeadStatus | string
     convertedEngagementId?: string | null
@@ -62,7 +62,6 @@ export interface CreateEngagementLeadIntakeRequest {
     roleTitle: string
     jobDescription: string
     requiredSkills: string[]
-    experienceLevel: ExperienceLevel | string
     minYearsExperience: number
     industryDomain?: string
     resourcesRequired: number
@@ -74,8 +73,25 @@ export interface CreateEngagementLeadIntakeRequest {
     workLocationRestrictions?: string
     billRateCurrency: string
     billRateAmount: string
-    priority: LeadPriority | string
+    priority?: LeadPriority | string
     additionalRequirements?: string
+}
+
+export type CreateWiproDirectEngagementLeadIntakeRequest = Pick<
+    CreateEngagementLeadIntakeRequest,
+    | 'workEmail'
+    | 'accountName'
+    | 'smu'
+    | 'jobDescription'
+    | 'requiredSkills'
+    | 'resourcesRequired'
+    | 'engagementDuration'
+    | 'workingHoursPerDay'
+    | 'timeZoneRequirement'
+    | 'remoteWorkAccepted'
+    | 'workLocationRestrictions'
+> & {
+    preferredStartDate?: string
 }
 
 export interface EngagementLeadIntakeResponse {

@@ -9,6 +9,18 @@
     margin: 0;
 }
 
+.totals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin: 0;
+
+    // Set explicitly: the browser's default bold for <strong> does not show through in this modal.
+    strong {
+        @include font-weight-bold;
+    }
+}
+
 .field {
     display: grid;
     gap: 6px;

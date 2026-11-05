@@ -1,7 +1,7 @@
 # Payload CMS client
 
-This library is the browser-side CMS boundary for the migrated Thrive app. It calls only
-`https://cms.topcoder-dev.com` and accepts media only from `https://assets.topcoder-dev.com`; it has
+This library is the browser-side CMS boundary for the migrated Thrive app. It selects `cms.topcoder-dev.com` / `assets.topcoder-dev.com` for dev and
+`cms.topcoder.com` / `assets.topcoder.com` when `REACT_APP_HOST_ENV=prod`. It has
 no Contentful, Octana, or community-app proxy fallback.
 
 Payload's read-only compatibility facade deliberately retains the old response schema so migrated

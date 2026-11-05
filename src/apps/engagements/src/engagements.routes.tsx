@@ -19,6 +19,10 @@ const LeadIntakePage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/lead-intake'),
     'LeadIntakePage',
 )
+const WiproDirectLeadIntakePage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/lead-intake'),
+    'WiproDirectLeadIntakePage',
+)
 const ApplicationFormPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/application-form'),
     'ApplicationFormPage',
@@ -62,6 +66,12 @@ export const engagementsRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <LeadIntakePage />,
                 id: 'Engagement Lead Intake',
                 route: 'intake',
+            },
+            {
+                children: [],
+                element: <WiproDirectLeadIntakePage />,
+                id: 'Wipro Direct Engagement Lead Intake',
+                route: 'intake/wipro-direct',
             },
             {
                 children: [],

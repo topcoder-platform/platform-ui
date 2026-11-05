@@ -266,8 +266,8 @@ export const validateHours = (
 
     const hours = Number(trimmed)
 
-    if (hours <= 0) {
-        return { error: 'Hours must be greater than zero.' }
+    if (hours < 0) {
+        return { error: 'Hours cannot be negative.' }
     }
 
     if (hours > TIMESHEET_MAX_HOURS_PER_DAY) {
@@ -300,10 +300,11 @@ export const hasRowValidationError = (
     || validateRemarks(row.remarks).error,
 )
 
-/** True when the row holds hours that could be saved. */
+/** True when the row holds hours that could be saved. Zero counts: it records a day not worked. */
 export const hasEnteredHours = (row: TimesheetRow): boolean => {
     const trimmed = row.hoursWorked.trim()
-    return Boolean(trimmed) && Number(trimmed) > 0
+    const hours = Number(trimmed)
+    return Boolean(trimmed) && Number.isFinite(hours) && hours >= 0
 }
 
 /**

@@ -109,12 +109,22 @@ const rows: EngagementAssignmentRow[] = [
     }),
 ]
 
+function selectStatus(status: string): void {
+    fireEvent.change(screen.getByTestId('work-assignments-status'), {
+        target: { value: status },
+    })
+}
+
+/**
+ * Renders the table with every status shown, since most cases check rows of several statuses.
+ */
 function renderTable(tableRows: EngagementAssignmentRow[] = rows): void {
     render(
         <MemoryRouter>
             <EngagementAssignmentsTable backUrl='/work/engagements?tab=assignments' rows={tableRows} />
         </MemoryRouter>,
     )
+    selectStatus('all')
 }
 
 function getMemberHandles(): string[] {
@@ -125,6 +135,19 @@ function getMemberHandles(): string[] {
 }
 
 describe('EngagementAssignmentsTable', () => {
+    it('shows only assigned assignments by default', () => {
+        render(
+            <MemoryRouter>
+                <EngagementAssignmentsTable backUrl='/work/engagements?tab=assignments' rows={rows} />
+            </MemoryRouter>,
+        )
+
+        expect((screen.getByTestId('work-assignments-status') as HTMLSelectElement).value)
+            .toBe('ASSIGNED')
+        expect(getMemberHandles())
+            .toEqual(['first_member'])
+    })
+
     it('renders one row per assignment with its customer, engagement, and project', () => {
         renderTable()
 
@@ -183,9 +206,7 @@ describe('EngagementAssignmentsTable', () => {
     it('filters by assignment status', () => {
         renderTable()
 
-        fireEvent.change(screen.getByTestId('work-assignments-status'), {
-            target: { value: 'SELECTED' },
-        })
+        selectStatus('SELECTED')
 
         expect(getMemberHandles())
             .toEqual(['second_member'])
