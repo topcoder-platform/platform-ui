@@ -2,11 +2,13 @@ import { FC } from 'react'
 
 import { formatFormValue, FormReport } from '../../lib/services/forms.service'
 
+import SendGridLogLinks, { sendGridMessageIdsColumn } from './SendGridLogLinks'
 import styles from './FormsPage.module.scss'
 
 const hiddenColumns = new Set([
     'source_page', 'form_version', 'leadsource', 'source__c',
     'lead_source_for_campaign__c', 'primary_campaign__c', 'insta_page_name__c',
+    sendGridMessageIdsColumn,
 ])
 const inquiryColumn = 'briefly_describe_your_inquiry'
 const labels: Record<string, string> = {
@@ -21,13 +23,15 @@ const labels: Record<string, string> = {
 /**
  * Displays contact submissions in API order with compact details above the full-width inquiry.
  * @param props Report page with published field labels, typed answers, and submission metadata.
- * @returns Responsive, labelled submissions without repetitive campaign fields; CSV data is unchanged.
+ * @returns Responsive, labelled submissions without repetitive campaign fields, each with links to the SendGrid
+ * logs of the emails sent for it when the API reports any; CSV data is unchanged.
  * @throws Does not throw for API JSON reports.
  */
 const LetsTalkSubmissions: FC<{ report: FormReport }> = (props: { report: FormReport }) => {
     const report = props.report
     const columns = report.columns.filter(column => !hiddenColumns.has(column) && column !== inquiryColumn)
     if (report.columns.includes(inquiryColumn)) columns.push(inquiryColumn)
+    const showEmailLogs = report.columns.includes(sendGridMessageIdsColumn)
 
     return (
         <section className={styles.submissions} aria-label='Form submissions'>
@@ -41,6 +45,14 @@ const LetsTalkSubmissions: FC<{ report: FormReport }> = (props: { report: FormRe
                             </div>
                         ))}
                     </dl>
+                    {showEmailLogs && (
+                        <p className={styles.emailLogs}>
+                            <SendGridLogLinks
+                                value={row[sendGridMessageIdsColumn]}
+                                empty='No SendGrid emails recorded'
+                            />
+                        </p>
+                    )}
                 </article>
             ))}
         </section>
