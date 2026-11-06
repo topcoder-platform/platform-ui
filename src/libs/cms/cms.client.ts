@@ -7,11 +7,13 @@ import {
     CmsSpace,
 } from './cms.types'
 
-/** Payload CMS origin selected for the 2026 platform migration. */
-export const PAYLOAD_CMS_ORIGIN = 'https://cms.topcoder-dev.com'
+const CMS_DOMAIN = process.env.REACT_APP_HOST_ENV === 'prod' ? 'topcoder.com' : 'topcoder-dev.com'
 
-/** Payload-managed media origin selected for migrated CMS assets. */
-export const PAYLOAD_ASSET_ORIGIN = 'https://assets.topcoder-dev.com'
+/** Environment-specific Payload CMS origin. */
+export const PAYLOAD_CMS_ORIGIN = `https://cms.${CMS_DOMAIN}`
+
+/** Media must belong to the same environment as the CMS API. */
+export const PAYLOAD_ASSET_ORIGIN = `https://assets.${CMS_DOMAIN}`
 
 const CMS_SPACE_IDS: Record<CmsSpace, string> = {
     default: 'b5f1djy59z3a',

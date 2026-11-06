@@ -4,6 +4,7 @@ import { SMU_OPTIONS } from './lead-intake.constants'
 import type { LeadIntakeFormData, WiproDirectLeadIntakeFormData } from './lead-intake.types'
 
 const requiredMessage = 'Field cannot be empty or contain only whitespace'
+const remoteWorkMessage = 'Please confirm that a fully remote engagement is acceptable'
 
 const skillSchema = yup.object({
     id: yup
@@ -20,30 +21,21 @@ export const leadIntakeSchema: yup.ObjectSchema<LeadIntakeFormData> = yup.object
         .trim()
         .required(requiredMessage)
         .max(255),
-    billRateAmount: yup
-        .string()
-        .trim()
-        .required(requiredMessage)
-        .max(50),
-    billRateCurrency: yup
-        .string()
-        .trim()
-        .required(requiredMessage)
-        .max(10),
     engagementDuration: yup
         .string()
         .trim()
         .required(requiredMessage)
         .max(100),
-    engagementModel: yup
-        .string()
-        .oneOf(['TIME_AND_MATERIAL', 'FIXED_PRICE'])
-        .required(requiredMessage),
     jobDescription: yup
         .string()
         .trim()
         .required(requiredMessage)
         .max(10000),
+    maximumCost: yup
+        .string()
+        .trim()
+        .required(requiredMessage)
+        .max(100),
     minYearsExperience: yup
         .number()
         .min(0, 'Must be 0 or greater')
@@ -55,8 +47,8 @@ export const leadIntakeSchema: yup.ObjectSchema<LeadIntakeFormData> = yup.object
         .required(requiredMessage),
     remoteWorkAccepted: yup
         .string()
-        .oneOf(['yes'])
-        .required(requiredMessage),
+        .oneOf(['yes'], remoteWorkMessage)
+        .required(remoteWorkMessage),
     requiredSkills: yup
         .array()
         .of(skillSchema)

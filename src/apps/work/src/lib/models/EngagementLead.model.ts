@@ -68,6 +68,7 @@ export interface EngagementLead {
     workLocationRestrictions?: string | null
     billRateCurrency?: string | null
     billRateAmount?: string | null
+    maximumCost?: string | null
     priority?: LeadPriority | string | null
     additionalRequirements?: string | null
     /** Oldest first. */

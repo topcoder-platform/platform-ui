@@ -4,7 +4,6 @@ export interface LeadIntakeFormData {
     workEmail: string
     accountName: string
     smu: string
-    engagementModel: string
     roleTitle: string
     jobDescription: string
     requiredSkills: SearchUserSkill[]
@@ -16,8 +15,7 @@ export interface LeadIntakeFormData {
     timeZoneRequirement: string
     remoteWorkAccepted: string
     workLocationRestrictions: string
-    billRateCurrency: string
-    billRateAmount: string
+    maximumCost: string
 }
 
 export type LeadIntakeVariant = 'wiproConsumption' | 'wiproDirect'

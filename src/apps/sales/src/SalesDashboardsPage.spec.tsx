@@ -43,7 +43,7 @@ const response: SalesDashboardResponse = {
     notices: [],
 }
 
-const activeSections = ['bookings', 'pipeline', 'revenue', 'payments', 'taas-payments', 'talent']
+const activeSections = ['bookings', 'pipeline', 'revenue', 'revenue-forecast', 'payments', 'taas-payments', 'talent']
 
 beforeEach(() => {
     jest.clearAllMocks()
@@ -55,7 +55,7 @@ it.each([undefined, 'reports', 'sales'] as Array<SalesDashboardPortal | undefine
     async portal => {
         render(<SalesDashboardsPage portal={portal} />)
         await waitFor(() => expect(fetchDashboard)
-            .toHaveBeenCalledTimes(6))
+            .toHaveBeenCalledTimes(7))
         expect(fetchDashboard.mock.calls.map(call => [call[0], call[1]]))
             .toEqual(activeSections.map(section => [section, portal ?? 'reports']))
         expect(screen.queryByRole('heading', { name: /gross margin/i }))
@@ -70,16 +70,16 @@ it.each(['reports', 'sales'] as SalesDashboardPortal[])(
     async portal => {
         render(<SalesDashboardsPage portal={portal} />)
         await waitFor(() => expect(fetchDashboard)
-            .toHaveBeenCalledTimes(6))
+            .toHaveBeenCalledTimes(7))
         fireEvent.click(screen.getByRole('button', { name: 'Created date' }))
         await waitFor(() => expect(fetchDashboard)
-            .toHaveBeenCalledTimes(8))
+            .toHaveBeenCalledTimes(9))
         expect(fetchDashboard)
-            .toHaveBeenLastCalledWith('pipeline', portal, 'created', expect.any(AbortSignal), 'stage')
+            .toHaveBeenLastCalledWith('pipeline', portal, 'created', expect.any(AbortSignal), 'offeringType')
         fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
         await waitFor(() => expect(fetchDashboard)
-            .toHaveBeenCalledTimes(14))
-        expect(fetchDashboard.mock.calls.slice(8)
+            .toHaveBeenCalledTimes(16))
+        expect(fetchDashboard.mock.calls.slice(9)
             .map(call => call[0]))
             .toEqual(activeSections)
         expect(screen.queryByRole('heading', { name: /gross margin/i }))
@@ -105,7 +105,7 @@ it('keeps independent sections usable when one source fails and retries just tha
     expect(await screen.findByText('Talent data loaded.'))
         .toBeInTheDocument()
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(7)
+        .toHaveBeenCalledTimes(8)
 })
 
 it('cancels pending source requests on unmount', () => {
@@ -140,8 +140,8 @@ it('shows percentage units and unknown values in the accessible monthly table', 
         .getByText('25.5%'))
         .toBeInTheDocument()
     expect(within(table)
-        .getByText('—'))
-        .toBeInTheDocument()
+        .getAllByText('—'))
+        .toHaveLength(2)
     expect(within(table)
         .getByText('Sep 2026'))
         .toBeInTheDocument()
@@ -159,15 +159,14 @@ it('renders every fiscal-year month, including April data and the following Marc
     const rows = within(table)
         .getAllByRole('row', { hidden: true })
     expect(rows)
-        .toHaveLength(14)
+        .toHaveLength(2)
+    expect(within(rows[0])
+        .getAllByRole('columnheader', { hidden: true })
+        .map(cell => cell.textContent?.replace(/ [↑↓↕]$/, '')))
+        .toEqual(['Field', 'Annual', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026', 'Aug 2026',
+            'Sep 2026', 'Oct 2026', 'Nov 2026', 'Dec 2026', 'Jan 2027', 'Feb 2027', 'Mar 2027'])
     expect(rows[1])
-        .toHaveTextContent('Annual$123.45')
-    expect(rows[2])
-        .toHaveTextContent('Apr 2026$123.45')
-    expect(rows[11])
-        .toHaveTextContent('Jan 2027')
-    expect(rows[13])
-        .toHaveTextContent('Mar 2027')
+        .toHaveTextContent('Payments$123.45$123.45')
 })
 
 it.each([
@@ -328,7 +327,7 @@ it('totals currency and omits annual totals from member counts and percentages',
     const view = render(<SalesDashboardChart chart={chart} />)
     const table = screen.getByRole('table', { hidden: true })
     expect(within(table)
-        .getByRole('columnheader', { hidden: true, name: 'Total' }))
+        .getByRole('rowheader', { hidden: true, name: 'Total' }))
         .toBeInTheDocument()
     expect(within(table)
         .getAllByText('$75.00'))
@@ -343,7 +342,7 @@ it('totals currency and omits annual totals from member counts and percentages',
         .not.toBeInTheDocument()
     expect(screen.queryByRole('rowheader', { hidden: true, name: 'Annual' }))
         .not.toBeInTheDocument()
-    expect(screen.getByText(/Counts are unique within each category and month/))
+    expect(screen.getByText(/Counts are unique within each category and period/))
         .toBeInTheDocument()
     view.rerender(<SalesDashboardChart chart={{ ...chart, unit: 'percent' }} />)
     expect(chartOptions().tooltip?.formatter)
@@ -371,7 +370,7 @@ it.each(['Goods Sold Customer-Wise', 'Revenue Customer-Wise'])(
         const table = screen.getByRole('table')
         expect(within(table)
             .getAllByRole('columnheader')
-            .map(cell => cell.textContent))
+            .map(cell => cell.textContent?.replace(/ [↑↓↕]$/, '')))
             .toEqual(['Customer', 'Annual', 'Apr 2026', 'May 2026', 'Jun 2026'])
         expect(within(table)
             .getByRole('row', { name: /Metro/ }))
@@ -464,7 +463,7 @@ it('places both customer tables at the bottom without duplicate requests or the 
         .toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Bookings' })).not.toBeInTheDocument()
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(6)
+        .toHaveBeenCalledTimes(7)
 })
 
 it('shows customer-source failures independently and retries the shared source only once', async () => {
@@ -490,7 +489,7 @@ it('shows customer-source failures independently and retries the shared source o
         .getByText('Partial source.'))
         .toBeInTheDocument()
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(7)
+        .toHaveBeenCalledTimes(8)
     expect(fetchDashboard)
         .toHaveBeenLastCalledWith('revenue', 'sales', 'close', expect.any(AbortSignal), 'offeringType')
 })
@@ -541,7 +540,7 @@ it('provides explicit missing-customer-data notices for older APIs and authoriza
         .toHaveLength(0)
 })
 
-it('adds an Annual row before all months for single-series charts without treating missing data as zero', () => {
+it('adds an Annual column before all months for single-series charts without treating missing data as zero', () => {
     const chart: MonthlySalesChart = {
         ...response.charts[0],
         months: [
@@ -554,7 +553,7 @@ it('adds an Annual row before all months for single-series charts without treati
     let table = screen.getByRole('table', { hidden: true })
     expect(within(table)
         .getAllByRole('row', { hidden: true })[1])
-        .toHaveTextContent('Annual$8.25')
+        .toHaveTextContent('Payments$8.25')
     expect(jest.mocked(HighchartsReact).mock.calls.slice(-1)[0][0].options.tooltip.formatter)
         .toBeDefined()
     view.rerender(<SalesDashboardChart chart={{ ...chart,
@@ -564,7 +563,7 @@ it('adds an Annual row before all months for single-series charts without treati
     table = screen.getByRole('table', { hidden: true })
     expect(within(table)
         .getAllByRole('row', { hidden: true })[1])
-        .toHaveTextContent('Annual—')
+        .toHaveTextContent('Payments——')
 })
 
 /** @returns Independent card sources with category breakdowns and amount/count measures. Does not throw. */
@@ -573,7 +572,8 @@ function mockConsolidatedDashboards(): void {
         const labels = groupBy === 'stage' ? ['Proposal', 'Negotiation']
             : groupBy === 'dealCategory' ? ['Wipro Direct', 'Topcoder Direct']
                 : groupBy === 'customerType' ? ['New Customer', 'Extension to Existing Project']
-                    : ['AI Training', 'Flexible Talent']
+                    : groupBy === 'fyClosure' ? ['FY21', 'FY26']
+                        : ['AI Training', 'Flexible Talent']
         const chart = (id: string, value: number, unit: MonthlySalesChart['unit'] = 'currency'): MonthlySalesChart => ({
             ...response.charts[0],
             id,
@@ -585,9 +585,10 @@ function mockConsolidatedDashboards(): void {
         })
         const charts = section === 'bookings' ? [chart('closed-won', 1000)]
             : section === 'pipeline' ? [chart('pipeline-stage', 1000), chart('expected-revenue', 500)]
-                : section === 'revenue' ? [chart('revenue', 1000)]
+                : section === 'revenue' || section === 'revenue-forecast' ? [chart(section, 1000)]
                     : section === 'payments' ? [chart('payment-type', 1000), chart('members-paid', 2, 'count')]
-                        : section === 'taas-payments' ? [chart('taas-payments', 75)]
+                        : section === 'taas-payments'
+                            ? [chart('taas-payments', 75), chart('taas-members-paid', 2, 'count')]
                             : [chart('flexible-talent', 3, 'count')]
         return { charts,
             customerPayments: section === 'payments' ? customerPayments : undefined,
@@ -601,7 +602,7 @@ it('selects independent breakdown dimensions and displays every category in the 
     render(<SalesDashboardsPage portal='sales' />)
     const card = (title: string): ReturnType<typeof within> => within(screen.getByRole('article', { name: title }))
     await waitFor(() => expect(card('Bookings Won')
-        .getByRole('columnheader', { hidden: true, name: 'AI Training' }))
+        .getByRole('rowheader', { hidden: true, name: 'AI Training' }))
         .toBeInTheDocument())
     expect(within(card('Bookings Won')
         .getByLabelText('Filter by'))
@@ -615,7 +616,7 @@ it('selects independent breakdown dimensions and displays every category in the 
         .toEqual(['Stage', 'Offering Type', 'Deal Category', 'Customer Type'])
     expect(card('Bookings in Pipeline')
         .getByLabelText('Filter by'))
-        .toHaveValue('stage')
+        .toHaveValue('offeringType')
     for (const [title, section, groupBy, label] of [
         ['Bookings Won', 'bookings', 'dealCategory', 'Wipro Direct'],
         ['Bookings in Pipeline', 'pipeline', 'customerType', 'New Customer'],
@@ -628,11 +629,11 @@ it('selects independent breakdown dimensions and displays every category in the 
             .toHaveBeenLastCalledWith(section, 'sales', 'close', expect.any(AbortSignal), groupBy))
         // eslint-disable-next-line no-await-in-loop -- The selected card must finish loading before checking its table.
         await waitFor(() => expect(card(title)
-            .getByRole('columnheader', { hidden: true, name: label }))
+            .getByRole('rowheader', { hidden: true, name: label }))
             .toBeInTheDocument())
         expect(card(title)
-            .getByRole('row', { hidden: true, name: /^Annual/ }))
-            .toHaveTextContent('$300.00$700.00$1,000.00')
+            .getByRole('row', { hidden: true, name: /^Total/ }))
+            .toHaveTextContent('Total$1,000.00$1,000.00')
         expect(jest.mocked(HighchartsReact).mock.calls.map(call => call[0].options.series))
             .toContainEqual(expect.arrayContaining([expect.objectContaining({ data: [300], name: label })]))
     }
@@ -644,7 +645,7 @@ it('selects independent breakdown dimensions and displays every category in the 
         .getByLabelText('Filter by'))
         .toHaveValue('dealCategory')
     fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
-    await waitFor(() => expect(fetchDashboard.mock.calls.slice(-6)
+    await waitFor(() => expect(fetchDashboard.mock.calls.slice(-7)
         .slice(0, 3)
         .map(call => call[4]))
         .toEqual(['dealCategory', 'customerType', 'customerType']))
@@ -719,11 +720,11 @@ it('switches pipeline and payment measures without refetching and never sums mem
     mockConsolidatedDashboards()
     render(<SalesDashboardsPage portal='sales' />)
     await waitFor(() => expect(screen.getAllByRole('figure'))
-        .toHaveLength(6))
+        .toHaveLength(7))
     const pipeline = within(screen.getByRole('article', { name: 'Bookings in Pipeline' }))
     fireEvent.click(pipeline.getByRole('button', { name: 'Expected Amount' }))
-    expect(pipeline.getByRole('row', { hidden: true, name: /^Annual/ }))
-        .toHaveTextContent('$150.00$350.00$500.00')
+    expect(pipeline.getByRole('row', { hidden: true, name: /^Total/ }))
+        .toHaveTextContent('Total$500.00$500.00')
     const payments = within(screen.getByRole('article', { name: 'Topcoder Payments' }))
     fireEvent.click(payments.getByRole('button', { name: 'Count' }))
     expect(payments.queryByRole('rowheader', { hidden: true, name: 'Annual' })).not.toBeInTheDocument()
@@ -734,8 +735,198 @@ it('switches pipeline and payment measures without refetching and never sums mem
     expect(screen.getByRole('article', { name: 'TaaS Payments' }))
         .toHaveTextContent('$75.00')
     fireEvent.click(payments.getByRole('button', { name: 'Amount' }))
-    expect(payments.getByRole('row', { hidden: true, name: 'Annual $1,000.00' }))
+    expect(payments.getByRole('row', { hidden: true, name: 'Amount $1,000.00 $1,000.00' }))
         .toBeInTheDocument()
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(6)
+        .toHaveBeenCalledTimes(7)
+})
+
+it('sorts customer rows alphabetically and numerically before applying the five-row limit', () => {
+    const series = ['Zulu', 'Echo', 'Delta', 'Charlie', 'Beta', 'Alpha'].map((label, index) => ({
+        key: String(index), label,
+    }))
+    const data = { ...customerPayments,
+        months: [{ month: '2026-04-01', values: { 0: 1000, 1: 20, 2: -5, 3: 100, 4: null, 5: 0 } }],
+        series }
+    render(<SalesCustomerTable title='Customers' data={data} />)
+    const labels = (): Array<string | null> => screen.getAllByRole('rowheader')
+        .map(cell => cell.textContent)
+    expect(labels())
+        .toEqual(['Total', 'Alpha', 'Beta', 'Charlie', 'Delta', 'Echo'])
+    fireEvent.click(screen.getByRole('button', { name: 'Annual' }))
+    expect(labels())
+        .toEqual(['Total', 'Delta', 'Alpha', 'Echo', 'Charlie', 'Zulu'])
+    expect(screen.getByRole('columnheader', { name: 'Annual' }))
+        .toHaveAttribute('aria-sort', 'ascending')
+    fireEvent.click(screen.getByRole('button', { name: 'Annual' }))
+    expect(labels())
+        .toEqual(['Total', 'Zulu', 'Charlie', 'Echo', 'Alpha', 'Delta'])
+    fireEvent.click(screen.getByRole('button', { name: 'Show all 6 customers' }))
+    expect(labels()
+        .slice(-1))
+        .toEqual(['Beta'])
+    fireEvent.click(screen.getByRole('button', { name: 'Apr 2026' }))
+    expect(labels())
+        .toEqual(['Total', 'Delta', 'Alpha', 'Echo', 'Charlie', 'Zulu', 'Beta'])
+})
+
+it('switches all requested sections to fiscal quarters and offers TaaS Count without refetching', async () => {
+    mockConsolidatedDashboards()
+    render(<SalesDashboardsPage />)
+    await waitFor(() => expect(screen.getAllByRole('figure'))
+        .toHaveLength(7))
+    fireEvent.click(screen.getByRole('button', { name: 'Quarterly' }))
+    for (const title of [
+        'Bookings Won', 'Bookings in Pipeline', 'Revenue Closed', 'Topcoder Payments', 'TaaS Payments',
+    ]) {
+        const card = within(screen.getByRole('article', { name: title }))
+        expect(card.getByRole('columnheader', { hidden: true, name: 'Q2' }))
+            .toBeInTheDocument()
+        expect(card.queryByRole('columnheader', { hidden: true, name: 'Sep 2026' })).not.toBeInTheDocument()
+    }
+
+    expect(within(screen.getByRole('table', { name: 'Revenue Customer-Wise (USD)' }))
+        .getByRole('row', { name: /^ANZ/ }))
+        .toHaveTextContent('ANZ$15,500.00$15,500.00')
+    const taas = within(screen.getByRole('article', { name: 'TaaS Payments' }))
+    fireEvent.click(taas.getByRole('button', { name: 'Count' }))
+    expect(taas.getByRole('button', { name: 'Count' }))
+        .toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Monthly' }))
+    expect(taas.getByRole('cell', { hidden: true, name: '2' }))
+        .toBeInTheDocument()
+    expect(fetchDashboard)
+        .toHaveBeenCalledTimes(7)
+})
+
+it('filters customer revenue by account category without changing revenue charts or goods sold', async () => {
+    fetchDashboard.mockImplementation(async section => ({
+        charts: [],
+        customerPayments,
+        notices: [],
+        ...(section === 'revenue' ? {
+            customerRevenue: customerPayments,
+            customerRevenueByAccountCategory: {
+                'External Revenue': { ...customerPayments, series: [customerPayments.series[0]] },
+                'Through Wipro': { ...customerPayments, series: [] },
+                'Wipro Internal': { ...customerPayments, series: [customerPayments.series[1]] },
+            },
+        } : {}),
+    }))
+    render(<SalesDashboardsPage />)
+    await screen.findByRole('table', { name: 'Revenue Customer-Wise (USD)' })
+    const filter = screen.getByRole('combobox', { name: 'Revenue account category' })
+    expect(filter)
+        .toHaveValue('')
+    fireEvent.change(filter, { target: { value: 'External Revenue' } })
+    const revenueTable = (): ReturnType<typeof within> => within(screen.getByRole('table', {
+        name: 'Revenue Customer-Wise (USD)',
+    }))
+    expect(revenueTable()
+        .getByRole('rowheader', { name: 'Metro' }))
+        .toBeInTheDocument()
+    expect(revenueTable()
+        .queryByRole('rowheader', { name: 'Rebel' })).not.toBeInTheDocument()
+    expect(within(screen.getByRole('table', { name: 'Goods Sold Customer-Wise (USD)' }))
+        .getByRole('rowheader', { name: 'Rebel' }))
+        .toBeInTheDocument()
+    fireEvent.change(filter, { target: { value: 'Through Wipro' } })
+    expect(screen.getByText('No customer data in this fiscal year.'))
+        .toBeInTheDocument()
+    fireEvent.change(filter, { target: { value: 'Wipro Internal' } })
+    expect(revenueTable()
+        .getByRole('rowheader', { name: 'Rebel' }))
+        .toBeInTheDocument()
+    fireEvent.change(filter, { target: { value: '' } })
+    expect(revenueTable()
+        .getAllByRole('rowheader'))
+        .toHaveLength(4)
+    expect(fetchDashboard)
+        .toHaveBeenCalledTimes(7)
+})
+
+it('headlines quarterly data using the current fiscal quarter and the previous quarter comparison', () => {
+    const chart = { ...response.charts[0],
+        months: [
+            { month: '2026-07-01', values: { amount: 100 } },
+            { month: '2026-10-01', values: { amount: 150 } },
+            { month: '2027-01-01', values: { amount: 0 } },
+        ] }
+    expect(chartHeadline(chart, false, new Date('2026-11-02T00:00:00Z'), 'Quarterly'))
+        .toEqual({
+            caption: 'Current quarter to date',
+            figures: [{ change: { direction: 'up', text: '+50.0% vs last quarter' }, value: 150 }],
+        })
+    expect(chartHeadline(chart, true, new Date('2026-11-02T00:00:00Z'), 'Quarterly')?.caption)
+        .toBe('Current quarter, including expected closes')
+})
+
+it('offers FY Closure only on revenue cards and keeps forecast selection independent through refresh', async () => {
+    mockConsolidatedDashboards()
+    render(<SalesDashboardsPage portal='sales' />)
+    const card = (title: string): ReturnType<typeof within> => within(screen.getByRole('article', { name: title }))
+    await waitFor(() => expect(card('Revenue Forecast')
+        .getByRole('rowheader', { hidden: true, name: 'AI Training' }))
+        .toBeInTheDocument())
+    for (const title of ['Revenue Closed', 'Revenue Forecast']) {
+        expect(within(card(title)
+            .getByLabelText('Filter by'))
+            .getAllByRole('option')
+            .map(option => option.textContent))
+            .toEqual(['FY Closure', 'Offering Type', 'Deal Category', 'Customer Type'])
+    }
+
+    fireEvent.change(card('Revenue Forecast')
+        .getByLabelText('Filter by'), { target: { value: 'fyClosure' } })
+    await waitFor(() => expect(card('Revenue Forecast')
+        .getByRole('rowheader', { hidden: true, name: 'FY21' }))
+        .toBeInTheDocument())
+    expect(fetchDashboard)
+        .toHaveBeenCalledTimes(8)
+    expect(fetchDashboard)
+        .toHaveBeenLastCalledWith('revenue-forecast', 'sales', 'close', expect.any(AbortSignal), 'fyClosure')
+    expect(card('Revenue Closed')
+        .getByLabelText('Filter by'))
+        .toHaveValue('offeringType')
+    fireEvent.change(card('Revenue Closed')
+        .getByLabelText('Filter by'), { target: { value: 'fyClosure' } })
+    await waitFor(() => expect(card('Revenue Closed')
+        .getByRole('rowheader', { hidden: true, name: 'FY26' }))
+        .toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: 'Quarterly' }))
+    expect(card('Revenue Forecast')
+        .getByRole('rowheader', { hidden: true, name: 'FY21' }))
+        .toBeInTheDocument()
+    expect(fetchDashboard)
+        .toHaveBeenCalledTimes(9)
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
+    await waitFor(() => expect(fetchDashboard)
+        .toHaveBeenCalledTimes(16))
+    expect(fetchDashboard.mock.calls.slice(-7)
+        .filter(call => ['revenue', 'revenue-forecast'].includes(call[0]))
+        .map(call => call[4]))
+        .toEqual(['fyClosure', 'fyClosure'])
+})
+
+it('retries a failed forecast without reloading recognized revenue', async () => {
+    mockConsolidatedDashboards()
+    const success = fetchDashboard.getMockImplementation()
+    if (!success) throw new Error('Dashboard mock is required')
+    fetchDashboard.mockImplementation((...args) => (args[0] === 'revenue-forecast'
+        ? Promise.reject(new Error('offline')) : success(...args)))
+    render(<SalesDashboardsPage portal='sales' />)
+    expect(await screen.findByRole('alert'))
+        .toHaveTextContent('Revenue forecast could not be loaded')
+    expect(within(screen.getByRole('article', { name: 'Revenue Closed' }))
+        .getByRole('table', { hidden: true }))
+        .toBeInTheDocument()
+    fetchDashboard.mockImplementation(success)
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
+    await waitFor(() => expect(within(screen.getByRole('article', { name: 'Revenue Forecast' }))
+        .getByRole('table', { hidden: true }))
+        .toBeInTheDocument())
+    expect(fetchDashboard)
+        .toHaveBeenCalledTimes(8)
+    expect(fetchDashboard)
+        .toHaveBeenLastCalledWith('revenue-forecast', 'sales', 'close', expect.any(AbortSignal), 'offeringType')
 })

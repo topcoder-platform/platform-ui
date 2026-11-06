@@ -298,9 +298,9 @@ on unmount or control changes.
 
 Bookings Won, Bookings in Pipeline and Revenue Closed each have one independent
 **Filter by** dropdown. It selects the dimension shown as stacked chart series and
-monthly table columns: **Offering Type**, **Deal Category** or **Customer Type**.
+table rows: **Offering Type**, **Deal Category** or **Customer Type**.
 Pipeline also offers **Stage**. Bookings Won and Revenue default to Offering Type;
-Pipeline defaults to Stage. Every category in the selected dimension is visible together,
+Pipeline also defaults to Offering Type. Every category in the selected dimension is visible together,
 including Unknown values; the dropdown does not select individual category values.
 The API's `groupBy` parameter groups the same full-period amounts without changing totals.
 A missing source dimension produces an explicit notice while the selector remains usable.
@@ -311,8 +311,8 @@ categories through its linked Opportunity; missing classifications appear as Unk
 All dashboard cards occupy one full-width row, including Sales and Payments.
 
 Bookings in Pipeline switches between Amount and Expected Amount, and Topcoder Payments
-between Amount and Count, without refetching. TaaS Payments is a separate monthly amount
-chart based on platform payment creation date. The Customer section shares the revenue
+between Amount and Count, without refetching. TaaS Payments also switches between Amount
+and unique member Count, based on platform payment creation date. The Customer section shares the revenue
 and payment responses, including loading/error/retry states. Changing Revenue's breakdown
 preserves the full fiscal-year customer totals and does not add a seventh source request.
 
@@ -379,12 +379,12 @@ Only the open-pipeline charts use the “including expected closes” headline c
 
 ### PM-6668 totals and customer reporting
 
-Each currency chart's monthly table starts with an **Annual** row summing each column
-across the fiscal year. Multi-series currency tables include a Total column, and currency
-tooltips show Total before category details. Hiding a series updates tooltip totals;
-negative adjustments and unknown values are preserved. PM-6672 removes Annual rows,
-Total columns and summed tooltips from count charts because members may recur across
-months and categories. Percentages are not summed; gross margin remains on hold.
+Each chart table places categories in rows and **Annual** before its month or quarter columns.
+Multi-series currency tables include a Total row, and currency tooltips show Total before category details. Hiding a series updates tooltip totals;
+negative adjustments and unknown values are preserved. Count tables use API-computed distinct annual counts; they never sum monthly counts.
+Count charts have no summed category totals or summed tooltips because members may recur
+across categories. Unavailable annual counts (including Flexible Talent) and percentages
+are shown as a dash; gross margin remains on hold.
 
 The bottom **Customer** section replaces the Member payments by customer chart
 with two always-visible tables: **Revenue Customer-Wise**, from the optional API
@@ -420,3 +420,50 @@ independent dimension selectors, breakdown cancellation, measure switches, custo
 expansion with full-data totals, consolidated card rendering, both customer matrices and their totals/missing values/empty
 states, shared-source retries and cancellation. Reports route/navigation tests
 cover the entry point.
+
+
+### PM-6688 quarterly views and sortable tables
+
+The **Monthly / Quarterly** control switches Sales, Revenue, Payments and Customer together.
+Q1 is April–June, Q2 July–September, Q3 October–December and Q4 January–March.
+Currency values sum the months in each quarter, preserving negative adjustments and unknowns.
+Chart headlines compare the selected period with its predecessor. Flexible Talent remains monthly.
+All tables use `Field/Customer | Annual | periods`, default to alphabetical A–Z, and provide
+header buttons with sort arrows and `aria-sort`. Period and annual columns sort raw numbers,
+with unknowns last in either direction. Customer sorting happens before the five-row limit;
+Total always includes the entire dataset and remains pinned first.
+
+The pipeline defaults to Offering Type. Empty TC Classic series are hidden in chart and table;
+nonzero historical amounts remain visible. Won - SOW Signed displays as **Won**, including stage
+tiles and pipeline table cells, while drilldowns retain the original Salesforce value.
+
+Revenue Customer-Wise offers **ALL**, **External Revenue**, **Through Wipro**, and **Wipro Internal**.
+The API supplies complete per-category matrices based on **Account Category**, independently of
+Deal Category. Selecting a category changes only that customer table, without refetching.
+ALL includes unknown categories. The source label Wipro Internal - Ignore maps to Wipro Internal.
+
+Deploy the matching PM-6688 Reports API change before the UI. It adds `taas-members-paid`,
+`quarters` and `annual` to payment count charts, and `customerRevenueByAccountCategory` to revenue.
+Quarterly and annual counts are distinct members over the corresponding period, not sums of
+monthly unique counts. Older APIs show unavailable values/datasets explicitly. Regression tests
+cover fiscal boundaries, numeric sorting, count aggregation, category selection, measure/period
+switches and preserving the raw Won stage drilldown.
+
+## Revenue forecast and closure fiscal years (PM-6700, PM-6697)
+
+The Revenue section also includes **Revenue Forecast**, loaded independently from
+`/sales-dashboard/revenue-forecast`. Both revenue cards offer **Offering Type**,
+**Deal Category**, **Customer Type** and **FY Closure** in **Filter by**. Each
+selection changes only its own card, persists on refresh and applies to both
+monthly and quarterly charts/tables.
+
+FY Closure breaks the revenue amounts down by the opportunity/project's close
+date, using April–March fiscal years labelled with the ending year (for example,
+April 2025–March 2026 is FY26). The monthly axis still uses the recognition or
+forecast line-item date, so current-year revenue from earlier closures stays
+included. Missing close dates appear as Unknown rather than disappearing from
+totals. The forecast uses Salesforce report `00OUN000008sJ4H2AU`; recognised
+revenue keeps report `00O1K000009GxBtUAK` and the customer matrices.
+
+Deploy the companion Reports API changes before the UI. The same shared dashboard
+also appears in the Reports portal. No browser Salesforce credentials are needed.

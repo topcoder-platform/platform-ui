@@ -11,10 +11,12 @@ const categories: Array<{ value: GroupBy; label: string }> = [
 
 /**
  * Selects the business dimension whose categories appear together in the chart and monthly table.
- * @param props Current dimension, selection callback and whether Pipeline's Stage option is available.
+ * @param props Current dimension, selection callback and whether Stage or FY Closure is available.
  * @returns One labelled Filter by dropdown. Does not throw.
  */
-const SalesDashboardGroupBy: FC<{ value: GroupBy; onChange: (value: GroupBy) => void; pipeline?: boolean }> = props => {
+const SalesDashboardGroupBy: FC<{
+    value: GroupBy; onChange: (value: GroupBy) => void; pipeline?: boolean; revenue?: boolean
+}> = props => {
     const change = useCallback((event: ChangeEvent<HTMLSelectElement>) => {
         props.onChange(event.target.value as GroupBy)
     }, [props])
@@ -24,6 +26,7 @@ const SalesDashboardGroupBy: FC<{ value: GroupBy; onChange: (value: GroupBy) => 
                 Filter by
                 <select value={props.value} onChange={change}>
                     {props.pipeline && <option value='stage'>Stage</option>}
+                    {props.revenue && <option value='fyClosure'>FY Closure</option>}
                     {categories.map(category => (
                         <option key={category.value} value={category.value}>{category.label}</option>
                     ))}
