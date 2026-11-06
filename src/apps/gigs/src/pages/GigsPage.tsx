@@ -193,7 +193,7 @@ const GigsPage: FC = () => {
                         for your next opportunity.
                     </p>
                     <a
-                        href={`${EnvironmentConfig.TOPCODER_URL}/community/gig-resources`}
+                        href={`${EnvironmentConfig.TOPCODER_URL}/lp/gig-resources`}
                         rel='noreferrer'
                         target='_blank'
                     >

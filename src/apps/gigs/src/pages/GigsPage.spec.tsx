@@ -104,7 +104,7 @@ describe('GigsPage listing presentation', () => {
         )
 
         expect(screen.getByRole('link', { name: 'Read our Gig Work resources' }))
-            .toHaveAttribute('href', 'https://www.topcoder.example/community/gig-resources')
+            .toHaveAttribute('href', 'https://www.topcoder.example/lp/gig-resources')
         expect(screen.getByRole('link', { name: 'Read our Gig Work resources' }))
             .toHaveAttribute('target', '_blank')
         expect(screen.getByRole('link', { name: 'Read our Gig Work resources' }))

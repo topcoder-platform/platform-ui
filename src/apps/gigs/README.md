@@ -26,7 +26,7 @@ The listing search, location and sort controls use the same teal focused border
 and ring as the other 2026 opportunity filters instead of inheriting the browser's
 blue outline. Keyboard focus retains a real teal outline, with a system Highlight
 fallback in forced color modes.
-The Gig Work resources callout opens its external community guide in a new tab
+The Gig Work resources callout opens the Payload-backed website guide at `/lp/gig-resources` in a new tab
 with the opener relationship removed.
 
 ## Data and behavior
