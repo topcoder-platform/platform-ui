@@ -4,7 +4,7 @@ import { xhrGetAsync } from '~/libs/core'
 import { Winning } from '../models/WinningDetail'
 import {
     fetchChallengePaymentSummary,
-    fetchDuplicatePaymentReleases,
+    fetchTrolleyLogs,
     fetchWinningPaymentDetails,
 } from './wallet'
 
@@ -256,17 +256,17 @@ describe('fetchChallengePaymentSummary', () => {
     })
 })
 
-describe('fetchDuplicatePaymentReleases', () => {
+describe('fetchTrolleyLogs', () => {
     const mockedXhrGetAsync = xhrGetAsync as jest.Mock
 
     beforeEach(() => {
         mockedXhrGetAsync.mockReset()
     })
 
-    it('requests the whole history when no period is given', async () => {
+    it('requests everything since October 2025 when no period is given', async () => {
         mockedXhrGetAsync.mockResolvedValueOnce({ data: [], status: 'success' })
 
-        await fetchDuplicatePaymentReleases()
+        await fetchTrolleyLogs()
 
         expect(mockedXhrGetAsync)
             .toHaveBeenCalledWith('https://example.com/v6/finance/admin/payment-releases/duplicates')
@@ -275,7 +275,7 @@ describe('fetchDuplicatePaymentReleases', () => {
     it('passes the period in days', async () => {
         mockedXhrGetAsync.mockResolvedValueOnce({ data: [], status: 'success' })
 
-        await fetchDuplicatePaymentReleases(30)
+        await fetchTrolleyLogs(30)
 
         expect(mockedXhrGetAsync)
             .toHaveBeenCalledWith('https://example.com/v6/finance/admin/payment-releases/duplicates?days=30')
@@ -284,8 +284,8 @@ describe('fetchDuplicatePaymentReleases', () => {
     it('throws when the API reports an error', async () => {
         mockedXhrGetAsync.mockResolvedValueOnce({ data: undefined, status: 'error' })
 
-        await expect(fetchDuplicatePaymentReleases())
+        await expect(fetchTrolleyLogs())
             .rejects
-            .toThrow('Error fetching duplicate payments')
+            .toThrow('Error fetching Trolley logs')
     })
 })

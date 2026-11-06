@@ -3,12 +3,15 @@ import {
     fireEvent,
     render,
     screen,
+    waitFor,
+    within,
 } from '@testing-library/react'
 
 import { ChangeEvent } from 'react'
 import type { Assignment } from '../../models'
 
 import { fetchTimesheetPaymentSummary, findTimesheetPaymentConflicts } from '../../services'
+import { calculatePaymentAmount, getAssignmentRatePerHour } from '../../utils'
 
 import PaymentFormModal from './PaymentFormModal'
 
@@ -79,6 +82,52 @@ jest.mock('~/libs/ui', () => ({
             {props.label}
         </button>
     ),
+    // A working stand-in for the shared confirmation hook: confirm() opens a dialog and resolves with
+    // the button pressed.
+    useConfirmationModal: () => {
+        // jest.mock factories cannot close over imports, so React is required here.
+        // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+        const mockReact: typeof import('react') = require('react')
+
+        const [pending, setPending] = mockReact.useState<{
+            action?: string
+            content: string
+            resolve:(confirmed: boolean) => void
+            title: string
+        } | undefined>()
+
+        return {
+            confirm: (props: { action?: string, content: string, title: string }) => new Promise<boolean>(
+                resolve => {
+                    setPending({ ...props, resolve })
+                },
+            ),
+            modal: pending && (
+                <div role='alertdialog'>
+                    <h2>{pending.title}</h2>
+                    <p>{pending.content}</p>
+                    <button
+                        onClick={function onCancel() {
+                            setPending(undefined)
+                            pending.resolve(false)
+                        }}
+                        type='button'
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={function onContinue() {
+                            setPending(undefined)
+                            pending.resolve(true)
+                        }}
+                        type='button'
+                    >
+                        {pending.action ?? 'Confirm'}
+                    </button>
+                </div>
+            ),
+        }
+    },
 }), {
     virtual: true,
 })
@@ -251,5 +300,70 @@ describe('PaymentFormModal', () => {
             .toBeTruthy()
         expect(screen.getByText('80001063'))
             .toBeTruthy()
+    })
+
+    it('asks for confirmation in a modal before submitting the payment', async () => {
+        mockFetchSummary.mockResolvedValue({
+            alreadyPaidEntryIds: [],
+            approvedHours: '40.00',
+            entryIds: ['e1', 'e2'],
+            expectedHours: '40.00',
+            paidHours: '0.00',
+            ratePerHour: '20.53',
+            totalDays: 5,
+            totalHours: '40.00',
+        })
+        // The test setup resets mock implementations, so give the payment a rate and an amount again.
+        jest.mocked(getAssignmentRatePerHour)
+            .mockReturnValue(20.53)
+        jest.mocked(calculatePaymentAmount)
+            .mockReturnValue(821.2)
+        const onConfirm = jest.fn()
+            .mockResolvedValue(undefined)
+        const nativeConfirm = jest.spyOn(window, 'confirm')
+
+        render(
+            <PaymentFormModal
+                engagementId='engagement-1'
+                engagementName='Engagement'
+                member={member}
+                onCancel={jest.fn()}
+                onConfirm={onConfirm}
+                open
+                projectName='Project'
+            />,
+        )
+
+        const [fromPicker, toPicker] = screen.getAllByTestId('payment-date-picker')
+        fireEvent.change(fromPicker, { target: { value: '2026-09-01' } })
+        fireEvent.change(toPicker, { target: { value: '2026-09-05' } })
+        await screen.findByText('Expected Hours')
+
+        // Declining the confirmation leaves the payment unsubmitted.
+        fireEvent.click(screen.getByRole('button', { name: 'Confirm' }))
+        const dialog = await screen.findByRole('alertdialog')
+        expect(within(dialog)
+            .getByText('Are you sure you want to submit this payment?'))
+            .toBeTruthy()
+        fireEvent.click(within(dialog)
+            .getByRole('button', { name: 'Cancel' }))
+        await waitFor(() => expect(screen.queryByRole('alertdialog'))
+            .toBeNull())
+        expect(onConfirm)
+            .not.toHaveBeenCalled()
+
+        // Accepting it submits the payment.
+        fireEvent.click(screen.getByRole('button', { name: 'Confirm' }))
+        fireEvent.click(within(await screen.findByRole('alertdialog'))
+            .getByRole('button', { name: 'Submit' }))
+        await waitFor(() => expect(onConfirm)
+            .toHaveBeenCalledWith(expect.objectContaining({
+                amount: 821.2,
+                entryIds: ['e1', 'e2'],
+                hoursWorked: 40,
+            })))
+        expect(nativeConfirm)
+            .not.toHaveBeenCalled()
+        nativeConfirm.mockRestore()
     })
 })

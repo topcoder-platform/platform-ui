@@ -23,7 +23,7 @@ import { TransactionResponse } from '../models/TransactionId'
 import { PaginationInfo } from '../models/PaginationInfo'
 import { WinningsAudit } from '../models/WinningsAudit'
 import { PayoutAudit } from '../models/PayoutAudit'
-import { DuplicatePaymentRelease } from '../models/DuplicatePaymentRelease'
+import { TrolleyLogReleasePair } from '../models/TrolleyLogReleasePair'
 import ApiResponse from '../models/ApiResponse'
 
 const baseUrl = `${EnvironmentConfig.TC_FINANCE_API}`
@@ -313,19 +313,20 @@ export async function fetchAuditLogs(paymentId: string): Promise<WinningsAudit[]
 }
 
 /**
- * Fetches pairs of payment releases that contain the same payments.
+ * Fetches the Trolley Logs: pairs of payment releases that contain the same payments.
+ * The API only returns releases created from October 2025, when payouts moved to Trolley.
  *
- * @param days Only include pairs created in the last N days; omit for the whole history.
- * @returns The duplicate release pairs, newest first.
+ * @param days Only include pairs created in the last N days; omit for everything since October 2025.
+ * @returns The release pairs, newest first.
  */
-export async function fetchDuplicatePaymentReleases(days?: number): Promise<DuplicatePaymentRelease[]> {
+export async function fetchTrolleyLogs(days?: number): Promise<TrolleyLogReleasePair[]> {
     const query = days ? `?days=${days}` : ''
-    const response = await xhrGetAsync<ApiResponse<DuplicatePaymentRelease[]>>(
+    const response = await xhrGetAsync<ApiResponse<TrolleyLogReleasePair[]>>(
         `${baseUrl}/admin/payment-releases/duplicates${query}`,
     )
 
     if (response.status === 'error') {
-        throw new Error('Error fetching duplicate payments')
+        throw new Error('Error fetching Trolley logs')
     }
 
     return response.data
