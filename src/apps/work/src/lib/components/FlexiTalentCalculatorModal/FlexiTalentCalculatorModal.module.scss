@@ -1,0 +1,121 @@
+@import '@libs/ui/styles/includes';
+
+.content {
+    display: grid;
+    gap: 20px;
+}
+
+.subtitle {
+    margin: 0;
+    color: $black-60;
+    font-size: 14px;
+}
+
+.section {
+    display: grid;
+    gap: 10px;
+}
+
+.sectionTitle {
+    margin: 0;
+    color: $black-80;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.field {
+    display: grid;
+    gap: 6px;
+    align-content: start;
+}
+
+.label {
+    color: $black-60;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.input {
+    width: 100%;
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: $tc-white;
+    font-size: 14px;
+}
+
+.activeField {
+    .label {
+        color: #2a62d5;
+    }
+
+    .input {
+        border-color: #2a62d5;
+        box-shadow: 0 0 0 1px #2a62d5;
+    }
+}
+
+.readOnlyValue {
+    padding: 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.cards {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.card {
+    display: grid;
+    gap: 4px;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    padding: 12px 16px;
+    background: #f7f8fa;
+}
+
+.cardLabel {
+    color: $black-60;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.cardValue {
+    color: $black-80;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.smallPrint,
+.hint {
+    margin: 0;
+    color: $black-60;
+    font-size: 12px;
+}
+
+.warning {
+    margin: 0;
+    color: #991b1b;
+    font-size: 12px;
+}
+
+.proposal {
+    margin: 0;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    padding: 12px 16px;
+    background: #f7f8fa;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}

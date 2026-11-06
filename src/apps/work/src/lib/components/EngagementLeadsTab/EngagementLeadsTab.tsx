@@ -48,6 +48,9 @@ import {
     EngagementLeadNotesModal,
 } from '../EngagementLeadNotesModal'
 import {
+    FlexiTalentCalculatorModal,
+} from '../FlexiTalentCalculatorModal'
+import {
     canCreateEngagementFromLead,
     formatLeadAge,
     formatLeadDate,
@@ -164,6 +167,7 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
     const [filters, setFilters] = useState<EngagementLeadsListFilters>(DEFAULT_FILTERS)
     const [selectedLead, setSelectedLead] = useState<EngagementLead | undefined>(undefined)
     const [notesLead, setNotesLead] = useState<EngagementLead | undefined>(undefined)
+    const [calculatorLead, setCalculatorLead] = useState<EngagementLead | undefined>(undefined)
     const [viewingEngagementId, setViewingEngagementId] = useState<string | undefined>(undefined)
 
     const loadLeads = useCallback(async (): Promise<void> => {
@@ -259,6 +263,10 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
             lead.id === updatedLead.id ? updatedLead : lead
         )))
         setNotesLead(undefined)
+    }, [])
+
+    const handleCalculatorClose = useCallback((): void => {
+        setCalculatorLead(undefined)
     }, [])
 
     const handleCreateEngagementOpen = useCallback((lead: EngagementLead): void => {
@@ -438,6 +446,24 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
                                                         />
                                                     </button>
                                                 </Tooltip>
+                                                <Tooltip
+                                                    content='Cost Calculator'
+                                                    triggerOn='click-hover'
+                                                >
+                                                    <button
+                                                        aria-label='Cost Calculator'
+                                                        className={styles.actionIconButton}
+                                                        type='button'
+                                                        onClick={() => {
+                                                            setCalculatorLead(lead)
+                                                        }}
+                                                    >
+                                                        <IconOutline.CalculatorIcon
+                                                            aria-hidden
+                                                            className={styles.actionIcon}
+                                                        />
+                                                    </button>
+                                                </Tooltip>
                                                 {lead.convertedEngagementId
                                                     ? (
                                                         <Tooltip
@@ -530,6 +556,13 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
                     lead={notesLead}
                     onClose={handleNotesClose}
                     onSaved={handleNotesSaved}
+                />
+            )}
+
+            {calculatorLead && (
+                <FlexiTalentCalculatorModal
+                    lead={calculatorLead}
+                    onClose={handleCalculatorClose}
                 />
             )}
         </div>
