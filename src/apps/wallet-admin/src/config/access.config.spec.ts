@@ -1,8 +1,10 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import {
-    canAccessDuplicatePaymentsReport,
+    canAccessPayments,
+    canAccessTrolleyLogs,
     canAccessWalletAdmin,
     WALLET_ADMIN_ALLOWED_ROLES,
+    WALLET_ADMIN_PAYMENT_ROLES,
 } from './access.config'
 
 describe('canAccessWalletAdmin', () => {
@@ -11,12 +13,14 @@ describe('canAccessWalletAdmin', () => {
             .toBe(true)
     })
 
-    it('allows a payment role regardless of casing', () => {
+    it('allows a role regardless of casing', () => {
         expect(canAccessWalletAdmin(['payment admin']))
+            .toBe(true)
+        expect(canAccessWalletAdmin(['Administrator']))
             .toBe(true)
     })
 
-    it('denies members without a payment role', () => {
+    it('denies members without a payment or Admin role', () => {
         expect(canAccessWalletAdmin(['Topcoder User']))
             .toBe(false)
         expect(canAccessWalletAdmin([]))
@@ -26,23 +30,35 @@ describe('canAccessWalletAdmin', () => {
     })
 })
 
-describe('canAccessDuplicatePaymentsReport', () => {
-    it('allows Payment Admin regardless of casing', () => {
-        expect(canAccessDuplicatePaymentsReport(['Payment Admin']))
-            .toBe(true)
-        expect(canAccessDuplicatePaymentsReport([' payment admin ']))
+describe('canAccessPayments', () => {
+    it.each([...WALLET_ADMIN_PAYMENT_ROLES])('allows %s', role => {
+        expect(canAccessPayments([role]))
             .toBe(true)
     })
 
-    it.each(WALLET_ADMIN_ALLOWED_ROLES.filter(role => role !== 'Payment Admin'))('denies %s', role => {
-        expect(canAccessDuplicatePaymentsReport([role]))
+    it('denies Admins without a payment role', () => {
+        expect(canAccessPayments(['administrator']))
+            .toBe(false)
+    })
+})
+
+describe('canAccessTrolleyLogs', () => {
+    it('allows Admins regardless of casing', () => {
+        expect(canAccessTrolleyLogs(['administrator']))
+            .toBe(true)
+        expect(canAccessTrolleyLogs([' Administrator ']))
+            .toBe(true)
+    })
+
+    it.each([...WALLET_ADMIN_PAYMENT_ROLES])('denies %s', role => {
+        expect(canAccessTrolleyLogs([role]))
             .toBe(false)
     })
 
     it('denies members without roles', () => {
-        expect(canAccessDuplicatePaymentsReport([]))
+        expect(canAccessTrolleyLogs([]))
             .toBe(false)
-        expect(canAccessDuplicatePaymentsReport(undefined))
+        expect(canAccessTrolleyLogs(undefined))
             .toBe(false)
     })
 })

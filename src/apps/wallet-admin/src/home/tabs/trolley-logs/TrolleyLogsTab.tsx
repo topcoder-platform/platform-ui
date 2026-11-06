@@ -4,10 +4,10 @@ import classNames from 'classnames'
 
 import { Button, LoadingCircles } from '~/libs/ui'
 
-import { DuplicatePaymentRelease } from '../../../lib/models/DuplicatePaymentRelease'
-import { fetchDuplicatePaymentReleases } from '../../../lib/services/wallet'
+import { TrolleyLogReleasePair } from '../../../lib/models/TrolleyLogReleasePair'
+import { fetchTrolleyLogs } from '../../../lib/services/wallet'
 
-import styles from './DuplicatePayments.module.scss'
+import styles from './TrolleyLogs.module.scss'
 
 interface PeriodOption {
     days?: number
@@ -18,8 +18,20 @@ export const PERIOD_OPTIONS: ReadonlyArray<PeriodOption> = [
     { days: 7, label: 'Last 7 days' },
     { days: 30, label: 'Last 30 days' },
     { days: 90, label: 'Last 90 days' },
-    { label: 'All time' },
+    { label: 'Since October 2025' },
 ]
+
+/**
+ * Payouts moved to Trolley in October 2025; this view only covers releases from then on.
+ * The API applies the same cutoff, this keeps the view correct against an older API.
+ */
+export const TROLLEY_LOGS_START = new Date('2025-10-01T00:00:00Z')
+
+function isPostTrolley(pair: TrolleyLogReleasePair): boolean {
+    // release1 is the older release of the pair
+    return new Date(pair.release1CreatedAt)
+        .getTime() >= TROLLEY_LOGS_START.getTime()
+}
 
 const DEFAULT_PERIOD_INDEX = 1
 
@@ -63,35 +75,36 @@ const ReleaseCell: FC<ReleaseCellProps> = (props: ReleaseCellProps) => (
     </div>
 )
 
-const DuplicatePaymentsTab: FC = () => {
+const TrolleyLogsTab: FC = () => {
     const [periodIndex, setPeriodIndex] = useState<number>(DEFAULT_PERIOD_INDEX)
-    const [duplicates, setDuplicates] = useState<DuplicatePaymentRelease[]>([])
+    const [pairs, setPairs] = useState<TrolleyLogReleasePair[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | undefined>()
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
 
-    const loadDuplicates = useCallback(async (): Promise<void> => {
+    const loadPairs = useCallback(async (): Promise<void> => {
         setIsLoading(true)
         setError(undefined)
 
         try {
-            setDuplicates(await fetchDuplicatePaymentReleases(PERIOD_OPTIONS[periodIndex].days))
+            const result = await fetchTrolleyLogs(PERIOD_OPTIONS[periodIndex].days)
+            setPairs(result.filter(isPostTrolley))
             setExpandedRows(new Set())
         } catch {
-            setDuplicates([])
-            setError('Failed to load duplicate payments. Please try again.')
+            setPairs([])
+            setError('Failed to load Trolley logs. Please try again.')
         } finally {
             setIsLoading(false)
         }
     }, [periodIndex])
 
     useEffect(() => {
-        loadDuplicates()
-    }, [loadDuplicates])
+        loadPairs()
+    }, [loadPairs])
 
     const totalSharedAmount = useMemo(
-        () => duplicates.reduce((sum, d) => sum + (Number(d.sharedAmount) || 0), 0),
-        [duplicates],
+        () => pairs.reduce((sum, d) => sum + (Number(d.sharedAmount) || 0), 0),
+        [pairs],
     )
 
     function toggleRow(key: string): void {
@@ -120,10 +133,10 @@ const DuplicatePaymentsTab: FC = () => {
             return <div className={classNames(styles.centered, styles.error)}>{error}</div>
         }
 
-        if (duplicates.length === 0) {
+        if (pairs.length === 0) {
             return (
                 <div className={styles.centered}>
-                    No duplicate payments found for this period.
+                    No release pairs found for this period.
                 </div>
             )
         }
@@ -131,10 +144,9 @@ const DuplicatePaymentsTab: FC = () => {
         return (
             <>
                 <p className={styles.summary}>
-                    <strong>{duplicates.length}</strong>
-                    {` pair${duplicates.length === 1 ? '' : 's'} of releases share payments, totalling `}
+                    <strong>{pairs.length}</strong>
+                    {` pair${pairs.length === 1 ? '' : 's'} of releases totalling `}
                     <strong>{currencyFormatter.format(totalSharedAmount)}</strong>
-                    {' paid more than once.'}
                 </p>
                 <div className={styles.tableContainer}>
                     <table>
@@ -148,7 +160,7 @@ const DuplicatePaymentsTab: FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {duplicates.map(d => {
+                            {pairs.map(d => {
                                 const rowKey = `${d.release1Id}_${d.release2Id}`
                                 const isExpanded = expandedRows.has(rowKey)
 
@@ -211,10 +223,10 @@ const DuplicatePaymentsTab: FC = () => {
     return (
         <div className={styles.container}>
             <div className={styles.header}>
-                <h3>Duplicate Payments</h3>
+                <h3>Trolley Logs</h3>
                 <p className={styles.muted}>
-                    Payment releases that contain the same payments, meaning the member was paid more than once.
-                    Failed and returned releases are excluded. Check each pair in Trolley before taking action.
+                    Failed and returned releases are excluded from the below list.
+                    Check each pair in Trolley before taking action.
                 </p>
             </div>
             <div className={styles.toolbar}>
@@ -239,7 +251,7 @@ const DuplicatePaymentsTab: FC = () => {
                     size='md'
                     label='Refresh'
                     disabled={isLoading}
-                    onClick={loadDuplicates}
+                    onClick={loadPairs}
                 />
             </div>
             {renderContent()}
@@ -247,4 +259,4 @@ const DuplicatePaymentsTab: FC = () => {
     )
 }
 
-export default DuplicatePaymentsTab
+export default TrolleyLogsTab

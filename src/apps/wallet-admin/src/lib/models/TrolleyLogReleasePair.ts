@@ -1,14 +1,15 @@
-export interface DuplicateSharedWinning {
+export interface TrolleyLogSharedWinning {
     winningId: string
     title: string | null
     amount: string
 }
 
 /**
- * Two active payment releases that contain the same payments.
+ * Two active payment releases that contain the same payments, as listed in the
+ * Trolley Logs report.
  * `release1` is the older release of the pair.
  */
-export interface DuplicatePaymentRelease {
+export interface TrolleyLogReleasePair {
     userId: string
     handle: string | null
     release1Id: string
@@ -23,5 +24,5 @@ export interface DuplicatePaymentRelease {
     trolleyPayment2Id: string | null
     sharedPayments: number
     sharedAmount: string
-    sharedWinnings: DuplicateSharedWinning[]
+    sharedWinnings: TrolleyLogSharedWinning[]
 }
