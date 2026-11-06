@@ -15,6 +15,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 import {
     BaseModal,
     Button,
+    useConfirmationModal,
 } from '~/libs/ui'
 
 import {
@@ -205,6 +206,8 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
     const [linkEntriesMessage, setLinkEntriesMessage] = useState<string | undefined>(undefined)
     const [summaryReloadToken, setSummaryReloadToken] = useState<number>(0)
     const [editedHoursWorked, setEditedHoursWorked] = useState<string | undefined>(undefined)
+    const { confirm: confirmAction, modal: confirmationModal }: ReturnType<typeof useConfirmationModal>
+        = useConfirmationModal()
 
     /**
      * Hours are prefilled from approved timesheet entries. Once PAYMENT_HOURS_LOCKED_TO_TIMESHEETS is
@@ -565,8 +568,13 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
             return
         }
 
-        // eslint-disable-next-line no-alert
-        if (!window.confirm('Are you sure you want to submit this payment?')) {
+        const confirmed = await confirmAction({
+            action: 'Submit',
+            content: 'Are you sure you want to submit this payment?',
+            title: 'Confirm Payment',
+        })
+
+        if (!confirmed) {
             return
         }
 
@@ -581,6 +589,7 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         resetState()
     }, [
         amount,
+        confirmAction,
         editedHoursWorked,
         fromDate,
         hoursWorked,
@@ -829,6 +838,7 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                     />
                 </div>
             </div>
+            {confirmationModal}
         </BaseModal>
     )
 }
