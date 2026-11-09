@@ -466,7 +466,7 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
                                                             </button>
                                                         </Tooltip>
                                                     )
-                                                    : canCreateEngagementFromLead(String(lead.status))
+                                                    : canCreateEngagementFromLead(lead)
                                                         ? (
                                                             <Tooltip
                                                                 content='Create Engagement'

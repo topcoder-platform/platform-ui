@@ -158,9 +158,9 @@ export const EngagementLeadsFilter: FC<EngagementLeadsFilterProps> = (
                 >
                     <option value=''>All statuses</option>
                     <option value={EngagementLeadStatusGroup.NEW}>New</option>
-                    <option value={EngagementLeadStatusGroup.IN_PROGRESS}>In Progress</option>
-                    <option value={EngagementLeadStatusGroup.CONVERTED}>Converted</option>
-                    <option value={EngagementLeadStatusGroup.DECLINED}>Declined</option>
+                    <option value={EngagementLeadStatusGroup.UNDER_REVIEW}>Under Review</option>
+                    <option value={EngagementLeadStatusGroup.FULFILLED}>Fulfilled</option>
+                    <option value={EngagementLeadStatusGroup.LOST}>Lost</option>
                 </select>
             </label>
 
