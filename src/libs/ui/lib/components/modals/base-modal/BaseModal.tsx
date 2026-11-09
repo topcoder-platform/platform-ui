@@ -1,9 +1,10 @@
-import { FC, ReactNode, useCallback, useEffect } from 'react'
+import { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import Modal, { ModalProps } from 'react-responsive-modal'
 import classNames from 'classnames'
 
 import { LoadingSpinner } from '../../loading-spinner'
 import { IconOutline } from '../../svgs'
+import { UPLOAD_PICKER_EVENT } from '../upload-picker-event'
 
 import {
     ModalContentResponse,
@@ -24,6 +25,22 @@ export interface BaseModalProps extends ModalProps {
 }
 
 const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
+    const [uploadPickerOpen, setUploadPickerOpen] = useState(false)
+    const uploadPickerOpenRef = useRef(false)
+    const onCloseRef = useRef(props.onClose)
+    onCloseRef.current = props.onClose
+    const handleClose = useCallback((): void => {
+        if (!uploadPickerOpenRef.current) onCloseRef.current()
+    }, [])
+    useEffect(() => {
+        const onPickerChange = (event: Event): void => {
+            uploadPickerOpenRef.current = (event as CustomEvent<boolean>).detail
+            setUploadPickerOpen(uploadPickerOpenRef.current)
+        }
+
+        window.addEventListener(UPLOAD_PICKER_EVENT, onPickerChange)
+        return () => window.removeEventListener(UPLOAD_PICKER_EVENT, onPickerChange)
+    }, [])
     const { content }: ModalContentResponse = useFetchModalContent(
         props.contentUrl,
         props.open,
@@ -69,6 +86,8 @@ const BaseModal: FC<BaseModalProps> = (props: BaseModalProps) => {
     return (
         <Modal
             {...props}
+            onClose={handleClose}
+            focusTrapped={uploadPickerOpen ? false : props.focusTrapped}
             classNames={{
                 ...props.classNames,
                 modal: classNames(

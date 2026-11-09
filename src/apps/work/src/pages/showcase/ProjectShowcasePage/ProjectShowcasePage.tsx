@@ -9,13 +9,13 @@ import {
     useRef,
     useState,
 } from 'react'
-import { init, type PickerOptions } from 'filestack-js'
 import { FormProvider, useForm, UseFormReturn } from 'react-hook-form'
 import { useParams } from 'react-router-dom'
 import { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
 import { yupResolver } from '@hookform/resolvers/yup'
+import { pickFiles } from '~/libs/shared/lib/services/s3-upload'
 import { EnvironmentConfig } from '~/config'
 import { BaseModal, Button, LoadingSpinner, useConfirmationModal } from '~/libs/ui'
 
@@ -97,7 +97,6 @@ const STATUS_OPTIONS: SelectOption[] = [
     { label: 'Archived', value: 'ARCHIVED' },
 ]
 
-const SHOWCASE_MEDIA_FILE_PICKER_FROM_SOURCES = ['local_file_system']
 const SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES = 10
 const SHOWCASE_MEDIA_FILE_PICKER_ACCEPT = [
     '.bmp',
@@ -111,19 +110,6 @@ const SHOWCASE_MEDIA_FILE_PICKER_ACCEPT = [
     '.mov',
     '.avi',
 ]
-const SHOWCASE_MEDIA_FILE_PICKER_CONTAINER = EnvironmentConfig.FILESTACK_SHOWCASE_MEDIA_FILE_PICKER_CONTAINER
-const SHOWCASE_MEDIA_FILE_PICKER_CDN_URL = EnvironmentConfig.FILESTACK_SHOWCASE_MEDIA_CDN_URL
-
-function resolveShowcaseMediaUrl(file: { key?: unknown; url?: unknown }): string {
-    const storageKey = typeof file.key === 'string' && file.key.trim()
-
-    if (storageKey) {
-        return `${SHOWCASE_MEDIA_FILE_PICKER_CDN_URL.replace(/\/$/, '')}/${encodeURI(storageKey)}`
-    }
-
-    return typeof file.url === 'string' ? file.url : ''
-}
-
 /**
  * Strips the CloudFront signature from a media url so only the canonical
  * object url is persisted; the API re-signs urls on every response.
@@ -1135,7 +1121,7 @@ export const ProjectShowcasePage: FC = () => {
         [getValues, manageMode, saveUploadedMedia, selectedPostId, setValue],
     )
 
-    const handleOpenMediaPicker = useCallback(() => {
+    const handleOpenMediaPicker = useCallback(async () => {
         if (!projectId) {
             return
         }
@@ -1151,82 +1137,25 @@ export const ProjectShowcasePage: FC = () => {
 
         setMediaLimitWarning(undefined)
 
-        const apiKey = EnvironmentConfig.FILESTACK.API_KEY
-        if (!apiKey) {
-            showErrorToast('Media uploads are not configured for this environment.')
-            return
-        }
-
-        const uploadedMedia: Array<{ type: string; url: string; alt?: string }> = []
-        const uploadedPreviews: { [url: string]: string } = {}
-        const mediaStorePath = `project-showcase/${projectId}/`
-
-        const pickerOptions: PickerOptions = {
-            accept: SHOWCASE_MEDIA_FILE_PICKER_ACCEPT,
-            // Needed so `onFileUploadFinished` hands back the browser `File`
-            // rather than a plain metadata object.
-            exposeOriginalFile: true,
-            fromSources: SHOWCASE_MEDIA_FILE_PICKER_FROM_SOURCES,
-            maxFiles: SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES,
-            onClose: () => {
-                setIsOpeningMediaPicker(false)
-                if (!uploadedMedia.length) {
-                    return
-                }
-
-                applyUploadedMedia(uploadedMedia, uploadedPreviews)
-            },
-            onFileUploadFinished: file => {
-                if (!file) {
-                    return
-                }
-
-                const mediaUrl = resolveShowcaseMediaUrl(file)
-                if (!mediaUrl) {
-                    return
-                }
-
-                const altText
-                    = typeof file.alt === 'string' && file.alt.trim()
-                        ? file.alt.trim()
-                        : undefined
-
-                if (file.originalFile instanceof Blob) {
-                    uploadedPreviews[mediaUrl] = URL.createObjectURL(file.originalFile)
-                }
-
-                uploadedMedia.push({
-                    type: String(file.mimetype || 'application/octet-stream'),
-                    url: mediaUrl,
-                    ...(altText ? { alt: altText } : {}),
-                })
-            },
-            storeTo: {
-                container: SHOWCASE_MEDIA_FILE_PICKER_CONTAINER,
-                location: 's3',
-                path: mediaStorePath,
-                region: EnvironmentConfig.FILESTACK.REGION,
-            },
-            uploadInBackground: false,
-        }
-
-        const client = init(apiKey, {
-            cname: EnvironmentConfig.FILESTACK.CNAME,
-            security: EnvironmentConfig.FILESTACK.SECURITY
-                ? {
-                    policy: EnvironmentConfig.FILESTACK.SECURITY.POLICY,
-                    signature: EnvironmentConfig.FILESTACK.SECURITY.SIGNATURE,
-                }
-                : undefined,
-        })
-
+        setIsOpeningMediaPicker(true)
         try {
-            setIsOpeningMediaPicker(true)
-            client.picker(pickerOptions)
-                .open()
+            const files = await pickFiles({
+                allowedFileTypes: SHOWCASE_MEDIA_FILE_PICKER_ACCEPT,
+                contextId: projectId,
+                maxFiles: SHOWCASE_MEDIA_FILE_PICKER_MAX_FILES - currentMedia.length,
+                purpose: 'showcase',
+            })
+            if (files.length) {
+                const previews: Record<string, string> = {}
+                files.forEach(file => {
+                    if (file.originalFile) previews[file.url] = URL.createObjectURL(file.originalFile)
+                })
+                applyUploadedMedia(files.map(file => ({ type: file.mimetype, url: file.url })), previews)
+            }
         } catch (uploadError) {
+            showErrorToast(uploadError instanceof Error ? uploadError.message : 'Failed to upload media.')
+        } finally {
             setIsOpeningMediaPicker(false)
-            showErrorToast(uploadError instanceof Error ? uploadError.message : 'Failed to open media picker.')
         }
     }, [applyUploadedMedia, getValues, projectId])
 

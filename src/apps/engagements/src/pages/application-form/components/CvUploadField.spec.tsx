@@ -26,7 +26,7 @@ describe('CvUploadField', () => {
         jest.clearAllMocks()
     })
 
-    it('uploads the selected CV through Filestack and reports the stored file URL', async () => {
+    it('uploads the selected CV through Uppy and reports the stored file URL', async () => {
         mockedUpload.mockResolvedValue({
             filename: 'jane-cv.pdf',
             handle: 'cv-handle',
@@ -84,7 +84,7 @@ describe('CvUploadField', () => {
 
         selectFile(container, new File(['cv'], 'cv.exe'))
 
-        expect(screen.getByText('Only PDF, DOC and DOCX files are allowed.'))
+        expect(screen.getByText('Only PDF and DOCX files are allowed.'))
             .toBeInTheDocument()
         expect(mockedUpload)
             .not.toHaveBeenCalled()
@@ -105,7 +105,7 @@ describe('CvUploadField', () => {
             .not.toHaveBeenCalled()
     })
 
-    it('shows the upload error when Filestack rejects the file', async () => {
+    it('shows the upload error when the upload service rejects the file', async () => {
         mockedUpload.mockRejectedValue(new Error('File uploads are not configured for this environment.'))
         const onChange = jest.fn()
         const { container }: { container: HTMLElement } = render(<CvUploadField onChange={onChange} />)

@@ -21,7 +21,7 @@ export interface Application {
     coverLetter?: string
     /** Link to a resume or professional profile (LinkedIn, Google Drive CV, personal website). */
     resumeUrl?: string
-    /** URL of the CV file uploaded to S3 through Filestack. */
+    /** URL of the CV file uploaded to S3 through Uppy. */
     cvFileUrl?: string
     /** Only present on applications submitted before the field was removed from the form. Not shown. */
     portfolioUrls?: string[]
@@ -48,7 +48,7 @@ export interface CreateApplicationRequest {
     name?: string
     email?: string
     address?: string
-    /** URL of the CV file uploaded to S3 through Filestack. */
+    /** URL of the CV file uploaded to S3 through Uppy. */
     cvFileUrl?: string
     expectedPayRate?: string
     referralSource?: string

@@ -16,7 +16,7 @@ interface CvUploadFieldProps {
     errorMessage?: string
 }
 
-export const CV_ACCEPTED_EXTENSIONS = ['.pdf', '.doc', '.docx']
+export const CV_ACCEPTED_EXTENSIONS = ['.pdf', '.docx']
 const CV_MAX_FILE_SIZE_MB = 8
 export const CV_MAX_FILE_SIZE_BYTES = CV_MAX_FILE_SIZE_MB * 1024 * 1024
 
@@ -31,7 +31,7 @@ const CV_UPLOAD_CATEGORY = 'application-cv'
 export const getCvFileError = (file: File): string | undefined => {
     const fileName = file.name.toLowerCase()
     if (!CV_ACCEPTED_EXTENSIONS.some(extension => fileName.endsWith(extension))) {
-        return 'Only PDF, DOC and DOCX files are allowed.'
+        return 'Only PDF and DOCX files are allowed.'
     }
 
     if (file.size > CV_MAX_FILE_SIZE_BYTES) {
@@ -44,7 +44,7 @@ export const getCvFileError = (file: File): string | undefined => {
 /**
  * CV upload control for the engagement application form.
  *
- * The chosen file is uploaded straight to S3 through the shared Filestack flow
+ * The chosen file is uploaded straight to S3 through the shared Uppy flow
  * (`uploadEngagementAttachment`) and only the resulting URL is kept in the form, which is sent to the
  * engagements API as `cvFileUrl`. Shows upload progress, the uploaded file name and a remove action.
  */
@@ -114,7 +114,7 @@ const CvUploadField: FC<CvUploadFieldProps> = (props: CvUploadFieldProps) => {
     return (
         <div className={styles.cvUpload}>
             <div className={styles.fieldHint} id='cv-file-hint'>
-                {`Upload your CV as a PDF, DOC or DOCX file (max ${CV_MAX_FILE_SIZE_MB} MB).`}
+                {`Upload your CV as a PDF or DOCX file (max ${CV_MAX_FILE_SIZE_MB} MB).`}
             </div>
             <input
                 ref={fileInputRef}

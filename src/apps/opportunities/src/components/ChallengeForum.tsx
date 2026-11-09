@@ -4,7 +4,7 @@ import { toast } from 'react-toastify'
 import useSWR, { SWRResponse } from 'swr'
 
 import { BaseModal, ConfirmModal, IconOutline } from '~/libs/ui'
-import { uploadForumAttachment } from '../services/forum-attachments.service'
+import { pickForumAttachments } from '../services/forum-attachments.service'
 import { ForumIcon } from './ForumIcon'
 
 import {
@@ -708,7 +708,6 @@ interface MarkdownEditorProps {
  */
 export const MarkdownEditor: FC<MarkdownEditorProps> = props => {
     const textareaRef = useRef<HTMLTextAreaElement>(null)
-    const uploadRef = useRef<HTMLInputElement>(null)
     const currentValue = useRef(props.value)
     currentValue.current = props.value
     const [uploading, setUploading] = useState(false)
@@ -718,14 +717,12 @@ export const MarkdownEditor: FC<MarkdownEditorProps> = props => {
     /** Uploads the selected file and appends its Markdown to the latest editor value.
      * @param event File selection. @returns Completion. @throws None; failures remain beside the editor.
      */
-    const attach = async (event: ChangeEvent<HTMLInputElement>): Promise<void> => {
-        const file = event.target.files?.[0]
-        event.target.value = ''
-        if (!file) return
+    const attach = async (): Promise<void> => {
         setUploading(true)
         setUploadError(undefined)
         try {
-            const markdown = await uploadForumAttachment(file)
+            const markdown = await pickForumAttachments()
+            if (!markdown) return
             const value = `${currentValue.current}\n${markdown}`
             if (value.length > props.maxLength) {
                 throw new Error('This attachment exceeds the remaining character limit.')
@@ -801,7 +798,6 @@ export const MarkdownEditor: FC<MarkdownEditorProps> = props => {
     return (
         <div className={`${styles.markdownField} ${expanded ? styles.expandedEditor : ''}`}>
             <label htmlFor={props.id}>{props.label}</label>
-            <input aria-label='Choose attachment' hidden onChange={attach} ref={uploadRef} type='file' />
             <div className={styles.editorShell}>
                 <div aria-label='Markdown formatting' className={styles.editorToolbar} role='toolbar'>
                     {toolbarItems.map(([label, prefix, suffix, icon], index) => (
@@ -828,7 +824,7 @@ export const MarkdownEditor: FC<MarkdownEditorProps> = props => {
                                 aria-pressed={icon === 'expand' ? expanded : undefined}
                                 disabled={props.preview || (icon === 'attachment' && uploading)}
                                 onClick={() => {
-                                    if (icon === 'attachment') uploadRef.current?.click()
+                                    if (icon === 'attachment') attach()
                                     else if (icon === 'expand') setExpanded(value => !value)
                                     else format(prefix, suffix)
                                 }}

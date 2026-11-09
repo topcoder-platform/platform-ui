@@ -66,7 +66,6 @@
     "express-fileupload": "^1.5.2",
     "express-interceptor": "^1.2.0",
     "fflate": "^0.8.2",
-    "filestack-js": "^3.44.2",
     "flag-icons": "^6.7.0",
     "grapesjs": "0.22.14",
     "grapesjs-preset-newsletter": "1.0.2",
@@ -134,7 +133,10 @@
     "typescript": "5.5.4",
     "universal-navigation": "https://github.com/topcoder-platform/universal-navigation#master",
     "uuid": "^11.1.0",
-    "yup": "^1.7.1"
+    "yup": "^1.7.1",
+    "@uppy/core": "6.0.2",
+    "@uppy/aws-s3": "6.0.0",
+    "@uppy/dashboard": "6.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.29.6",
@@ -247,7 +249,9 @@
     "node-fetch": "2.6.7",
     "**/postcss/nanoid": "3.3.18",
     "nth-check": "2.0.1",
-    "lodash.mergewith": "4.6.2"
+    "lodash.mergewith": "4.6.2",
+    "@uppy/thumbnail-generator": "6.0.0",
+    "follow-redirects": "1.16.2"
   },
   "browserslist": {
     "production": [
