@@ -149,8 +149,8 @@ export async function pickFiles(options: UploadOptions): Promise<UploadedFile[]>
                 closeAfterFinish: false,
                 doneButtonHandler: () => uppy.getPlugin<DashboardPlugin<UploadMeta, AwsBody>>('Dashboard')
                     ?.closeModal(),
-                proudlyDisplayPoweredByUppy: false,
                 hideProgressDetails: false,
+                proudlyDisplayPoweredByUppy: false,
             })
             uppy.on('dashboard:modal-closed', () => {
                 const files = uppy.getFiles()
