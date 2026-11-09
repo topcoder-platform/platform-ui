@@ -1,6 +1,6 @@
 .container {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     flex-wrap: wrap;
     gap: 12px;
     padding: 16px;
@@ -38,4 +38,5 @@
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
+    margin-top: 24px;
 }
