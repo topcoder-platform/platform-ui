@@ -650,7 +650,8 @@ describe('ChallengeForum', () => {
         fireEvent.change(screen.getByLabelText('Topic Content'), { target: { value: 'See attached.' } })
 
         await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Attachment' })))
-        expect(mockUploadForumAttachment).toHaveBeenCalledWith()
+        expect(mockUploadForumAttachment)
+            .toHaveBeenCalledWith()
         expect(screen.getByLabelText('Topic Content'))
             .toHaveValue(`See attached.\n${markdown}`)
         expect(screen.queryByRole('alert'))
@@ -817,7 +818,8 @@ describe('ChallengeForum', () => {
         await act(async () => clickTool('Attachment')())
         await waitFor(() => expect(textarea.value)
             .toBe('Thanks @\n[brief.pdf](<https://cdn.example/brief.pdf>)'))
-        expect(mockUploadForumAttachment).toHaveBeenCalledWith()
+        expect(mockUploadForumAttachment)
+            .toHaveBeenCalledWith()
 
         const expand = toolbar.getByRole('button', { name: 'Expand editor' })
         fireEvent.click(expand)

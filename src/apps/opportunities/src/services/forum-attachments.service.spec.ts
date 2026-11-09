@@ -1,7 +1,10 @@
 import { pickFiles, uploadFile } from '~/libs/shared/lib/services/s3-upload'
+
 import { pickForumAttachments, uploadForumAttachment } from './forum-attachments.service'
 
-jest.mock('~/libs/shared/lib/services/s3-upload', () => ({ uploadFile: jest.fn(), pickFiles: jest.fn() }), { virtual: true })
+jest.mock('~/libs/shared/lib/services/s3-upload', () => ({
+    pickFiles: jest.fn(), uploadFile: jest.fn(),
+}), { virtual: true })
 
 describe('forum attachments', () => {
     beforeEach(() => {
@@ -12,7 +15,8 @@ describe('forum attachments', () => {
     it('uploads XML as a downloadable attachment without modifying its bytes', async () => {
         const file = new File(['<document/>'], 'document.xml', { type: 'application/xml' })
         await expect(uploadForumAttachment(file)).resolves.toBe('[document.xml](<https://files.example/file>)')
-        expect(uploadFile).toHaveBeenCalledWith(file, { purpose: 'forum' })
+        expect(uploadFile)
+            .toHaveBeenCalledWith(file, { purpose: 'forum' })
     })
     it('embeds safe images and strips Markdown syntax from the filename', async () => {
         await expect(uploadForumAttachment(new File(['image'], 'a[bad].png', { type: 'image/png' })))
@@ -31,8 +35,11 @@ describe('forum attachments', () => {
         (pickFiles as jest.Mock).mockResolvedValueOnce([
             { filename: 'image.png', mimetype: 'image/png', url: 'https://files.example/image' },
             { filename: 'notes.txt', mimetype: 'text/plain', url: 'https://files.example/text' },
-        ]).mockResolvedValueOnce([])
-        await expect(pickForumAttachments()).resolves.toBe('![image.png](<https://files.example/image>)\n[notes.txt](<https://files.example/text>)')
+        ])
+            .mockResolvedValueOnce([])
+        await expect(pickForumAttachments()).resolves.toBe(
+            '![image.png](<https://files.example/image>)\n[notes.txt](<https://files.example/text>)',
+        )
         await expect(pickForumAttachments()).resolves.toBe('')
     })
 })
