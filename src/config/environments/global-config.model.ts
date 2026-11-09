@@ -114,27 +114,12 @@ export interface GlobalConfig {
         PROFILE_PAGE_URL: string
         OPPORTUNITIES_URL: string
     },
-    FILESTACK: {
-        API_KEY: string
-        CNAME?: string
-        REGION: string
-        CONTAINER: string
-        SUBMISSION_CONTAINER: string
-        PATH_PREFIX: string
-        SECURITY?: {
-            POLICY: string
-            SIGNATURE: string
-        },
-        RETRY: number
-        TIMEOUT: number
-        PROGRESS_INTERVAL: number
-    },
+    UPLOADS_API_URL: string
     SKILLS_EXTRACTION_WORKFLOW_ID: string
     RAG_CHALLENGE_INGESTION_WORKFLOW_ID: string
     RAG_CHALLENGE_BULK_INGESTION_WORKFLOW_ID: string
     ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[]
     LOCAL_SERVICE_OVERRIDES?: LocalServiceOverride[]
     TROLLEY_WIDGET_ORIGIN: string
-    FILESTACK_SHOWCASE_MEDIA_FILE_PICKER_CONTAINER: string
-    FILESTACK_SHOWCASE_MEDIA_CDN_URL: string
+
 }

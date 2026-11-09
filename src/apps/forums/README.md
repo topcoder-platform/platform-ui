@@ -65,13 +65,12 @@ quoting, sanitized Markdown, previews and moderation behavior consistent.
 
 The common Markdown toolbar also supports headings, lists, strike-through,
 restricted text sizes/alignment, links, images, tables, mentions and expanding
-the editor. `uploadForumAttachment(file)` uses the existing environment's
-Filestack API key/CNAME/security configuration, enforces a 25 MiB limit and
-returns escaped Markdown using an HTTPS URL. Files upload when selected; failures
-stay beside the editor. Raster image formats render inline; SVG/other files use
-download links. A deployment must supply a valid `FILESTACK_API_KEY` (and the
-existing security policy/signature where required). Imported attachment links
-continue to use their original Filestack URLs.
+the editor. The attachment toolbar opens the Uppy 6 Dashboard, with drag/drop,
+previews, progress, retry and cancellation, for up to four files of 25 MiB each.
+`pickForumAttachments()` inserts safe images as Markdown images and other files as
+download links. `UPLOADS_API_URL` defaults to the environment's
+`/v6/reviews/uploads` API, which authenticates the member, selects the existing S3
+bucket and returns a durable attachment URL. Existing posts retain their original URLs.
 
 Deploy the companion forums-api-v6 public-forums change before enabling this
 app. It adds inherited category permissions, optional public reads, catalog
@@ -88,4 +87,4 @@ CI=true yarn test:no-watch --runInBand \
 On memory-constrained build runners use `NODE_OPTIONS=--max-old-space-size=8192`
 for the production build. Before production cutover, compare the index,
 category, thread and composer screens in a connected desktop/mobile browser;
-verify guest login return paths and real Filestack uploads with configured keys.
+verify guest login return paths and real Uppy S3 uploads with the configured signing API.

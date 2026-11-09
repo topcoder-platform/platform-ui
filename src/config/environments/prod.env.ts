@@ -1,4 +1,3 @@
-import { FILESTACK as DefaultFileStack } from './default.env'
 import { getReactEnv } from './react-env'
 
 export * from './default.env'
@@ -44,16 +43,4 @@ export const REVIEW = {
     PROFILE_PAGE_URL: 'https://profiles.topcoder.com',
 }
 
-export const FILESTACK = {
-    ...DefaultFileStack,
-    CNAME: getReactEnv<string>('FILESTACK_CNAME', 'fs.topcoder.com'),
-    CONTAINER: getReactEnv<string>('FILESTACK_CONTAINER', 'topcoder-submissions'),
-    PATH_PREFIX: getReactEnv<string>('FILESTACK_PATH_PREFIX', 'review-app'),
-    SUBMISSION_CONTAINER: getReactEnv<string>(
-        'FILESTACK_SUBMISSION_CONTAINER',
-        'topcoder-submissions-dmz',
-    ),
-}
-
-export const FILESTACK_SHOWCASE_MEDIA_CDN_URL
-    = getReactEnv<string>('FILESTACK_SHOWCASE_MEDIA_CDN_URL', 'https://showcase-media.topcoder.com')
+export const UPLOADS_API_URL = getReactEnv<string>('UPLOADS_API_URL', 'https://api.topcoder.com/v6/reviews/uploads')

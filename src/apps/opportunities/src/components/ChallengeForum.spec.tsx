@@ -69,7 +69,7 @@ jest.mock('react-toastify', () => ({
 }))
 
 jest.mock('../services/forum-attachments.service', () => ({
-    uploadForumAttachment: (...args: unknown[]) => mockUploadForumAttachment(...args),
+    pickForumAttachments: (...args: unknown[]) => mockUploadForumAttachment(...args),
 }))
 
 jest.mock('swr', () => ({
@@ -649,13 +649,8 @@ describe('ChallengeForum', () => {
         fireEvent.change(screen.getByLabelText('Topic Title'), { target: { value: 'XML attachment' } })
         fireEvent.change(screen.getByLabelText('Topic Content'), { target: { value: 'See attached.' } })
 
-        const file = new File(['<document>test</document>'], 'document.xml', { type: 'application/xml' })
-        await act(async () => fireEvent.change(screen.getByLabelText('Choose attachment'), {
-            target: { files: [file] },
-        }))
-
-        expect(mockUploadForumAttachment)
-            .toHaveBeenCalledWith(file)
+        await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Attachment' })))
+        expect(mockUploadForumAttachment).toHaveBeenCalledWith()
         expect(screen.getByLabelText('Topic Content'))
             .toHaveValue(`See attached.\n${markdown}`)
         expect(screen.queryByRole('alert'))
@@ -819,18 +814,10 @@ describe('ChallengeForum', () => {
         expect(applyToDraft('Thanks ', 7, clickTool('Mention member')))
             .toBe('Thanks @')
 
-        const chooser = screen.getByLabelText('Choose attachment') as HTMLInputElement
-        const openChooser = jest.spyOn(chooser, 'click')
-            .mockImplementation(() => undefined)
-        clickTool('Attachment')()
-        expect(openChooser)
-            .toHaveBeenCalledTimes(1)
-        const file = new File(['brief'], 'brief.pdf', { type: 'application/pdf' })
-        await act(async () => fireEvent.change(chooser, { target: { files: [file] } }))
+        await act(async () => clickTool('Attachment')())
         await waitFor(() => expect(textarea.value)
             .toBe('Thanks @\n[brief.pdf](<https://cdn.example/brief.pdf>)'))
-        expect(mockUploadForumAttachment)
-            .toHaveBeenCalledWith(file)
+        expect(mockUploadForumAttachment).toHaveBeenCalledWith()
 
         const expand = toolbar.getByRole('button', { name: 'Expand editor' })
         fireEvent.click(expand)

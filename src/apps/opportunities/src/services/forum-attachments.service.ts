@@ -1,33 +1,27 @@
-import { init } from 'filestack-js'
+import { pickFiles, UploadedFile, uploadFile } from '~/libs/shared/lib/services/s3-upload'
 
-import { EnvironmentConfig } from '~/config'
-
-/** Uploads a selected forum attachment using the existing configured Filestack service.
+/** Uploads a selected forum attachment using the shared Uppy S3 uploader.
  * @param file Image or downloadable attachment, limited to 25 MiB.
  * @returns Escaped Markdown link using the durable HTTPS URL.
  * @throws Error for invalid size/configuration/response or upload failure.
  */
 export async function uploadForumAttachment(file: File): Promise<string> {
     if (!file.size || file.size > 25 * 1024 * 1024) throw new Error('Choose a file between 1 byte and 25 MB.')
-    const config = EnvironmentConfig.FILESTACK
-    if (!config.API_KEY) throw new Error('File uploads are not configured for this environment.')
-    const client = init(config.API_KEY, {
-        cname: config.CNAME,
-        security: config.SECURITY
-            ? { policy: config.SECURITY.POLICY, signature: config.SECURITY.SIGNATURE }
-            : undefined,
-    })
-    // Filestack rejects XML MIME types; store XML attachments as binary downloads.
-    const xml = /\.xml$/i.test(file.name) || /^(application|text)\/xml$/i.test(file.type)
-    const result = await client.upload(
-        file,
-        { retry: config.RETRY, timeout: config.TIMEOUT },
-        xml ? { mimetype: 'application/octet-stream' } : undefined,
-    )
-    const url = new URL(result.url)
+    const result = await uploadFile(file, { purpose: 'forum' })
+    return attachmentMarkdown(result)
+}
+
+function attachmentMarkdown(file: UploadedFile): string {
+    const url = new URL(file.url)
     if (url.protocol !== 'https:') throw new Error('The upload service returned an invalid attachment URL.')
-    const label = file.name.replace(/[\\[\]<>]/g, '')
+    const label = file.filename.replace(/[\\[\]<>]/g, '')
         .replace(/[\r\n]/g, ' ') || 'Attachment'
-    const image = /^image\/(png|jpeg|gif|webp|avif)$/.test(file.type)
+    const image = /^image\/(png|jpeg|gif|webp|avif)$/.test(file.mimetype)
     return `${image ? '!' : ''}[${label}](<${url.href}>)`
+}
+
+export async function pickForumAttachments(): Promise<string> {
+    const files = await pickFiles({ maxFiles: 4, purpose: 'forum' })
+    return files.map(attachmentMarkdown)
+        .join('\n')
 }

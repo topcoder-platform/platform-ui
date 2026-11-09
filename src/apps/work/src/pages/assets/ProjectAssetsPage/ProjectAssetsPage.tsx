@@ -2,12 +2,6 @@
 /* eslint-disable react/jsx-no-bind */
 
 import {
-    Client,
-    init,
-    PickerFileMetadata,
-    PickerOptions,
-} from 'filestack-js'
-import {
     FC,
     useCallback,
     useContext,
@@ -19,6 +13,7 @@ import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
 import { PageWrapper } from '~/apps/review/src/lib'
+import { pickFiles, UploadedFile } from '~/libs/shared/lib/services/s3-upload'
 import { EnvironmentConfig } from '~/config'
 import {
     BaseModal,
@@ -29,8 +24,6 @@ import {
 import {
     ATTACHMENT_TYPE_FILE,
     ATTACHMENT_TYPE_LINK,
-    FILE_PICKER_SUBMISSION_CONTAINER_NAME,
-    PROJECT_ATTACHMENTS_FOLDER,
 } from '../../../lib/constants'
 import {
     ConfirmationModal,
@@ -69,7 +62,6 @@ import styles from './ProjectAssetsPage.module.scss'
 type AssetsTab = 'files' | 'links'
 type ShareMode = 'all' | 'selected'
 
-const ASSETS_FILE_PICKER_FROM_SOURCES = ['local_file_system']
 const ASSETS_FILE_PICKER_MAX_FILES = 4
 const FILE_PICKER_ACCEPT = [
     '.bmp',
@@ -196,7 +188,7 @@ function buildAttachmentUrl(attachment?: ProjectAttachment): string | undefined 
         return undefined
     }
 
-    const region = EnvironmentConfig.FILESTACK.REGION
+    const region = EnvironmentConfig.ADMIN.AWS_REGION
         .toLowerCase()
     const baseUrl = region && region !== 'us-east-1'
         ? `https://${bucket}.s3.${region}.amazonaws.com`
@@ -342,7 +334,7 @@ export const ProjectAssetsPage: FC = () => {
 
     const [activeTab, setActiveTab] = useState<AssetsTab>('files')
     const [isOpeningPicker, setIsOpeningPicker] = useState<boolean>(false)
-    const [pendingUploadFiles, setPendingUploadFiles] = useState<PickerFileMetadata[]>([])
+    const [pendingUploadFiles, setPendingUploadFiles] = useState<UploadedFile[]>([])
     const [showUploadOptionsModal, setShowUploadOptionsModal] = useState<boolean>(false)
     const [uploadShareMode, setUploadShareMode] = useState<ShareMode>('all')
     const [uploadAllowedUsers, setUploadAllowedUsers] = useState<string[]>([])
@@ -365,23 +357,6 @@ export const ProjectAssetsPage: FC = () => {
     const [attachmentToDelete, setAttachmentToDelete] = useState<ProjectAttachment | undefined>(undefined)
     const [isDeletingAttachment, setIsDeletingAttachment] = useState<boolean>(false)
     const [downloadingAttachmentId, setDownloadingAttachmentId] = useState<string | undefined>(undefined)
-
-    const filestackClient = useMemo<Client | undefined>(() => {
-        const apiKey = EnvironmentConfig.FILESTACK.API_KEY
-        if (!apiKey) {
-            return undefined
-        }
-
-        return init(apiKey, {
-            cname: EnvironmentConfig.FILESTACK.CNAME,
-            security: EnvironmentConfig.FILESTACK.SECURITY
-                ? {
-                    policy: EnvironmentConfig.FILESTACK.SECURITY.POLICY,
-                    signature: EnvironmentConfig.FILESTACK.SECURITY.SIGNATURE,
-                }
-                : undefined,
-        })
-    }, [])
 
     const membersById = useMemo<Record<string, ProjectMember>>(() => (
         projectMembersResult.members.reduce<Record<string, ProjectMember>>((accumulator, member) => {
@@ -432,54 +407,28 @@ export const ProjectAssetsPage: FC = () => {
         setUploadShareMode('all')
     }, [isSavingUploadOptions])
 
-    const handleOpenFilePicker = useCallback((): void => {
-        if (!projectId) {
-            return
-        }
-
-        if (!filestackClient) {
-            toast.error('File uploads are not configured for this environment.')
-            return
-        }
-
-        const uploadedFiles: PickerFileMetadata[] = []
-        const attachmentsStorePath = `${PROJECT_ATTACHMENTS_FOLDER}/${projectId}/`
-        const pickerOptions: PickerOptions = {
-            accept: FILE_PICKER_ACCEPT,
-            fromSources: ASSETS_FILE_PICKER_FROM_SOURCES,
-            maxFiles: ASSETS_FILE_PICKER_MAX_FILES,
-            onClose: () => {
-                setIsOpeningPicker(false)
-                if (!uploadedFiles.length) {
-                    return
-                }
-
-                setPendingUploadFiles(uploadedFiles)
+    const handleOpenFilePicker = useCallback(async (): Promise<void> => {
+        if (!projectId) return
+        setIsOpeningPicker(true)
+        try {
+            const files = await pickFiles({
+                allowedFileTypes: FILE_PICKER_ACCEPT,
+                contextId: projectId,
+                maxFiles: ASSETS_FILE_PICKER_MAX_FILES,
+                purpose: 'project',
+            })
+            if (files.length) {
+                setPendingUploadFiles(files)
                 setUploadAllowedUsers([])
                 setUploadShareMode('all')
                 setShowUploadOptionsModal(true)
-            },
-            onFileUploadFinished: file => {
-                uploadedFiles.push(file)
-            },
-            storeTo: {
-                container: FILE_PICKER_SUBMISSION_CONTAINER_NAME,
-                location: 's3',
-                path: attachmentsStorePath,
-                region: EnvironmentConfig.FILESTACK.REGION,
-            },
-            uploadInBackground: false,
-        }
-
-        try {
-            setIsOpeningPicker(true)
-            filestackClient.picker(pickerOptions)
-                .open()
+            }
         } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to upload files.'))
+        } finally {
             setIsOpeningPicker(false)
-            toast.error(getErrorMessage(error, 'Failed to open file picker.'))
         }
-    }, [filestackClient, projectId])
+    }, [projectId])
 
     const handleSaveUploadOptions = useCallback(async (): Promise<void> => {
         if (!projectId || !pendingUploadFiles.length) {
@@ -509,6 +458,7 @@ export const ProjectAssetsPage: FC = () => {
                     contentType: file.mimetype || 'application/unknown',
                     description: '',
                     path: storagePath,
+                    s3Bucket: file.container,
                     size: file.size,
                     title: file.filename,
                     type: ATTACHMENT_TYPE_FILE,

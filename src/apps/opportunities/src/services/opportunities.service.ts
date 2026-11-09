@@ -1,11 +1,6 @@
 import { AxiosHeaders, AxiosResponse } from 'axios'
-import {
-    Client,
-    init,
-    StoreUploadOptions,
-    UploadOptions,
-} from 'filestack-js'
 
+import { uploadFile } from '~/libs/shared/lib/services/s3-upload'
 import { EnvironmentConfig } from '~/config'
 import {
     xhrDeleteAsync,
@@ -57,7 +52,6 @@ const REVIEW_SUMMATIONS_PAGE_SIZE = 500
 const PROJECT_RESULTS_PAGE_SIZE = 100
 const MAX_DETAIL_PAGES = 100
 const PAGE_REQUEST_BATCH_SIZE = 4
-let submissionFilestackClient: Client | undefined
 
 const DEFAULT_SUMMARY: OpportunitySummary = {
     competitions: { amount: 0, count: 0 },
@@ -71,27 +65,6 @@ const ENGAGEMENT_SKILL_SEARCH_SIZE = 25
 const MEMBER_STATE_PAGE_SIZE = 200
 const CLIENT_SORT_PAGE_SIZE = 1000
 const MAX_CLIENT_SORT_PAGES = 20
-
-/**
- * Resolves the shared Filestack client used for challenge submissions.
- *
- * @returns configured Filestack browser client.
- * @throws Error when file uploads are not configured for the environment.
- */
-function getSubmissionFilestackClient(): Client {
-    const { API_KEY, CNAME, SECURITY }: typeof EnvironmentConfig.FILESTACK = EnvironmentConfig.FILESTACK
-    if (!API_KEY) throw new Error('File uploads are not configured for this environment.')
-    if (!submissionFilestackClient) {
-        submissionFilestackClient = init(API_KEY, {
-            cname: CNAME,
-            security: SECURITY
-                ? { policy: SECURITY.POLICY, signature: SECURITY.SIGNATURE }
-                : undefined,
-        })
-    }
-
-    return submissionFilestackClient
-}
 
 /**
  * Uploads a member's ZIP to the submission DMZ, then creates the v6 Review API
@@ -115,28 +88,14 @@ export async function createChallengeSubmission(
     signal?: AbortSignal,
 ): Promise<ChallengeSubmission> {
     if (signal?.aborted) throw new DOMException('Upload cancelled.', 'AbortError')
-    const submissionContainer = EnvironmentConfig.ADMIN.AWS_DMZ_BUCKET
-    const storagePath = `${challengeId}-${memberId}-${type}-${Date.now()}.zip`
-    const uploadOptions: UploadOptions = {
-        onProgress: event => {
-            if (!onProgress) return
-            const percent = typeof event?.totalPercent === 'number' ? event.totalPercent : 0
-            onProgress(Math.min(99, Math.max(0, Math.round(percent))))
-        },
-        progressInterval: EnvironmentConfig.FILESTACK.PROGRESS_INTERVAL,
-        retry: EnvironmentConfig.FILESTACK.RETRY,
-        timeout: EnvironmentConfig.FILESTACK.TIMEOUT,
-    }
-    const storeOptions: StoreUploadOptions = {
-        container: submissionContainer,
-        path: storagePath,
-        region: EnvironmentConfig.FILESTACK.REGION,
-    }
-    const upload = await getSubmissionFilestackClient()
-        .upload(file, uploadOptions, storeOptions)
+    const upload = await uploadFile(file, {
+        contextId: challengeId,
+        onProgress: percent => onProgress?.(Math.min(99, percent)),
+        purpose: 'submission',
+        signal,
+    })
     if (signal?.aborted) throw new DOMException('Upload cancelled.', 'AbortError')
-    const storageKey = String(upload?.key ?? storagePath)
-    const storageUrl = `https://s3.amazonaws.com/${submissionContainer}/${storageKey}`
+    const storageUrl = upload.url
     const submission = await xhrPostAsync<{
         challengeId: string
         memberId: string
@@ -161,7 +120,7 @@ export async function createChallengeSubmission(
 /**
  * Creates a challenge submission whose deliverable is an authored external URL.
  *
- * URL submissions bypass Filestack and storage because Review API persists the
+ * URL submissions bypass file uploads and storage because Review API persists the
  * member-provided link as a non-file submission. Registration and open-phase
  * authorization remain owned by Review API.
  *

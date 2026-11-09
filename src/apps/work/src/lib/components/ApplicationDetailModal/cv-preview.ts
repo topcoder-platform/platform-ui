@@ -31,9 +31,9 @@ function resolveByExtension(url: string): string {
 /**
  * Resolves the URL a CV can be previewed at, instead of the browser downloading it.
  *
- * CV files are served by the Filestack CDN with headers that make the browser download them, so a PDF is
+ * CV download links may redirect to private S3 objects with download headers, so a PDF is
  * fetched and exposed through a local blob URL, and DOC / DOCX files go through the Office Online viewer.
- * Filestack URLs carry no file extension, so the type is taken from the fetched file.
+ * Durable attachment URLs may carry no file extension, so the type is taken from the fetched file.
  *
  * @param url the CV file URL.
  * @returns the URL to open for previewing the CV; the original URL when no preview is possible.
