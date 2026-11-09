@@ -2,6 +2,7 @@ import { FC, useCallback, useMemo, useState } from 'react'
 import moment, { Duration } from 'moment'
 
 import { ReviewsContextModel } from '~/apps/review/src/lib/models'
+import { getLlmDisplayName } from '~/libs/shared'
 import {
     AiWorkflowReviewMethod,
     useRolePermissions,
@@ -66,7 +67,7 @@ const ScorecardHeader: FC = () => {
                             className={styles.modelName}
                             onClick={toggleModelDetails}
                         >
-                            {workflow.llm.name}
+                            {getLlmDisplayName(workflow.llm)}
                         </span>
                     </div>
                 </div>

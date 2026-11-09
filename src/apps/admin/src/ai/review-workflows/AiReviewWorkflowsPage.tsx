@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 
 import { EnvironmentConfig } from '~/config'
-import { useWindowSize, WindowSize } from '~/libs/shared'
+import { getLlmDisplayName, useWindowSize, WindowSize } from '~/libs/shared'
 import { Table, TableColumn } from '~/libs/ui'
 import FormToggleSwitch from '~/libs/ui/lib/components/form/form-groups/form-toggle-switch'
 
@@ -139,10 +139,13 @@ export const AiReviewWorkflowsPage: FC = () => {
             label: 'Provider/LLM',
             propertyName: 'llm.provider.name',
             renderer: (data: AiWorkflow) => (
-                <div className={styles.cellText} title={`${data.llm?.provider?.name}/${data.llm?.name}`}>
+                <div
+                    className={styles.cellText}
+                    title={`${data.llm?.provider?.name}/${getLlmDisplayName(data.llm)}`}
+                >
                     {data.llm?.provider?.name}
                     /
-                    {data.llm?.name}
+                    {getLlmDisplayName(data.llm)}
                 </div>
             ),
             type: 'element',

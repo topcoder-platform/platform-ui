@@ -33,7 +33,9 @@ export interface AiWorkflow {
     defUrl: string
     reviewMethod?: string
     llm: {
+        // Provider model id (may be a Bedrock ARN) - show getLlmDisplayName(llm) instead
         name: string
+        displayName?: string | null
         description: string
         icon: string
         url: string

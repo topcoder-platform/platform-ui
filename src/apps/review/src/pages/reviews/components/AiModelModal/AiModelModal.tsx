@@ -1,6 +1,7 @@
 import { FC } from 'react'
 
 import { BaseModal } from '~/libs/ui'
+import { getLlmDisplayName } from '~/libs/shared'
 import { AiWorkflow } from '~/apps/review/src/lib/hooks'
 import { IconExternalLink } from '~/apps/review/src/lib/assets/icons'
 import { MarkdownReview } from '~/apps/review/src/lib/components/MarkdownReview'
@@ -28,7 +29,7 @@ const AiModelModal: FC<AiModelModalProps> = props => (
                     <AiModelIcon model={props.model} />
                 </div>
                 <div className={styles.modelName}>
-                    <h3>{props.model.name}</h3>
+                    <h3>{getLlmDisplayName(props.model)}</h3>
                     <a href={props.model.url} target='_blank' rel='noreferrer noopener'>
                         <IconExternalLink />
                     </a>
