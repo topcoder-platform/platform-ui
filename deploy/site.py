@@ -18,13 +18,14 @@ sys.path.insert(0, '/tmp/tc-deploy-scripts')
 import tcdeploy as d
 
 PUBLIC_VARIABLES = frozenset({
-    'REACT_APP_FILESTACK_API_KEY', 'REACT_APP_FILESTACK_SUBMISSION_CONTAINER',
+    'REACT_APP_UPLOADS_API_URL',
     'REACT_APP_HOST_ENV', 'REACT_APP_PAYLOAD_CMS_DEFAULT_ACCESS_TOKEN',
     'REACT_APP_PAYLOAD_CMS_EDU_ACCESS_TOKEN', 'REACT_APP_MEMBER_VERIFY_LOOKER',
     'REACT_APP_SPRIG_ENV_ID', 'REACT_APP_RESTRICT_TALENT_SEARCH',
     'REACT_APP_ENABLE_EMSI_SKILLS', 'REACT_APP_ENABLE_TCA_CERT_MONETIZATION',
 })
 REQUIRED_VARIABLES = PUBLIC_VARIABLES - {
+    'REACT_APP_UPLOADS_API_URL',
     'REACT_APP_MEMBER_VERIFY_LOOKER', 'REACT_APP_SPRIG_ENV_ID',
     'REACT_APP_RESTRICT_TALENT_SEARCH', 'REACT_APP_ENABLE_EMSI_SKILLS',
     'REACT_APP_ENABLE_TCA_CERT_MONETIZATION',
@@ -158,7 +159,10 @@ def config_values(m, path):
     value = json.loads(raw, object_pairs_hook=d.unique_object)
     d.require(set(value) == {'schemaVersion', 'environment', 'variables'} and
               value['schemaVersion'] == 1 and value['environment'] == m['environment'], 'Wrong browser config environment')
-    variables = value['variables']
+    # Older pinned browser-config objects still contain retired Filestack fields.
+    # Ignore them so both environments can roll out without republishing those objects.
+    retired = {'REACT_APP_FILESTACK_API_KEY', 'REACT_APP_FILESTACK_SUBMISSION_CONTAINER'}
+    variables = {key: val for key, val in value['variables'].items() if key not in retired}
     d.require(isinstance(variables, dict) and REQUIRED_VARIABLES <= set(variables) <= PUBLIC_VARIABLES, 'Unreviewed browser config variable')
     d.require(all(isinstance(v, str) and len(v) < 10000 and '\n' not in v and '\r' not in v for v in variables.values()), 'Invalid browser config value')
     d.require(variables['REACT_APP_HOST_ENV'] == m['environment'] and all(variables[k] for k in REQUIRED_VARIABLES), 'Missing browser configuration')

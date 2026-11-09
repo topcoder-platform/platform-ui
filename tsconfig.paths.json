@@ -1,7 +1,6 @@
 {
     "compilerOptions": {
         "baseUrl": "./",
-
         "paths": {
             "~/*": [
                 "./src/*"
@@ -38,6 +37,18 @@
             ],
             "@libs/ui/styles/*": [
                 "./src/libs/ui/lib/styles/*"
+            ],
+            "@uppy/core": [
+                "./node_modules/@uppy/core/lib/index"
+            ],
+            "@uppy/aws-s3": [
+                "./node_modules/@uppy/aws-s3/lib/index"
+            ],
+            "@uppy/dashboard": [
+                "./node_modules/@uppy/dashboard/lib/index"
+            ],
+            "@uppy/core/utils": [
+                "./node_modules/@uppy/core/lib/utils/index"
             ]
         }
     }

@@ -1233,7 +1233,7 @@ export async function addProjectAttachment(
     }
 
     if (payload.type === ATTACHMENT_TYPE_FILE) {
-        payload.s3Bucket = FILE_PICKER_SUBMISSION_CONTAINER_NAME
+        payload.s3Bucket = payload.s3Bucket || FILE_PICKER_SUBMISSION_CONTAINER_NAME
     }
 
     try {

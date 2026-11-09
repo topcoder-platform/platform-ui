@@ -21,7 +21,7 @@ jest.mock('~/config', () => ({
     AppSubdomain: { work: 'work' },
     EnvironmentConfig: { URLS: { CHALLENGES_PAGE: '/challenges', WORK_APP: '/work' } },
 }), { virtual: true })
-jest.mock('filestack-js', () => ({ init: jest.fn() }))
+jest.mock('~/libs/shared/lib/services/s3-upload', () => ({ pickFiles: jest.fn() }), { virtual: true })
 jest.mock('react-router-dom', () => ({ useParams: () => ({ projectId: '123' }) }))
 jest.mock('~/libs/ui', () => ({
     BaseModal: (props: any): JSX.Element => (props.open

@@ -63,7 +63,7 @@ export interface Application {
     availability: string
     coverLetter?: string
     createdAt: string
-    /** URL of the CV file the applicant uploaded to S3 through Filestack. */
+    /** URL of the CV file the applicant uploaded to S3 through Uppy. */
     cvFileUrl?: string
     email: string
     engagementId: number | string
