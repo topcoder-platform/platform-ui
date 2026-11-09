@@ -345,4 +345,4 @@ export const REVIEW = {
 
 export const SUBDOMAIN = window.location.hostname.split('.')[0]
 
-export const UPLOADS_API_URL = getReactEnv<string>('UPLOADS_API_URL', `${API.V6}/reviews/uploads`)
+export const UPLOADS_API_URL = getReactEnv<string>('UPLOADS_API_URL', `${API.V6}/uploads/files`)

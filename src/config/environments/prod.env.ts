@@ -43,4 +43,4 @@ export const REVIEW = {
     PROFILE_PAGE_URL: 'https://profiles.topcoder.com',
 }
 
-export const UPLOADS_API_URL = getReactEnv<string>('UPLOADS_API_URL', 'https://api.topcoder.com/v6/reviews/uploads')
+export const UPLOADS_API_URL = getReactEnv<string>('UPLOADS_API_URL', 'https://api.topcoder.com/v6/uploads/files')

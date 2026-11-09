@@ -69,7 +69,7 @@ the editor. The attachment toolbar opens the Uppy 6 Dashboard, with drag/drop,
 previews, progress, retry and cancellation, for up to four files of 25 MiB each.
 `pickForumAttachments()` inserts safe images as Markdown images and other files as
 download links. `UPLOADS_API_URL` defaults to the environment's
-`/v6/reviews/uploads` API, which authenticates the member, selects the existing S3
+`/v6/uploads/files` API, which authenticates the member, selects the existing S3
 bucket and returns a durable attachment URL. Existing posts retain their original URLs.
 
 Deploy the companion forums-api-v6 public-forums change before enabling this
