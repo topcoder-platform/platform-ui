@@ -29,13 +29,16 @@ interface BackendLeadListResponse {
 function appendFilterParam(
     params: URLSearchParams,
     key: string,
-    value?: string | number,
+    value?: string | number | string[],
 ): void {
-    if (value === undefined || value === null || value === '') {
+    // Lists go out comma-separated, which the API reads as several values.
+    const normalized = Array.isArray(value) ? value.join(',') : value
+
+    if (normalized === undefined || normalized === null || normalized === '') {
         return
     }
 
-    params.set(key, String(value))
+    params.set(key, String(normalized))
 }
 
 export const fetchEngagementLeads = async (
