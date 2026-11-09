@@ -113,7 +113,8 @@ export interface EngagementLeadFilters {
     sortBy?: 'createdAt' | 'preferredStartDate' | 'priority'
     sortOrder?: 'asc' | 'desc'
     status?: EngagementLeadStatus | string
-    statusGroup?: EngagementLeadStatusGroup | string
+    /** Several groups are ORed. */
+    statusGroup?: EngagementLeadStatusGroup | string | Array<EngagementLeadStatusGroup | string>
 }
 
 export interface EngagementLeadListResponse {

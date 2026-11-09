@@ -3,10 +3,11 @@ import {
     FC,
     useCallback,
     useEffect,
+    useMemo,
     useState,
 } from 'react'
 
-import { Button } from '~/libs/ui'
+import { Button, InputMultiselect, InputMultiselectOption } from '~/libs/ui'
 
 import { LEAD_SMU_OPTIONS } from '../../constants'
 import {
@@ -22,7 +23,8 @@ export interface EngagementLeadsListFilters {
     smu?: string
     sortBy?: 'createdAt' | 'preferredStartDate'
     sortOrder?: 'asc' | 'desc'
-    statusGroup?: string
+    /** Empty or unset shows leads in every status. */
+    statusGroups?: string[]
 }
 
 interface EngagementLeadsFilterProps {
@@ -31,10 +33,36 @@ interface EngagementLeadsFilterProps {
     onFiltersChange: (patch: Partial<EngagementLeadsListFilters>) => void
 }
 
+// The Leads page opens on the leads that still need work: new ones and the ones under review.
+export const DEFAULT_STATUS_GROUPS: string[] = [
+    EngagementLeadStatusGroup.NEW,
+    EngagementLeadStatusGroup.IN_PROGRESS,
+]
+
 export const DEFAULT_FILTERS: EngagementLeadsListFilters = {
     sortBy: 'createdAt',
     sortOrder: 'desc',
-    statusGroup: EngagementLeadStatusGroup.NEW,
+    statusGroups: DEFAULT_STATUS_GROUPS,
+}
+
+export const LEAD_STATUS_GROUP_OPTIONS: InputMultiselectOption[] = [
+    { label: 'New', value: EngagementLeadStatusGroup.NEW },
+    { label: 'In Progress', value: EngagementLeadStatusGroup.IN_PROGRESS },
+    { label: 'Converted', value: EngagementLeadStatusGroup.CONVERTED },
+    { label: 'Declined', value: EngagementLeadStatusGroup.DECLINED },
+]
+
+/**
+ * Normalizes the selected status groups for the applied filters.
+ * @param statusGroups Selected status group values.
+ * @returns undefined when nothing or everything is selected, as both mean every status.
+ */
+function normalizeStatusGroups(statusGroups: string[]): string[] | undefined {
+    if (!statusGroups.length || statusGroups.length === LEAD_STATUS_GROUP_OPTIONS.length) {
+        return undefined
+    }
+
+    return statusGroups
 }
 
 export const EngagementLeadsFilter: FC<EngagementLeadsFilterProps> = (
@@ -48,7 +76,7 @@ export const EngagementLeadsFilter: FC<EngagementLeadsFilterProps> = (
     const [accountNameInput, setAccountNameInput] = useState<string>(filters.accountName || '')
     const [smu, setSmu] = useState<string>(filters.smu || '')
     const [roleTitleInput, setRoleTitleInput] = useState<string>(filters.roleTitle || '')
-    const [statusGroup, setStatusGroup] = useState<string>(filters.statusGroup || '')
+    const [statusGroups, setStatusGroups] = useState<string[]>(filters.statusGroups || [])
 
     useEffect(() => {
         setAccountNameInput(filters.accountName || '')
@@ -63,15 +91,20 @@ export const EngagementLeadsFilter: FC<EngagementLeadsFilterProps> = (
     }, [filters.roleTitle])
 
     useEffect(() => {
-        setStatusGroup(filters.statusGroup || '')
-    }, [filters.statusGroup])
+        setStatusGroups(filters.statusGroups || [])
+    }, [filters.statusGroups])
+
+    const selectedStatusOptions = useMemo<InputMultiselectOption[]>(
+        () => LEAD_STATUS_GROUP_OPTIONS.filter(option => statusGroups.includes(option.value)),
+        [statusGroups],
+    )
 
     const handleApplyFilters = useCallback((): void => {
         onFiltersChange({
             accountName: accountNameInput.trim() || undefined,
             roleTitle: showRoleTitle ? roleTitleInput.trim() || undefined : undefined,
             smu: smu || undefined,
-            statusGroup: statusGroup || undefined,
+            statusGroups: normalizeStatusGroups(statusGroups),
         })
     }, [
         accountNameInput,
@@ -79,19 +112,19 @@ export const EngagementLeadsFilter: FC<EngagementLeadsFilterProps> = (
         roleTitleInput,
         showRoleTitle,
         smu,
-        statusGroup,
+        statusGroups,
     ])
 
     const handleClearFilters = useCallback((): void => {
         setAccountNameInput(DEFAULT_FILTERS.accountName || '')
         setRoleTitleInput(DEFAULT_FILTERS.roleTitle || '')
         setSmu(DEFAULT_FILTERS.smu || '')
-        setStatusGroup(DEFAULT_FILTERS.statusGroup || '')
+        setStatusGroups(DEFAULT_FILTERS.statusGroups || [])
         onFiltersChange({
             accountName: DEFAULT_FILTERS.accountName || undefined,
             roleTitle: DEFAULT_FILTERS.roleTitle || undefined,
             smu: DEFAULT_FILTERS.smu || undefined,
-            statusGroup: DEFAULT_FILTERS.statusGroup || undefined,
+            statusGroups: DEFAULT_FILTERS.statusGroups,
         })
     }, [onFiltersChange])
 
@@ -107,8 +140,19 @@ export const EngagementLeadsFilter: FC<EngagementLeadsFilterProps> = (
         setRoleTitleInput(event.target.value)
     }, [])
 
-    const handleStatusGroupChange = useCallback((event: ChangeEvent<HTMLSelectElement>): void => {
-        setStatusGroup(event.target.value)
+    const handleStatusGroupsChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
+        const options = (event.target.value || []) as unknown as InputMultiselectOption[]
+        setStatusGroups(options.map(option => option.value)
+            .filter(Boolean))
+    }, [])
+
+    const fetchStatusOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
+        const normalizedQuery = query.trim()
+            .toLowerCase()
+
+        return LEAD_STATUS_GROUP_OPTIONS.filter(option => String(option.label)
+            .toLowerCase()
+            .includes(normalizedQuery))
     }, [])
 
     return (
@@ -149,20 +193,20 @@ export const EngagementLeadsFilter: FC<EngagementLeadsFilterProps> = (
                 </label>
             )}
 
-            <label className={styles.field}>
+            <div className={styles.field}>
                 <span className={styles.label}>Status</span>
-                <select
-                    className={styles.select}
-                    value={statusGroup}
-                    onChange={handleStatusGroupChange}
-                >
-                    <option value=''>All statuses</option>
-                    <option value={EngagementLeadStatusGroup.NEW}>New</option>
-                    <option value={EngagementLeadStatusGroup.IN_PROGRESS}>In Progress</option>
-                    <option value={EngagementLeadStatusGroup.CONVERTED}>Converted</option>
-                    <option value={EngagementLeadStatusGroup.DECLINED}>Declined</option>
-                </select>
-            </label>
+                <InputMultiselect
+                    className={styles.statusMultiselect}
+                    label='Lead Status'
+                    name='engagement-leads-status'
+                    openMenuOnClick
+                    options={LEAD_STATUS_GROUP_OPTIONS}
+                    onFetchOptions={fetchStatusOptions}
+                    onChange={handleStatusGroupsChange}
+                    placeholder='All statuses'
+                    value={selectedStatusOptions}
+                />
+            </div>
 
             <div className={styles.actions}>
                 <Button label='Apply Filters' onClick={handleApplyFilters} primary size='md' />
