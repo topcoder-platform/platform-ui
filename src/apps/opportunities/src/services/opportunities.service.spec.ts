@@ -1419,8 +1419,8 @@ describe('opportunities service normalization', () => {
             .toHaveBeenCalledWith(
                 file,
                 expect.objectContaining({
-                    purpose: 'submission',
                     contextId: 'challenge-id',
+                    purpose: 'submission',
                     signal: controller.signal,
                 }),
             )

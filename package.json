@@ -250,7 +250,8 @@
     "**/postcss/nanoid": "3.3.18",
     "nth-check": "2.0.1",
     "lodash.mergewith": "4.6.2",
-    "@uppy/thumbnail-generator": "6.0.0"
+    "@uppy/thumbnail-generator": "6.0.0",
+    "follow-redirects": "1.16.2"
   },
   "browserslist": {
     "production": [
