@@ -8,7 +8,13 @@ import {
 import classNames from 'classnames'
 
 import { copyTextToClipboard } from '~/libs/shared'
-import { BaseModal, Button } from '~/libs/ui'
+import {
+    BaseModal,
+    Button,
+    InputSelect,
+    InputSelectOption,
+    InputText,
+} from '~/libs/ui'
 
 import { EngagementLead } from '../../models/EngagementLead.model'
 import {
@@ -34,6 +40,8 @@ import styles from './FlexiTalentCalculatorModal.module.scss'
 
 const DEFAULT_HOURS_PER_DAY = 8
 
+const noop = (): void => undefined
+
 interface DraftInput<TField extends string> {
     field: TField
     raw: string
@@ -50,12 +58,22 @@ const MEMBER_FIELDS: ReadonlyArray<AmountFieldDefinition<MemberInputField>> = [
 ]
 
 const COMMERCIAL_FIELDS: ReadonlyArray<AmountFieldDefinition<CommercialInputField>> = [
-    { field: 'tcMarginPercent', label: 'TC Margin %' },
-    { field: 'tcMarginAmount', label: 'TC Margin Amount (USD)' },
     { field: 'bookingCost', label: 'Booking Cost (USD)' },
     { field: 'bookingRate', label: 'Booking Rate / Hour (USD)' },
     { field: 'actualCost', label: 'Actual Cost (USD)' },
     { field: 'actualRate', label: 'Actual Rate / Hour (USD)' },
+    { field: 'tcMarginAmount', label: 'TC Margin Amount (USD)' },
+    { field: 'tcMarginPercent', label: 'TC Margin %' },
+]
+
+const SMU_SELECT_OPTIONS: ReadonlyArray<InputSelectOption> = FLEXI_TALENT_SMU_OPTIONS.map(option => ({
+    label: `${option.label} (${(option.costTransferRate * 100).toFixed(2)}%)`,
+    value: option.code,
+}))
+
+const REFERRAL_OPTIONS: ReadonlyArray<InputSelectOption> = [
+    { label: 'No', value: 'no' },
+    { label: 'Yes', value: 'yes' },
 ]
 
 function getFieldValue<TField extends string>(
@@ -140,7 +158,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
         setRoleTitle(event.target.value)
     }, [])
 
-    const handleSmuChange = useCallback((event: ChangeEvent<HTMLSelectElement>): void => {
+    const handleSmuChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
         setSmuCode(event.target.value)
     }, [])
 
@@ -152,7 +170,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
         setDurationWeeksRaw(event.target.value)
     }, [])
 
-    const handleReferralChange = useCallback((event: ChangeEvent<HTMLSelectElement>): void => {
+    const handleReferralChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
         setReferral(event.target.value === 'yes')
     }, [])
 
@@ -207,83 +225,81 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                 <section className={styles.section}>
                     <h4 className={styles.sectionTitle}>Engagement</h4>
                     <div className={styles.grid}>
-                        <label className={styles.field}>
-                            <span className={styles.label}>Member Name</span>
-                            <input
-                                className={styles.input}
-                                placeholder='Enter member name'
-                                value={memberName}
-                                onChange={handleMemberNameChange}
-                            />
-                        </label>
-                        <label className={styles.field}>
-                            <span className={styles.label}>Account Name</span>
-                            <input
-                                className={styles.input}
-                                value={accountName}
-                                onChange={handleAccountNameChange}
-                            />
-                        </label>
-                        <label className={styles.field}>
-                            <span className={styles.label}>Role</span>
-                            <input
-                                className={styles.input}
-                                placeholder='Enter role'
-                                value={roleTitle}
-                                onChange={handleRoleTitleChange}
-                            />
-                        </label>
-                        <label className={styles.field}>
-                            <span className={styles.label}>SMU</span>
-                            <select
-                                className={styles.input}
-                                value={smuCode}
-                                onChange={handleSmuChange}
-                            >
-                                <option value=''>Select SMU</option>
-                                {FLEXI_TALENT_SMU_OPTIONS.map(option => (
-                                    <option key={option.code} value={option.code}>
-                                        {`${option.label} (${(option.costTransferRate * 100).toFixed(2)}%)`}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                        <label className={styles.field}>
-                            <span className={styles.label}>Hours per Day</span>
-                            <input
-                                className={styles.input}
-                                inputMode='decimal'
-                                value={hoursPerDayRaw}
-                                onChange={handleHoursPerDayChange}
-                            />
-                        </label>
-                        <label className={styles.field}>
-                            <span className={styles.label}>Duration (Weeks)</span>
-                            <input
-                                className={styles.input}
-                                inputMode='decimal'
-                                placeholder={lead.engagementDuration || undefined}
-                                value={durationWeeksRaw}
-                                onChange={handleDurationChange}
-                            />
-                        </label>
-                        <label className={styles.field}>
-                            <span className={styles.label}>Referral</span>
-                            <select
-                                className={styles.input}
-                                value={referral ? 'yes' : 'no'}
-                                onChange={handleReferralChange}
-                            >
-                                <option value='no'>No</option>
-                                <option value='yes'>Yes</option>
-                            </select>
-                        </label>
-                        <div className={styles.field}>
-                            <span className={styles.label}>Total Billing Hours</span>
-                            <span className={styles.readOnlyValue} data-testid='total-billing-hours'>
-                                {formatCalculatorAmount(result.totalBillingHours)}
-                            </span>
-                        </div>
+                        <InputText
+                            forceUpdateValue
+                            label='Member Name'
+                            name='memberName'
+                            onChange={handleMemberNameChange}
+                            placeholder='Enter member name'
+                            tabIndex={0}
+                            type='text'
+                            value={memberName}
+                        />
+                        <InputText
+                            forceUpdateValue
+                            label='Account Name'
+                            name='accountName'
+                            onChange={handleAccountNameChange}
+                            tabIndex={0}
+                            type='text'
+                            value={accountName}
+                        />
+                    </div>
+                    <div className={styles.grid}>
+                        {/* <InputText
+                            forceUpdateValue
+                            label='Role'
+                            name='roleTitle'
+                            onChange={handleRoleTitleChange}
+                            placeholder='Enter role'
+                            tabIndex={0}
+                            type='text'
+                            value={roleTitle}
+                        /> */}
+                        <InputSelect
+                            label='SMU'
+                            name='smu'
+                            onChange={handleSmuChange}
+                            options={SMU_SELECT_OPTIONS}
+                            placeholder='Select SMU'
+                            value={smuCode}
+                        />
+                        <InputText
+                            forceUpdateValue
+                            label='Duration (Weeks)'
+                            name='durationWeeks'
+                            onChange={handleDurationChange}
+                            placeholder={lead.engagementDuration || undefined}
+                            tabIndex={0}
+                            type='text'
+                            value={durationWeeksRaw}
+                        />
+                        <InputText
+                            forceUpdateValue
+                            label='Hours per Day'
+                            name='hoursPerDay'
+                            onChange={handleHoursPerDayChange}
+                            tabIndex={0}
+                            type='text'
+                            value={hoursPerDayRaw}
+                        />
+                        <InputSelect
+                            label='Referral'
+                            name='referral'
+                            onChange={handleReferralChange}
+                            options={REFERRAL_OPTIONS}
+                            value={referral ? 'yes' : 'no'}
+                        />
+                        {/* <InputText
+                            forceUpdateValue
+                            label='Total Billing Hours'
+                            name='totalBillingHours'
+                            onChange={noop}
+                            readonly
+                            tabIndex={-1}
+                            type='text'
+                            value={formatCalculatorAmount(result.totalBillingHours)}
+                        /> */}
                     </div>
                 </section>
 
@@ -291,22 +307,19 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                     <h4 className={styles.sectionTitle}>Member</h4>
                     <div className={styles.grid}>
                         {MEMBER_FIELDS.map(definition => (
-                            <label
-                                className={classNames(
-                                    styles.field,
+                            <InputText
+                                classNameWrapper={classNames(
                                     memberDraft?.field === definition.field && styles.activeField,
                                 )}
+                                forceUpdateValue
                                 key={definition.field}
-                            >
-                                <span className={styles.label}>{definition.label}</span>
-                                <input
-                                    className={styles.input}
-                                    inputMode='decimal'
-                                    name={definition.field}
-                                    value={getFieldValue(definition.field, memberDraft, result)}
-                                    onChange={handleMemberFieldChange}
-                                />
-                            </label>
+                                label={definition.label}
+                                name={definition.field}
+                                onChange={handleMemberFieldChange}
+                                tabIndex={0}
+                                type='text'
+                                value={getFieldValue(definition.field, memberDraft, result)}
+                            />
                         ))}
                     </div>
                 </section>
@@ -315,22 +328,19 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                     <h4 className={styles.sectionTitle}>Commercials</h4>
                     <div className={styles.grid}>
                         {COMMERCIAL_FIELDS.map(definition => (
-                            <label
-                                className={classNames(
-                                    styles.field,
+                            <InputText
+                                classNameWrapper={classNames(
                                     commercialDraft?.field === definition.field && styles.activeField,
                                 )}
+                                forceUpdateValue
                                 key={definition.field}
-                            >
-                                <span className={styles.label}>{definition.label}</span>
-                                <input
-                                    className={styles.input}
-                                    inputMode='decimal'
-                                    name={definition.field}
-                                    value={getFieldValue(definition.field, commercialDraft, result)}
-                                    onChange={handleCommercialFieldChange}
-                                />
-                            </label>
+                                label={definition.label}
+                                name={definition.field}
+                                onChange={handleCommercialFieldChange}
+                                tabIndex={0}
+                                type='text'
+                                value={getFieldValue(definition.field, commercialDraft, result)}
+                            />
                         ))}
                     </div>
                     {result.tcMarginPercent !== undefined && result.tcMarginPercent < 0 && (

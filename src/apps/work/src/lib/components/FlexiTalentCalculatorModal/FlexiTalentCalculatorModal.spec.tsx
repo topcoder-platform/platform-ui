@@ -1,6 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import '@testing-library/jest-dom'
 
+import { ChangeEvent } from 'react'
+
 import {
     render,
     screen,
@@ -38,6 +40,43 @@ jest.mock('~/libs/ui', () => ({
         <button onClick={props.onClick} type='button'>
             {props.label}
         </button>
+    ),
+    InputSelect: (props: {
+        label: string
+        name: string
+        onChange: (event: ChangeEvent<HTMLSelectElement>) => void
+        options: ReadonlyArray<{ label: string; value: string }>
+        placeholder?: string
+        value?: string
+    }): JSX.Element => (
+        <label>
+            {props.label}
+            <select name={props.name} value={props.value} onChange={props.onChange}>
+                {props.placeholder && <option value=''>{props.placeholder}</option>}
+                {props.options.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+            </select>
+        </label>
+    ),
+    InputText: (props: {
+        label: string
+        name: string
+        onChange: (event: ChangeEvent<HTMLInputElement>) => void
+        placeholder?: string
+        readonly?: boolean
+        value?: string
+    }): JSX.Element => (
+        <label>
+            {props.label}
+            <input
+                name={props.name}
+                placeholder={props.placeholder}
+                readOnly={props.readonly}
+                value={props.value}
+                onChange={props.onChange}
+            />
+        </label>
     ),
 }), { virtual: true })
 
@@ -84,8 +123,8 @@ describe('FlexiTalentCalculatorModal', () => {
             .toHaveValue('EURP')
         expect(screen.getByLabelText('Duration (Weeks)'))
             .toHaveValue('52')
-        expect(screen.getByTestId('total-billing-hours'))
-            .toHaveTextContent('2,080')
+        expect(screen.getByLabelText('Total Billing Hours'))
+            .toHaveValue('2,080')
     })
 
     it('recalculates from the last edited commercial value', async () => {

@@ -29,42 +29,11 @@
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
 
-.field {
-    display: grid;
-    gap: 6px;
-    align-content: start;
-}
-
-.label {
-    color: $black-60;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.input {
-    width: 100%;
-    border: 1px solid $black-20;
-    border-radius: 8px;
-    padding: 8px 12px;
-    background: $tc-white;
-    font-size: 14px;
-}
-
 .activeField {
-    .label {
-        color: #2a62d5;
+    :global(.input-el) {
+        border-color: $turq-160;
+        box-shadow: 0 0 0 1px $turq-160;
     }
-
-    .input {
-        border-color: #2a62d5;
-        box-shadow: 0 0 0 1px #2a62d5;
-    }
-}
-
-.readOnlyValue {
-    padding: 8px 0;
-    font-size: 14px;
-    font-weight: 600;
 }
 
 .cards {
