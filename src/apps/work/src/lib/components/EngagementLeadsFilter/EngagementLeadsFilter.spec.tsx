@@ -59,11 +59,11 @@ function renderFilter(onFiltersChange: jest.Mock): void {
 }
 
 describe('EngagementLeadsFilter', () => {
-    it('shows new and in progress leads by default', () => {
+    it('shows new and under review leads by default', () => {
         renderFilter(jest.fn())
 
         expect(screen.getByTestId('engagement-leads-status-value').textContent)
-            .toBe('New,In Progress')
+            .toBe('New,Under Review')
     })
 
     it('applies the selected status groups', () => {
@@ -75,7 +75,7 @@ describe('EngagementLeadsFilter', () => {
 
         expect(onFiltersChange)
             .toHaveBeenCalledWith(expect.objectContaining({
-                statusGroups: [EngagementLeadStatusGroup.CONVERTED],
+                statusGroups: [EngagementLeadStatusGroup.FULFILLED],
             }))
     })
 
@@ -99,9 +99,9 @@ describe('EngagementLeadsFilter', () => {
 
         expect(onFiltersChange)
             .toHaveBeenCalledWith(expect.objectContaining({
-                statusGroups: [EngagementLeadStatusGroup.NEW, EngagementLeadStatusGroup.IN_PROGRESS],
+                statusGroups: [EngagementLeadStatusGroup.NEW, EngagementLeadStatusGroup.UNDER_REVIEW],
             }))
         expect(screen.getByTestId('engagement-leads-status-value').textContent)
-            .toBe('New,In Progress')
+            .toBe('New,Under Review')
     })
 })

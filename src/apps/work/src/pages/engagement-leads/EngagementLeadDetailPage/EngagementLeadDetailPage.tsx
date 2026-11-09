@@ -34,8 +34,11 @@ import {
 } from '../../../lib/utils'
 import { fetchEngagement } from '../../../lib/services/engagements.service'
 import {
+    canCreateEngagementFromLead,
     formatLeadType,
     getEngagementLeadsTabPath,
+    getLeadDisplayStatus,
+    getLeadStatusTransitions,
 } from '../../../lib/utils/engagement-leads.utils'
 import { withQueryParams } from '../../../lib/utils/navigation.utils'
 
@@ -59,6 +62,12 @@ function formatDate(value: string): string {
 
 function formatBoolean(value: boolean): string {
     return value ? 'Yes' : 'No'
+}
+
+const STATUS_ACTION_LABELS: Partial<Record<EngagementLeadStatus, string>> = {
+    [EngagementLeadStatus.UNDER_REVIEW]: 'Mark Under Review',
+    [EngagementLeadStatus.FULFILLED]: 'Mark Fulfilled',
+    [EngagementLeadStatus.REJECTED]: 'Reject',
 }
 
 interface DetailFieldProps {
@@ -182,14 +191,8 @@ export const EngagementLeadDetailPage: FC = () => {
         }
     }, [lead?.convertedEngagementId, navigate, viewingEngagement])
 
-    const canUpdateStatus = lead
-        && lead.status !== EngagementLeadStatus.CONVERTED
-        && lead.status !== EngagementLeadStatus.REJECTED
-
-    const canCreateEngagement = lead
-        && (lead.status === EngagementLeadStatus.QUALIFIED
-            || lead.status === EngagementLeadStatus.UNDER_REVIEW
-            || lead.status === EngagementLeadStatus.SUBMITTED)
+    const statusTransitions = lead ? getLeadStatusTransitions(String(lead.status)) : []
+    const canCreateEngagement = lead && canCreateEngagementFromLead(lead)
 
     return (
         <PageWrapper
@@ -214,34 +217,19 @@ export const EngagementLeadDetailPage: FC = () => {
                     <>
                         <div className={styles.actions}>
                             <span className={styles.statusPill}>
-                                {formatLabel(String(lead.status))}
+                                {getLeadDisplayStatus(String(lead.status))}
                             </span>
 
-                            {canUpdateStatus && (
-                                <>
-                                    <Button
-                                        secondary
-                                        disabled={updatingStatus}
-                                        onClick={() => handleStatusUpdate(EngagementLeadStatus.UNDER_REVIEW)}
-                                    >
-                                        Mark Under Review
-                                    </Button>
-                                    <Button
-                                        secondary
-                                        disabled={updatingStatus}
-                                        onClick={() => handleStatusUpdate(EngagementLeadStatus.QUALIFIED)}
-                                    >
-                                        Mark Qualified
-                                    </Button>
-                                    <Button
-                                        secondary
-                                        disabled={updatingStatus}
-                                        onClick={() => handleStatusUpdate(EngagementLeadStatus.REJECTED)}
-                                    >
-                                        Reject
-                                    </Button>
-                                </>
-                            )}
+                            {statusTransitions.map(status => (
+                                <Button
+                                    key={status}
+                                    secondary
+                                    disabled={updatingStatus}
+                                    onClick={() => handleStatusUpdate(status)}
+                                >
+                                    {STATUS_ACTION_LABELS[status]}
+                                </Button>
+                            ))}
                         </div>
 
                         {lead.convertedEngagementId && (

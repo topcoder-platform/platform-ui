@@ -36,7 +36,7 @@ interface EngagementLeadsFilterProps {
 // The Leads page opens on the leads that still need work: new ones and the ones under review.
 export const DEFAULT_STATUS_GROUPS: string[] = [
     EngagementLeadStatusGroup.NEW,
-    EngagementLeadStatusGroup.IN_PROGRESS,
+    EngagementLeadStatusGroup.UNDER_REVIEW,
 ]
 
 export const DEFAULT_FILTERS: EngagementLeadsListFilters = {
@@ -47,9 +47,9 @@ export const DEFAULT_FILTERS: EngagementLeadsListFilters = {
 
 export const LEAD_STATUS_GROUP_OPTIONS: InputMultiselectOption[] = [
     { label: 'New', value: EngagementLeadStatusGroup.NEW },
-    { label: 'In Progress', value: EngagementLeadStatusGroup.IN_PROGRESS },
-    { label: 'Converted', value: EngagementLeadStatusGroup.CONVERTED },
-    { label: 'Declined', value: EngagementLeadStatusGroup.DECLINED },
+    { label: 'Under Review', value: EngagementLeadStatusGroup.UNDER_REVIEW },
+    { label: 'Fulfilled', value: EngagementLeadStatusGroup.FULFILLED },
+    { label: 'Lost', value: EngagementLeadStatusGroup.LOST },
 ]
 
 /**

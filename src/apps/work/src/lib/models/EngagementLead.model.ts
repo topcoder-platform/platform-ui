@@ -1,11 +1,16 @@
 import type { Skill } from './Skill.model'
 
+/**
+ * SUBMITTED shows as New and REJECTED as Lost. QUALIFIED and CONVERTED are retired: existing leads in
+ * either were moved to UNDER_REVIEW, and leads stay under review once an engagement is created from them.
+ */
 export enum EngagementLeadStatus {
     SUBMITTED = 'SUBMITTED',
     UNDER_REVIEW = 'UNDER_REVIEW',
     QUALIFIED = 'QUALIFIED',
     CONVERTED = 'CONVERTED',
     REJECTED = 'REJECTED',
+    FULFILLED = 'FULFILLED',
 }
 
 export enum EngagementModel {
@@ -22,9 +27,9 @@ export enum ExperienceLevel {
 
 export enum EngagementLeadStatusGroup {
     NEW = 'NEW',
-    IN_PROGRESS = 'IN_PROGRESS',
-    CONVERTED = 'CONVERTED',
-    DECLINED = 'DECLINED',
+    UNDER_REVIEW = 'UNDER_REVIEW',
+    FULFILLED = 'FULFILLED',
+    LOST = 'LOST',
 }
 
 export enum EngagementLeadType {

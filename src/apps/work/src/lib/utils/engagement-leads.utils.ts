@@ -1,9 +1,10 @@
 import {
+    EngagementLead,
     EngagementLeadStatus,
     EngagementLeadType,
 } from '../models/EngagementLead.model'
 
-export type LeadDisplayStatus = 'New' | 'In Progress' | 'Converted' | 'Declined'
+export type LeadDisplayStatus = 'New' | 'Under Review' | 'Fulfilled' | 'Lost'
 
 export function formatLeadLabel(value: string): string {
     return value
@@ -11,20 +12,54 @@ export function formatLeadLabel(value: string): string {
         .replace(/_/g, ' ')
 }
 
+// Leads qualified or converted before those statuses were retired count as under review.
+const UNDER_REVIEW_STATUSES: string[] = [
+    EngagementLeadStatus.UNDER_REVIEW,
+    EngagementLeadStatus.QUALIFIED,
+    EngagementLeadStatus.CONVERTED,
+]
+
 export function getLeadDisplayStatus(status: string): LeadDisplayStatus {
-    if (status === EngagementLeadStatus.CONVERTED) {
-        return 'Converted'
+    if (status === EngagementLeadStatus.FULFILLED) {
+        return 'Fulfilled'
     }
 
     if (status === EngagementLeadStatus.REJECTED) {
-        return 'Declined'
+        return 'Lost'
     }
 
-    if (status === EngagementLeadStatus.UNDER_REVIEW || status === EngagementLeadStatus.QUALIFIED) {
-        return 'In Progress'
+    if (UNDER_REVIEW_STATUSES.includes(status)) {
+        return 'Under Review'
     }
 
     return 'New'
+}
+
+/**
+ * Statuses a Talent Manager can move a lead to from the lead view page.
+ * @param status Current lead status.
+ * @returns The next statuses, in the order their buttons are shown.
+ */
+export function getLeadStatusTransitions(status: string): EngagementLeadStatus[] {
+    const displayStatus = getLeadDisplayStatus(status)
+
+    if (displayStatus === 'New') {
+        return [
+            EngagementLeadStatus.UNDER_REVIEW,
+            EngagementLeadStatus.FULFILLED,
+            EngagementLeadStatus.REJECTED,
+        ]
+    }
+
+    if (displayStatus === 'Lost') {
+        return [EngagementLeadStatus.UNDER_REVIEW, EngagementLeadStatus.FULFILLED]
+    }
+
+    if (displayStatus === 'Under Review') {
+        return [EngagementLeadStatus.FULFILLED, EngagementLeadStatus.REJECTED]
+    }
+
+    return [EngagementLeadStatus.UNDER_REVIEW]
 }
 
 export function getLeadDisplayStatusClassName(
@@ -33,16 +68,16 @@ export function getLeadDisplayStatusClassName(
 ): string {
     const displayStatus = getLeadDisplayStatus(status)
 
-    if (displayStatus === 'Converted') {
-        return styles.statusConverted
+    if (displayStatus === 'Fulfilled') {
+        return styles.statusFulfilled
     }
 
-    if (displayStatus === 'Declined') {
-        return styles.statusDeclined
+    if (displayStatus === 'Lost') {
+        return styles.statusLost
     }
 
-    if (displayStatus === 'In Progress') {
-        return styles.statusInProgress
+    if (displayStatus === 'Under Review') {
+        return styles.statusUnderReview
     }
 
     return styles.statusNew
@@ -89,9 +124,12 @@ export function formatLeadAge(value: string): string {
     return `${days} days`
 }
 
-export function canCreateEngagementFromLead(status: string): boolean {
-    return status !== EngagementLeadStatus.CONVERTED
-        && status !== EngagementLeadStatus.REJECTED
+// Only new leads and leads under review can still become an engagement; each lead gets at most one.
+export function canCreateEngagementFromLead(lead: Pick<EngagementLead, 'convertedEngagementId' | 'status'>): boolean {
+    const displayStatus = getLeadDisplayStatus(String(lead.status))
+
+    return !lead.convertedEngagementId
+        && (displayStatus === 'New' || displayStatus === 'Under Review')
 }
 
 export function getLeadIntakeUrl(engagementsAppUrl: string): string {
