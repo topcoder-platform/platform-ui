@@ -1,11 +1,16 @@
 import type { Skill } from './Skill.model'
 
+/**
+ * SUBMITTED shows as New and REJECTED as Lost. QUALIFIED and CONVERTED are retired: existing leads in
+ * either were moved to UNDER_REVIEW, and leads stay under review once an engagement is created from them.
+ */
 export enum EngagementLeadStatus {
     SUBMITTED = 'SUBMITTED',
     UNDER_REVIEW = 'UNDER_REVIEW',
     QUALIFIED = 'QUALIFIED',
     CONVERTED = 'CONVERTED',
     REJECTED = 'REJECTED',
+    FULFILLED = 'FULFILLED',
 }
 
 export enum EngagementModel {
@@ -22,9 +27,9 @@ export enum ExperienceLevel {
 
 export enum EngagementLeadStatusGroup {
     NEW = 'NEW',
-    IN_PROGRESS = 'IN_PROGRESS',
-    CONVERTED = 'CONVERTED',
-    DECLINED = 'DECLINED',
+    UNDER_REVIEW = 'UNDER_REVIEW',
+    FULFILLED = 'FULFILLED',
+    LOST = 'LOST',
 }
 
 export enum EngagementLeadType {
@@ -74,6 +79,8 @@ export interface EngagementLead {
     /** Oldest first. */
     notes?: EngagementLeadNote[]
     status: EngagementLeadStatus | string
+    /** Why the lead was rejected; set only while it is rejected. */
+    rejectionReason?: string | null
     convertedEngagementId?: string | null
     createdAt: string
     updatedAt: string
@@ -113,7 +120,8 @@ export interface EngagementLeadFilters {
     sortBy?: 'createdAt' | 'preferredStartDate' | 'priority'
     sortOrder?: 'asc' | 'desc'
     status?: EngagementLeadStatus | string
-    statusGroup?: EngagementLeadStatusGroup | string
+    /** Several groups are ORed. */
+    statusGroup?: EngagementLeadStatusGroup | string | Array<EngagementLeadStatusGroup | string>
 }
 
 export interface EngagementLeadListResponse {

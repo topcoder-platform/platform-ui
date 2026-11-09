@@ -27,6 +27,7 @@ import {
     ErrorMessage,
     LoadingSpinner,
 } from '../../../lib/components'
+import { RejectEngagementLeadModal } from '../../../lib/components/RejectEngagementLeadModal'
 import {
     extractErrorMessage,
     showErrorToast,
@@ -34,8 +35,11 @@ import {
 } from '../../../lib/utils'
 import { fetchEngagement } from '../../../lib/services/engagements.service'
 import {
+    canCreateEngagementFromLead,
     formatLeadType,
     getEngagementLeadsTabPath,
+    getLeadDisplayStatus,
+    getLeadStatusTransitions,
 } from '../../../lib/utils/engagement-leads.utils'
 import { withQueryParams } from '../../../lib/utils/navigation.utils'
 
@@ -59,6 +63,12 @@ function formatDate(value: string): string {
 
 function formatBoolean(value: boolean): string {
     return value ? 'Yes' : 'No'
+}
+
+const STATUS_ACTION_LABELS: Partial<Record<EngagementLeadStatus, string>> = {
+    [EngagementLeadStatus.UNDER_REVIEW]: 'Mark Under Review',
+    [EngagementLeadStatus.FULFILLED]: 'Mark Fulfilled',
+    [EngagementLeadStatus.REJECTED]: 'Reject',
 }
 
 interface DetailFieldProps {
@@ -85,6 +95,7 @@ export const EngagementLeadDetailPage: FC = () => {
     const [updatingStatus, setUpdatingStatus] = useState<boolean>(false)
     const [projectId, setProjectId] = useState<string>('')
     const [viewingEngagement, setViewingEngagement] = useState<boolean>(false)
+    const [rejecting, setRejecting] = useState<boolean>(false)
 
     const leadsBackUrl = `${rootRoute}${getEngagementLeadsTabPath(lead?.leadType)}`
     // Each lead shows only what its intake form asks for. The Wipro Direct form has no role,
@@ -121,7 +132,7 @@ export const EngagementLeadDetailPage: FC = () => {
             .catch(() => undefined)
     }, [loadLead])
 
-    const handleStatusUpdate = useCallback(async (status: EngagementLeadStatus): Promise<void> => {
+    const handleStatusUpdate = useCallback(async (status: EngagementLeadStatus, reason?: string): Promise<void> => {
         if (!leadId || updatingStatus) {
             return
         }
@@ -129,8 +140,9 @@ export const EngagementLeadDetailPage: FC = () => {
         setUpdatingStatus(true)
 
         try {
-            const updated = await updateEngagementLeadStatus(leadId, status)
+            const updated = await updateEngagementLeadStatus(leadId, status, reason)
             setLead(updated)
+            setRejecting(false)
             showSuccessToast('Lead status updated.')
         } catch (err: unknown) {
             showErrorToast(extractErrorMessage(err, 'Unable to update lead status.'))
@@ -182,14 +194,8 @@ export const EngagementLeadDetailPage: FC = () => {
         }
     }, [lead?.convertedEngagementId, navigate, viewingEngagement])
 
-    const canUpdateStatus = lead
-        && lead.status !== EngagementLeadStatus.CONVERTED
-        && lead.status !== EngagementLeadStatus.REJECTED
-
-    const canCreateEngagement = lead
-        && (lead.status === EngagementLeadStatus.QUALIFIED
-            || lead.status === EngagementLeadStatus.UNDER_REVIEW
-            || lead.status === EngagementLeadStatus.SUBMITTED)
+    const statusTransitions = lead ? getLeadStatusTransitions(String(lead.status)) : []
+    const canCreateEngagement = lead && canCreateEngagementFromLead(lead)
 
     return (
         <PageWrapper
@@ -214,34 +220,28 @@ export const EngagementLeadDetailPage: FC = () => {
                     <>
                         <div className={styles.actions}>
                             <span className={styles.statusPill}>
-                                {formatLabel(String(lead.status))}
+                                {getLeadDisplayStatus(String(lead.status))}
                             </span>
 
-                            {canUpdateStatus && (
-                                <>
-                                    <Button
-                                        secondary
-                                        disabled={updatingStatus}
-                                        onClick={() => handleStatusUpdate(EngagementLeadStatus.UNDER_REVIEW)}
-                                    >
-                                        Mark Under Review
-                                    </Button>
-                                    <Button
-                                        secondary
-                                        disabled={updatingStatus}
-                                        onClick={() => handleStatusUpdate(EngagementLeadStatus.QUALIFIED)}
-                                    >
-                                        Mark Qualified
-                                    </Button>
-                                    <Button
-                                        secondary
-                                        disabled={updatingStatus}
-                                        onClick={() => handleStatusUpdate(EngagementLeadStatus.REJECTED)}
-                                    >
-                                        Reject
-                                    </Button>
-                                </>
-                            )}
+                            {statusTransitions.map(status => (
+                                <Button
+                                    key={status}
+                                    secondary
+                                    disabled={updatingStatus}
+                                    onClick={() => {
+                                        // Rejecting needs a reason, so it goes through the modal.
+                                        if (status === EngagementLeadStatus.REJECTED) {
+                                            setRejecting(true)
+                                            return
+                                        }
+
+                                        handleStatusUpdate(status)
+                                            .catch(() => undefined)
+                                    }}
+                                >
+                                    {STATUS_ACTION_LABELS[status]}
+                                </Button>
+                            ))}
                         </div>
 
                         {lead.convertedEngagementId && (
@@ -276,6 +276,14 @@ export const EngagementLeadDetailPage: FC = () => {
                                 fullWidth
                                 label='Converted Engagement ID'
                                 value={lead.convertedEngagementId}
+                            />
+                        )}
+
+                        {lead.status === EngagementLeadStatus.REJECTED && lead.rejectionReason && (
+                            <DetailField
+                                fullWidth
+                                label='Rejection Reason'
+                                value={lead.rejectionReason}
                             />
                         )}
 
@@ -348,6 +356,18 @@ export const EngagementLeadDetailPage: FC = () => {
                             </section>
                         )}
                     </>
+                )}
+
+                {rejecting && lead && (
+                    <RejectEngagementLeadModal
+                        leadId={lead.id}
+                        saving={updatingStatus}
+                        onCancel={() => setRejecting(false)}
+                        onConfirm={reason => {
+                            handleStatusUpdate(EngagementLeadStatus.REJECTED, reason)
+                                .catch(() => undefined)
+                        }}
+                    />
                 )}
             </div>
         </PageWrapper>
