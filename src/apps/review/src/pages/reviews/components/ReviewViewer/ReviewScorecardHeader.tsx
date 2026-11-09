@@ -1,6 +1,7 @@
 import { FC, useMemo } from 'react'
 
 import { useChallengeDetailsContext } from '~/apps/review/src/lib'
+import { getLlmDisplayName } from '~/libs/shared'
 import { ProgressBar } from '~/apps/review/src/lib/components/ProgressBar'
 import { IconDeepseekAi, IconPhaseReview, IconPremium } from '~/apps/review/src/lib/assets/icons'
 import { ChallengeDetailContextModel, ReviewInfo, ScorecardInfo } from '~/apps/review/src/lib/models'
@@ -32,7 +33,7 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
 
     const reviewerHandle = reviewer?.memberHandle
     const reviewerColor = reviewer?.handleColor
-    const llmModelName = props.workflow?.llm?.name || 'N/A'
+    const llmModelName = getLlmDisplayName(props.workflow?.llm) || 'N/A'
     const minimumPassingScore = props.scorecardInfo?.minimumPassingScore ?? 0
     const isScreeningPhase = props.reviewPhaseType === 'screening'
         || props.reviewPhaseType === 'checkpoint screening'
