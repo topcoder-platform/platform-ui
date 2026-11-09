@@ -74,6 +74,8 @@ export interface EngagementLead {
     /** Oldest first. */
     notes?: EngagementLeadNote[]
     status: EngagementLeadStatus | string
+    /** Why the lead was rejected; set only while it is rejected. */
+    rejectionReason?: string | null
     convertedEngagementId?: string | null
     createdAt: string
     updatedAt: string

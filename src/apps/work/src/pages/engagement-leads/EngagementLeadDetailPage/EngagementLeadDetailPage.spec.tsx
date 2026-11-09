@@ -2,7 +2,8 @@
 import '@testing-library/jest-dom'
 
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import {
@@ -10,7 +11,10 @@ import {
     EngagementLeadStatus,
     EngagementLeadType,
 } from '../../../lib/models/EngagementLead.model'
-import { fetchEngagementLeadById } from '../../../lib/services/engagement-leads.service'
+import {
+    fetchEngagementLeadById,
+    updateEngagementLeadStatus,
+} from '../../../lib/services/engagement-leads.service'
 
 import { EngagementLeadDetailPage } from './EngagementLeadDetailPage'
 
@@ -23,8 +27,15 @@ jest.mock('~/apps/review/src/lib', () => ({
     ),
 }), { virtual: true })
 jest.mock('~/libs/ui', () => ({
-    Button: (props: { children?: React.ReactNode, onClick?: () => void }) => (
-        <button onClick={props.onClick} type='button'>{props.children}</button>
+    Button: (props: {
+        children?: React.ReactNode
+        disabled?: boolean
+        label?: string
+        onClick?: () => void
+    }) => (
+        <button disabled={props.disabled} onClick={props.onClick} type='button'>
+            {props.children ?? props.label}
+        </button>
     ),
 }), { virtual: true })
 jest.mock('../../../config/routes.config', () => ({
@@ -51,6 +62,7 @@ jest.mock('../../../lib/services/engagements.service', () => ({
 }))
 
 const mockFetchLead = fetchEngagementLeadById as jest.MockedFunction<typeof fetchEngagementLeadById>
+const mockUpdateStatus = updateEngagementLeadStatus as jest.MockedFunction<typeof updateEngagementLeadStatus>
 
 const baseLead: EngagementLead = {
     accountName: 'ABC Bank',
@@ -159,5 +171,38 @@ describe('EngagementLeadDetailPage', () => {
                 .not
                 .toBeInTheDocument()
         })
+    })
+
+    it('asks for a reason before rejecting a lead', async () => {
+        mockUpdateStatus.mockResolvedValue({
+            ...baseLead,
+            rejectionReason: 'Budget was cut.',
+            status: EngagementLeadStatus.REJECTED,
+        })
+        await renderLead(baseLead)
+
+        await userEvent.click(screen.getByRole('button', { name: 'Reject' }))
+
+        const dialog = screen.getByRole('dialog')
+        const confirm = within(dialog)
+            .getByRole('button', { name: 'Reject' })
+        expect(confirm)
+            .toBeDisabled()
+        expect(mockUpdateStatus)
+            .not
+            .toHaveBeenCalled()
+
+        await userEvent.type(within(dialog)
+            .getByLabelText('Rejection reason'), 'Budget was cut.')
+        await userEvent.click(confirm)
+
+        await waitFor(() => expect(mockUpdateStatus)
+            .toHaveBeenCalledWith('lead-1', EngagementLeadStatus.REJECTED, 'Budget was cut.'))
+        expect(await screen.findByText('Rejection Reason'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Budget was cut.'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('dialog'))
+            .toBeNull()
     })
 })
