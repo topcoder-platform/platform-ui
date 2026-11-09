@@ -1,39 +1,40 @@
 import { TabsNavItem } from '~/libs/ui'
 
-import { canAccessDuplicatePaymentsReport } from '../../../config/access.config'
+import { canAccessPayments, canAccessTrolleyLogs } from '../../../config/access.config'
 
 export enum WalletAdminTabViews {
     home = '0',
     payments = '1',
-    duplicatePayments = '2',
+    trolleyLogs = '2',
 }
 
-export const WalletAdminTabsConfig: TabsNavItem[] = [
-    {
-        id: WalletAdminTabViews.home,
-        title: 'Dashboard',
-    },
-    {
-        id: WalletAdminTabViews.payments,
-        title: 'Payments',
-    },
-]
+const DashboardTabConfig: TabsNavItem = {
+    id: WalletAdminTabViews.home,
+    title: 'Dashboard',
+}
 
-const DuplicatePaymentsTabConfig: TabsNavItem = {
-    id: WalletAdminTabViews.duplicatePayments,
-    title: 'Duplicate Payments',
+const PaymentsTabConfig: TabsNavItem = {
+    id: WalletAdminTabViews.payments,
+    title: 'Payments',
+}
+
+const TrolleyLogsTabConfig: TabsNavItem = {
+    id: WalletAdminTabViews.trolleyLogs,
+    title: 'Trolley Logs',
 }
 
 /**
  * Returns the tabs the member can see.
  *
  * @param roles Profile roles from Auth0.
- * @returns The base tabs, plus Duplicate Payments for Payment Admins.
+ * @returns Dashboard, plus Payments for payment roles and Trolley Logs for Admins.
  */
 export function getWalletAdminTabs(roles: string[] | undefined): TabsNavItem[] {
-    return canAccessDuplicatePaymentsReport(roles)
-        ? [...WalletAdminTabsConfig, DuplicatePaymentsTabConfig]
-        : WalletAdminTabsConfig
+    return [
+        DashboardTabConfig,
+        ...(canAccessPayments(roles) ? [PaymentsTabConfig] : []),
+        ...(canAccessTrolleyLogs(roles) ? [TrolleyLogsTabConfig] : []),
+    ]
 }
 
 export function getHashFromTabId(tabId: string): string {
@@ -42,8 +43,8 @@ export function getHashFromTabId(tabId: string): string {
             return '#home'
         case WalletAdminTabViews.payments:
             return '#payments'
-        case WalletAdminTabViews.duplicatePayments:
-            return '#duplicate-payments'
+        case WalletAdminTabViews.trolleyLogs:
+            return '#trolley-logs'
         default:
             return '#home'
     }
@@ -53,8 +54,8 @@ export function getTabIdFromHash(hash: string): string {
     switch (hash) {
         case '#payments':
             return WalletAdminTabViews.payments
-        case '#duplicate-payments':
-            return WalletAdminTabViews.duplicatePayments
+        case '#trolley-logs':
+            return WalletAdminTabViews.trolleyLogs
         default:
             return WalletAdminTabViews.home
     }
