@@ -6,9 +6,11 @@ import { Button, LoadingSpinner, PageTitle } from '~/libs/ui'
 
 import {
     SalesAccountCategory,
+    SalesCustomerRevenue,
     SalesDashboardGroupBy,
     SalesDashboardPeriod,
     SalesDashboardPortal,
+    SalesRevenueOfferingType,
 } from './sales-dashboard.service'
 import { salesFiscalYearLabel, salesFiscalYearPeriod } from './sales-fiscal-year'
 import { SalesDashboardSource, useSalesDashboard } from './useSalesDashboard'
@@ -89,11 +91,14 @@ const MeasureToggle: FC<{
  */
 const CustomerDashboard: FC<{
     source: SalesDashboardSource; field: 'customerRevenue' | 'customerPayments'; title: string
-    period: SalesDashboardPeriod; accountCategory?: SalesAccountCategory
+    period: SalesDashboardPeriod; accountCategory?: SalesAccountCategory; offeringType?: SalesRevenueOfferingType
 }> = props => {
-    const data = props.accountCategory
-        ? props.source.data?.customerRevenueByAccountCategory?.[props.accountCategory]
-        : props.source.data?.[props.field]
+    const revenueScope: SalesCustomerRevenue | undefined = props.offeringType
+        ? props.source.data?.customerRevenueByOfferingType?.[props.offeringType]
+        : props.source.data
+    const data = props.field === 'customerPayments' ? props.source.data?.customerPayments
+        : props.accountCategory ? revenueScope?.customerRevenueByAccountCategory?.[props.accountCategory]
+            : revenueScope?.customerRevenue
     if (data) {
         return (
             <SalesCustomerTable
@@ -111,9 +116,11 @@ const CustomerDashboard: FC<{
             <SourceContent source={props.source} title={props.title}>
                 {props.source.data?.notices.map(notice => <p key={notice} role='status'>{notice}</p>)}
                 <p>
-                    {props.accountCategory
-                        ? 'Revenue account category details are unavailable for this source.'
-                        : 'Customer details are unavailable for this source.'}
+                    {props.offeringType && !revenueScope
+                        ? 'Revenue offering type details are unavailable for this source.'
+                        : props.accountCategory
+                            ? 'Revenue account category details are unavailable for this source.'
+                            : 'Customer details are unavailable for this source.'}
                 </p>
             </SourceContent>
         </article>
@@ -139,6 +146,7 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
     const [taasMeasure, setTaasMeasure] = useState('Amount')
     const [period, setPeriod] = useState<SalesDashboardPeriod>('Monthly')
     const [accountCategory, setAccountCategory] = useState<SalesAccountCategory | ''>('')
+    const [offeringType, setOfferingType] = useState<SalesRevenueOfferingType | ''>('')
     const bookings = useSalesDashboard('bookings', portal, dateBasis, refreshKey, wonGroup)
     const pipeline = useSalesDashboard('pipeline', portal, dateBasis, refreshKey, pipelineGroup)
     const revenue = useSalesDashboard('revenue', portal, dateBasis, refreshKey, revenueGroup)
@@ -265,6 +273,21 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
                 <h2 id='monthly-customer'>Customer</h2>
                 <div className={styles.filters}>
                     <label>
+                        Revenue offering type
+                        <select
+                            value={offeringType}
+                            onChange={event => setOfferingType(event.target.value as SalesRevenueOfferingType | '')}
+                        >
+                            <option value=''>ALL</option>
+                            {[
+                                'AI Training', 'Crowd Powered Outcomes', 'Crowd Powered Innovation',
+                                'Flexible Talent', 'TopGear', 'TaaS Ops',
+                            ].map(offering => (
+                                <option key={offering} value={offering}>{offering}</option>
+                            ))}
+                        </select>
+                    </label>
+                    <label>
                         Revenue account category
                         <select
                             value={accountCategory}
@@ -283,6 +306,7 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
                     title='Revenue Customer-Wise'
                     period={period}
                     accountCategory={accountCategory || undefined}
+                    offeringType={offeringType || undefined}
                 />
                 <CustomerDashboard
                     source={payments}
