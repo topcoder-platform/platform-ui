@@ -5,7 +5,7 @@ import { xhrPostAsync } from '~/libs/core'
 import { notifyUploadPicker } from '~/libs/ui/lib/components/modals/upload-picker-event'
 import type DashboardPlugin from '@uppy/dashboard'
 
-export type UploadPurpose = 'submission' | 'cv' | 'engagement' | 'review' | 'forum' | 'project' | 'showcase'
+export type UploadPurpose = 'submission' | 'cv' | 'engagement' | 'review' | 'forum' | 'project' | 'showcase' | 'support'
 
 export interface UploadedFile {
     url: string
@@ -66,8 +66,9 @@ async function createUploader(options: UploadOptions): Promise<UppyInstance<Uplo
         import('@uppy/core'), import('@uppy/aws-s3'),
     ])
     const sessions = new Map<string, UploadSession>()
-    const maxFileSize = options.purpose === 'cv' ? 8 * 1024 * 1024
-        : options.purpose === 'forum' ? 25 * 1024 * 1024 : 500 * 1024 * 1024
+    const maxFileSize = options.purpose === 'support' ? 2 * 1024 * 1024
+        : options.purpose === 'cv' ? 8 * 1024 * 1024
+            : options.purpose === 'forum' ? 25 * 1024 * 1024 : 500 * 1024 * 1024
     const allowedFileTypes = options.purpose === 'submission' ? ['.zip']
         : options.purpose === 'cv' ? ['.pdf', '.docx'] : options.allowedFileTypes
     const uppy = new Uppy<UploadMeta, AwsBody>({
