@@ -66,6 +66,15 @@ const MEMBER_STATE_PAGE_SIZE = 200
 const CLIENT_SORT_PAGE_SIZE = 1000
 const MAX_CLIENT_SORT_PAGES = 20
 
+/** Review API body for creating a member submission. */
+interface ChallengeSubmissionRequest {
+    aiAssisted?: boolean
+    challengeId: string
+    memberId: string
+    type: ChallengeSubmissionType
+    url: string
+}
+
 /**
  * Uploads a member's ZIP to the submission DMZ, then creates the v6 Review API
  * record with the resulting S3 URL for validation and virus scanning.
@@ -76,6 +85,7 @@ const MAX_CLIENT_SORT_PAGES = 20
  * @param file single ZIP archive selected in the Opportunities submission form.
  * @param onProgress optional callback receiving whole-number upload completion from 0 to 100.
  * @param signal optional abort signal used by the form's cancel-file action.
+ * @param aiAssisted optional answer to the "AI tools wrote most of the code" question.
  * @returns the newly created Review API submission.
  * @throws request, authorization, registration, phase, validation, or upload errors from Review API.
  */
@@ -86,6 +96,7 @@ export async function createChallengeSubmission(
     file: File,
     onProgress?: (percent: number) => void,
     signal?: AbortSignal,
+    aiAssisted?: boolean,
 ): Promise<ChallengeSubmission> {
     if (signal?.aborted) throw new DOMException('Upload cancelled.', 'AbortError')
     const upload = await uploadFile(file, {
@@ -96,18 +107,14 @@ export async function createChallengeSubmission(
     })
     if (signal?.aborted) throw new DOMException('Upload cancelled.', 'AbortError')
     const storageUrl = upload.url
-    const submission = await xhrPostAsync<{
-        challengeId: string
-        memberId: string
-        type: ChallengeSubmissionType
-        url: string
-    }, ChallengeSubmission>(
+    const submission = await xhrPostAsync<ChallengeSubmissionRequest, ChallengeSubmission>(
         `${V6_URL}/submissions`,
         {
             challengeId,
             memberId,
             type,
             url: storageUrl,
+            ...(aiAssisted === undefined ? {} : { aiAssisted }),
         },
         {
             signal,
@@ -129,6 +136,7 @@ export async function createChallengeSubmission(
  * @param type Review API submission category derived from the active challenge phase.
  * @param url validated absolute HTTP(S) URL supplied by the member.
  * @param signal optional abort signal used by the form's cancel action.
+ * @param aiAssisted optional answer to the "AI tools wrote most of the code" question.
  * @returns the newly created Review API submission.
  * @throws request, authorization, registration, phase, validation, or abort errors.
  */
@@ -138,20 +146,17 @@ export async function createChallengeUrlSubmission(
     type: ChallengeSubmissionType,
     url: string,
     signal?: AbortSignal,
+    aiAssisted?: boolean,
 ): Promise<ChallengeSubmission> {
     if (signal?.aborted) throw new DOMException('Submission cancelled.', 'AbortError')
-    return xhrPostAsync<{
-        challengeId: string
-        memberId: string
-        type: ChallengeSubmissionType
-        url: string
-    }, ChallengeSubmission>(
+    return xhrPostAsync<ChallengeSubmissionRequest, ChallengeSubmission>(
         `${V6_URL}/submissions`,
         {
             challengeId,
             memberId,
             type,
             url: url.trim(),
+            ...(aiAssisted === undefined ? {} : { aiAssisted }),
         },
         { signal },
     )

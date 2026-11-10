@@ -1461,6 +1461,33 @@ describe('opportunities service normalization', () => {
             .not.toHaveBeenCalled()
     })
 
+    it('includes the Marathon Match AI-usage answer in the submission body when provided', async () => {
+        const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
+        post.mockResolvedValueOnce({ id: 'url-submission-id' } as never)
+
+        await createChallengeUrlSubmission(
+            'challenge-id',
+            '123',
+            'CONTEST_SUBMISSION',
+            'https://deliverables.example.com/member/result',
+            undefined,
+            false,
+        )
+
+        expect(post)
+            .toHaveBeenLastCalledWith(
+                'https://api.example/v6/submissions',
+                {
+                    aiAssisted: false,
+                    challengeId: 'challenge-id',
+                    memberId: '123',
+                    type: 'CONTEST_SUBMISSION',
+                    url: 'https://deliverables.example.com/member/result',
+                },
+                { signal: undefined },
+            )
+    })
+
     it('does not create an already-cancelled URL submission', async () => {
         const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
         const controller = new AbortController()
