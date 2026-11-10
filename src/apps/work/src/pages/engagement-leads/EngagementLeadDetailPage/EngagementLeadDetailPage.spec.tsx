@@ -239,11 +239,11 @@ describe('EngagementLeadDetailPage', () => {
         })
         await renderLead(baseLead)
 
-        await userEvent.click(screen.getByRole('button', { name: 'Reject' }))
+        await userEvent.click(screen.getByRole('button', { name: 'Mark Lost' }))
 
         const dialog = screen.getByRole('dialog')
         const confirm = within(dialog)
-            .getByRole('button', { name: 'Reject' })
+            .getByRole('button', { name: 'Mark Lost' })
         expect(confirm)
             .toBeDisabled()
         expect(mockUpdateStatus)
