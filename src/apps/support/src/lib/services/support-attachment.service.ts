@@ -1,13 +1,11 @@
-/** Authenticated attachment uploader for support-api-v6. */
+/** Support attachment validation and shared Files API upload transport. */
 import { isAxiosError } from 'axios'
 
-import { xhrPostAsync } from '~/libs/core'
-
-import { SUPPORT_API_BASE } from './support.service'
+import { uploadFile } from '~/libs/shared/lib/services/s3-upload'
 
 export const MAX_SUPPORT_ATTACHMENT_BYTES = 2 * 1024 * 1024
 
-/** Exact filename-extension to declared-MIME contract enforced by support-api-v6. */
+/** Exact filename-extension to declared-MIME contract enforced for Support by files-api-v6. */
 export const SUPPORT_ATTACHMENT_MIME_TYPES_BY_EXTENSION: Readonly<
     Record<string, readonly string[]>
 > = {
@@ -66,17 +64,12 @@ export interface SupportAttachmentUploadResult {
 }
 
 /**
- * Uploads one attachment through the authenticated Support API rather than
- * connecting the browser directly to a storage bucket.
+ * Uploads a validated Support attachment through the shared Uppy/Files API flow.
  *
  * @param file browser-selected, dropped, or pasted attachment.
  * @param options optional upload-progress callback used by Markdown editors.
- * @returns canonical hosted-file metadata for Markdown insertion.
- * @throws Error when no file is supplied, the file is empty, larger than 2 MiB,
- * does not match the Support API extension/MIME allowlist, or support-api-v6
- * rejects or cannot complete the upload. Gateway, network, and timeout failures
- * use a readable temporary-unavailability message. Requests time out after 30
- * seconds, allowing the API's 20-second provider deadline to respond first.
+ * @returns hosted-file metadata with a durable Files API URL for Markdown insertion.
+ * @throws Error when validation or upload fails; gateway/network failures are normalized.
  */
 export async function uploadSupportAttachment(
     file: File,
@@ -107,29 +100,11 @@ export async function uploadSupportAttachment(
         throw new Error('This file type is not allowed for support attachments.')
     }
 
-    const formData = new FormData()
-    formData.append('file', file, file.name)
-
-    return xhrPostAsync<FormData, SupportAttachmentUploadResult>(
-        `${SUPPORT_API_BASE}/attachments`,
-        formData,
-        {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-            onUploadProgress: progressEvent => {
-                if (!options.onProgress) return
-
-                const ratio = typeof progressEvent.progress === 'number'
-                    ? progressEvent.progress
-                    : progressEvent.total
-                        ? progressEvent.loaded / progressEvent.total
-                        : 0
-                options.onProgress(Math.max(0, Math.min(100, Math.round(ratio * 100))))
-            },
-            timeout: 30_000,
-        },
-    )
+    return uploadFile(file, {
+        allowedFileTypes: [...SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES],
+        onProgress: options.onProgress,
+        purpose: 'support',
+    })
         .catch((error: unknown) => {
             if (isAxiosError(error) && (
                 [502, 503, 504].includes(error.response?.status ?? 0)
