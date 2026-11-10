@@ -68,7 +68,7 @@ function formatBoolean(value: boolean): string {
 const STATUS_ACTION_LABELS: Partial<Record<EngagementLeadStatus, string>> = {
     [EngagementLeadStatus.UNDER_REVIEW]: 'Mark Under Review',
     [EngagementLeadStatus.FULFILLED]: 'Mark Fulfilled',
-    [EngagementLeadStatus.REJECTED]: 'Reject',
+    [EngagementLeadStatus.REJECTED]: 'Mark Lost',
 }
 
 interface DetailFieldProps {
