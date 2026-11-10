@@ -20,7 +20,7 @@ export interface RejectEngagementLeadModalProps {
 }
 
 /**
- * Asks for the mandatory reason before a lead is rejected; Reject stays disabled until one is entered.
+ * Asks for the mandatory reason before a lead is marked Lost; Mark Lost stays disabled until one is entered.
  */
 export const RejectEngagementLeadModal: FC<RejectEngagementLeadModalProps> = (
     props: RejectEngagementLeadModalProps,
@@ -43,18 +43,18 @@ export const RejectEngagementLeadModal: FC<RejectEngagementLeadModalProps> = (
         <ConfirmationModal
             confirmButtonDanger
             confirmDisabled={props.saving || !trimmedReason}
-            confirmText='Reject'
-            message={`Enter the reason for rejecting lead ${props.leadId}.`}
+            confirmText='Mark Lost'
+            message={`Enter the reason lead ${props.leadId} was lost.`}
             onCancel={props.onCancel}
             onConfirm={handleConfirm}
-            title='Reject Lead'
+            title='Mark Lead as Lost'
         >
             <textarea
                 aria-label='Rejection reason'
                 className={styles.textarea}
                 disabled={props.saving}
                 maxLength={REASON_MAX_LENGTH}
-                placeholder='Reason for rejecting (required)'
+                placeholder='Reason the lead was lost (required)'
                 value={reason}
                 onChange={handleReasonChange}
             />

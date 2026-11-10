@@ -241,7 +241,7 @@ export const EngagementLeadDetailPage: FC = () => {
                                         disabled={updatingStatus}
                                         onClick={() => setRejecting(true)}
                                     >
-                                        Reject
+                                        Mark Lost
                                     </Button>
                                 </>
                             )}

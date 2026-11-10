@@ -25,7 +25,7 @@ describe('RejectEngagementLeadModal', () => {
         const onConfirm = jest.fn()
         render(<RejectEngagementLeadModal leadId='lead-1' onCancel={jest.fn()} onConfirm={onConfirm} />)
 
-        const reject = screen.getByRole('button', { name: 'Reject' })
+        const reject = screen.getByRole('button', { name: 'Mark Lost' })
         expect(reject)
             .toBeDisabled()
 
@@ -39,7 +39,7 @@ describe('RejectEngagementLeadModal', () => {
         render(<RejectEngagementLeadModal leadId='lead-1' onCancel={jest.fn()} onConfirm={onConfirm} />)
 
         await userEvent.type(screen.getByLabelText('Rejection reason'), '  Customer chose another vendor.  ')
-        await userEvent.click(screen.getByRole('button', { name: 'Reject' }))
+        await userEvent.click(screen.getByRole('button', { name: 'Mark Lost' }))
 
         expect(onConfirm)
             .toHaveBeenCalledWith('Customer chose another vendor.')
