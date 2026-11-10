@@ -1,0 +1,62 @@
+// Listing-only legacy presentation. Every rule is beneath this CSS-module root,
+// so loading the route cannot restyle the header, details, application, or other apps.
+main.listing {
+    background: #fff;
+    color: #2a2a2a;
+    font: 14px/1.5 Roboto, Arial, sans-serif;
+    padding: 40px 0 56px;
+
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 15px; }
+    .filters { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) minmax(0, 1fr); gap: 30px; align-items: end; }
+    .search, .select { min-width: 0; position: relative; }
+    .select label { position: absolute; top: -10px; left: 12px; padding: 0 4px; background: #fff; font-size: 12px; line-height: 20px; z-index: 1; }
+    input.control, select.control { width: 100%; height: 42px; min-height: 42px; border: 1px solid #aaa; border-radius: 6px; background: #fff; padding: 0 15px; color: #2a2a2a; font: inherit; }
+    .search input { font-size: 16px; }
+    .control::placeholder { color: #767676; opacity: 1; }
+    .control:focus { border-color: #137d60; box-shadow: 0 0 0 1px #137d60; }
+    a:focus-visible, button:focus-visible, .control:focus-visible { outline: 2px solid #137d60; outline-offset: 3px; }
+    .clear { display: block; background: none; border: 0; color: #137d60; text-decoration: underline; font: inherit; padding: 12px 0 0; cursor: pointer; }
+    .results { margin: 20px 0 50px; }
+    .card { border: 1px solid #e9e9e9; border-radius: 10px; padding: 25px 35px 25px 44px; margin-bottom: 15px; position: relative; }
+    .card h2 { margin: 0 0 12px; font: 600 20px/24px Barlow, Arial, sans-serif; text-transform: uppercase; overflow-wrap: anywhere; }
+    .card h2 a { color: #1e94a3; text-decoration: none; }
+    .card h2 a:hover { text-decoration: underline; }
+    .tag { position: absolute; top: -1px; left: 10px; width: 24px; height: 56px; }
+    .facts { display: grid; grid-template-columns: 1.15fr .95fr 1.6fr .9fr auto; gap: 20px; align-items: center; }
+    .facts > span { display: flex; align-items: center; min-width: 0; overflow-wrap: anywhere; }
+    .facts svg, .facts img, .hotlist svg { flex: 0 0 20px; width: 20px; height: 20px; margin-right: 7px; }
+    .details { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 24px; border-radius: 20px; color: #fff; background: #137d60; text-decoration: none; font-size: 14px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+    .details:hover { background: #0d664e; }
+    .hotlist { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin: 5px 0 16px; }
+    .hotlist > a { display: flex; flex-direction: column; border-radius: 10px; padding: 20px 20px 12px; color: #fff; text-decoration: none; background-image: linear-gradient(305.22deg, #9d41c9 .01%, #ef476f 100%); }
+    .hotlist > a:nth-child(2) { background-image: linear-gradient(125.57deg, #2c95d7 0%, #83c5ee 100%); }
+    .hotlist > a:nth-child(3) { color: #2a2a2a; background-image: linear-gradient(309.43deg, #f4f4f4 0%, #d4d4d4 100%); }
+    .hotlist > a:nth-child(4) { background-image: linear-gradient(359.14deg, #555 0%, #2a2a2a 100%); }
+    .hotlist > a:not(:nth-child(3)) svg g { stroke: #fff; }
+    .hotlist h2 { margin: 0; font: 600 20px/24px Barlow, Arial, sans-serif; text-transform: uppercase; color: inherit; overflow-wrap: anywhere; }
+    .hotlist span { display: flex; align-items: center; line-height: 30px; }
+    .pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 20px; }
+    .pagination button { font: inherit; font-weight: 700; border: 1px solid #137d60; border-radius: 20px; background: #fff; color: #137d60; padding: 8px 20px; cursor: pointer; }
+    .pagination button:disabled { opacity: .5; cursor: default; }
+    .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+    @media (max-width: 1100px) {
+        .filters { grid-template-columns: 2fr 1fr 1fr; gap: 20px; }
+        .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .details { justify-self: start; }
+        .hotlist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 767px) {
+        padding-top: 28px;
+        .filters { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+        .card { padding: 25px 20px 25px 44px; }
+        .card h2 { margin-bottom: 20px; }
+        .facts, .hotlist { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    @media (forced-colors: active) {
+        .control:focus { border-color: Highlight; box-shadow: none; }
+        a:focus-visible, button:focus-visible, .control:focus-visible { outline-color: Highlight; }
+    }
+}
