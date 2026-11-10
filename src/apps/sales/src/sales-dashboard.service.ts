@@ -8,6 +8,8 @@ export type SalesDashboardSection =
 export type SalesDashboardPortal = 'reports' | 'sales'
 export type SalesDashboardPeriod = 'Monthly' | 'Quarterly'
 export type SalesAccountCategory = 'External Revenue' | 'Through Wipro' | 'Wipro Internal'
+export type SalesRevenueOfferingType =
+    'AI Training' | 'Crowd Powered Outcomes' | 'Crowd Powered Innovation' | 'Flexible Talent' | 'TopGear' | 'TaaS Ops'
 
 /** Dimension whose categories become chart series and monthly table columns. */
 export type SalesDashboardGroupBy = 'offeringType' | 'dealCategory' | 'customerType' | 'stage' | 'fyClosure'
@@ -26,14 +28,19 @@ export interface MonthlySalesChart {
     annual?: Record<string, number | null>
 }
 
-export interface SalesDashboardResponse {
+export interface SalesCustomerRevenue {
+    /** Every customer from the revenue report, without grouping smaller customers into Other. */
+    customerRevenue?: MonthlySalesChart
+    customerRevenueByAccountCategory?: Partial<Record<SalesAccountCategory, MonthlySalesChart>>
+}
+
+export interface SalesDashboardResponse extends SalesCustomerRevenue {
     charts: MonthlySalesChart[]
     notices: string[]
     /** Every customer before top-five/Other grouping, used for the monthly payments matrix. */
     customerPayments?: MonthlySalesChart
-    /** Every customer from the revenue report, without grouping smaller customers into Other. */
-    customerRevenue?: MonthlySalesChart
-    customerRevenueByAccountCategory?: Partial<Record<SalesAccountCategory, MonthlySalesChart>>
+    /** Offering-scoped matrices, with account-category intersections calculated from revenue detail rows. */
+    customerRevenueByOfferingType?: Partial<Record<SalesRevenueOfferingType, SalesCustomerRevenue>>
 }
 
 /**
