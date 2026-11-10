@@ -343,50 +343,6 @@ export const REVIEW = {
     PROFILE_PAGE_URL: 'https://profiles.topcoder-dev.com',
 }
 
-const FILESTACK_SECURITY_POLICY = getReactEnv<string | undefined>(
-    'FILESTACK_SECURITY_POLICY',
-    undefined,
-)
-const FILESTACK_SECURITY_SIGNATURE = getReactEnv<string | undefined>(
-    'FILESTACK_SECURITY_SIGNATURE',
-    undefined,
-)
-
-export const FILESTACK = {
-    API_KEY: getReactEnv<string>('FILESTACK_API_KEY', ''),
-    CNAME: getReactEnv<string>('FILESTACK_CNAME', 'filestackapi.com'),
-    CONTAINER: getReactEnv<string>(
-        'FILESTACK_CONTAINER',
-        'tc-challenge-v5-dev',
-    ),
-    PATH_PREFIX: getReactEnv<string>('FILESTACK_PATH_PREFIX', 'v6-review-app'),
-    PROGRESS_INTERVAL: getReactEnv<number>(
-        'FILESTACK_UPLOAD_PROGRESS_INTERVAL',
-        100,
-    ),
-    REGION: getReactEnv<string>('FILESTACK_REGION', 'us-east-1'),
-    RETRY: getReactEnv<number>('FILESTACK_UPLOAD_RETRY', 2),
-    SECURITY:
-        FILESTACK_SECURITY_POLICY && FILESTACK_SECURITY_SIGNATURE
-            ? {
-                POLICY: FILESTACK_SECURITY_POLICY,
-                SIGNATURE: FILESTACK_SECURITY_SIGNATURE,
-            }
-            : undefined,
-    SUBMISSION_CONTAINER: getReactEnv<string>(
-        'FILESTACK_SUBMISSION_CONTAINER',
-        'topcoder-dev-submissions-dmz',
-    ),
-    TIMEOUT: getReactEnv<number>('FILESTACK_UPLOAD_TIMEOUT', 30 * 60 * 1000),
-}
-
 export const SUBDOMAIN = window.location.hostname.split('.')[0]
 
-export const FILESTACK_SHOWCASE_MEDIA_FILE_PICKER_CONTAINER
-    = getReactEnv<string>('FILESTACK_SHOWCASE_MEDIA_FILE_PICKER_CONTAINER', `topcoder-${ENV}-showcase-media`)
-
-export const FILESTACK_SHOWCASE_MEDIA_CDN_URL
-    = getReactEnv<string>(
-        'FILESTACK_SHOWCASE_MEDIA_CDN_URL',
-        `https://showcase-media.topcoder${ENV === 'prod' ? '' : '-dev'}.com`,
-    )
+export const UPLOADS_API_URL = getReactEnv<string>('UPLOADS_API_URL', `${API.V6}/uploads/files`)

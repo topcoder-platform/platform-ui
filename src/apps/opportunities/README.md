@@ -765,9 +765,9 @@ HTTP(S) link with a deliverable path on `wipro365.sharepoint.com`,
 embedded credentials or nonstandard port. Deployments can override these exact
 hosts with the pipe-separated `REACT_APP_TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS`
 setting, matching community-app's allowlist configuration. URL submissions send
-the confirmed link directly to `POST /v6/submissions` without invoking Filestack. ZIP submissions accept one
+the confirmed link directly to `POST /v6/submissions` without uploading a file. ZIP submissions accept one
 `.zip` archive up to 500MB and report live upload progress. The browser uploads
-the archive to Filestack's S3 endpoint using the environment's canonical
+the archive through Uppy 6 directly to S3 using the environment's canonical
 submissions DMZ bucket, then sends the resulting storage URL to the same Review
 API endpoint. Both modes require the authored declaration and revalidate the
 member's registration before submission. The active phase selects `CONTEST_SUBMISSION`,
@@ -965,7 +965,7 @@ post and Markdown editor components. `ForumTopicView` accepts optional
 `contentOnly`, `onSignIn` and `onWatch` props for the public page layout and guest
 login handoff. Topic detail may include API `permissions`; an explicit denied
 reply permission hides the composer. Existing challenge callers need no changes.
-The shared toolbar includes configured Filestack attachments through
+The shared toolbar includes Uppy S3 attachments through
 `uploadForumAttachment`, preserving Markdown links and rated @mentions. Its
 Figma grouping (dividers between formatting, heading, size, alignment, list,
 insert and expand controls, plus the size chevron) lives in the shared editor
