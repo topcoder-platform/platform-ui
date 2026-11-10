@@ -173,12 +173,12 @@ describe('EngagementLeadDetailPage', () => {
         })
     })
 
-    const STATUS_BUTTONS = ['Mark Under Review', 'Mark Fulfilled', 'Reject']
+    const STATUS_BUTTONS = ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost']
 
     it.each([
-        [EngagementLeadStatus.SUBMITTED, 'New', ['Mark Under Review', 'Mark Fulfilled', 'Reject']],
+        [EngagementLeadStatus.SUBMITTED, 'New', ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost']],
         [EngagementLeadStatus.REJECTED, 'Lost', ['Mark Under Review', 'Mark Fulfilled']],
-        [EngagementLeadStatus.UNDER_REVIEW, 'Under Review', ['Mark Fulfilled', 'Reject']],
+        [EngagementLeadStatus.UNDER_REVIEW, 'Under Review', ['Mark Fulfilled', 'Mark Lost']],
         [EngagementLeadStatus.FULFILLED, 'Fulfilled', ['Mark Under Review']],
     ])('shows a %s lead as %s with its status actions', async (status, label, buttons) => {
         await renderLead({ ...baseLead, status })
