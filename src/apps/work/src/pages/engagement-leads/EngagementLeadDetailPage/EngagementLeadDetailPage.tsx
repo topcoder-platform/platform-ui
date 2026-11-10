@@ -36,7 +36,6 @@ import {
 import { fetchEngagement } from '../../../lib/services/engagements.service'
 import {
     canCreateEngagementFromLead,
-    formatLeadType,
     getEngagementLeadsTabPath,
     getLeadDisplayStatus,
     getLeadStatusTransitions,
@@ -293,7 +292,6 @@ export const EngagementLeadDetailPage: FC = () => {
                                 <DetailField label='Work Email (SPOC)' value={lead.workEmail} />
                                 <DetailField label='Account / Customer' value={lead.accountName} />
                                 <DetailField label='SMU' value={lead.smu} />
-                                <DetailField label='Lead Type' value={formatLeadType(lead.leadType)} />
                                 <DetailField label='Submitted' value={formatDate(lead.createdAt)} />
                             </div>
                         </section>
