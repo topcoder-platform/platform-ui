@@ -86,4 +86,4 @@ The release build uses `python3 -I deploy/site.py build --manifest deploy/dev.js
 with the verified browser configuration and CircleCI source metadata. Local
 application development continues to use the existing `.environments` setup.
 
-Uploads require Review API `/v6/reviews/uploads` and its persistent signing secret/bucket settings. `REACT_APP_UPLOADS_API_URL` overrides the default endpoint. Retired Filestack fields in older pinned config objects are ignored and are not passed to the build. Deploy the upload API before deploying either frontend.
+Uploads require Files API `/v6/uploads/files` and its persistent signing secret/bucket settings. `REACT_APP_UPLOADS_API_URL` overrides the default endpoint. Retired Filestack fields in older pinned config objects are ignored and are not passed to the build. Deploy the upload API before deploying either frontend.
