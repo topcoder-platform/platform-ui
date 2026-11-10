@@ -122,6 +122,8 @@ describe('ChallengeSubmissionUpload', () => {
             .toBeInTheDocument()
         expect(screen.getByLabelText(/Upload File\*/))
             .toBeInTheDocument()
+        expect(screen.getByRole('group', { name: /Did AI tools write most of your submission's code\?/ }))
+            .toBeInTheDocument()
     })
 
     it('renders the QA plural label and Requirements guidance', () => {
@@ -325,6 +327,7 @@ describe('ChallengeSubmissionUpload', () => {
         })
         fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('radio', { name: 'No' }))
         fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
 
         await waitFor(() => expect(mockedCreateUrlSubmission)
@@ -334,6 +337,7 @@ describe('ChallengeSubmissionUpload', () => {
                 'CONTEST_SUBMISSION',
                 'https://wipro365.sharepoint.com/result',
                 expect.any(AbortSignal),
+                false,
             ))
         expect(mockedCreateSubmission)
             .not.toHaveBeenCalled()
@@ -366,6 +370,7 @@ describe('ChallengeSubmissionUpload', () => {
         })
         fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('radio', { name: 'No' }))
         fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
 
         expect(await screen.findByRole('alert'))
@@ -389,6 +394,7 @@ describe('ChallengeSubmissionUpload', () => {
         })
         fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('radio', { name: 'No' }))
         fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
 
         await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' }))
@@ -415,6 +421,7 @@ describe('ChallengeSubmissionUpload', () => {
         })
         fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('radio', { name: 'No' }))
         fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
 
         await waitFor(() => expect(onUploadingChange)
@@ -462,6 +469,7 @@ describe('ChallengeSubmissionUpload', () => {
         expect(screen.queryByRole('progressbar'))
             .not.toBeInTheDocument()
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('radio', { name: 'No' }))
         fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
 
         expect(await screen.findByText('25%'))
@@ -478,6 +486,7 @@ describe('ChallengeSubmissionUpload', () => {
                 file,
                 expect.any(Function),
                 expect.any(AbortSignal),
+                false,
             )
 
         await act(async () => resolveUpload?.({ id: '123 456 789' }))
@@ -498,6 +507,54 @@ describe('ChallengeSubmissionUpload', () => {
             }, true)
     })
 
+    it('requires and sends the AI-usage answer with every submission', async () => {
+        mockedCreateSubmission.mockResolvedValue({ id: 'mm-submission' })
+        renderUpload(challengeFixture({
+            currentPhaseNames: ['Submission'],
+            phases: [{ isOpen: true, name: 'Submission' }],
+            track: { name: 'Data Science' },
+            type: { name: 'Marathon Match' },
+        }))
+        const file = new File(['zip'], 'MySubmission.zip', { type: 'application/zip' })
+
+        expect(screen.getByRole('group', { name: /Did AI tools write most of your submission's code\?/ }))
+            .toBeInTheDocument()
+        expect(screen.getByText('This helps shape future match formats. It has no impact on scoring or rating.'))
+            .toBeInTheDocument()
+
+        fireEvent.change(screen.getByLabelText(/Upload File\(s\)\*/), {
+            target: { files: [file] },
+        })
+        fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        expect(screen.getByRole('button', { name: 'Submit' }))
+            .toBeDisabled()
+
+        fireEvent.click(screen.getByRole('radio', { name: 'No' }))
+        fireEvent.click(screen.getByRole('radio', { name: 'Yes' }))
+        expect(screen.getByRole('button', { name: 'Submit' }))
+            .not.toBeDisabled()
+        fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+        await waitFor(() => expect(mockedCreateSubmission)
+            .toHaveBeenCalledWith(
+                'challenge-id',
+                '123',
+                'CONTEST_SUBMISSION',
+                file,
+                expect.any(Function),
+                expect.any(AbortSignal),
+                true,
+            ))
+        await waitFor(() => expect(screen.getByText('Your solutions has been submitted'))
+            .toBeInTheDocument())
+
+        fireEvent.click(screen.getByRole('button', { name: 'Submit another solution' }))
+        expect(screen.getByRole('radio', { name: 'Yes' }))
+            .not.toBeChecked()
+        expect(screen.getByRole('radio', { name: 'No' }))
+            .not.toBeChecked()
+    })
+
     it('does not upload when the submitter registration is no longer current', async () => {
         const validateRegistration = jest.fn()
             .mockResolvedValue(false)
@@ -508,6 +565,7 @@ describe('ChallengeSubmissionUpload', () => {
             target: { files: [file] },
         })
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('radio', { name: 'No' }))
         fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
 
         await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' }))
@@ -530,6 +588,7 @@ describe('ChallengeSubmissionUpload', () => {
             target: { files: [file] },
         })
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('radio', { name: 'No' }))
         fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
         await waitFor(() => expect(validateRegistration)
             .toHaveBeenCalledTimes(1))
@@ -552,6 +611,7 @@ describe('ChallengeSubmissionUpload', () => {
             target: { files: [file] },
         })
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
+        fireEvent.click(screen.getByRole('radio', { name: 'No' }))
         fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
 
         await waitFor(() => expect(onUploadingChange)

@@ -146,6 +146,7 @@ function formatFileSize(bytes: number): string {
 export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = props => {
     const onUploadingChange = props.onUploadingChange
     const [agreementAccepted, setAgreementAccepted] = useState(false)
+    const [aiAssisted, setAiAssisted] = useState<boolean | undefined>()
     const [dragActive, setDragActive] = useState(false)
     const [error, setError] = useState<string | undefined>()
     const [file, setFile] = useState<File | undefined>()
@@ -163,6 +164,8 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
     const submissionMode = challengeSubmissionMode(props.challenge)
     const urlMode = submissionMode === 'url'
     const selectionReady = urlMode ? !!submissionUrl : !!file
+    // Every submission must answer the AI-usage question before submitting.
+    const aiAnswerReady = aiAssisted !== undefined
 
     useEffect(() => () => {
         abortController.current?.abort()
@@ -298,7 +301,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
      * @throws Does not throw; request failures restore the ready state with an error message.
      */
     const submit = async (): Promise<void> => {
-        if (!selectionReady || !agreementAccepted || uploading) return
+        if (!selectionReady || !agreementAccepted || !aiAnswerReady || uploading) return
         const controller = new AbortController()
         abortController.current = controller
         setError(undefined)
@@ -315,6 +318,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                     submissionType,
                     submissionUrl as string,
                     controller.signal,
+                    aiAssisted,
                 )
                 : await createChallengeSubmission(
                     props.challenge.id,
@@ -323,6 +327,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                     file as File,
                     setProgress,
                     controller.signal,
+                    aiAssisted,
                 )
             recordAnalyticsEvent('challenge_submitted', {
                 challenge_id: props.challenge.id,
@@ -372,6 +377,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
      */
     const submitAnother = (): void => {
         clearSelection()
+        setAiAssisted(undefined)
         setSubmissionId(undefined)
     }
 
@@ -715,6 +721,35 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                     </div>
                                 </div>
                             )}
+                            <fieldset className={styles.aiUsage}>
+                                <legend>
+                                    Did AI tools write most of your submission&apos;s code?
+                                    <span>*</span>
+                                </legend>
+                                <div className={styles.aiUsageOptions}>
+                                    <label>
+                                        <input
+                                            checked={aiAssisted === true}
+                                            disabled={uploading}
+                                            name='challenge-submission-ai-assisted'
+                                            onChange={() => setAiAssisted(true)}
+                                            type='radio'
+                                        />
+                                        <span>Yes</span>
+                                    </label>
+                                    <label>
+                                        <input
+                                            checked={aiAssisted === false}
+                                            disabled={uploading}
+                                            name='challenge-submission-ai-assisted'
+                                            onChange={() => setAiAssisted(false)}
+                                            type='radio'
+                                        />
+                                        <span>No</span>
+                                    </label>
+                                </div>
+                                <p>This helps shape future match formats. It has no impact on scoring or rating.</p>
+                            </fieldset>
                             <div className={styles.declaration}>
                                 <h3>Declaration</h3>
                                 <p>
@@ -772,7 +807,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                     className={styles.primaryButton}
                                     data-analytics-id='challenge-submit-confirm'
                                     data-analytics-placement='challenge-submission'
-                                    disabled={!selectionReady || !agreementAccepted || uploading}
+                                    disabled={!selectionReady || !agreementAccepted || !aiAnswerReady || uploading}
                                     onClick={submit}
                                     type='button'
                                 >
