@@ -116,7 +116,11 @@ async function createUploader(options: UploadOptions): Promise<UppyInstance<Uplo
 /** Upload one local file while retaining the calling form's simple native file input. */
 export async function uploadFile(file: File, options: UploadOptions): Promise<UploadedFile> {
     if (options.signal?.aborted) throw cancelled()
-    const uppy = await createUploader(options)
+    let complete = false
+    const uppy = await createUploader({
+        ...options,
+        onProgress: percent => { if (!complete) options.onProgress?.(percent) },
+    })
     let abort: (() => void) | undefined
     try {
         if (options.signal?.aborted) throw cancelled()
@@ -128,6 +132,9 @@ export async function uploadFile(file: File, options: UploadOptions): Promise<Up
         const result = await Promise.race([uppy.upload(), aborted])
         if (!result || result.failed?.length) throw new Error(result?.failed?.[0]?.error || 'File upload failed.')
         const uploaded = uploadedFile(uppy.getFile(id))
+        // Destroying Uppy removes files and emits a final zero-progress event.
+        // Keep successful uploads at 100% while cleanup runs.
+        complete = true
         options.onProgress?.(100)
         return uploaded
     } finally {
