@@ -253,7 +253,7 @@ def deploy(m, root, metadata, receipt):
     d.require(aws.call('s3api', 'get-bucket-versioning', Bucket=m['bucket']).get('Status') == 'Enabled', 'Enable bucket versioning before release')
     release = sha + '-' + os.environ.get('CIRCLE_BUILD_NUM', '')
     d.require(re.fullmatch(r'[a-f0-9]{40}-[0-9]{1,12}', release), 'Invalid release identity')
-    entries = {'asset-manifest.json': root / 'asset-manifest.json', 'index.html': root / 'index.html', 'gigs/index.html': root / 'index.html'}
+    entries = {'asset-manifest.json': root / 'asset-manifest.json', 'index.html': root / 'index.html', 'gigs/index.html': root / 'index.html', 'timeline-wall/index.html': root / 'index.html'}
     with tempfile.TemporaryDirectory(prefix='platform-ui-rollback-') as directory:
         previous = {}
         for number, key in enumerate(entries):
@@ -262,13 +262,13 @@ def deploy(m, root, metadata, receipt):
                 info = aws.call('s3api', 'get-object', extra=(str(target),), Bucket=m['bucket'], Key=key)
                 previous[key] = (target, info.get('VersionId'))
             except d.DeployError as exc:
-                if key != 'gigs/index.html' or not re.search(r'\((NoSuchKey|404)\)|: (NoSuchKey|404)$', str(exc)):
+                if key not in ('gigs/index.html', 'timeline-wall/index.html') or not re.search(r'\((NoSuchKey|404)\)|: (NoSuchKey|404)$', str(exc)):
                     raise
                 previous[key] = previous['index.html']
         promoted = False
         try:
             aws.sync(root, m['bucket'], ['--exclude', '*', '--include', 'static/*'], 'public,max-age=31536000,immutable')
-            aws.sync(root, m['bucket'], ['--exclude', 'static/*', '--exclude', 'index.html', '--exclude', 'gigs/index.html', '--exclude', 'asset-manifest.json'], NO_CACHE)
+            aws.sync(root, m['bucket'], ['--exclude', 'static/*', '--exclude', 'index.html', '--exclude', 'gigs/index.html', '--exclude', 'timeline-wall/index.html', '--exclude', 'asset-manifest.json'], NO_CACHE)
             for key, path in entries.items():
                 promoted = True
                 put(aws, m, key, path, sha)
