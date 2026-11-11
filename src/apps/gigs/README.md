@@ -16,17 +16,22 @@ This sub-app ports the public community-app Gig Work flow into platform-ui:
   between members or gigs.
 
 The app reuses platform navigation, profile/auth context, buttons, modal, spinner,
-icons, skills autocomplete service, and the scoped 2026 design tokens. Figtree
-headings, Nunito Sans body text, semantic surfaces/teal actions and responsive
-cards follow the platform design system. The reference was the August 2026 Figma
-file `C2cA6508RhpjWJDp7MLKbO`, Color page `1:54`, with design context retrieved
-from `674:8828`. Layout retains the legacy listing/detail/form hierarchy while
-adapting to the platform components. Styles apply only inside `.gigs-app`.
-The listing search, location and sort controls use the same teal focused border
-and ring as the other 2026 opportunity filters instead of inheriting the browser's
-blue outline. Keyboard focus retains a real teal outline, with a system Highlight
-fallback in forced color modes.
-The Gig Work resources callout opens its external community guide in a new tab
+icons, and skills autocomplete service. The blue listing header and the detail and
+application pages retain the scoped 2026 design system.
+
+The `/gigs` listing content restores community-app's horizontal search/location/sort
+row, white background, Barlow uppercase teal titles, Roboto facts, green pill actions,
+job-tag ribbons, and four gradient hotlist tiles. It reuses the legacy listing assets.
+Featured jobs precede the hotlist (up to two), followed by the remaining results.
+Filters and cards stack on narrow screens. URL filters, ten-job pagination, and the
+current Recruit API contract are preserved.
+
+`pages/GigsPage.module.scss` owns this presentation. All selectors are nested beneath
+its local `listing` class, applied only to the listing's main content. These styles
+cannot affect the blue header, gig details/applications, or other platform routes,
+even after client-side navigation. Keyboard focus remains visible, with system colors
+in forced-color mode.
+The Gig Work resources callout opens the Payload-backed website guide at `/lp/gig-resources` in a new tab
 with the opener relationship removed.
 
 ## Data and behavior

@@ -134,30 +134,28 @@ describe('EngagementLeadNotesModal', () => {
             .toBeInTheDocument()
     })
 
-    it('offers no way to add notes once the lead is converted', async () => {
-        const onClose = jest.fn()
+    it.each([
+        EngagementLeadStatus.CONVERTED,
+        EngagementLeadStatus.REJECTED,
+    ])('adds notes to a %s lead', async status => {
+        const lead = { ...baseLead, notes: [earlierNote], status }
+        mockAddNote.mockResolvedValue(lead)
 
         render(
             <EngagementLeadNotesModal
-                lead={{ ...baseLead, notes: [earlierNote], status: EngagementLeadStatus.CONVERTED }}
-                onClose={onClose}
+                lead={lead}
+                onClose={jest.fn()}
                 onSaved={jest.fn()}
             />,
         )
 
         expect(screen.getByText('First call done.'))
             .toBeInTheDocument()
-        expect(screen.queryByLabelText('New note'))
-            .toBeNull()
-        expect(screen.queryByRole('button', { name: 'Add Note' }))
-            .toBeNull()
 
-        await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+        await userEvent.type(screen.getByLabelText('New note'), 'Account asked to reopen.')
+        await userEvent.click(screen.getByRole('button', { name: 'Add Note' }))
 
-        expect(onClose)
-            .toHaveBeenCalled()
-        expect(mockAddNote)
-            .not
-            .toHaveBeenCalled()
+        await waitFor(() => expect(mockAddNote)
+            .toHaveBeenCalledWith('lead-1', 'Account asked to reopen.'))
     })
 })

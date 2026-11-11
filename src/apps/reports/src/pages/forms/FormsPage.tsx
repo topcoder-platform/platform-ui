@@ -16,6 +16,7 @@ import {
 import { downloadBlobFile } from '../../lib/services/reports.service'
 
 import LetsTalkSubmissions from './LetsTalkSubmissions'
+import SendGridLogLinks, { sendGridMessageIdsColumn } from './SendGridLogLinks'
 import styles from './FormsPage.module.scss'
 
 interface Selection extends FormDates {
@@ -196,7 +197,11 @@ const FormsPage: FC = () => {
                                     {report.data.map(row => (
                                         <tr key={String(row.submission_id)}>
                                             {report.columns.map(column => (
-                                                <td key={column}>{formatFormValue(row[column])}</td>
+                                                <td key={column}>
+                                                    {column === sendGridMessageIdsColumn
+                                                        ? <SendGridLogLinks value={row[column]} />
+                                                        : formatFormValue(row[column])}
+                                                </td>
                                             ))}
                                         </tr>
                                     ))}

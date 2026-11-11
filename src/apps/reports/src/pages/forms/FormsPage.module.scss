@@ -52,6 +52,16 @@
     padding-top: 16px;
     line-height: 1.6;
 }
+.emailLogs {
+    margin: 16px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid #d4d4d4;
+}
+.emailLogLinks {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+}
 .tableScroll {
     overflow-x: auto;
     table { border-collapse: collapse; width: 100%; }

@@ -11,18 +11,18 @@ jobs:
     - checkout
     - &id001
       run:
-        name: Verify deployment helpers v2.0.8
+        name: Verify deployment helpers v2.0.10
         command: 'set -euo pipefail
 
           git init --quiet /tmp/tc-deploy-scripts
 
           git -C /tmp/tc-deploy-scripts remote add origin https://github.com/topcoder-platform/tc-deploy-scripts.git
 
-          git -C /tmp/tc-deploy-scripts fetch --quiet --depth 1 origin refs/tags/v2.0.8
+          git -C /tmp/tc-deploy-scripts fetch --quiet --depth 1 origin refs/tags/v2.0.10
 
           git -C /tmp/tc-deploy-scripts checkout --quiet --detach FETCH_HEAD
 
-          test "$(git -C /tmp/tc-deploy-scripts rev-parse HEAD)" = 75bf839e1b4fa4b8dcd5ce36dad0a4d080e9a73d
+          test "$(git -C /tmp/tc-deploy-scripts rev-parse HEAD)" = e81a6772a33819c1b57c88a95d04494e59c559b8
 
           '
     - &id005

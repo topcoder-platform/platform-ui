@@ -847,7 +847,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                             )
                         } catch {
                             showErrorToast(
-                                'Engagement created, but the lead could not be marked as converted.',
+                                'Engagement created, but it could not be linked to the lead.',
                             )
                         }
                     }

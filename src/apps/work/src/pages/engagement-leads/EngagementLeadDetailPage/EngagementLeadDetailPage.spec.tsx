@@ -2,7 +2,8 @@
 import '@testing-library/jest-dom'
 
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import {
@@ -10,7 +11,10 @@ import {
     EngagementLeadStatus,
     EngagementLeadType,
 } from '../../../lib/models/EngagementLead.model'
-import { fetchEngagementLeadById } from '../../../lib/services/engagement-leads.service'
+import {
+    fetchEngagementLeadById,
+    updateEngagementLeadStatus,
+} from '../../../lib/services/engagement-leads.service'
 
 import { EngagementLeadDetailPage } from './EngagementLeadDetailPage'
 
@@ -23,8 +27,15 @@ jest.mock('~/apps/review/src/lib', () => ({
     ),
 }), { virtual: true })
 jest.mock('~/libs/ui', () => ({
-    Button: (props: { children?: React.ReactNode, onClick?: () => void }) => (
-        <button onClick={props.onClick} type='button'>{props.children}</button>
+    Button: (props: {
+        children?: React.ReactNode
+        disabled?: boolean
+        label?: string
+        onClick?: () => void
+    }) => (
+        <button disabled={props.disabled} onClick={props.onClick} type='button'>
+            {props.children ?? props.label}
+        </button>
     ),
 }), { virtual: true })
 jest.mock('../../../config/routes.config', () => ({
@@ -51,6 +62,7 @@ jest.mock('../../../lib/services/engagements.service', () => ({
 }))
 
 const mockFetchLead = fetchEngagementLeadById as jest.MockedFunction<typeof fetchEngagementLeadById>
+const mockUpdateStatus = updateEngagementLeadStatus as jest.MockedFunction<typeof updateEngagementLeadStatus>
 
 const baseLead: EngagementLead = {
     accountName: 'ABC Bank',
@@ -159,5 +171,96 @@ describe('EngagementLeadDetailPage', () => {
                 .not
                 .toBeInTheDocument()
         })
+    })
+
+    const STATUS_BUTTONS = ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost']
+
+    it.each([
+        [EngagementLeadStatus.SUBMITTED, 'New', ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost']],
+        [EngagementLeadStatus.REJECTED, 'Lost', ['Mark Under Review', 'Mark Fulfilled']],
+        [EngagementLeadStatus.UNDER_REVIEW, 'Under Review', ['Mark Fulfilled', 'Mark Lost']],
+        [EngagementLeadStatus.FULFILLED, 'Fulfilled', ['Mark Under Review']],
+    ])('shows a %s lead as %s with its status actions', async (status, label, buttons) => {
+        await renderLead({ ...baseLead, status })
+
+        expect(screen.getByText(label))
+            .toBeInTheDocument()
+        STATUS_BUTTONS.forEach(button => {
+            if (buttons.includes(button)) {
+                expect(screen.getByText(button))
+                    .toBeInTheDocument()
+            } else {
+                expect(screen.queryByText(button))
+                    .not
+                    .toBeInTheDocument()
+            }
+        })
+        expect(screen.queryByText('Mark Qualified'))
+            .not
+            .toBeInTheDocument()
+    })
+
+    it('marks a lead fulfilled', async () => {
+        mockUpdateStatus.mockResolvedValue({ ...baseLead, status: EngagementLeadStatus.FULFILLED })
+        await renderLead({ ...baseLead, status: EngagementLeadStatus.UNDER_REVIEW })
+
+        fireEvent.click(screen.getByText('Mark Fulfilled'))
+
+        await waitFor(() => {
+            expect(mockUpdateStatus)
+                .toHaveBeenCalledWith('lead-1', EngagementLeadStatus.FULFILLED, undefined)
+        })
+        expect(await screen.findByText('Fulfilled'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('Mark Fulfilled'))
+            .not
+            .toBeInTheDocument()
+    })
+
+    it('does not offer another engagement once one was created from the lead', async () => {
+        await renderLead({
+            ...baseLead,
+            convertedEngagementId: 'eng-1',
+            status: EngagementLeadStatus.UNDER_REVIEW,
+        })
+
+        expect(screen.queryByText('Create Engagement from Lead'))
+            .not
+            .toBeInTheDocument()
+        expect(screen.getByText('View Engagement'))
+            .toBeInTheDocument()
+    })
+
+    it('asks for a reason before rejecting a lead', async () => {
+        mockUpdateStatus.mockResolvedValue({
+            ...baseLead,
+            rejectionReason: 'Budget was cut.',
+            status: EngagementLeadStatus.REJECTED,
+        })
+        await renderLead(baseLead)
+
+        await userEvent.click(screen.getByRole('button', { name: 'Mark Lost' }))
+
+        const dialog = screen.getByRole('dialog')
+        const confirm = within(dialog)
+            .getByRole('button', { name: 'Mark Lost' })
+        expect(confirm)
+            .toBeDisabled()
+        expect(mockUpdateStatus)
+            .not
+            .toHaveBeenCalled()
+
+        await userEvent.type(within(dialog)
+            .getByLabelText('Rejection reason'), 'Budget was cut.')
+        await userEvent.click(confirm)
+
+        await waitFor(() => expect(mockUpdateStatus)
+            .toHaveBeenCalledWith('lead-1', EngagementLeadStatus.REJECTED, 'Budget was cut.'))
+        expect(await screen.findByText('Rejection Reason'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Budget was cut.'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('dialog'))
+            .toBeNull()
     })
 })
