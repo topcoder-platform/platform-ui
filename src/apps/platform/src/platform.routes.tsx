@@ -26,6 +26,7 @@ import { forumsRoutes } from '~/apps/forums'
 import { legacyOpportunityRoutes, opportunitiesRoutes, topgearRoutes } from '~/apps/opportunities'
 import { analyticsRoutes } from '~/apps/analytics'
 import { contactRoutes } from '~/apps/contact'
+import { statisticsRoutes } from '~/apps/statistics'
 import { gigsRoutes } from '~/apps/gigs'
 
 const Home: LazyLoadedComponent = lazyLoad(
@@ -68,6 +69,7 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...forumsRoutes,
     ...timelineWallRoutes,
     ...gigsRoutes,
+    ...statisticsRoutes,
     ...devCenterRoutes,
     ...campusRoutes,
     ...copilotsRoutes,

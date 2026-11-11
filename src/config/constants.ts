@@ -1,4 +1,5 @@
 export enum AppSubdomain {
+    statistics = 'statistics',
     accounts = 'account-settings',
     analytics = 'analytics',
     contact = 'contact',
@@ -30,6 +31,7 @@ export enum AppSubdomain {
 }
 
 export enum ToolTitle {
+    statistics = 'Statistics',
     accounts = 'Account Settings',
     analytics = 'Analytics',
     contact = 'Contact',
