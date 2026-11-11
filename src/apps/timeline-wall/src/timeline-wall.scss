@@ -94,18 +94,20 @@
     position: relative;
     background: #d9f1ec url('./assets/top-banner.png') center / cover no-repeat;
     h1 {
-        font-size: 36px;
+        font-size: 60px;
         line-height: 1.2;
-        color: #2a2a2a;
-        font-weight: 600;
+        color: #fff;
+        font-weight: 500;
         text-transform: uppercase;
         padding-right: 140px;
     }
     .timeline-discuss {
+        color: #fff;
+        border-color: #fff;
         position: absolute;
         top: 72px;
         right: 7%;
-        border: 1px solid #00856d;
+        border: 1px solid #fff;
         padding: 8px 20px;
         text-decoration: none;
         text-transform: uppercase;
@@ -119,10 +121,11 @@
     button {
         border: 0;
         background: transparent;
+        color: white;
         border-radius: 0;
     }
     button[aria-pressed=true] {
-        border-bottom: 4px solid #00856d;
+        border-bottom: 4px solid #fff;
         font-weight: 700;
     }
 }
@@ -389,7 +392,7 @@
         padding: 32px 20px;
         background-image: url('./assets/top-banner-mobile.png');
         h1 {
-            font-size: 26px;
+            font-size: 42px;
             padding: 0;
         }
         .timeline-discuss {
