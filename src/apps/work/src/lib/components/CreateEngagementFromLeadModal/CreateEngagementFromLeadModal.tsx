@@ -124,10 +124,17 @@ export const CreateEngagementFromLeadModal: FC<CreateEngagementFromLeadModalProp
 
     const loadProjectOptions = useMemo(() => {
         let timeoutId: number | undefined
+        let resolvePending: ((options: ProjectOption[]) => void) | undefined
 
         return (keyword: string): Promise<ProjectOption[]> => new Promise(resolve => {
+            // The search this one replaces is never run; settle it so it isn't left pending.
+            // react-select ignores results for input that has since changed.
             window.clearTimeout(timeoutId)
+            resolvePending?.([])
+            resolvePending = resolve
+
             timeoutId = window.setTimeout(() => {
+                resolvePending = undefined
                 searchProjects(keyword.trim())
                     .then(resolve)
             }, PROJECT_SEARCH_DEBOUNCE_MS)

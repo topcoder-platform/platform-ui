@@ -41,6 +41,7 @@ jest.mock('react-select/async', () => ({
     }): JSX.Element => {
         const react: typeof import('react') = jest.requireActual('react')
         const [options, setOptions] = react.useState<Option[]>([])
+        const [settledSearches, setSettledSearches] = react.useState<number>(0)
 
         return (
             <div>
@@ -48,9 +49,13 @@ jest.mock('react-select/async', () => ({
                     aria-label={props['aria-label']}
                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
                         props.loadOptions(event.target.value)
-                            .then(setOptions)
+                            .then(nextOptions => {
+                                setOptions(nextOptions)
+                                setSettledSearches(count => count + 1)
+                            })
                     }}
                 />
+                <p>{`Settled searches: ${settledSearches}`}</p>
                 {options.map(option => (
                     <button key={option.value} onClick={() => props.onChange(option)} type='button'>
                         {option.label}
@@ -162,6 +167,22 @@ describe('CreateEngagementFromLeadModal', () => {
 
         expect(handlers.onConfirm)
             .toHaveBeenCalledWith('project-1')
+    })
+
+    it('only searches for the last input typed and settles the searches it replaced', async () => {
+        renderModal()
+
+        fireEvent.change(screen.getByLabelText('Project'), { target: { value: 'Pa' } })
+        fireEvent.change(screen.getByLabelText('Project'), { target: { value: 'Pay' } })
+
+        expect(await screen.findByRole('button', { name: 'Payments (project-1)' }))
+            .toBeTruthy()
+        expect(screen.getByText('Settled searches: 2'))
+            .toBeTruthy()
+        expect(mockedFetchProjectsList)
+            .toHaveBeenCalledTimes(1)
+        expect(mockedFetchProjectsList)
+            .toHaveBeenCalledWith(expect.objectContaining({ keyword: 'Pay' }))
     })
 
     it('shows why the projects could not be searched', async () => {
