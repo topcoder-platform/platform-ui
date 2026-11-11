@@ -25,6 +25,7 @@ export enum AppSubdomain {
     support = 'support',
     opportunities = 'opportunities',
     forums = 'forums',
+    timelineWall = 'timeline',
     topgear = 'topgear'
 }
 
@@ -56,6 +57,7 @@ export enum ToolTitle {
     support = 'Support',
     opportunities = 'Opportunities',
     forums = 'Forums',
+    timelineWall = 'Timeline Wall',
     thrive = 'Thrive'
 }
 
