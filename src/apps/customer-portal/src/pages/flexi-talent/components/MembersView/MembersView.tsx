@@ -13,6 +13,7 @@ import { debounce } from 'lodash'
 import classNames from 'classnames'
 
 import { Pagination } from '~/apps/admin/src/lib/components/common/Pagination'
+import { EnvironmentConfig } from '~/config'
 import { renderRichTextToHtml } from '~/libs/shared/lib/utils/rich-text'
 import { IconOutline } from '~/libs/ui'
 
@@ -928,7 +929,7 @@ export const MembersView: FC<MembersViewProps> = props => {
                             )}
                         </div>
 
-                        {hasWorkLinks(detailData.workLinks) && (
+                        {(!detailData.isCurrentlyAssigned || hasWorkLinks(detailData.workLinks)) && (
                             <div className={styles.workLinks}>
                                 {detailData.workLinks.projectUrl && (
                                     <a href={detailData.workLinks.projectUrl} rel='noreferrer' target='_blank'>
@@ -949,6 +950,18 @@ export const MembersView: FC<MembersViewProps> = props => {
                                         target='_blank'
                                     >
                                         Assignee Details
+                                        <IconOutline.ExternalLinkIcon />
+                                    </a>
+                                )}
+                                {!detailData.isCurrentlyAssigned && (
+                                    <a
+                                        href={`${EnvironmentConfig.USER_PROFILE_URL}/${
+                                            encodeURIComponent(detailData.handle)
+                                        }`}
+                                        rel='noopener noreferrer'
+                                        target='_blank'
+                                    >
+                                        View Profile
                                         <IconOutline.ExternalLinkIcon />
                                     </a>
                                 )}
