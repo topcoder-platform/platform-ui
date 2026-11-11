@@ -23,6 +23,12 @@ replace the stack template.
 - Website distribution: `E3P6DRXC192WA`; existing `PlatformUiOrigin` and OAC.
 - Platform distribution: `EFA7R1KH3UX5M`; add `timeline.topcoder-dev.com` to aliases.
 - Existing wildcard ACM certificate covers the new host.
+- Add `https://timeline.topcoder-dev.com` to the existing Universal Navigation
+  CloudFront CORS response-headers policy `860b79bb-1e6a-47f0-b10b-354194fa2b79`.
+  Preserve every existing allowed origin and header setting. Verify that
+  `https://uni-nav.topcoder-dev.com/v1/tc-universal-nav.js` returns
+  `Access-Control-Allow-Origin: https://timeline.topcoder-dev.com` for that origin;
+  otherwise the platform header's cross-origin script is blocked.
 - Public Route 53 zone: `Z2CIRG3R0ZSGFQ`; alias A points to
   `d10303ypawq4ub.cloudfront.net` (CloudFront zone `Z2FDTNDATAQYW2`).
 - Add `platform-host-fragment.js` immediately after the existing platform viewer
@@ -66,7 +72,8 @@ already supports.
 Revert the website stack using the captured before-template and unchanged
 parameters. Remove only the added timeline alias/DNS record and marked platform
 function block, checking for concurrent changes. Remove only the timeline bucket
-policy statement. Invalidate the timeline and legacy paths. Retain deployed assets
+policy statement and the one added navigation CORS origin. Invalidate the timeline
+and legacy paths. Retain deployed assets
 for clients with open tabs. Restoring the previous website template restores the
 legacy community-app handoff without changing timeline events.
 
