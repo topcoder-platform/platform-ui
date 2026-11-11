@@ -42,7 +42,8 @@ export function createEvent(draft: EventDraft): Promise<void> {
     body.append('title', draft.title)
     body.append('description', draft.description)
     // The legacy date picker submitted local midnight, not UTC midnight.
-    body.append('eventDate', new Date(`${draft.eventDate}T00:00:00`).toISOString())
+    body.append('eventDate', new Date(`${draft.eventDate}T00:00:00`)
+        .toISOString())
     draft.files.forEach(file => body.append('mediaFiles', file))
     return request('timelineEvents', true, { body, method: 'POST' })
 }

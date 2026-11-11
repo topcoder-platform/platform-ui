@@ -28,7 +28,7 @@ const event: TimelineEvent = {
     eventDate: '2022-10-01T12:00:00Z',
     id: 1,
     mediaFiles: [
-        { previewUrl: 'https://example.com/preview.jpg', url: 'https://example.com/movie.mp4' },
+        { previewUrl: 'https://example.com/movie.mp4', url: 'https://example.com/movie.mp4' },
         { url: 'https://example.com/photo.jpg' },
     ],
     title: 'Community event',
@@ -52,6 +52,8 @@ beforeEach(() => {
 it('allows anonymous browsing, date navigation, and original video/photo viewing', async () => {
     render(<TimelineWall />)
     await screen.findByText('Community event')
+    expect(document.querySelector('.timeline-media-strip video'))
+        .toHaveAttribute('src', 'https://example.com/movie.mp4')
     expect(api.getCurrentUser).not.toHaveBeenCalled()
     expect(screen.queryByText(/Pending Approvals/)).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'login' }))

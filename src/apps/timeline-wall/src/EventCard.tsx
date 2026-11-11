@@ -79,7 +79,7 @@ const EventCard: FC<Props> = props => {
                             onClick={() => setMediaIndex(index)}
                             aria-label={`View ${isVideo(item) ? 'video' : 'photo'} ${index + 1} for ${event.title}`}
                         >
-                            {isVideo(item) && !item.previewUrl
+                            {isVideo(item) && (!item.previewUrl || isVideo({ url: item.previewUrl }))
                                 ? <video src={item.url} preload='metadata' muted aria-label='Video preview' />
                                 : <img src={item.previewUrl || item.url} alt='' loading='lazy' />}
                             {isVideo(item) && <span className='timeline-play' aria-hidden>▶</span>}
