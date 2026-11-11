@@ -63,7 +63,7 @@ import styles from './FlexiTalentCalculatorModal.module.scss'
 /** How long after the last edit a calculation is saved. */
 export const AUTOSAVE_DELAY_MS = 500
 
-const noop = (): void => undefined
+// const noop = (): void => undefined
 
 type SaveStatus = 'error' | 'saved' | 'saving'
 
@@ -137,7 +137,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
     const [confirmingDelete, setConfirmingDelete] = useState<boolean>(false)
     const [deleting, setDeleting] = useState<boolean>(false)
     // Not saved: the role always comes from the lead.
-    const [roleTitle, setRoleTitle] = useState<string>(lead.roleTitle || '')
+    const [roleTitle] = useState<string>(lead.roleTitle || '')
 
     // Autosave runs outside React's render cycle, so it reads the latest state from refs.
     const draftsRef = useRef<CalculatorDraft[]>([])
@@ -311,9 +311,9 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
         updateActiveDraft({ accountName: event.target.value })
     }, [updateActiveDraft])
 
-    const handleRoleTitleChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-        setRoleTitle(event.target.value)
-    }, [])
+    // const handleRoleTitleChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
+    //     setRoleTitle(event.target.value)
+    // }, [])
 
     const handleSmuChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
         updateActiveDraft({ smuCode: event.target.value })
