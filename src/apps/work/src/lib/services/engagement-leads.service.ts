@@ -29,13 +29,16 @@ interface BackendLeadListResponse {
 function appendFilterParam(
     params: URLSearchParams,
     key: string,
-    value?: string | number,
+    value?: string | number | string[],
 ): void {
-    if (value === undefined || value === null || value === '') {
+    // Lists go out comma-separated, which the API reads as several values.
+    const normalized = Array.isArray(value) ? value.join(',') : value
+
+    if (normalized === undefined || normalized === null || normalized === '') {
         return
     }
 
-    params.set(key, String(value))
+    params.set(key, String(normalized))
 }
 
 export const fetchEngagementLeads = async (
@@ -85,13 +88,20 @@ export const fetchEngagementLeadPrefill = async (
     xhrGetAsync<EngagementLeadPrefill>(`${LEADS_URL}/${leadId}/prefill`)
 )
 
+/**
+ * Updates a lead's status.
+ * @param leadId Lead to update.
+ * @param status New status.
+ * @param reason Why the lead is rejected; the API requires it for REJECTED.
+ */
 export const updateEngagementLeadStatus = async (
     leadId: string,
     status: string,
+    reason?: string,
 ): Promise<EngagementLead> => (
-    xhrPatchAsync<{ status: string }, EngagementLead>(
+    xhrPatchAsync<{ reason?: string, status: string }, EngagementLead>(
         `${LEADS_URL}/${leadId}/status`,
-        { status },
+        reason === undefined ? { status } : { reason, status },
     )
 )
 

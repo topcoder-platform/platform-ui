@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
-import { xhrPostAsync } from '~/libs/core'
+import { uploadFile } from '~/libs/shared/lib/services/s3-upload'
 
 import {
     MAX_SUPPORT_ATTACHMENT_BYTES,
@@ -7,76 +7,68 @@ import {
     SUPPORT_ATTACHMENT_MIME_TYPES_BY_EXTENSION,
     uploadSupportAttachment,
 } from './support-attachment.service'
-import { SUPPORT_API_BASE } from './support.service'
 
-jest.mock('~/config', () => ({
-    EnvironmentConfig: { API: { V6: 'https://api.example.test/v6' } },
+jest.mock('~/libs/shared/lib/services/s3-upload', () => ({
+    uploadFile: jest.fn(),
 }), { virtual: true })
 
-jest.mock('~/libs/core', () => ({
-    xhrPostAsync: jest.fn(),
-}), { virtual: true })
-
-const mockedPost = xhrPostAsync as jest.Mock
+const mockedUpload = uploadFile as jest.Mock
 
 describe('Support attachment service', () => {
     beforeEach(() => {
-        mockedPost.mockReset()
+        mockedUpload.mockReset()
     })
 
-    it('posts one file to the authenticated multipart endpoint and returns its metadata', async () => {
+    it('uses the support purpose and returns durable Files API metadata for Markdown', async () => {
         const file = new File(['image'], 'screenshot.png', { type: 'image/png' })
         const result = {
             filename: 'screenshot.png',
-            handle: 'hosted-handle',
+            handle: 'uppy/support/test/screenshot.png',
+            key: 'uppy/support/test/screenshot.png',
             mimetype: 'image/png',
             size: file.size,
-            url: 'https://cdn.filestackcontent.com/hosted-handle',
+            url: 'https://api.example.test/v6/uploads/files/read-capability',
         }
-        mockedPost.mockResolvedValue(result)
+        mockedUpload.mockResolvedValue(result)
 
         await expect(uploadSupportAttachment(file)).resolves.toEqual(result)
-
-        expect(mockedPost)
-            .toHaveBeenCalledWith(
-                `${SUPPORT_API_BASE}/attachments`,
-                expect.any(FormData),
-                expect.objectContaining({
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                    onUploadProgress: expect.any(Function),
-                    timeout: 30_000,
-                }),
-            )
-        const formData = mockedPost.mock.calls[0][1] as FormData
-        expect(formData.getAll('file'))
-            .toEqual([file])
+        expect(mockedUpload)
+            .toHaveBeenCalledWith(file, {
+                allowedFileTypes: SUPPORT_ATTACHMENT_ACCEPTED_UPLOAD_TYPES,
+                onProgress: undefined,
+                purpose: 'support',
+            })
     })
 
-    it('reports bounded, rounded upload progress', async () => {
+    it('forwards shared uploader progress to the Markdown editor', async () => {
         const onProgress = jest.fn()
-        mockedPost.mockImplementationOnce((_url, _data, config) => {
-            config.onUploadProgress({ loaded: 1, progress: 0.126, total: 8 })
-            config.onUploadProgress({ loaded: 10, total: 8 })
+        mockedUpload.mockImplementationOnce((_file, options) => {
+            options.onProgress(13)
+            options.onProgress(100)
             return Promise.resolve({
                 filename: 'notes.txt',
-                handle: 'notes-handle',
-                url: 'https://cdn.filestackcontent.com/notes-handle',
+                handle: 'uppy/support/test/notes.txt',
+                url: 'https://api.example.test/v6/uploads/files/read-capability',
             })
         })
-
         await uploadSupportAttachment(
             new File(['notes'], 'notes.txt', { type: 'text/plain' }),
             { onProgress },
         )
-
         expect(onProgress.mock.calls)
             .toEqual([[13], [100]])
     })
 
+    it('accepts the inclusive two-MiB boundary', async () => {
+        const file = new File([new Uint8Array(MAX_SUPPORT_ATTACHMENT_BYTES)], 'boundary.txt', { type: 'text/plain' })
+        mockedUpload.mockResolvedValue({ url: 'https://api.example.test/v6/uploads/files/read-capability' })
+        await uploadSupportAttachment(file)
+        expect(mockedUpload)
+            .toHaveBeenCalledTimes(1)
+    })
+
     it.each([502, 503, 504])('normalizes HTTP %s, including HTML gateway responses', async status => {
-        mockedPost.mockRejectedValue({
+        mockedUpload.mockRejectedValue({
             isAxiosError: true,
             message: 'Request failed',
             response: { data: '<html><h1>Bad Gateway</h1></html>', status },
@@ -84,12 +76,12 @@ describe('Support attachment service', () => {
 
         await expect(uploadSupportAttachment(new File(['notes'], 'notes.txt', { type: 'text/plain' })))
             .rejects.toThrow('Attachment uploads are temporarily unavailable. Please try again.')
-        expect(mockedPost)
+        expect(mockedUpload)
             .toHaveBeenCalledTimes(1)
     })
 
     it.each(['ERR_NETWORK', 'ECONNABORTED', 'ETIMEDOUT'])('normalizes %s failures', async code => {
-        mockedPost.mockRejectedValue({ code, isAxiosError: true })
+        mockedUpload.mockRejectedValue({ code, isAxiosError: true })
 
         await expect(uploadSupportAttachment(new File(['notes'], 'notes.txt', { type: 'text/plain' })))
             .rejects.toThrow('Attachment uploads are temporarily unavailable. Please try again.')
@@ -100,7 +92,7 @@ describe('Support attachment service', () => {
             isAxiosError: true,
             response: { status: 400 },
         })
-        mockedPost.mockRejectedValue(error)
+        mockedUpload.mockRejectedValue(error)
 
         await expect(uploadSupportAttachment(new File(['notes'], 'notes.txt', { type: 'text/plain' })))
             .rejects.toBe(error)
@@ -142,7 +134,7 @@ describe('Support attachment service', () => {
             .rejects.toThrow('This file type is not allowed for support attachments.')
         await expect(uploadSupportAttachment(mismatch))
             .rejects.toThrow('This file type is not allowed for support attachments.')
-        expect(mockedPost)
+        expect(mockedUpload)
             .not.toHaveBeenCalled()
     })
 
@@ -157,7 +149,7 @@ describe('Support attachment service', () => {
             .rejects.toThrow('The selected attachment is empty.')
         await expect(uploadSupportAttachment(oversized))
             .rejects.toThrow('larger than the 2 MB attachment limit')
-        expect(mockedPost)
+        expect(mockedUpload)
             .not.toHaveBeenCalled()
     })
 })

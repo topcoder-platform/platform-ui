@@ -4,7 +4,7 @@ export interface ApplicationFormData {
     name?: string
     email?: string
     address?: string
-    /** URL of the CV file uploaded to S3 through Filestack. */
+    /** URL of the CV file uploaded to S3 through Uppy. */
     cvFileUrl?: string
     /** Pay rate the applicant expects, as free text (e.g. "$50/hour"). */
     expectedPayRate: string

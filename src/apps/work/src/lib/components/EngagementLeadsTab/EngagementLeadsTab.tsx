@@ -143,7 +143,7 @@ function areLeadFiltersEqual(
     return left.accountName === right.accountName
         && left.smu === right.smu
         && left.roleTitle === right.roleTitle
-        && left.statusGroup === right.statusGroup
+        && (left.statusGroups || []).join(',') === (right.statusGroups || []).join(',')
         && left.sortBy === right.sortBy
         && left.sortOrder === right.sortOrder
 }
@@ -184,7 +184,7 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
                 smu: filters.smu,
                 sortBy: filters.sortBy,
                 sortOrder: filters.sortOrder,
-                statusGroup: filters.statusGroup,
+                statusGroup: filters.statusGroups,
             })
 
             setLeads(response.data)
@@ -200,7 +200,7 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
         filters.smu,
         filters.sortBy,
         filters.sortOrder,
-        filters.statusGroup,
+        filters.statusGroups,
         leadType,
         page,
         perPage,
@@ -492,7 +492,7 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
                                                             </button>
                                                         </Tooltip>
                                                     )
-                                                    : canCreateEngagementFromLead(String(lead.status))
+                                                    : canCreateEngagementFromLead(lead)
                                                         ? (
                                                             <Tooltip
                                                                 content='Create Engagement'

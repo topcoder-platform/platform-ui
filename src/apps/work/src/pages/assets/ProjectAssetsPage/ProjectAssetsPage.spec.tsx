@@ -25,9 +25,7 @@ import { ProjectAssetsPage } from './ProjectAssetsPage'
 
 var mockWorkAppContext: Context<WorkAppContextModel>
 
-jest.mock('filestack-js', () => ({
-    init: jest.fn(),
-}))
+jest.mock('~/libs/shared/lib/services/s3-upload', () => ({ pickFiles: jest.fn() }), { virtual: true })
 jest.mock('~/apps/review/src/lib', () => ({
     PageWrapper: (
         props: PropsWithChildren<{
@@ -48,7 +46,7 @@ jest.mock('~/apps/review/src/lib', () => ({
 })
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
-        FILESTACK: {
+        ADMIN: {
             API_KEY: '',
             CNAME: '',
             REGION: '',

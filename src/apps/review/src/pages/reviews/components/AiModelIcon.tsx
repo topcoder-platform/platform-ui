@@ -1,5 +1,6 @@
 import { FC, useCallback, useRef } from 'react'
 
+import { getLlmDisplayName } from '~/libs/shared'
 import iconDeepseekAi from '~/apps/review/src/lib/assets/icons/deepseek.svg'
 
 import { AiWorkflow } from '../../../lib/hooks'
@@ -20,7 +21,7 @@ const AiModelIcon: FC<AiModelIconProps> = props => {
     }, [])
 
     return (
-        <img src={props.model.icon} alt={props.model.name} onError={handleError} ref={llmIconImgRef} />
+        <img src={props.model.icon} alt={getLlmDisplayName(props.model)} onError={handleError} ref={llmIconImgRef} />
     )
 }
 

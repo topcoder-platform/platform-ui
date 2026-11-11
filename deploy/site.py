@@ -18,13 +18,14 @@ sys.path.insert(0, '/tmp/tc-deploy-scripts')
 import tcdeploy as d
 
 PUBLIC_VARIABLES = frozenset({
-    'REACT_APP_FILESTACK_API_KEY', 'REACT_APP_FILESTACK_SUBMISSION_CONTAINER',
+    'REACT_APP_UPLOADS_API_URL',
     'REACT_APP_HOST_ENV', 'REACT_APP_PAYLOAD_CMS_DEFAULT_ACCESS_TOKEN',
     'REACT_APP_PAYLOAD_CMS_EDU_ACCESS_TOKEN', 'REACT_APP_MEMBER_VERIFY_LOOKER',
     'REACT_APP_SPRIG_ENV_ID', 'REACT_APP_RESTRICT_TALENT_SEARCH',
     'REACT_APP_ENABLE_EMSI_SKILLS', 'REACT_APP_ENABLE_TCA_CERT_MONETIZATION',
 })
 REQUIRED_VARIABLES = PUBLIC_VARIABLES - {
+    'REACT_APP_UPLOADS_API_URL',
     'REACT_APP_MEMBER_VERIFY_LOOKER', 'REACT_APP_SPRIG_ENV_ID',
     'REACT_APP_RESTRICT_TALENT_SEARCH', 'REACT_APP_ENABLE_EMSI_SKILLS',
     'REACT_APP_ENABLE_TCA_CERT_MONETIZATION',
@@ -158,7 +159,10 @@ def config_values(m, path):
     value = json.loads(raw, object_pairs_hook=d.unique_object)
     d.require(set(value) == {'schemaVersion', 'environment', 'variables'} and
               value['schemaVersion'] == 1 and value['environment'] == m['environment'], 'Wrong browser config environment')
-    variables = value['variables']
+    # Older pinned browser-config objects still contain retired Filestack fields.
+    # Ignore them so both environments can roll out without republishing those objects.
+    retired = {'REACT_APP_FILESTACK_API_KEY', 'REACT_APP_FILESTACK_SUBMISSION_CONTAINER'}
+    variables = {key: val for key, val in value['variables'].items() if key not in retired}
     d.require(isinstance(variables, dict) and REQUIRED_VARIABLES <= set(variables) <= PUBLIC_VARIABLES, 'Unreviewed browser config variable')
     d.require(all(isinstance(v, str) and len(v) < 10000 and '\n' not in v and '\r' not in v for v in variables.values()), 'Invalid browser config value')
     d.require(variables['REACT_APP_HOST_ENV'] == m['environment'] and all(variables[k] for k in REQUIRED_VARIABLES), 'Missing browser configuration')
@@ -249,7 +253,7 @@ def deploy(m, root, metadata, receipt):
     d.require(aws.call('s3api', 'get-bucket-versioning', Bucket=m['bucket']).get('Status') == 'Enabled', 'Enable bucket versioning before release')
     release = sha + '-' + os.environ.get('CIRCLE_BUILD_NUM', '')
     d.require(re.fullmatch(r'[a-f0-9]{40}-[0-9]{1,12}', release), 'Invalid release identity')
-    entries = {'asset-manifest.json': root / 'asset-manifest.json', 'index.html': root / 'index.html', 'gigs/index.html': root / 'index.html'}
+    entries = {'asset-manifest.json': root / 'asset-manifest.json', 'index.html': root / 'index.html', 'gigs/index.html': root / 'index.html', 'timeline-wall/index.html': root / 'index.html'}
     with tempfile.TemporaryDirectory(prefix='platform-ui-rollback-') as directory:
         previous = {}
         for number, key in enumerate(entries):
@@ -258,13 +262,13 @@ def deploy(m, root, metadata, receipt):
                 info = aws.call('s3api', 'get-object', extra=(str(target),), Bucket=m['bucket'], Key=key)
                 previous[key] = (target, info.get('VersionId'))
             except d.DeployError as exc:
-                if key != 'gigs/index.html' or not re.search(r'\((NoSuchKey|404)\)|: (NoSuchKey|404)$', str(exc)):
+                if key not in ('gigs/index.html', 'timeline-wall/index.html') or not re.search(r'\((NoSuchKey|404)\)|: (NoSuchKey|404)$', str(exc)):
                     raise
                 previous[key] = previous['index.html']
         promoted = False
         try:
             aws.sync(root, m['bucket'], ['--exclude', '*', '--include', 'static/*'], 'public,max-age=31536000,immutable')
-            aws.sync(root, m['bucket'], ['--exclude', 'static/*', '--exclude', 'index.html', '--exclude', 'gigs/index.html', '--exclude', 'asset-manifest.json'], NO_CACHE)
+            aws.sync(root, m['bucket'], ['--exclude', 'static/*', '--exclude', 'index.html', '--exclude', 'gigs/index.html', '--exclude', 'timeline-wall/index.html', '--exclude', 'asset-manifest.json'], NO_CACHE)
             for key, path in entries.items():
                 promoted = True
                 put(aws, m, key, path, sha)

@@ -15,7 +15,7 @@ project/branch restrictions and disallow SSH reruns and API-supplied configurati
 
 `config-dev`/`config-prod` can read only the exact S3 object version pinned in
 the corresponding manifest. Its SHA-256 is checked before use. These are reviewed
-browser settings: Filestack settings and read-only CMS delivery tokens, including
+browser settings: the optional Uppy signing API URL and read-only CMS delivery tokens, including
 values that become public in the JavaScript bundle. Preview/admin tokens and
 server secrets must never be added. The allowlist in `site.py` rejects other keys.
 
@@ -85,3 +85,5 @@ CI=true yarn test:no-watch --runInBand --watch=false --runTestsByPath \
 The release build uses `python3 -I deploy/site.py build --manifest deploy/dev.json`
 with the verified browser configuration and CircleCI source metadata. Local
 application development continues to use the existing `.environments` setup.
+
+Uploads require Files API `/v6/uploads/files` and its persistent signing secret/bucket settings. `REACT_APP_UPLOADS_API_URL` overrides the default endpoint. Retired Filestack fields in older pinned config objects are ignored and are not passed to the build. Deploy the upload API before deploying either frontend.

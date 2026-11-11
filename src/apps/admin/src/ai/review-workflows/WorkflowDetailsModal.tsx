@@ -1,6 +1,7 @@
 import { FC } from 'react'
 
 import { EnvironmentConfig } from '~/config'
+import { getLlmDisplayName } from '~/libs/shared'
 import { BaseModal, Button } from '~/libs/ui'
 import { MarkdownReview } from '~/apps/review/src/lib/components/MarkdownReview'
 
@@ -74,7 +75,7 @@ const LlmSection: FC<SectionProps> = (props: SectionProps) => (
             </div>
             <div className={styles.field}>
                 <span className={styles.label}>Model</span>
-                <span className={styles.value}>{props.workflow.llm?.name || 'N/A'}</span>
+                <span className={styles.value}>{getLlmDisplayName(props.workflow.llm) || 'N/A'}</span>
             </div>
             <div className={styles.field}>
                 <span className={styles.label}>LLM URL</span>

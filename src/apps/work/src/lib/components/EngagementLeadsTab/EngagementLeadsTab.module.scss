@@ -79,17 +79,18 @@
     color: #3730a3;
 }
 
-.statusInProgress {
+.statusUnderReview {
     background: #fef3c7;
     color: #92400e;
+    text-align: center;
 }
 
-.statusConverted {
-    background: #dbeafe;
-    color: #1d4ed8;
+.statusFulfilled {
+    background: #dcfce7;
+    color: #166534;
 }
 
-.statusDeclined {
+.statusLost {
     background: #fee2e2;
     color: #991b1b;
 }

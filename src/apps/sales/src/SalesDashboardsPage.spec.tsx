@@ -845,6 +845,106 @@ it('filters customer revenue by account category without changing revenue charts
         .toHaveBeenCalledTimes(7)
 })
 
+it('combines customer revenue filters and preserves selections across refresh', async () => {
+    const ai: MonthlySalesChart = {
+        ...customerPayments,
+        months: [
+            { month: '2026-04-01', values: { anz: 30, metro: 10, rebel: 20 } },
+            { month: '2026-05-01', values: { anz: 0, metro: -2, rebel: 0 } },
+        ],
+    }
+    const external: MonthlySalesChart = {
+        ...ai,
+        months: [
+            { month: '2026-04-01', values: { metro: 5 } },
+            { month: '2026-05-01', values: { metro: -2 } },
+        ],
+        series: [ai.series[0]],
+    }
+    fetchDashboard.mockImplementation(async section => ({
+        charts: [],
+        customerPayments,
+        notices: [],
+        ...(section === 'revenue' ? {
+            customerRevenue: customerPayments,
+            customerRevenueByAccountCategory: { 'External Revenue': customerPayments },
+            customerRevenueByOfferingType: {
+                'AI Training': {
+                    customerRevenue: ai,
+                    customerRevenueByAccountCategory: { 'External Revenue': external },
+                },
+                'TaaS Ops': {
+                    customerRevenue: { ...ai, series: [] },
+                },
+            },
+        } : {}),
+    }))
+    render(<SalesDashboardsPage portal='sales' />)
+    await screen.findByRole('table', { name: 'Revenue Customer-Wise (USD)' })
+    const offering = screen.getByRole('combobox', { name: 'Revenue offering type' })
+    const account = screen.getByRole('combobox', { name: 'Revenue account category' })
+    const table = (): ReturnType<typeof within> => within(screen.getByRole('table', {
+        name: 'Revenue Customer-Wise (USD)',
+    }))
+    expect(within(offering)
+        .getAllByRole('option')
+        .map(option => option.textContent))
+        .toEqual(['ALL', 'AI Training', 'Crowd Powered Outcomes', 'Crowd Powered Innovation',
+            'Flexible Talent', 'TopGear', 'TaaS Ops'])
+    expect(offering)
+        .toHaveValue('')
+    fireEvent.change(offering, { target: { value: 'AI Training' } })
+    expect(table()
+        .getAllByRole('rowheader'))
+        .toHaveLength(4)
+    expect(table()
+        .getByRole('row', { name: /^Total/ }))
+        .toHaveTextContent('Total$58.00$60.00-$2.00')
+    fireEvent.change(account, { target: { value: 'External Revenue' } })
+    expect(table()
+        .getAllByRole('rowheader'))
+        .toHaveLength(2)
+    expect(table()
+        .getByRole('row', { name: /^Metro/ }))
+        .toHaveTextContent('Metro$3.00$5.00-$2.00')
+    fireEvent.click(screen.getByRole('button', { name: 'Quarterly' }))
+    expect(table()
+        .getByRole('row', { name: /^Total/ }))
+        .toHaveTextContent('Total$3.00$3.00')
+    expect(within(screen.getByRole('table', { name: 'Goods Sold Customer-Wise (USD)' }))
+        .getByRole('row', { name: /^Metro/ }))
+        .toHaveTextContent('Metro$8,500.00$8,500.00')
+    expect(fetchDashboard)
+        .toHaveBeenCalledTimes(7)
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
+    await screen.findByRole('table', { name: 'Revenue Customer-Wise (USD)' })
+    expect(offering)
+        .toHaveValue('AI Training')
+    expect(account)
+        .toHaveValue('External Revenue')
+    expect(table()
+        .getByRole('row', { name: /^Total/ }))
+        .toHaveTextContent('Total$3.00$3.00')
+    fireEvent.change(offering, { target: { value: '' } })
+    expect(table()
+        .getAllByRole('rowheader'))
+        .toHaveLength(4)
+    fireEvent.change(account, { target: { value: '' } })
+    fireEvent.change(offering, { target: { value: 'TaaS Ops' } })
+    expect(screen.getByText('No customer data in this fiscal year.'))
+        .toBeInTheDocument()
+    fireEvent.change(offering, { target: { value: 'TopGear' } })
+    expect(screen.getByText('Revenue offering type details are unavailable for this source.'))
+        .toBeInTheDocument()
+    expect(screen.queryByRole('table', { name: 'Revenue Customer-Wise (USD)' })).not.toBeInTheDocument()
+    fireEvent.change(offering, { target: { value: '' } })
+    expect(table()
+        .getAllByRole('rowheader'))
+        .toHaveLength(4)
+    expect(fetchDashboard)
+        .toHaveBeenCalledTimes(14)
+})
+
 it('headlines quarterly data using the current fiscal quarter and the previous quarter comparison', () => {
     const chart = { ...response.charts[0],
         months: [

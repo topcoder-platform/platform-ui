@@ -369,6 +369,20 @@ App Enhancement(s) 5 to Flexible Talent; populated values remain unchanged. A pe
 another report without column settings. See that repository's `SALES.md` for source
 definitions, settings and API parameters.
 
+### PM-6740 customer revenue by offering
+
+The Customer section's **Revenue offering type** selector offers ALL, AI Training,
+Crowd Powered Outcomes, Crowd Powered Innovation, Flexible Talent, TopGear and TaaS
+Ops. It combines with **Revenue account category** to select the corresponding
+`customerRevenueByOfferingType` matrix and optional account-category intersection.
+The API aggregates only matching revenue detail rows, including the two existing
+blank-offering corrections; TopGear includes TopGear Ops. ALL retains unknown
+and other offerings. Filters affect only Revenue Customer-Wise, require no new
+requests, and remain selected through refresh and Monthly/Quarterly changes.
+Unsupported source columns show an unavailable message; valid empty selections
+show no customer data. Deploy the reports-api-v6 change before the UI to enable
+these optional datasets.
+
 ### PM-6667 dashboard changes
 
 The Reports API removes Total Opportunity Size, returns Won - SOW Signed bookings

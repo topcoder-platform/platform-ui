@@ -34,7 +34,7 @@ export interface SupportMarkdownEditorProps {
  */
 export const SupportMarkdownEditor: FC<SupportMarkdownEditorProps> = props => {
     /**
-     * Uploads through the authenticated Support API, forwarding editor progress.
+     * Uploads through Files API, forwarding editor progress.
      *
      * @param file browser-selected, dropped, or pasted attachment.
      * @param options editor upload progress callback.

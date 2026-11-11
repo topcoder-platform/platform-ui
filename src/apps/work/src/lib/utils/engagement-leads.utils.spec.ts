@@ -1,8 +1,10 @@
 import { EngagementLeadStatus, EngagementLeadType } from '../models/EngagementLead.model'
 
 import {
+    canCreateEngagementFromLead,
     getEngagementLeadsTabPath,
     getLeadDisplayStatus,
+    getLeadStatusTransitions,
     getLeadTypeFromQueryValue,
     getLeadTypeQueryValue,
 } from './engagement-leads.utils'
@@ -10,13 +12,51 @@ import {
 describe('getLeadDisplayStatus', () => {
     it.each([
         [EngagementLeadStatus.SUBMITTED, 'New'],
-        [EngagementLeadStatus.UNDER_REVIEW, 'In Progress'],
-        [EngagementLeadStatus.QUALIFIED, 'In Progress'],
-        [EngagementLeadStatus.CONVERTED, 'Converted'],
-        [EngagementLeadStatus.REJECTED, 'Declined'],
+        [EngagementLeadStatus.UNDER_REVIEW, 'Under Review'],
+        [EngagementLeadStatus.QUALIFIED, 'Under Review'],
+        [EngagementLeadStatus.CONVERTED, 'Under Review'],
+        [EngagementLeadStatus.FULFILLED, 'Fulfilled'],
+        [EngagementLeadStatus.REJECTED, 'Lost'],
     ])('shows %s leads as %s', (status, displayStatus) => {
         expect(getLeadDisplayStatus(status))
             .toBe(displayStatus)
+    })
+})
+
+describe('getLeadStatusTransitions', () => {
+    it.each([
+        [EngagementLeadStatus.SUBMITTED, [
+            EngagementLeadStatus.UNDER_REVIEW,
+            EngagementLeadStatus.FULFILLED,
+            EngagementLeadStatus.REJECTED,
+        ]],
+        [EngagementLeadStatus.REJECTED, [EngagementLeadStatus.UNDER_REVIEW, EngagementLeadStatus.FULFILLED]],
+        [EngagementLeadStatus.UNDER_REVIEW, [EngagementLeadStatus.FULFILLED, EngagementLeadStatus.REJECTED]],
+        [EngagementLeadStatus.CONVERTED, [EngagementLeadStatus.FULFILLED, EngagementLeadStatus.REJECTED]],
+        [EngagementLeadStatus.FULFILLED, [EngagementLeadStatus.UNDER_REVIEW]],
+    ])('lets a %s lead move to %p', (status, transitions) => {
+        expect(getLeadStatusTransitions(status))
+            .toEqual(transitions)
+    })
+})
+
+describe('canCreateEngagementFromLead', () => {
+    it.each([
+        [EngagementLeadStatus.SUBMITTED, true],
+        [EngagementLeadStatus.UNDER_REVIEW, true],
+        [EngagementLeadStatus.FULFILLED, false],
+        [EngagementLeadStatus.REJECTED, false],
+    ])('allows it for a %s lead: %s', (status, expected) => {
+        expect(canCreateEngagementFromLead({ status }))
+            .toBe(expected)
+    })
+
+    it('does not allow a second engagement from the same lead', () => {
+        expect(canCreateEngagementFromLead({
+            convertedEngagementId: 'eng-1',
+            status: EngagementLeadStatus.UNDER_REVIEW,
+        }))
+            .toBe(false)
     })
 })
 

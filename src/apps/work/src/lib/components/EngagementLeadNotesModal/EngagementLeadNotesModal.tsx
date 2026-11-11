@@ -6,7 +6,7 @@ import {
     useState,
 } from 'react'
 
-import { EngagementLead, EngagementLeadStatus } from '../../models/EngagementLead.model'
+import { EngagementLead } from '../../models/EngagementLead.model'
 import { addEngagementLeadNote } from '../../services/engagement-leads.service'
 import { extractErrorMessage, showErrorToast, showSuccessToast } from '../../utils'
 import { formatLeadDateTime } from '../../utils/engagement-leads.utils'
@@ -31,8 +31,6 @@ export const EngagementLeadNotesModal: FC<EngagementLeadNotesModalProps> = (
 ) => {
     const lead = props.lead
     const onSaved = props.onSaved
-    // Nothing can be added once the lead becomes an engagement, so the notes still record what led to it.
-    const readOnly = lead.status === EngagementLeadStatus.CONVERTED
 
     const [newNote, setNewNote] = useState<string>('')
     const [saving, setSaving] = useState<boolean>(false)
@@ -63,26 +61,19 @@ export const EngagementLeadNotesModal: FC<EngagementLeadNotesModalProps> = (
         }
     }, [lead.id, newNote, onSaved])
 
+    // Notes can be added whatever the lead's status, including lost and completed leads.
     const handleConfirm = useCallback((): void => {
-        if (readOnly) {
-            props.onClose()
-            return
-        }
-
         handleSave()
             .catch(() => undefined)
-    }, [handleSave, props, readOnly])
+    }, [handleSave])
 
     return (
         <ConfirmationModal
-            confirmDisabled={!readOnly && (saving || !newNote.trim())}
-            confirmText={readOnly ? 'Close' : 'Add Note'}
-            message={readOnly
-                ? 'This lead has been converted, so no more notes can be added.'
-                : `Notes for lead ${lead.id}.`}
+            confirmDisabled={saving || !newNote.trim()}
+            confirmText='Add Note'
+            message={`Notes for lead ${lead.id}.`}
             onCancel={props.onClose}
             onConfirm={handleConfirm}
-            showCancelButton={!readOnly}
             title='Notes'
         >
             {notes.length
@@ -101,17 +92,15 @@ export const EngagementLeadNotesModal: FC<EngagementLeadNotesModalProps> = (
                 )
                 : <p className={styles.empty}>No notes were added.</p>}
 
-            {!readOnly && (
-                <textarea
-                    aria-label='New note'
-                    className={styles.textarea}
-                    disabled={saving}
-                    maxLength={NOTES_MAX_LENGTH}
-                    placeholder='Enter a new note'
-                    value={newNote}
-                    onChange={handleNoteChange}
-                />
-            )}
+            <textarea
+                aria-label='New note'
+                className={styles.textarea}
+                disabled={saving}
+                maxLength={NOTES_MAX_LENGTH}
+                placeholder='Enter a new note'
+                value={newNote}
+                onChange={handleNoteChange}
+            />
         </ConfirmationModal>
     )
 }

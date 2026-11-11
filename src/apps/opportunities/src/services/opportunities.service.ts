@@ -1,11 +1,6 @@
 import { AxiosHeaders, AxiosResponse } from 'axios'
-import {
-    Client,
-    init,
-    StoreUploadOptions,
-    UploadOptions,
-} from 'filestack-js'
 
+import { uploadFile } from '~/libs/shared/lib/services/s3-upload'
 import { EnvironmentConfig } from '~/config'
 import {
     xhrDeleteAsync,
@@ -57,7 +52,6 @@ const REVIEW_SUMMATIONS_PAGE_SIZE = 500
 const PROJECT_RESULTS_PAGE_SIZE = 100
 const MAX_DETAIL_PAGES = 100
 const PAGE_REQUEST_BATCH_SIZE = 4
-let submissionFilestackClient: Client | undefined
 
 const DEFAULT_SUMMARY: OpportunitySummary = {
     competitions: { amount: 0, count: 0 },
@@ -72,25 +66,13 @@ const MEMBER_STATE_PAGE_SIZE = 200
 const CLIENT_SORT_PAGE_SIZE = 1000
 const MAX_CLIENT_SORT_PAGES = 20
 
-/**
- * Resolves the shared Filestack client used for challenge submissions.
- *
- * @returns configured Filestack browser client.
- * @throws Error when file uploads are not configured for the environment.
- */
-function getSubmissionFilestackClient(): Client {
-    const { API_KEY, CNAME, SECURITY }: typeof EnvironmentConfig.FILESTACK = EnvironmentConfig.FILESTACK
-    if (!API_KEY) throw new Error('File uploads are not configured for this environment.')
-    if (!submissionFilestackClient) {
-        submissionFilestackClient = init(API_KEY, {
-            cname: CNAME,
-            security: SECURITY
-                ? { policy: SECURITY.POLICY, signature: SECURITY.SIGNATURE }
-                : undefined,
-        })
-    }
-
-    return submissionFilestackClient
+/** Review API body for creating a member submission. */
+interface ChallengeSubmissionRequest {
+    aiAssisted?: boolean
+    challengeId: string
+    memberId: string
+    type: ChallengeSubmissionType
+    url: string
 }
 
 /**
@@ -103,6 +85,7 @@ function getSubmissionFilestackClient(): Client {
  * @param file single ZIP archive selected in the Opportunities submission form.
  * @param onProgress optional callback receiving whole-number upload completion from 0 to 100.
  * @param signal optional abort signal used by the form's cancel-file action.
+ * @param aiAssisted optional answer to the "AI tools wrote most of the code" question.
  * @returns the newly created Review API submission.
  * @throws request, authorization, registration, phase, validation, or upload errors from Review API.
  */
@@ -113,42 +96,25 @@ export async function createChallengeSubmission(
     file: File,
     onProgress?: (percent: number) => void,
     signal?: AbortSignal,
+    aiAssisted?: boolean,
 ): Promise<ChallengeSubmission> {
     if (signal?.aborted) throw new DOMException('Upload cancelled.', 'AbortError')
-    const submissionContainer = EnvironmentConfig.ADMIN.AWS_DMZ_BUCKET
-    const storagePath = `${challengeId}-${memberId}-${type}-${Date.now()}.zip`
-    const uploadOptions: UploadOptions = {
-        onProgress: event => {
-            if (!onProgress) return
-            const percent = typeof event?.totalPercent === 'number' ? event.totalPercent : 0
-            onProgress(Math.min(99, Math.max(0, Math.round(percent))))
-        },
-        progressInterval: EnvironmentConfig.FILESTACK.PROGRESS_INTERVAL,
-        retry: EnvironmentConfig.FILESTACK.RETRY,
-        timeout: EnvironmentConfig.FILESTACK.TIMEOUT,
-    }
-    const storeOptions: StoreUploadOptions = {
-        container: submissionContainer,
-        path: storagePath,
-        region: EnvironmentConfig.FILESTACK.REGION,
-    }
-    const upload = await getSubmissionFilestackClient()
-        .upload(file, uploadOptions, storeOptions)
+    const upload = await uploadFile(file, {
+        contextId: challengeId,
+        onProgress: percent => onProgress?.(Math.min(99, percent)),
+        purpose: 'submission',
+        signal,
+    })
     if (signal?.aborted) throw new DOMException('Upload cancelled.', 'AbortError')
-    const storageKey = String(upload?.key ?? storagePath)
-    const storageUrl = `https://s3.amazonaws.com/${submissionContainer}/${storageKey}`
-    const submission = await xhrPostAsync<{
-        challengeId: string
-        memberId: string
-        type: ChallengeSubmissionType
-        url: string
-    }, ChallengeSubmission>(
+    const storageUrl = upload.url
+    const submission = await xhrPostAsync<ChallengeSubmissionRequest, ChallengeSubmission>(
         `${V6_URL}/submissions`,
         {
             challengeId,
             memberId,
             type,
             url: storageUrl,
+            ...(aiAssisted === undefined ? {} : { aiAssisted }),
         },
         {
             signal,
@@ -161,7 +127,7 @@ export async function createChallengeSubmission(
 /**
  * Creates a challenge submission whose deliverable is an authored external URL.
  *
- * URL submissions bypass Filestack and storage because Review API persists the
+ * URL submissions bypass file uploads and storage because Review API persists the
  * member-provided link as a non-file submission. Registration and open-phase
  * authorization remain owned by Review API.
  *
@@ -170,6 +136,7 @@ export async function createChallengeSubmission(
  * @param type Review API submission category derived from the active challenge phase.
  * @param url validated absolute HTTP(S) URL supplied by the member.
  * @param signal optional abort signal used by the form's cancel action.
+ * @param aiAssisted optional answer to the "AI tools wrote most of the code" question.
  * @returns the newly created Review API submission.
  * @throws request, authorization, registration, phase, validation, or abort errors.
  */
@@ -179,20 +146,17 @@ export async function createChallengeUrlSubmission(
     type: ChallengeSubmissionType,
     url: string,
     signal?: AbortSignal,
+    aiAssisted?: boolean,
 ): Promise<ChallengeSubmission> {
     if (signal?.aborted) throw new DOMException('Submission cancelled.', 'AbortError')
-    return xhrPostAsync<{
-        challengeId: string
-        memberId: string
-        type: ChallengeSubmissionType
-        url: string
-    }, ChallengeSubmission>(
+    return xhrPostAsync<ChallengeSubmissionRequest, ChallengeSubmission>(
         `${V6_URL}/submissions`,
         {
             challengeId,
             memberId,
             type,
             url: url.trim(),
+            ...(aiAssisted === undefined ? {} : { aiAssisted }),
         },
         { signal },
     )

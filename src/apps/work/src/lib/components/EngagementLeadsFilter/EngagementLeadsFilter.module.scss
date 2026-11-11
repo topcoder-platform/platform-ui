@@ -1,6 +1,6 @@
 .container {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     flex-wrap: wrap;
     gap: 12px;
     padding: 16px;
@@ -30,8 +30,13 @@
     font-size: 14px;
 }
 
+.statusMultiselect {
+    width: 100%;
+}
+
 .actions {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
+    margin-top: 24px;
 }

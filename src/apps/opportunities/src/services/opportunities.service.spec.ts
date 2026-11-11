@@ -7,7 +7,7 @@ import {
     xhrPostAsync,
     xhrRequestAsync,
 } from '~/libs/core'
-import { init } from 'filestack-js'
+import { uploadFile } from '~/libs/shared/lib/services/s3-upload'
 import {
     agreeToChallengeTerms,
     buildOpportunityPageUrl,
@@ -45,18 +45,9 @@ jest.mock('~/config', () => ({
     EnvironmentConfig: {
         ADMIN: { AWS_DMZ_BUCKET: 'submission-dmz' },
         API: { V5: 'https://api.example/v5', V6: 'https://api.example/v6' },
-        FILESTACK: {
-            API_KEY: 'filestack-key',
-            CNAME: 'filestack.example',
-            PROGRESS_INTERVAL: 100,
-            REGION: 'us-east-1',
-            RETRY: 2,
-            SUBMISSION_CONTAINER: 'general-assets-bucket',
-            TIMEOUT: 1000,
-        },
     },
 }), { virtual: true })
-jest.mock('filestack-js', () => ({ init: jest.fn() }))
+jest.mock('~/libs/shared/lib/services/s3-upload', () => ({ uploadFile: jest.fn() }), { virtual: true })
 jest.mock('~/libs/core', () => ({
     xhrDeleteAsync: jest.fn(),
     xhrGetAsync: jest.fn(),
@@ -1390,13 +1381,11 @@ describe('opportunities service normalization', () => {
 
     it('uploads a challenge ZIP to the canonical DMZ before creating its URL-backed submission', async () => {
         const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
-        const upload = jest.fn()
+        const upload = (uploadFile as jest.Mock)
             .mockImplementation(async (_file, options) => {
-                options.onProgress({ totalPercent: 50 })
-                return { key: 'challenge-id-123-CHECKPOINT_SUBMISSION.zip' }
+                options.onProgress(50)
+                return { url: 'https://s3.amazonaws.com/submission-dmz/challenge-id-123-CHECKPOINT_SUBMISSION.zip' }
             })
-        const initMock = init as jest.MockedFunction<typeof init>
-        initMock.mockReturnValue({ upload } as never)
         const progress = jest.fn()
         const file = new File(['archive'], 'MySubmission.zip', { type: 'application/zip' })
         const controller = new AbortController()
@@ -1430,13 +1419,9 @@ describe('opportunities service normalization', () => {
             .toHaveBeenCalledWith(
                 file,
                 expect.objectContaining({
-                    progressInterval: 100,
-                    retry: 2,
-                    timeout: 1000,
-                }),
-                expect.objectContaining({
-                    container: 'submission-dmz',
-                    region: 'us-east-1',
+                    contextId: 'challenge-id',
+                    purpose: 'submission',
+                    signal: controller.signal,
                 }),
             )
         expect(progress)
@@ -1445,9 +1430,9 @@ describe('opportunities service normalization', () => {
             .toHaveBeenLastCalledWith(100)
     })
 
-    it('creates a URL submission directly without initializing Filestack', async () => {
+    it('creates a URL submission directly without uploading a file', async () => {
         const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
-        const initMock = init as jest.MockedFunction<typeof init>
+        const initMock = uploadFile as jest.MockedFunction<typeof uploadFile>
         const controller = new AbortController()
         initMock.mockClear()
         post.mockResolvedValueOnce({ id: 'url-submission-id' } as never)
@@ -1474,6 +1459,33 @@ describe('opportunities service normalization', () => {
             )
         expect(initMock)
             .not.toHaveBeenCalled()
+    })
+
+    it('includes the Marathon Match AI-usage answer in the submission body when provided', async () => {
+        const post = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
+        post.mockResolvedValueOnce({ id: 'url-submission-id' } as never)
+
+        await createChallengeUrlSubmission(
+            'challenge-id',
+            '123',
+            'CONTEST_SUBMISSION',
+            'https://deliverables.example.com/member/result',
+            undefined,
+            false,
+        )
+
+        expect(post)
+            .toHaveBeenLastCalledWith(
+                'https://api.example/v6/submissions',
+                {
+                    aiAssisted: false,
+                    challengeId: 'challenge-id',
+                    memberId: '123',
+                    type: 'CONTEST_SUBMISSION',
+                    url: 'https://deliverables.example.com/member/result',
+                },
+                { signal: undefined },
+            )
     })
 
     it('does not create an already-cancelled URL submission', async () => {
