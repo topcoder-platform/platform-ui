@@ -27,7 +27,6 @@ export interface DraftInput<TField extends string> {
 export interface CalculatorDraft {
     accountName: string
     commercialDraft?: DraftInput<CommercialInputField>
-    dirty: boolean
     durationWeeksRaw: string
     hoursPerDayRaw: string
     /** Set once the calculation has been saved. */
@@ -37,6 +36,10 @@ export interface CalculatorDraft {
     memberDraft?: DraftInput<MemberInputField>
     memberName: string
     referral: boolean
+    /** Goes up on every edit. */
+    revision: number
+    /** Revision the saved calculation matches; behind `revision` while there are unsaved edits. */
+    savedRevision: number
     smuCode: string
 }
 
@@ -88,12 +91,13 @@ function toDraftInput<TField extends string>(
 export function createDraftFromLead(lead: EngagementLead): CalculatorDraft {
     return {
         accountName: lead.accountName || '',
-        dirty: false,
         durationWeeksRaw: numberToRaw(parseDurationToWeeks(lead.engagementDuration)),
         hoursPerDayRaw: String(lead.workingHoursPerDay || DEFAULT_HOURS_PER_DAY),
         key: createDraftKey(),
         memberName: '',
         referral: false,
+        revision: 0,
+        savedRevision: 0,
         smuCode: getSmuOption(lead.smu)?.code || '',
     }
 }
@@ -108,7 +112,6 @@ export function createDraftFromCalculation(calculation: EngagementLeadCalculatio
                 : undefined,
             calculation.commercialInputValue,
         ),
-        dirty: false,
         durationWeeksRaw: numberToRaw(calculation.durationWeeks),
         hoursPerDayRaw: numberToRaw(calculation.hoursPerDay),
         id: calculation.id,
@@ -121,6 +124,8 @@ export function createDraftFromCalculation(calculation: EngagementLeadCalculatio
         ),
         memberName: calculation.memberName || '',
         referral: calculation.referral,
+        revision: 0,
+        savedRevision: 0,
         smuCode: calculation.smu || '',
     }
 }
@@ -182,6 +187,11 @@ export function getDraftSavePayload(draft: CalculatorDraft): EngagementLeadCalcu
         referral: draft.referral,
         smu: emptyToUndefined(draft.smuCode),
     }
+}
+
+/** Whether the draft has edits that are not saved yet. */
+export function hasUnsavedChanges(draft: CalculatorDraft): boolean {
+    return draft.revision !== draft.savedRevision
 }
 
 /** Tab label: the member's name once entered, otherwise its position. */

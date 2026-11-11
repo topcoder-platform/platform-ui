@@ -12,6 +12,7 @@ import {
     getDraftCalculatorInputs,
     getDraftLabel,
     getDraftSavePayload,
+    hasUnsavedChanges,
 } from './flexi-talent-calculator-drafts.utils'
 
 const lead = {
@@ -46,11 +47,12 @@ describe('createDraftFromLead', () => {
         expect(draft)
             .toEqual(expect.objectContaining({
                 accountName: 'Acme',
-                dirty: false,
                 durationWeeksRaw: '26',
                 hoursPerDayRaw: '6',
                 memberName: '',
                 referral: false,
+                revision: 0,
+                savedRevision: 0,
                 smuCode: 'AMR2',
             }))
         expect(draft.id)
@@ -78,7 +80,6 @@ describe('createDraftFromCalculation', () => {
             .toEqual({
                 accountName: 'Acme',
                 commercialDraft: { field: 'bookingRate', raw: '75.5' },
-                dirty: false,
                 durationWeeksRaw: '12',
                 hoursPerDayRaw: '8',
                 id: 'calc-1',
@@ -86,6 +87,8 @@ describe('createDraftFromCalculation', () => {
                 memberDraft: { field: 'memberCost', raw: '20000' },
                 memberName: 'Jane Doe',
                 referral: true,
+                revision: 0,
+                savedRevision: 0,
                 smuCode: 'EURP',
             })
     })
@@ -186,5 +189,16 @@ describe('getDraftLabel', () => {
             .toBe('Calculation 2')
         expect(getDraftLabel({ ...draft, memberName: ' Jane ' }, 1))
             .toBe('Jane')
+    })
+})
+
+describe('hasUnsavedChanges', () => {
+    it('is true while the draft is ahead of what was saved', () => {
+        const draft = createDraftFromLead(lead)
+
+        expect(hasUnsavedChanges(draft))
+            .toBe(false)
+        expect(hasUnsavedChanges({ ...draft, revision: 2, savedRevision: 1 }))
+            .toBe(true)
     })
 })

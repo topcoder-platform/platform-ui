@@ -25,7 +25,7 @@ import {
     updateEngagementLeadCalculation,
 } from '../../services/engagement-leads.service'
 
-import { FlexiTalentCalculatorModal } from './FlexiTalentCalculatorModal'
+import { AUTOSAVE_DELAY_MS, FlexiTalentCalculatorModal } from './FlexiTalentCalculatorModal'
 
 jest.mock('~/libs/shared', () => ({
     copyTextToClipboard: jest.fn(),
@@ -53,6 +53,9 @@ jest.mock('~/libs/ui', () => ({
             {props.label}
         </button>
     ),
+    IconOutline: {
+        ClipboardCopyIcon: (): JSX.Element => <svg />,
+    },
     InputSelect: (props: {
         label: string
         name: string
@@ -74,6 +77,7 @@ jest.mock('~/libs/ui', () => ({
     InputText: (props: {
         label: string
         name: string
+        onBlur?: () => void
         onChange: (event: ChangeEvent<HTMLInputElement>) => void
         placeholder?: string
         readonly?: boolean
@@ -86,10 +90,12 @@ jest.mock('~/libs/ui', () => ({
                 placeholder={props.placeholder}
                 readOnly={props.readonly}
                 value={props.value}
+                onBlur={props.onBlur}
                 onChange={props.onChange}
             />
         </label>
     ),
+    Tooltip: (props: { children: JSX.Element }): JSX.Element => props.children,
 }), { virtual: true })
 
 jest.mock('../../services/engagement-leads.service', () => ({
@@ -224,7 +230,7 @@ describe('FlexiTalentCalculatorModal', () => {
         await user.type(screen.getByLabelText('Member Name'), 'Jane Doe')
         await user.type(screen.getByLabelText('Member Rate / Hour (USD)'), '50')
         await user.type(screen.getByLabelText('Booking Cost (USD)'), '220000')
-        await user.click(screen.getByRole('button', { name: 'Copy Cost Proposal' }))
+        await user.click(screen.getByRole('button', { name: 'Copy cost proposal' }))
 
         await waitFor(() => {
             expect(copyTextToClipboard)
@@ -265,18 +271,35 @@ describe('FlexiTalentCalculatorModal', () => {
             .toHaveValue('EURP')
     })
 
-    it('saves a new calculation, then overwrites it on the next save', async () => {
+    it('only has a Close button in the footer', async () => {
+        await renderCalculator()
+
+        expect(screen.queryByRole('button', { name: 'Save' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Copy Cost Proposal' }))
+            .not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Close' }))
+            .toBeInTheDocument()
+    })
+
+    it('does not save a calculation that was not edited', async () => {
+        await renderCalculator()
+
+        await new Promise(resolve => { setTimeout(resolve, AUTOSAVE_DELAY_MS + 100) })
+
+        expect(createEngagementLeadCalculation)
+            .not.toHaveBeenCalled()
+    })
+
+    it('autosaves once typing stops, creating the calculation only once', async () => {
         const user = userEvent.setup()
         await renderCalculator()
 
-        const saveButton = screen.getByRole('button', { name: 'Save' })
-        expect(saveButton)
-            .toBeDisabled()
-
-        await user.type(screen.getByLabelText('Member Name'), 'Jane Doe')
-        await user.type(screen.getByLabelText('Member Rate / Hour (USD)'), '50')
+        // Typing in one field, without leaving it, saves only after the autosave delay.
         await user.type(screen.getByLabelText('Booking Cost (USD)'), '220,000')
-        await user.click(saveButton)
+
+        expect(createEngagementLeadCalculation)
+            .not.toHaveBeenCalled()
 
         await waitFor(() => {
             expect(createEngagementLeadCalculation)
@@ -286,19 +309,20 @@ describe('FlexiTalentCalculatorModal', () => {
                     commercialInputValue: 220000,
                     durationWeeks: 52,
                     hoursPerDay: 8,
-                    memberInputField: LeadCalculationMemberInput.MEMBER_RATE,
-                    memberInputValue: 50,
-                    memberName: 'Jane Doe',
+                    memberInputField: undefined,
+                    memberInputValue: undefined,
+                    memberName: undefined,
                     referral: false,
                     smu: 'EURP',
                 })
         })
+        expect(await screen.findByText('All changes saved'))
+            .toBeInTheDocument()
         // The typed value stays as entered after saving.
         expect(screen.getByLabelText('Booking Cost (USD)'))
             .toHaveValue('220,000')
 
         await user.selectOptions(screen.getByLabelText('Referral'), 'yes')
-        await user.click(screen.getByRole('button', { name: 'Save' }))
 
         await waitFor(() => {
             expect(updateEngagementLeadCalculation)
@@ -306,6 +330,76 @@ describe('FlexiTalentCalculatorModal', () => {
         })
         expect(createEngagementLeadCalculation)
             .toHaveBeenCalledTimes(1)
+    })
+
+    it('saves straight away when a field loses focus', async () => {
+        jest.mocked(fetchEngagementLeadCalculations)
+            .mockResolvedValue([savedCalculation])
+        const user = userEvent.setup()
+        await renderCalculator()
+
+        await user.type(screen.getByLabelText('Hours per Day'), '{Backspace}6')
+        await user.tab()
+
+        expect(updateEngagementLeadCalculation)
+            .toHaveBeenCalledWith('lead-1', 'calc-1', expect.objectContaining({ hoursPerDay: 6 }))
+
+        // Nothing is left for the autosave timer to save.
+        await new Promise(resolve => { setTimeout(resolve, AUTOSAVE_DELAY_MS + 100) })
+        expect(updateEngagementLeadCalculation)
+            .toHaveBeenCalledTimes(1)
+    })
+
+    it('saves edits made while a save is running once it finishes', async () => {
+        let finishCreate: (value: EngagementLeadCalculation) => void = () => undefined
+        jest.mocked(createEngagementLeadCalculation)
+            .mockReturnValue(new Promise(resolve => { finishCreate = resolve }))
+        const user = userEvent.setup()
+        await renderCalculator()
+
+        await user.type(screen.getByLabelText('Member Name'), 'Jane')
+        await user.tab()
+        expect(createEngagementLeadCalculation)
+            .toHaveBeenCalledTimes(1)
+
+        await user.type(screen.getByLabelText('Member Name'), ' Doe')
+        await user.tab()
+        expect(updateEngagementLeadCalculation)
+            .not.toHaveBeenCalled()
+
+        finishCreate({ ...savedCalculation, id: 'calc-new' })
+
+        await waitFor(() => {
+            expect(updateEngagementLeadCalculation)
+                .toHaveBeenCalledWith('lead-1', 'calc-new', expect.objectContaining({ memberName: 'Jane Doe' }))
+        })
+        expect(createEngagementLeadCalculation)
+            .toHaveBeenCalledTimes(1)
+    })
+
+    it('shows when a calculation could not be saved', async () => {
+        jest.mocked(createEngagementLeadCalculation)
+            .mockRejectedValue(new Error('boom'))
+        const user = userEvent.setup()
+        await renderCalculator()
+
+        await user.type(screen.getByLabelText('Member Name'), 'Jane')
+        await user.tab()
+
+        expect(await screen.findByText('Not saved. It will be retried on your next change.'))
+            .toBeInTheDocument()
+    })
+
+    it('saves pending edits when the calculator is closed', async () => {
+        const user = userEvent.setup()
+        const view = render(<FlexiTalentCalculatorModal lead={lead} onClose={jest.fn()} />)
+        await screen.findByLabelText('Member Name')
+
+        await user.type(screen.getByLabelText('Member Name'), 'Jane')
+        view.unmount()
+
+        expect(createEngagementLeadCalculation)
+            .toHaveBeenCalledWith('lead-1', expect.objectContaining({ memberName: 'Jane' }))
     })
 
     it('adds a second calculation for the lead', async () => {
@@ -330,9 +424,11 @@ describe('FlexiTalentCalculatorModal', () => {
         const user = userEvent.setup()
         await renderCalculator()
 
-        await user.click(screen.getByRole('button', { name: 'Delete' }))
+        await user.click(screen.getByRole('button', { name: 'Delete Calculation' }))
         expect(deleteEngagementLeadCalculation)
             .not.toHaveBeenCalled()
+        expect(screen.getByText('Delete this calculation?'))
+            .toBeInTheDocument()
 
         await user.click(screen.getByRole('button', { name: 'Delete' }))
 
@@ -354,7 +450,7 @@ describe('FlexiTalentCalculatorModal', () => {
 
         expect(await screen.findByRole('alert'))
             .toHaveTextContent('Unable to load the saved cost calculations.')
-        expect(screen.queryByRole('button', { name: 'Save' }))
+        expect(screen.queryByRole('button', { name: 'Delete Calculation' }))
             .not.toBeInTheDocument()
     })
 })

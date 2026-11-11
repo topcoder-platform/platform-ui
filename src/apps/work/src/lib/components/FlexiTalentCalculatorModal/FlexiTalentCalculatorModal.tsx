@@ -5,6 +5,7 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import classNames from 'classnames'
@@ -13,9 +14,11 @@ import { copyTextToClipboard } from '~/libs/shared'
 import {
     BaseModal,
     Button,
+    IconOutline,
     InputSelect,
     InputSelectOption,
     InputText,
+    Tooltip,
 } from '~/libs/ui'
 
 import { EngagementLead } from '../../models/EngagementLead.model'
@@ -50,13 +53,25 @@ import {
     getDraftCalculatorInputs,
     getDraftLabel,
     getDraftSavePayload,
+    hasUnsavedChanges,
 } from '../../utils/flexi-talent-calculator-drafts.utils'
 import { ErrorMessage } from '../ErrorMessage'
 import { LoadingSpinner } from '../LoadingSpinner'
 
 import styles from './FlexiTalentCalculatorModal.module.scss'
 
+/** How long after the last edit a calculation is saved. */
+export const AUTOSAVE_DELAY_MS = 500
+
 const noop = (): void => undefined
+
+type SaveStatus = 'error' | 'saved' | 'saving'
+
+const SAVE_STATUS_LABELS: Record<SaveStatus, string> = {
+    error: 'Not saved. It will be retried on your next change.',
+    saved: 'All changes saved',
+    saving: 'Saving…',
+}
 
 interface AmountFieldDefinition<TField extends string> {
     field: TField
@@ -106,8 +121,8 @@ export interface FlexiTalentCalculatorModalProps {
 
 /**
  * Works out member cost, TC margin, cost transfer and booking cost for a lead, and builds a cost
- * proposal to share with the customer. A lead can have several saved calculations (e.g. one per
- * resource); saving one overwrites its previous values.
+ * proposal to share with the customer. A lead can have several calculations (e.g. one per
+ * resource). They save themselves as they are edited, overwriting the previous values.
  */
 export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
     props: FlexiTalentCalculatorModalProps,
@@ -118,10 +133,22 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
     const [activeKey, setActiveKey] = useState<string | undefined>(undefined)
     const [loading, setLoading] = useState<boolean>(true)
     const [loadError, setLoadError] = useState<string | undefined>(undefined)
-    const [saving, setSaving] = useState<boolean>(false)
+    const [saveStatuses, setSaveStatuses] = useState<Record<string, SaveStatus>>({})
     const [confirmingDelete, setConfirmingDelete] = useState<boolean>(false)
+    const [deleting, setDeleting] = useState<boolean>(false)
     // Not saved: the role always comes from the lead.
     const [roleTitle, setRoleTitle] = useState<string>(lead.roleTitle || '')
+
+    // Autosave runs outside React's render cycle, so it reads the latest state from refs.
+    const draftsRef = useRef<CalculatorDraft[]>([])
+    const savedIdsRef = useRef<Map<string, string>>(new Map())
+    const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+    const inFlightRef = useRef<Map<string, Promise<void>>>(new Map())
+    const resaveRef = useRef<Set<string>>(new Set())
+
+    useEffect(() => {
+        draftsRef.current = drafts
+    }, [drafts])
 
     const loadCalculations = useCallback(async (): Promise<void> => {
         setLoading(true)
@@ -133,6 +160,10 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                 ? calculations.map(createDraftFromCalculation)
                 : [createDraftFromLead(lead)]
 
+            calculations.forEach(calculation => {
+                savedIdsRef.current.set(calculation.id, calculation.id)
+            })
+            draftsRef.current = loaded
             setDrafts(loaded)
             setActiveKey(loaded[0].key)
         } catch (err: unknown) {
@@ -146,6 +177,92 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
         loadCalculations()
             .catch(() => undefined)
     }, [loadCalculations])
+
+    const clearAutosaveTimer = useCallback((key: string): void => {
+        const timer = timersRef.current.get(key)
+
+        if (timer) {
+            clearTimeout(timer)
+            timersRef.current.delete(key)
+        }
+    }, [])
+
+    /**
+     * Saves a draft if it has unsaved edits. Only one save per draft runs at a time; edits made
+     * meanwhile are saved once it finishes, so a new calculation is never created twice.
+     */
+    const saveDraft = useCallback(async function save(key: string): Promise<void> {
+        clearAutosaveTimer(key)
+
+        const running = inFlightRef.current.get(key)
+        if (running) {
+            resaveRef.current.add(key)
+            return running
+        }
+
+        const draft = draftsRef.current.find(item => item.key === key)
+        if (!draft || !hasUnsavedChanges(draft)) {
+            return undefined
+        }
+
+        const revision = draft.revision
+        const savedId = savedIdsRef.current.get(key)
+
+        setSaveStatuses(current => ({ ...current, [key]: 'saving' }))
+
+        const request = (async (): Promise<void> => {
+            try {
+                const payload = getDraftSavePayload(draft)
+                const saved = savedId
+                    ? await updateEngagementLeadCalculation(lead.id, savedId, payload)
+                    : await createEngagementLeadCalculation(lead.id, payload)
+
+                savedIdsRef.current.set(key, saved.id)
+                // What the user typed stays on screen; only record what is saved.
+                setDrafts(current => current.map(item => (
+                    item.key === key
+                        ? { ...item, id: saved.id, savedRevision: Math.max(item.savedRevision, revision) }
+                        : item
+                )))
+                setSaveStatuses(current => ({ ...current, [key]: 'saved' }))
+            } catch (err: unknown) {
+                setSaveStatuses(current => ({ ...current, [key]: 'error' }))
+                showErrorToast(extractErrorMessage(err, 'Unable to save the cost calculation.'))
+            }
+        })()
+
+        inFlightRef.current.set(key, request)
+
+        try {
+            await request
+        } finally {
+            inFlightRef.current.delete(key)
+        }
+
+        if (resaveRef.current.delete(key)) {
+            await save(key)
+        }
+
+        return undefined
+    }, [clearAutosaveTimer, lead.id])
+
+    const scheduleSave = useCallback((key: string): void => {
+        clearAutosaveTimer(key)
+        timersRef.current.set(key, setTimeout(() => {
+            timersRef.current.delete(key)
+            saveDraft(key)
+                .catch(() => undefined)
+        }, AUTOSAVE_DELAY_MS))
+    }, [clearAutosaveTimer, saveDraft])
+
+    // Closing the calculator saves whatever is still waiting for the autosave delay.
+    useEffect(() => () => {
+        Array.from(timersRef.current.keys())
+            .forEach(key => {
+                saveDraft(key)
+                    .catch(() => undefined)
+            })
+    }, [saveDraft])
 
     const activeDraft = drafts.find(draft => draft.key === activeKey)
 
@@ -165,10 +282,26 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
     }), [activeDraft, result, roleTitle])
 
     const updateActiveDraft = useCallback((patch: Partial<CalculatorDraft>): void => {
-        setDrafts(current => current.map(draft => (
-            draft.key === activeKey ? { ...draft, ...patch, dirty: true } : draft
-        )))
-    }, [activeKey])
+        if (!activeKey) {
+            return
+        }
+
+        const nextDrafts = draftsRef.current.map(draft => (
+            draft.key === activeKey ? { ...draft, ...patch, revision: draft.revision + 1 } : draft
+        ))
+
+        // Updated straight away so a save triggered before the next render sees this edit.
+        draftsRef.current = nextDrafts
+        setDrafts(nextDrafts)
+        scheduleSave(activeKey)
+    }, [activeKey, scheduleSave])
+
+    const handleFieldBlur = useCallback((): void => {
+        if (activeKey && timersRef.current.has(activeKey)) {
+            saveDraft(activeKey)
+                .catch(() => undefined)
+        }
+    }, [activeKey, saveDraft])
 
     const handleMemberNameChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
         updateActiveDraft({ memberName: event.target.value })
@@ -217,78 +350,70 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
     }, [updateActiveDraft])
 
     const handleSelectDraft = useCallback((event: MouseEvent<HTMLButtonElement>): void => {
+        // Leaving a calculation saves it without waiting for the autosave delay.
+        if (activeKey) {
+            saveDraft(activeKey)
+                .catch(() => undefined)
+        }
+
         setActiveKey(event.currentTarget.dataset.key)
         setConfirmingDelete(false)
-    }, [])
+    }, [activeKey, saveDraft])
 
     const handleAddCalculation = useCallback((): void => {
+        if (activeKey) {
+            saveDraft(activeKey)
+                .catch(() => undefined)
+        }
+
         const draft = createDraftFromLead(lead)
 
-        setDrafts(current => [...current, draft])
+        draftsRef.current = [...draftsRef.current, draft]
+        setDrafts(draftsRef.current)
         setActiveKey(draft.key)
         setConfirmingDelete(false)
-    }, [lead])
-
-    const handleSave = useCallback(async (): Promise<void> => {
-        if (!activeDraft) {
-            return
-        }
-
-        setSaving(true)
-
-        try {
-            const payload = getDraftSavePayload(activeDraft)
-            const saved = activeDraft.id
-                ? await updateEngagementLeadCalculation(lead.id, activeDraft.id, payload)
-                : await createEngagementLeadCalculation(lead.id, payload)
-
-            // Keep what the user typed on screen; only record that it is now saved.
-            setDrafts(current => current.map(draft => (
-                draft.key === activeDraft.key ? { ...draft, dirty: false, id: saved.id } : draft
-            )))
-            showSuccessToast('Cost calculation saved.')
-        } catch (err: unknown) {
-            showErrorToast(extractErrorMessage(err, 'Unable to save the cost calculation.'))
-        } finally {
-            setSaving(false)
-        }
-    }, [activeDraft, lead.id])
+    }, [activeKey, lead, saveDraft])
 
     const handleDelete = useCallback(async (): Promise<void> => {
         if (!activeDraft) {
             return
         }
 
-        setSaving(true)
+        const key = activeDraft.key
+
+        clearAutosaveTimer(key)
+        resaveRef.current.delete(key)
+        setDeleting(true)
 
         try {
-            if (activeDraft.id) {
-                await deleteEngagementLeadCalculation(lead.id, activeDraft.id)
+            // A calculation still being created has to exist before it can be deleted.
+            await inFlightRef.current.get(key)
+
+            const savedId = savedIdsRef.current.get(key)
+            if (savedId) {
+                await deleteEngagementLeadCalculation(lead.id, savedId)
+                savedIdsRef.current.delete(key)
             }
 
-            const index = drafts.findIndex(draft => draft.key === activeDraft.key)
-            const remaining = drafts.filter(draft => draft.key !== activeDraft.key)
+            const index = draftsRef.current.findIndex(draft => draft.key === key)
+            const remaining = draftsRef.current.filter(draft => draft.key !== key)
             // There is always a calculation to work on, so deleting the last one starts a new one.
             const nextDrafts = remaining.length ? remaining : [createDraftFromLead(lead)]
 
+            draftsRef.current = nextDrafts
             setDrafts(nextDrafts)
             setActiveKey(nextDrafts[Math.min(index, nextDrafts.length - 1)].key)
             setConfirmingDelete(false)
 
-            if (activeDraft.id) {
+            if (savedId) {
                 showSuccessToast('Cost calculation deleted.')
             }
         } catch (err: unknown) {
             showErrorToast(extractErrorMessage(err, 'Unable to delete the cost calculation.'))
         } finally {
-            setSaving(false)
+            setDeleting(false)
         }
-    }, [activeDraft, drafts, lead])
-
-    const handleSaveClick = useCallback((): void => {
-        handleSave()
-            .catch(() => undefined)
-    }, [handleSave])
+    }, [activeDraft, clearAutosaveTimer, lead])
 
     const handleDeleteClick = useCallback((): void => {
         setConfirmingDelete(true)
@@ -315,65 +440,60 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
     }, [loadCalculations])
 
     const selectedSmu = getSmuOption(activeDraft?.smuCode)
+    const activeSaveStatus = activeKey ? saveStatuses[activeKey] : undefined
 
-    function renderButtons(): JSX.Element {
-        if (confirmingDelete) {
-            return (
-                <>
-                    <span className={styles.confirmText}>Delete this calculation?</span>
-                    <Button
-                        disabled={saving}
-                        label='Cancel'
-                        onClick={handleDeleteCancel}
-                        secondary
-                    />
-                    <Button
-                        disabled={saving}
-                        label='Delete'
-                        onClick={handleDeleteConfirm}
-                        primary
-                        variant='danger'
-                    />
-                </>
-            )
-        }
-
+    function renderCalculationActions(): JSX.Element {
         return (
-            <>
-                <Button
-                    label='Close'
-                    onClick={props.onClose}
-                    secondary
-                />
-                {activeDraft && (
-                    <>
+            <div className={styles.calculationActions}>
+                <span
+                    aria-live='polite'
+                    className={classNames(
+                        styles.saveStatus,
+                        activeSaveStatus === 'error' && styles.saveStatusError,
+                    )}
+                >
+                    {activeSaveStatus ? SAVE_STATUS_LABELS[activeSaveStatus] : ''}
+                </span>
+                {confirmingDelete
+                    ? (
+                        <div className={styles.deleteConfirm}>
+                            <span>Delete this calculation?</span>
+                            <Button
+                                disabled={deleting}
+                                label='Cancel'
+                                onClick={handleDeleteCancel}
+                                secondary
+                                size='sm'
+                            />
+                            <Button
+                                disabled={deleting}
+                                label='Delete'
+                                onClick={handleDeleteConfirm}
+                                primary
+                                size='sm'
+                                variant='danger'
+                            />
+                        </div>
+                    )
+                    : (
                         <Button
-                            disabled={saving}
-                            label='Delete'
+                            disabled={deleting}
+                            label='Delete Calculation'
                             onClick={handleDeleteClick}
                             secondary
+                            size='sm'
                             variant='danger'
                         />
-                        <Button
-                            disabled={saving || !activeDraft.dirty}
-                            label='Save'
-                            onClick={handleSaveClick}
-                            secondary
-                        />
-                        <Button
-                            label='Copy Cost Proposal'
-                            onClick={handleCopyProposal}
-                            primary
-                        />
-                    </>
-                )}
-            </>
+                    )}
+            </div>
         )
     }
 
     function renderCalculator(draft: CalculatorDraft): JSX.Element {
         return (
             <>
+                {renderCalculationActions()}
+
                 <section className={styles.section}>
                     <h4 className={styles.sectionTitle}>Engagement</h4>
                     <div className={styles.grid}>
@@ -381,6 +501,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                             forceUpdateValue
                             label='Member Name'
                             name='memberName'
+                            onBlur={handleFieldBlur}
                             onChange={handleMemberNameChange}
                             placeholder='Enter member name'
                             tabIndex={0}
@@ -391,6 +512,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                             forceUpdateValue
                             label='Account Name'
                             name='accountName'
+                            onBlur={handleFieldBlur}
                             onChange={handleAccountNameChange}
                             tabIndex={0}
                             type='text'
@@ -420,6 +542,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                             forceUpdateValue
                             label='Duration (Weeks)'
                             name='durationWeeks'
+                            onBlur={handleFieldBlur}
                             onChange={handleDurationChange}
                             placeholder={lead.engagementDuration || undefined}
                             tabIndex={0}
@@ -430,6 +553,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                             forceUpdateValue
                             label='Hours per Day'
                             name='hoursPerDay'
+                            onBlur={handleFieldBlur}
                             onChange={handleHoursPerDayChange}
                             tabIndex={0}
                             type='text'
@@ -467,6 +591,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                                 key={definition.field}
                                 label={definition.label}
                                 name={definition.field}
+                                onBlur={handleFieldBlur}
                                 onChange={handleMemberFieldChange}
                                 tabIndex={0}
                                 type='text'
@@ -488,6 +613,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                                 key={definition.field}
                                 label={definition.label}
                                 name={definition.field}
+                                onBlur={handleFieldBlur}
                                 onChange={handleCommercialFieldChange}
                                 tabIndex={0}
                                 type='text'
@@ -539,7 +665,19 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                 </section>
 
                 <section className={styles.section}>
-                    <h4 className={styles.sectionTitle}>Cost Proposal</h4>
+                    <div className={styles.sectionHeader}>
+                        <h4 className={styles.sectionTitle}>Cost Proposal</h4>
+                        <Tooltip content='Copy to clipboard' triggerOn='click-hover'>
+                            <button
+                                aria-label='Copy cost proposal'
+                                className={styles.copyButton}
+                                onClick={handleCopyProposal}
+                                type='button'
+                            >
+                                <IconOutline.ClipboardCopyIcon aria-hidden className={styles.copyIcon} />
+                            </button>
+                        </Tooltip>
+                    </div>
                     <pre className={styles.proposal} data-testid='cost-proposal'>{proposal}</pre>
                 </section>
             </>
@@ -552,7 +690,13 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
             onClose={props.onClose}
             size='body'
             title='Flexi Talent Cost Calculator'
-            buttons={renderButtons()}
+            buttons={(
+                <Button
+                    label='Close'
+                    onClick={props.onClose}
+                    secondary
+                />
+            )}
         >
             <div className={styles.content}>
                 <p className={styles.subtitle}>
@@ -578,9 +722,6 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                                 type='button'
                             >
                                 {getDraftLabel(draft, index)}
-                                {(draft.dirty || !draft.id) && (
-                                    <span className={styles.unsaved} title='Not saved'>*</span>
-                                )}
                             </button>
                         ))}
                         <button
