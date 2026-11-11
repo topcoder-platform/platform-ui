@@ -145,6 +145,21 @@ describe('calculateFlexiTalentCosts', () => {
             .toBe(27500)
     })
 
+    it('calculates the booking cost from Booking Rate / Hour before an SMU is chosen', () => {
+        const result = calculateFlexiTalentCosts({
+            ...baseInputs,
+            commercialInput: { field: 'bookingRate', value: 100 },
+            smuCode: '',
+        })
+
+        expect(result.bookingCost)
+            .toBe(40000)
+        expect(result.bookingRate)
+            .toBe(100)
+        expect(result.actualCost)
+            .toBeUndefined()
+    })
+
     it('leaves the booking cost empty until an SMU is chosen', () => {
         const result = calculateFlexiTalentCosts({
             ...baseInputs,
@@ -231,7 +246,7 @@ describe('buildCostProposal', () => {
                 'Total Booking Cost: USD 220,000',
                 'Wipro Cost Benefit: USD 58,740 (26.70% for EURP SMU)',
                 'Total Cost Transfer: USD 161,260',
-            ].join('\n'))
+            ].join('\n\n'))
     })
 
     it('uses placeholders for missing details', () => {

@@ -235,9 +235,12 @@ export function calculateFlexiTalentCosts(
         totalBillingHours,
         costTransferRate,
     )
+    // An entered booking cost or rate gives the booking cost directly, even before an SMU is chosen.
     const bookingCost = inputs.commercialInput?.field === 'bookingCost'
         ? inputs.commercialInput.value
-        : divide(actualCost, costTransferRate)
+        : inputs.commercialInput?.field === 'bookingRate'
+            ? multiply(inputs.commercialInput.value, totalBillingHours)
+            : divide(actualCost, costTransferRate)
     const tcMarginAmount = isFiniteNumber(actualCost) && isFiniteNumber(totalMemberCost)
         ? actualCost - totalMemberCost
         : undefined
@@ -329,5 +332,6 @@ export function buildCostProposal(details: CostProposalDetails): string {
         `Wipro Cost Benefit: USD ${formatCalculatorAmount(details.result.wiproCostBenefit)}`
             + ` (${benefitPercent}% for ${smuCode} SMU)`,
         `Total Cost Transfer: USD ${formatCalculatorAmount(details.result.actualCost)}`,
-    ].join('\n')
+    // A blank line between lines, as in the agreed proposal format.
+    ].join('\n\n')
 }
