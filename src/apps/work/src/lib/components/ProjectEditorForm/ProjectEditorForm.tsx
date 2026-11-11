@@ -15,8 +15,8 @@ import {
     DEFAULT_NDA_UUID,
     PROJECT_STATUS,
     PROJECT_STATUSES,
-} from '../../../../../lib/constants'
-import { normalizeSmuValue } from '../../../../../lib/constants/showcase.constants'
+} from '../../constants'
+import { normalizeSmuValue } from '../../constants/showcase.constants'
 import {
     FormBillingAccountAutocomplete,
     FormCheckboxField,
@@ -26,39 +26,51 @@ import {
     FormSelectOption,
     FormTextAreaField,
     FormTextField,
-} from '../../../../../lib/components/form'
+} from '../form'
 import {
     useFetchProjectBillingAccount,
     UseFetchProjectBillingAccountResult,
-} from '../../../../../lib/hooks'
+} from '../../hooks'
 import {
     CreateProjectPayload,
     Project,
     ProjectStatusValue,
     ProjectType,
     UpdateProjectPayload,
-} from '../../../../../lib/models'
+} from '../../models'
 import {
     createProjectEditorSchema,
-} from '../../../../../lib/schemas/project-editor.schema'
+} from '../../schemas/project-editor.schema'
 import {
     BillingAccount,
     createProject,
     ProjectBillingAccount,
     updateProject,
-} from '../../../../../lib/services'
+} from '../../services'
 import {
     formatDate,
     showErrorToast,
     showSuccessToast,
-} from '../../../../../lib/utils'
-import { ProjectMetadataFields } from '../../../../../lib/components/form/ProjectMetadataFields'
+} from '../../utils'
+import { ProjectMetadataFields } from '../form/ProjectMetadataFields'
 
 import styles from './ProjectEditorForm.module.scss'
+
+/**
+ * Shows the form inside another flow, such as creating an engagement from a lead, instead of on its own page.
+ * The Enforce Topcoder NDA, Intended Work Groups and Display member payment details fields are hidden and
+ * saved with their defaults (No, none, checked), and saving stays disabled until every required field is valid.
+ */
+export interface ProjectEditorFormEmbedding {
+    onCancel: () => void
+    /** Called with the created project instead of opening it. */
+    onCreated: (project: Project) => void
+}
 
 interface ProjectEditorFormProps {
     billingAccountSearchUserId?: number | string
     canManage: boolean
+    embedded?: ProjectEditorFormEmbedding
     isEdit: boolean
     onSuccess?: (project: Project) => void
     projectDetail?: Project
@@ -298,6 +310,8 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
     })
 
     const formState = formMethods.formState
+    // Read on every render: react-hook-form only keeps `isValid` up to date once it has been read.
+    const isFormValid = formState.isValid
     const handleSubmit = formMethods.handleSubmit
     const reset = formMethods.reset
     const watch = formMethods.watch
@@ -410,7 +424,11 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                     showSuccessToast('Project created successfully')
                     props.onSuccess?.(createdProject)
 
-                    navigate(`/projects/${createdProject.id}/challenges`)
+                    if (props.embedded) {
+                        props.embedded.onCreated(createdProject)
+                    } else {
+                        navigate(`/projects/${createdProject.id}/challenges`)
+                    }
 
                     return
                 }
@@ -576,42 +594,55 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                         <ProjectMetadataFields showSalesforceOpportunity />
                     </div>
 
-                    <div className={styles.grid}>
-                        <FormRadioGroup
-                            label='Enforce Topcoder NDA'
-                            name='terms'
-                            options={[
-                                {
-                                    label: 'Yes',
-                                    value: DEFAULT_NDA_UUID,
-                                },
-                                {
-                                    label: 'No',
-                                    value: '',
-                                },
-                            ]}
-                        />
+                    {!props.embedded && (
+                        <div className={styles.grid}>
+                            <FormRadioGroup
+                                label='Enforce Topcoder NDA'
+                                name='terms'
+                                options={[
+                                    {
+                                        label: 'Yes',
+                                        value: DEFAULT_NDA_UUID,
+                                    },
+                                    {
+                                        label: 'No',
+                                        value: '',
+                                    },
+                                ]}
+                            />
 
-                        <FormGroupsSelect
-                            label='Intended Work Groups'
-                            name='groups'
-                        />
+                            <FormGroupsSelect
+                                label='Intended Work Groups'
+                                name='groups'
+                            />
 
-                        <FormCheckboxField
-                            label='Display member payment details to copilots'
-                            name='displayMemberPaymentDetailsToCopilots'
-                        />
-                    </div>
+                            <FormCheckboxField
+                                label='Display member payment details to copilots'
+                                name='displayMemberPaymentDetailsToCopilots'
+                            />
+                        </div>
+                    )}
                 </section>
 
                 <div className={styles.footer}>
                     <div className={styles.actions}>
-                        <Link className={styles.cancelLink} to={cancelPath}>
-                            Cancel
-                        </Link>
+                        {props.embedded
+                            ? (
+                                <Button
+                                    label='Cancel'
+                                    onClick={props.embedded.onCancel}
+                                    secondary
+                                    size='lg'
+                                />
+                            )
+                            : (
+                                <Link className={styles.cancelLink} to={cancelPath}>
+                                    Cancel
+                                </Link>
+                            )}
 
                         <Button
-                            disabled={!formState.isDirty || isSaving}
+                            disabled={!formState.isDirty || isSaving || (!!props.embedded && !isFormValid)}
                             label={isSaving ? 'Saving...' : 'Save project'}
                             primary
                             size='lg'
