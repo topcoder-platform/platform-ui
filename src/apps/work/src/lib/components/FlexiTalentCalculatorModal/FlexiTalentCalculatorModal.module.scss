@@ -88,3 +88,51 @@
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
+
+.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px solid $black-10;
+    padding-bottom: 8px;
+}
+
+.tab,
+.addTab {
+    appearance: none;
+    border: 1px solid $black-20;
+    border-radius: 999px;
+    padding: 6px 14px;
+    background: $tc-white;
+    color: $black-80;
+    cursor: pointer;
+    font: inherit;
+    font-size: 14px;
+
+    &:hover {
+        border-color: $turq-160;
+    }
+}
+
+.activeTab {
+    border-color: $turq-160;
+    background: $turq-160;
+    color: $tc-white;
+}
+
+.addTab {
+    border-style: dashed;
+    color: $turq-160;
+}
+
+.unsaved {
+    margin-left: 2px;
+    font-weight: 700;
+}
+
+.confirmText {
+    align-self: center;
+    margin-right: auto;
+    color: $black-80;
+    font-size: 14px;
+}

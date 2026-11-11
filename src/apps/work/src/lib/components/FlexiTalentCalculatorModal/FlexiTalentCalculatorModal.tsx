@@ -1,7 +1,9 @@
 import {
     ChangeEvent,
     FC,
+    MouseEvent,
     useCallback,
+    useEffect,
     useMemo,
     useState,
 } from 'react'
@@ -18,6 +20,12 @@ import {
 
 import { EngagementLead } from '../../models/EngagementLead.model'
 import {
+    createEngagementLeadCalculation,
+    deleteEngagementLeadCalculation,
+    fetchEngagementLeadCalculations,
+    updateEngagementLeadCalculation,
+} from '../../services/engagement-leads.service'
+import {
     extractErrorMessage,
     showErrorToast,
     showSuccessToast,
@@ -33,19 +41,22 @@ import {
     getSmuOption,
     MemberInputField,
     parseCalculatorNumber,
-    parseDurationToWeeks,
 } from '../../utils/flexi-talent-calculator.utils'
+import {
+    CalculatorDraft,
+    createDraftFromCalculation,
+    createDraftFromLead,
+    DraftInput,
+    getDraftCalculatorInputs,
+    getDraftLabel,
+    getDraftSavePayload,
+} from '../../utils/flexi-talent-calculator-drafts.utils'
+import { ErrorMessage } from '../ErrorMessage'
+import { LoadingSpinner } from '../LoadingSpinner'
 
 import styles from './FlexiTalentCalculatorModal.module.scss'
 
-const DEFAULT_HOURS_PER_DAY = 8
-
 const noop = (): void => undefined
-
-interface DraftInput<TField extends string> {
-    field: TField
-    raw: string
-}
 
 interface AmountFieldDefinition<TField extends string> {
     field: TField
@@ -95,98 +106,202 @@ export interface FlexiTalentCalculatorModalProps {
 
 /**
  * Works out member cost, TC margin, cost transfer and booking cost for a lead, and builds a cost
- * proposal to share with the customer. Nothing is saved.
+ * proposal to share with the customer. A lead can have several saved calculations (e.g. one per
+ * resource); saving one overwrites its previous values.
  */
 export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
     props: FlexiTalentCalculatorModalProps,
 ) => {
     const lead = props.lead
 
-    const [memberName, setMemberName] = useState<string>('')
-    const [accountName, setAccountName] = useState<string>(lead.accountName || '')
+    const [drafts, setDrafts] = useState<CalculatorDraft[]>([])
+    const [activeKey, setActiveKey] = useState<string | undefined>(undefined)
+    const [loading, setLoading] = useState<boolean>(true)
+    const [loadError, setLoadError] = useState<string | undefined>(undefined)
+    const [saving, setSaving] = useState<boolean>(false)
+    const [confirmingDelete, setConfirmingDelete] = useState<boolean>(false)
+    // Not saved: the role always comes from the lead.
     const [roleTitle, setRoleTitle] = useState<string>(lead.roleTitle || '')
-    const [smuCode, setSmuCode] = useState<string>(getSmuOption(lead.smu)?.code || '')
-    const [hoursPerDayRaw, setHoursPerDayRaw] = useState<string>(
-        String(lead.workingHoursPerDay || DEFAULT_HOURS_PER_DAY),
-    )
-    const [durationWeeksRaw, setDurationWeeksRaw] = useState<string>(
-        String(parseDurationToWeeks(lead.engagementDuration) ?? ''),
-    )
-    const [referral, setReferral] = useState<boolean>(false)
-    const [memberDraft, setMemberDraft] = useState<DraftInput<MemberInputField> | undefined>(undefined)
-    const [commercialDraft, setCommercialDraft] = useState<DraftInput<CommercialInputField> | undefined>(
-        undefined,
-    )
 
-    const hoursPerDay = parseCalculatorNumber(hoursPerDayRaw)
-    const durationWeeks = parseCalculatorNumber(durationWeeksRaw)
+    const loadCalculations = useCallback(async (): Promise<void> => {
+        setLoading(true)
+        setLoadError(undefined)
 
-    const result = useMemo(() => calculateFlexiTalentCosts({
-        commercialInput: commercialDraft && {
-            field: commercialDraft.field,
-            value: parseCalculatorNumber(commercialDraft.raw),
-        },
-        durationWeeks,
-        hoursPerDay,
-        memberInput: memberDraft && {
-            field: memberDraft.field,
-            value: parseCalculatorNumber(memberDraft.raw),
-        },
-        referral,
-        smuCode,
-    }), [commercialDraft, durationWeeks, hoursPerDay, memberDraft, referral, smuCode])
+        try {
+            const calculations = await fetchEngagementLeadCalculations(lead.id)
+            const loaded = calculations.length
+                ? calculations.map(createDraftFromCalculation)
+                : [createDraftFromLead(lead)]
+
+            setDrafts(loaded)
+            setActiveKey(loaded[0].key)
+        } catch (err: unknown) {
+            setLoadError(extractErrorMessage(err, 'Unable to load the saved cost calculations.'))
+        } finally {
+            setLoading(false)
+        }
+    }, [lead])
+
+    useEffect(() => {
+        loadCalculations()
+            .catch(() => undefined)
+    }, [loadCalculations])
+
+    const activeDraft = drafts.find(draft => draft.key === activeKey)
+
+    const result = useMemo(
+        () => calculateFlexiTalentCosts(activeDraft ? getDraftCalculatorInputs(activeDraft) : { referral: false }),
+        [activeDraft],
+    )
 
     const proposal = useMemo(() => buildCostProposal({
-        accountName,
-        durationWeeks,
-        hoursPerDay,
-        memberName,
+        accountName: activeDraft?.accountName,
+        durationWeeks: parseCalculatorNumber(activeDraft?.durationWeeksRaw),
+        hoursPerDay: parseCalculatorNumber(activeDraft?.hoursPerDayRaw),
+        memberName: activeDraft?.memberName,
         result,
         roleTitle,
-        smuCode,
-    }), [accountName, durationWeeks, hoursPerDay, memberName, result, roleTitle, smuCode])
+        smuCode: activeDraft?.smuCode,
+    }), [activeDraft, result, roleTitle])
+
+    const updateActiveDraft = useCallback((patch: Partial<CalculatorDraft>): void => {
+        setDrafts(current => current.map(draft => (
+            draft.key === activeKey ? { ...draft, ...patch, dirty: true } : draft
+        )))
+    }, [activeKey])
 
     const handleMemberNameChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-        setMemberName(event.target.value)
-    }, [])
+        updateActiveDraft({ memberName: event.target.value })
+    }, [updateActiveDraft])
 
     const handleAccountNameChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-        setAccountName(event.target.value)
-    }, [])
+        updateActiveDraft({ accountName: event.target.value })
+    }, [updateActiveDraft])
 
     const handleRoleTitleChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
         setRoleTitle(event.target.value)
     }, [])
 
     const handleSmuChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-        setSmuCode(event.target.value)
-    }, [])
+        updateActiveDraft({ smuCode: event.target.value })
+    }, [updateActiveDraft])
 
     const handleHoursPerDayChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-        setHoursPerDayRaw(event.target.value)
-    }, [])
+        updateActiveDraft({ hoursPerDayRaw: event.target.value })
+    }, [updateActiveDraft])
 
     const handleDurationChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-        setDurationWeeksRaw(event.target.value)
-    }, [])
+        updateActiveDraft({ durationWeeksRaw: event.target.value })
+    }, [updateActiveDraft])
 
     const handleReferralChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-        setReferral(event.target.value === 'yes')
-    }, [])
+        updateActiveDraft({ referral: event.target.value === 'yes' })
+    }, [updateActiveDraft])
 
     const handleMemberFieldChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-        setMemberDraft({
-            field: event.target.name as MemberInputField,
-            raw: event.target.value,
+        updateActiveDraft({
+            memberDraft: {
+                field: event.target.name as MemberInputField,
+                raw: event.target.value,
+            },
         })
-    }, [])
+    }, [updateActiveDraft])
 
     const handleCommercialFieldChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-        setCommercialDraft({
-            field: event.target.name as CommercialInputField,
-            raw: event.target.value,
+        updateActiveDraft({
+            commercialDraft: {
+                field: event.target.name as CommercialInputField,
+                raw: event.target.value,
+            },
         })
+    }, [updateActiveDraft])
+
+    const handleSelectDraft = useCallback((event: MouseEvent<HTMLButtonElement>): void => {
+        setActiveKey(event.currentTarget.dataset.key)
+        setConfirmingDelete(false)
     }, [])
+
+    const handleAddCalculation = useCallback((): void => {
+        const draft = createDraftFromLead(lead)
+
+        setDrafts(current => [...current, draft])
+        setActiveKey(draft.key)
+        setConfirmingDelete(false)
+    }, [lead])
+
+    const handleSave = useCallback(async (): Promise<void> => {
+        if (!activeDraft) {
+            return
+        }
+
+        setSaving(true)
+
+        try {
+            const payload = getDraftSavePayload(activeDraft)
+            const saved = activeDraft.id
+                ? await updateEngagementLeadCalculation(lead.id, activeDraft.id, payload)
+                : await createEngagementLeadCalculation(lead.id, payload)
+
+            // Keep what the user typed on screen; only record that it is now saved.
+            setDrafts(current => current.map(draft => (
+                draft.key === activeDraft.key ? { ...draft, dirty: false, id: saved.id } : draft
+            )))
+            showSuccessToast('Cost calculation saved.')
+        } catch (err: unknown) {
+            showErrorToast(extractErrorMessage(err, 'Unable to save the cost calculation.'))
+        } finally {
+            setSaving(false)
+        }
+    }, [activeDraft, lead.id])
+
+    const handleDelete = useCallback(async (): Promise<void> => {
+        if (!activeDraft) {
+            return
+        }
+
+        setSaving(true)
+
+        try {
+            if (activeDraft.id) {
+                await deleteEngagementLeadCalculation(lead.id, activeDraft.id)
+            }
+
+            const index = drafts.findIndex(draft => draft.key === activeDraft.key)
+            const remaining = drafts.filter(draft => draft.key !== activeDraft.key)
+            // There is always a calculation to work on, so deleting the last one starts a new one.
+            const nextDrafts = remaining.length ? remaining : [createDraftFromLead(lead)]
+
+            setDrafts(nextDrafts)
+            setActiveKey(nextDrafts[Math.min(index, nextDrafts.length - 1)].key)
+            setConfirmingDelete(false)
+
+            if (activeDraft.id) {
+                showSuccessToast('Cost calculation deleted.')
+            }
+        } catch (err: unknown) {
+            showErrorToast(extractErrorMessage(err, 'Unable to delete the cost calculation.'))
+        } finally {
+            setSaving(false)
+        }
+    }, [activeDraft, drafts, lead])
+
+    const handleSaveClick = useCallback((): void => {
+        handleSave()
+            .catch(() => undefined)
+    }, [handleSave])
+
+    const handleDeleteClick = useCallback((): void => {
+        setConfirmingDelete(true)
+    }, [])
+
+    const handleDeleteCancel = useCallback((): void => {
+        setConfirmingDelete(false)
+    }, [])
+
+    const handleDeleteConfirm = useCallback((): void => {
+        handleDelete()
+            .catch(() => undefined)
+    }, [handleDelete])
 
     const handleCopyProposal = useCallback((): void => {
         copyTextToClipboard(proposal)
@@ -194,34 +309,71 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
             .catch((err: unknown) => showErrorToast(extractErrorMessage(err, 'Unable to copy the cost proposal.')))
     }, [proposal])
 
-    const selectedSmu = getSmuOption(smuCode)
+    const handleRetryLoad = useCallback((): void => {
+        loadCalculations()
+            .catch(() => undefined)
+    }, [loadCalculations])
 
-    return (
-        <BaseModal
-            open
-            onClose={props.onClose}
-            size='body'
-            title='Flexi Talent Cost Calculator'
-            buttons={(
+    const selectedSmu = getSmuOption(activeDraft?.smuCode)
+
+    function renderButtons(): JSX.Element {
+        if (confirmingDelete) {
+            return (
                 <>
+                    <span className={styles.confirmText}>Delete this calculation?</span>
                     <Button
-                        label='Close'
-                        onClick={props.onClose}
+                        disabled={saving}
+                        label='Cancel'
+                        onClick={handleDeleteCancel}
                         secondary
                     />
                     <Button
-                        label='Copy Cost Proposal'
-                        onClick={handleCopyProposal}
+                        disabled={saving}
+                        label='Delete'
+                        onClick={handleDeleteConfirm}
                         primary
+                        variant='danger'
                     />
                 </>
-            )}
-        >
-            <div className={styles.content}>
-                <p className={styles.subtitle}>
-                    {`Lead ${lead.id}. Enter any one commercial value; the others are calculated from it.`}
-                </p>
+            )
+        }
 
+        return (
+            <>
+                <Button
+                    label='Close'
+                    onClick={props.onClose}
+                    secondary
+                />
+                {activeDraft && (
+                    <>
+                        <Button
+                            disabled={saving}
+                            label='Delete'
+                            onClick={handleDeleteClick}
+                            secondary
+                            variant='danger'
+                        />
+                        <Button
+                            disabled={saving || !activeDraft.dirty}
+                            label='Save'
+                            onClick={handleSaveClick}
+                            secondary
+                        />
+                        <Button
+                            label='Copy Cost Proposal'
+                            onClick={handleCopyProposal}
+                            primary
+                        />
+                    </>
+                )}
+            </>
+        )
+    }
+
+    function renderCalculator(draft: CalculatorDraft): JSX.Element {
+        return (
+            <>
                 <section className={styles.section}>
                     <h4 className={styles.sectionTitle}>Engagement</h4>
                     <div className={styles.grid}>
@@ -233,7 +385,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                             placeholder='Enter member name'
                             tabIndex={0}
                             type='text'
-                            value={memberName}
+                            value={draft.memberName}
                         />
                         <InputText
                             forceUpdateValue
@@ -242,7 +394,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                             onChange={handleAccountNameChange}
                             tabIndex={0}
                             type='text'
-                            value={accountName}
+                            value={draft.accountName}
                         />
                     </div>
                     <div className={styles.grid}>
@@ -262,7 +414,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                             onChange={handleSmuChange}
                             options={SMU_SELECT_OPTIONS}
                             placeholder='Select SMU'
-                            value={smuCode}
+                            value={draft.smuCode}
                         />
                         <InputText
                             forceUpdateValue
@@ -272,7 +424,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                             placeholder={lead.engagementDuration || undefined}
                             tabIndex={0}
                             type='text'
-                            value={durationWeeksRaw}
+                            value={draft.durationWeeksRaw}
                         />
                         <InputText
                             forceUpdateValue
@@ -281,14 +433,14 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                             onChange={handleHoursPerDayChange}
                             tabIndex={0}
                             type='text'
-                            value={hoursPerDayRaw}
+                            value={draft.hoursPerDayRaw}
                         />
                         <InputSelect
                             label='Referral'
                             name='referral'
                             onChange={handleReferralChange}
                             options={REFERRAL_OPTIONS}
-                            value={referral ? 'yes' : 'no'}
+                            value={draft.referral ? 'yes' : 'no'}
                         />
                         {/* <InputText
                             forceUpdateValue
@@ -309,7 +461,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                         {MEMBER_FIELDS.map(definition => (
                             <InputText
                                 classNameWrapper={classNames(
-                                    memberDraft?.field === definition.field && styles.activeField,
+                                    draft.memberDraft?.field === definition.field && styles.activeField,
                                 )}
                                 forceUpdateValue
                                 key={definition.field}
@@ -318,7 +470,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                                 onChange={handleMemberFieldChange}
                                 tabIndex={0}
                                 type='text'
-                                value={getFieldValue(definition.field, memberDraft, result)}
+                                value={getFieldValue(definition.field, draft.memberDraft, result)}
                             />
                         ))}
                     </div>
@@ -330,7 +482,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                         {COMMERCIAL_FIELDS.map(definition => (
                             <InputText
                                 classNameWrapper={classNames(
-                                    commercialDraft?.field === definition.field && styles.activeField,
+                                    draft.commercialDraft?.field === definition.field && styles.activeField,
                                 )}
                                 forceUpdateValue
                                 key={definition.field}
@@ -339,7 +491,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                                 onChange={handleCommercialFieldChange}
                                 tabIndex={0}
                                 type='text'
-                                value={getFieldValue(definition.field, commercialDraft, result)}
+                                value={getFieldValue(definition.field, draft.commercialDraft, result)}
                             />
                         ))}
                     </div>
@@ -390,6 +542,58 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                     <h4 className={styles.sectionTitle}>Cost Proposal</h4>
                     <pre className={styles.proposal} data-testid='cost-proposal'>{proposal}</pre>
                 </section>
+            </>
+        )
+    }
+
+    return (
+        <BaseModal
+            open
+            onClose={props.onClose}
+            size='body'
+            title='Flexi Talent Cost Calculator'
+            buttons={renderButtons()}
+        >
+            <div className={styles.content}>
+                <p className={styles.subtitle}>
+                    {`Lead ${lead.id}. Enter any one commercial value; the others are calculated from it.`}
+                </p>
+
+                {loading && <LoadingSpinner />}
+
+                {!loading && loadError && (
+                    <ErrorMessage message={loadError} onRetry={handleRetryLoad} />
+                )}
+
+                {!loading && !loadError && (
+                    <div className={styles.tabs} role='tablist' aria-label='Cost calculations'>
+                        {drafts.map((draft, index) => (
+                            <button
+                                aria-selected={draft.key === activeKey}
+                                className={classNames(styles.tab, draft.key === activeKey && styles.activeTab)}
+                                data-key={draft.key}
+                                key={draft.key}
+                                onClick={handleSelectDraft}
+                                role='tab'
+                                type='button'
+                            >
+                                {getDraftLabel(draft, index)}
+                                {(draft.dirty || !draft.id) && (
+                                    <span className={styles.unsaved} title='Not saved'>*</span>
+                                )}
+                            </button>
+                        ))}
+                        <button
+                            className={styles.addTab}
+                            onClick={handleAddCalculation}
+                            type='button'
+                        >
+                            + Add Calculation
+                        </button>
+                    </div>
+                )}
+
+                {!loading && !loadError && activeDraft && renderCalculator(activeDraft)}
             </div>
         </BaseModal>
     )
