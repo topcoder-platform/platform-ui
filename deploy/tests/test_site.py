@@ -146,10 +146,10 @@ class ReleaseTests(unittest.TestCase):
         with patch.object(site, 'check_job', return_value='a' * 40), patch.object(site, 'verify_artifact'), patch.object(site, 'authenticate', return_value=aws), patch.object(site, 'invalidate', return_value='invalidation'), patch.object(site, 'urlopen', side_effect=OSError('network')), patch.dict(os.environ, {'CIRCLE_BUILD_NUM': '1'}):
             with self.assertRaises(OSError):
                 site.deploy(self.m, root, self.root / 'artifact.json', self.root / 'receipt.json')
-        self.assertEqual(len(aws.puts), 8)
-        self.assertTrue(all(body == b'previous' for _, body in aws.puts[-4:]))
-        self.assertEqual([key for key, _ in aws.puts[-4:]],
-                         ['asset-manifest.json', 'index.html', 'gigs/index.html', 'timeline-wall/index.html'])
+        self.assertEqual(len(aws.puts), 10)
+        self.assertTrue(all(body == b'previous' for _, body in aws.puts[-5:]))
+        self.assertEqual([key for key, _ in aws.puts[-5:]],
+                         ['asset-manifest.json', 'index.html', 'gigs/index.html', 'timeline-wall/index.html', 'statistics/index.html'])
 
 
 class FakeAWS:
