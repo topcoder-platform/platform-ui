@@ -16,6 +16,7 @@ import {
 } from '../services'
 
 import {
+    challengeAiUsageNote,
     ChallengeSubmissionUpload,
     challengeSubmissionType,
     validateChallengeSubmissionFile,
@@ -505,6 +506,19 @@ describe('ChallengeSubmissionUpload', () => {
                 member_id: '123',
                 submission_type: 'CHECKPOINT_SUBMISSION',
             }, true)
+    })
+
+    it('explains the AI-usage question per challenge track', () => {
+        expect(challengeAiUsageNote('datascience', 'marathonmatch'))
+            .toBe('This helps shape future match formats. It has no impact on scoring or rating.')
+        expect(challengeAiUsageNote('development', 'challenge'))
+            .toBe('This helps shape future development challenges. It has no impact on scoring or rating.')
+        expect(challengeAiUsageNote('qualityassurance', 'challenge'))
+            .toBe('This helps shape future QA challenges. It has no impact on scoring.')
+        expect(challengeAiUsageNote('design', 'challenge'))
+            .toBe('This helps shape future design challenges. It has no impact on scoring.')
+        expect(challengeAiUsageNote('datascience', 'challenge'))
+            .toBe('This helps shape future challenges. It has no impact on scoring.')
     })
 
     it('requires and sends the AI-usage answer with every submission', async () => {

@@ -125,6 +125,28 @@ export function validateChallengeSubmissionUrl(value: string): string | undefine
 }
 
 /**
+ * Selects the explanation shown under the AI-usage question for the challenge's track.
+ *
+ * @param trackKey normalized challenge track key (for example `development`).
+ * @param typeKey normalized challenge type key (for example `marathonmatch`).
+ * @returns member-facing note describing how the answer is used.
+ * @throws Does not throw.
+ */
+export function challengeAiUsageNote(trackKey: string, typeKey: string): string {
+    if (typeKey === 'marathonmatch') {
+        return 'This helps shape future match formats. It has no impact on scoring or rating.'
+    }
+
+    if (trackKey === 'development') {
+        return 'This helps shape future development challenges. It has no impact on scoring or rating.'
+    }
+
+    if (trackKey === 'qualityassurance') return 'This helps shape future QA challenges. It has no impact on scoring.'
+    if (trackKey === 'design') return 'This helps shape future design challenges. It has no impact on scoring.'
+    return 'This helps shape future challenges. It has no impact on scoring.'
+}
+
+/**
  * Formats the compact whole-megabyte size displayed beside an uploaded archive.
  *
  * @param bytes file size in bytes.
@@ -748,7 +770,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                         <span>No</span>
                                     </label>
                                 </div>
-                                <p>This helps shape future match formats. It has no impact on scoring or rating.</p>
+                                <p>{challengeAiUsageNote(trackKey, typeKey)}</p>
                             </fieldset>
                             <div className={styles.declaration}>
                                 <h3>Declaration</h3>
