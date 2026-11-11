@@ -1,7 +1,12 @@
+@import '@libs/ui/styles/includes';
+
+.message {
+    margin-bottom: $sp-4;
+}
+
 .field {
     display: grid;
     gap: 6px;
-    margin-top: 12px;
 }
 
 .label {
@@ -9,15 +14,35 @@
     font-weight: 600;
 }
 
-.input {
-    width: 100%;
-    border: 1px solid var(--black-20, #ddd);
-    border-radius: 8px;
-    padding: 8px 12px;
+.error {
+    margin-top: $sp-2;
+    font-size: 12px;
+    color: $red-100;
+}
+
+.createProjectLink {
+    margin-top: $sp-3;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: $link-blue-dark;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.newProject {
+    border-top: 1px solid $black-10;
+    padding-top: $sp-4;
+}
+
+.newProjectTitle {
+    margin-bottom: $sp-3;
 }
 
 .hint {
-    margin-top: 8px;
+    margin-top: $sp-4;
     font-size: 12px;
-    color: var(--black-60, #666);
+    color: $black-60;
 }

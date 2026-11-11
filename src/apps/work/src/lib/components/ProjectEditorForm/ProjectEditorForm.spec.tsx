@@ -5,18 +5,22 @@ import {
     screen,
     waitFor,
 } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import {
+    MemoryRouter,
+    Route,
+    Routes,
+} from 'react-router-dom'
 
 import {
     useFetchProjectBillingAccount,
-} from '../../../../../lib/hooks'
+} from '../../hooks'
 import {
     createProject,
     updateProject,
-} from '../../../../../lib/services'
+} from '../../services'
 import {
     fetchSalesforceOpportunity,
-} from '../../../../../lib/services/salesforce-opportunities.service'
+} from '../../services/salesforce-opportunities.service'
 
 import { ProjectEditorForm } from './ProjectEditorForm'
 
@@ -44,7 +48,7 @@ jest.mock('~/config', () => ({
     virtual: true,
 })
 
-jest.mock('../../../../../lib/components/form', () => {
+jest.mock('../form', () => {
     const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
     const useFormContext: typeof reactHookForm.useFormContext = reactHookForm.useFormContext
 
@@ -138,21 +142,21 @@ jest.mock('../../../../../lib/components/form', () => {
     }
 })
 
-jest.mock('../../../../../lib/hooks', () => ({
+jest.mock('../../hooks', () => ({
     useFetchProjectBillingAccount: jest.fn(),
 }))
 
-jest.mock('../../../../../lib/services', () => ({
+jest.mock('../../services', () => ({
     createProject: jest.fn(),
     updateProject: jest.fn(),
 }))
 
-jest.mock('../../../../../lib/services/salesforce-opportunities.service', () => ({
+jest.mock('../../services/salesforce-opportunities.service', () => ({
     fetchSalesforceOpportunity: jest.fn(),
     salesforceOpportunityErrorMessage: () => 'We could not reach Salesforce. Please try again.',
 }))
 
-jest.mock('../../../../../lib/utils', () => ({
+jest.mock('../../utils', () => ({
     formatDate: () => '-',
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
@@ -162,10 +166,12 @@ jest.mock('~/libs/ui', () => ({
     Button: (props: {
         disabled?: boolean
         label: string
+        onClick?: () => void
         type?: 'button' | 'submit'
     }): JSX.Element => (
         <button
             disabled={props.disabled}
+            onClick={props.onClick}
             type={props.type === 'submit'
                 ? 'submit'
                 : 'button'}
@@ -256,6 +262,97 @@ describe('ProjectEditorForm', () => {
                     displayMemberPaymentDetailsToCopilots: true,
                 }),
             })))
+    })
+
+    describe('embedded', () => {
+        const projectTypes = [{
+            displayName: 'Generic',
+            key: 'generic',
+        }]
+
+        function renderEmbedded(): { onCancel: jest.Mock, onCreated: jest.Mock } {
+            const embedded = {
+                onCancel: jest.fn(),
+                onCreated: jest.fn(),
+            }
+
+            render(
+                <MemoryRouter initialEntries={['/leads']}>
+                    <Routes>
+                        <Route
+                            path='/leads'
+                            element={(
+                                <ProjectEditorForm
+                                    canManage={false}
+                                    embedded={embedded}
+                                    isEdit={false}
+                                    projectTypes={projectTypes}
+                                />
+                            )}
+                        />
+                        <Route path='/projects/:projectId/challenges' element={<p>Project page</p>} />
+                    </Routes>
+                </MemoryRouter>,
+            )
+
+            return embedded
+        }
+
+        function getSaveButton(): HTMLButtonElement {
+            return screen.getByRole('button', { name: 'Save project' }) as HTMLButtonElement
+        }
+
+        it('hides the NDA, work groups and payment details fields and saves their defaults', async () => {
+            const embedded = renderEmbedded()
+
+            expect(screen.queryByText('Enforce Topcoder NDA'))
+                .toBeNull()
+            expect(screen.queryByLabelText('Intended Work Groups'))
+                .toBeNull()
+            expect(screen.queryByLabelText('Display member payment details to copilots'))
+                .toBeNull()
+
+            fireEvent.change(screen.getByLabelText('Project Name'), {
+                target: { value: 'Payments Project' },
+            })
+            await waitFor(() => expect(mockedCreateProject)
+                .not.toHaveBeenCalled())
+            expect(getSaveButton().disabled)
+                .toBe(true)
+
+            fireEvent.change(screen.getByLabelText('Project Type'), {
+                target: { value: 'generic' },
+            })
+            fireEvent.change(screen.getByLabelText('Description'), {
+                target: { value: 'Project for a lead.' },
+            })
+            await waitFor(() => expect(getSaveButton().disabled)
+                .toBe(false))
+
+            fireEvent.click(getSaveButton())
+
+            await waitFor(() => expect(embedded.onCreated)
+                .toHaveBeenCalledWith(expect.objectContaining({ id: 'project-1' })))
+            expect(mockedCreateProject)
+                .toHaveBeenCalledWith(expect.objectContaining({
+                    details: expect.objectContaining({
+                        displayMemberPaymentDetailsToCopilots: true,
+                    }),
+                    groups: undefined,
+                    terms: undefined,
+                }))
+            expect(screen.queryByText('Project page'))
+                .toBeNull()
+        })
+
+        it('cancels through the embedding flow', () => {
+            const embedded = renderEmbedded()
+
+            fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+            expect(embedded.onCancel)
+                .toHaveBeenCalled()
+        })
     })
 
     it('submits null when clearing an existing project billing account', async () => {
