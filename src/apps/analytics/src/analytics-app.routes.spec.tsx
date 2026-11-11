@@ -33,11 +33,11 @@ describe('Analytics application routes', () => {
         })
     })
 
-    it('registers the default redirect plus campaign and general tabs', () => {
+    it('registers the default redirect plus campaign, general, and SpaceTech tabs', () => {
         const children = analyticsRoutes[0].children
 
         expect(children?.map(route => route.route))
-            .toEqual(['', 'campaigns', 'general'])
+            .toEqual(['', 'campaigns', 'general', 'spacetech'])
         expect(children?.[0].element?.props.to)
             .toBe('campaigns')
     })

@@ -10,11 +10,13 @@ import {
     GeneralReport,
     RouteFilters,
     RouteReport,
+    SpaceTechFilters,
+    SpaceTechReport,
 } from '../models'
 
 export const ANALYTICS_API_BASE = EnvironmentConfig.ANALYTICS.API_URL.replace(/\/$/, '')
 
-type AnalyticsQueryValues = Partial<CampaignFilters & GeneralFilters & RouteFilters>
+type AnalyticsQueryValues = Partial<CampaignFilters & GeneralFilters & RouteFilters & SpaceTechFilters>
 type AnalyticsPollWait = (milliseconds: number) => Promise<void>
 
 interface AnalyticsPendingResponse {
@@ -37,6 +39,7 @@ const ANALYTICS_QUERY_KEYS: Array<keyof AnalyticsQueryValues> = [
     'medium',
     'surface',
     'path',
+    'content',
 ]
 
 /**
@@ -188,4 +191,9 @@ export function getGeneralReport(filters: GeneralFilters): Promise<GeneralReport
  */
 export function getRouteReport(filters: RouteFilters): Promise<RouteReport> {
     return requestAnalyticsReport('route', filters)
+}
+
+/** Loads the SpaceTech landing-page campaign report with the existing bounded polling protocol. */
+export function getSpaceTechReport(filters: SpaceTechFilters): Promise<SpaceTechReport> {
+    return requestAnalyticsReport('spacetech', filters)
 }

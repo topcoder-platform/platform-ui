@@ -3,7 +3,12 @@ import '@testing-library/jest-dom'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 
 import FormsPage from './FormsPage'
-import { fetchReportForms, fetchFormSubmissions, downloadFormSubmissions } from '../../lib/services/forms.service'
+import {
+    fetchReportForms,
+    fetchFormSubmissions,
+    fetchSpaceTechSubmissions,
+    downloadFormSubmissions,
+} from '../../lib/services/forms.service'
 import { downloadBlobFile } from '../../lib/services/reports.service'
 
 jest.mock('~/libs/ui', () => ({ PageTitle: () => null }), { virtual: true })
@@ -11,6 +16,7 @@ jest.mock('../../lib/services/forms.service', () => ({
     downloadFormSubmissions: jest.fn(),
     fetchFormSubmissions: jest.fn(),
     fetchReportForms: jest.fn(),
+    fetchSpaceTechSubmissions: jest.fn(),
     formatFormValue: (value: unknown) => String(value),
 }))
 jest.mock('../../lib/services/reports.service', () => ({ downloadBlobFile: jest.fn() }))
@@ -207,4 +213,18 @@ describe('Forms reporting page', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
         await screen.findByText('first@example.com')
     })
+})
+
+it('uses the complete lead set for SpaceTech instead of the generic page endpoint', async () => {
+    (fetchReportForms as jest.Mock).mockResolvedValue([{ key: 'space_tech_challenge', title: 'SpaceTech' }]);
+    (fetchSpaceTechSubmissions as jest.Mock).mockResolvedValue({
+        ...report, form: 'space_tech_challenge', nextCursor: null,
+    })
+    render(<FormsPage />)
+    await screen.findByRole('option', { name: 'SpaceTech (space_tech_challenge)' })
+    fireEvent.change(screen.getByLabelText('Form'), { target: { value: 'space_tech_challenge' } })
+    await screen.findByLabelText('Filter utm_campaign')
+    expect(fetchSpaceTechSubmissions)
+        .toHaveBeenCalledWith(expect.objectContaining({ key: 'space_tech_challenge' }), expect.any(Function))
+    expect(screen.queryByRole('navigation', { name: 'Submission pages' })).not.toBeInTheDocument()
 })

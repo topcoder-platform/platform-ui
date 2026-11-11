@@ -114,6 +114,56 @@ class AnalyticsHandlerTests(unittest.TestCase):
             "routeKey": route_key,
         }
 
+    def test_spacetech_report_attribution_rates_and_quiet_days(self) -> None:
+        """Form conversions use visitors, preserve dimensions, and fill quiet dates."""
+        rows = [
+            {"row_type": "summary", "page_views": 20, "visitors": 10, "starts": 5,
+             "submissions": 2, "reached": 7, "engagement_ms": 100000},
+            {"row_type": "daily", "dimension_1": "2026-09-01", "visitors": 10, "submissions": 2},
+            {"row_type": "campaign", "dimension_1": "linkedin", "dimension_2": "social",
+             "dimension_3": "customer_spacetech_nov26_george", "dimension_4": "post_1",
+             "visitors": 10, "submissions": 2},
+            {"row_type": "faq", "dimension_1": "faq-one", "events": 3, "users": 2},
+            {"row_type": "country", "dimension_1": None, "visitors": 10},
+        ]
+        query = {"from": "2026-09-01", "to": "2026-09-03", "source": "linkedin", "content": "post_1"}
+        with patch.object(self.module, "_execute_query", return_value=rows) as execute:
+            response = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], query), None)
+        self.assertEqual(response["statusCode"], 200)
+        report = json.loads(response["body"])
+        self.assertEqual(report["totals"]["submissionRate"], 20)
+        self.assertEqual(report["totals"]["averageEngagementSeconds"], 5)
+        self.assertEqual(report["totals"]["reached"], 7)
+        self.assertEqual([row["submissions"] for row in report["series"]], [2, 0, 0])
+        self.assertEqual(report["campaigns"][0]["content"], "post_1")
+        self.assertEqual(report["faqs"][0]["users"], 2)
+        self.assertEqual(report["countries"][0]["country"], "")
+        self.assertNotIn("analytics_user_id", response["body"])
+        params = {item["name"]: item["value"] for item in execute.call_args.args[1]}
+        self.assertEqual(params["source"], "linkedin")
+        self.assertEqual(params["content"], "post_1")
+        self.assertIn(":content", execute.call_args.args[0])
+        self.assertNotIn("linkedin", execute.call_args.args[0])
+
+    def test_spacetech_empty_report_and_authorization(self) -> None:
+        """Empty campaigns are defined and unauthorized requests never reach Redshift."""
+        with patch.object(self.module, "_execute_query", return_value=[]) as execute:
+            denied = self.module.handler(self._event("GET /v1/analytics/spacetech", ["administrator"]), None)
+            self.assertEqual(denied["statusCode"], 403)
+            execute.assert_not_called()
+            invalid = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], {
+                "from": "2026-01-01", "to": "2027-01-03",
+            }), None)
+            self.assertEqual(invalid["statusCode"], 400)
+            execute.assert_not_called()
+            response = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], {
+                "from": "2026-09-01", "to": "2026-09-01",
+            }), None)
+        report = json.loads(response["body"])
+        self.assertEqual(report["totals"]["submissionRate"], 0)
+        self.assertEqual(report["totals"]["averageEngagementSeconds"], 0)
+        self.assertEqual(len(report["series"]), 1)
+
     def test_denies_missing_or_wrong_role_without_querying(self) -> None:
         """A verified token still needs the exact analytics role."""
 
