@@ -13,7 +13,7 @@ import { WorkAppContext } from '../../contexts'
 import { useFetchProjectTypes } from '../../hooks'
 import { Project, WorkAppContextModel } from '../../models'
 import { fetchProjectsList, ProjectSummary } from '../../services'
-import { checkCanManageProject } from '../../utils'
+import { checkCanManageProject, hasAdminRole } from '../../utils'
 import { ErrorMessage } from '../ErrorMessage'
 import { LoadingSpinner } from '../LoadingSpinner'
 import { ProjectEditorForm, ProjectEditorFormEmbedding } from '../ProjectEditorForm'
@@ -95,6 +95,9 @@ export const CreateEngagementFromLeadModal: FC<CreateEngagementFromLeadModalProp
 ) => {
     const { loginUserInfo, userRoles }: WorkAppContextModel = useContext(WorkAppContext)
     const canCreateProject = checkCanManageProject(userRoles, loginUserInfo?.userId)
+    // Managers and Talent Managers can read any project, but should only create engagements in the projects
+    // they are a member of (or invited to). Admins can create engagements in any project.
+    const memberOnly = !hasAdminRole(userRoles)
 
     const [selectedProject, setSelectedProject] = useState<ProjectOption | undefined>()
     const [isCreatingProject, setIsCreatingProject] = useState<boolean>(false)
@@ -109,9 +112,9 @@ export const CreateEngagementFromLeadModal: FC<CreateEngagementFromLeadModalProp
         setSearchError(undefined)
 
         try {
-            // The projects API only returns the projects the user has access to.
             const response = await fetchProjectsList({
                 keyword,
+                memberOnly,
                 perPage: PROJECT_SEARCH_PAGE_SIZE,
             })
 
@@ -120,7 +123,7 @@ export const CreateEngagementFromLeadModal: FC<CreateEngagementFromLeadModalProp
             setSearchError(error instanceof Error ? error.message : 'Failed to search projects.')
             return []
         }
-    }, [])
+    }, [memberOnly])
 
     const loadProjectOptions = useMemo(() => {
         let timeoutId: number | undefined

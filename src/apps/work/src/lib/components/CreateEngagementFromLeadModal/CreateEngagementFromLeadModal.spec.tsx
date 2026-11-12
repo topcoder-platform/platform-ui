@@ -4,12 +4,13 @@ import {
     fireEvent,
     render,
     screen,
+    waitFor,
 } from '@testing-library/react'
 
 import { WorkAppContext } from '../../contexts/WorkAppContext'
 import { WorkAppContextModel } from '../../models'
 import { fetchProjectsList } from '../../services'
-import { checkCanManageProject } from '../../utils'
+import { checkCanManageProject, hasAdminRole } from '../../utils'
 
 import { CreateEngagementFromLeadModal } from './CreateEngagementFromLeadModal'
 
@@ -83,6 +84,7 @@ jest.mock('../../hooks', () => ({
 
 jest.mock('../../utils', () => ({
     checkCanManageProject: jest.fn(),
+    hasAdminRole: jest.fn(),
 }))
 
 jest.mock('../ErrorMessage', () => ({
@@ -112,6 +114,7 @@ jest.mock('../ProjectEditorForm', () => ({
 
 const mockedFetchProjectsList = fetchProjectsList as jest.MockedFunction<typeof fetchProjectsList>
 const mockedCheckCanManageProject = checkCanManageProject as jest.MockedFunction<typeof checkCanManageProject>
+const mockedHasAdminRole = hasAdminRole as jest.MockedFunction<typeof hasAdminRole>
 
 const context = {
     loginUserInfo: { userId: 1001 },
@@ -145,6 +148,7 @@ describe('CreateEngagementFromLeadModal', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         mockedCheckCanManageProject.mockReturnValue(true)
+        mockedHasAdminRole.mockReturnValue(false)
         mockedFetchProjectsList.mockResolvedValue({
             metadata: { page: 1, perPage: 20, total: 1, totalPages: 1 },
             projects: [{ id: 'project-1', name: 'Payments' }],
@@ -161,12 +165,22 @@ describe('CreateEngagementFromLeadModal', () => {
         fireEvent.click(await screen.findByRole('button', { name: 'Payments (project-1)' }))
 
         expect(mockedFetchProjectsList)
-            .toHaveBeenCalledWith(expect.objectContaining({ keyword: 'Pay' }))
+            .toHaveBeenCalledWith(expect.objectContaining({ keyword: 'Pay', memberOnly: true }))
 
         fireEvent.click(getCreateEngagementButton())
 
         expect(handlers.onConfirm)
             .toHaveBeenCalledWith('project-1')
+    })
+
+    it('lets admins search every project', async () => {
+        mockedHasAdminRole.mockReturnValue(true)
+        renderModal()
+
+        fireEvent.change(screen.getByLabelText('Project'), { target: { value: 'Pay' } })
+
+        await waitFor(() => expect(mockedFetchProjectsList)
+            .toHaveBeenCalledWith(expect.objectContaining({ keyword: 'Pay', memberOnly: false })))
     })
 
     it('only searches for the last input typed and settles the searches it replaced', async () => {
