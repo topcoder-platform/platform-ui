@@ -392,6 +392,31 @@ function getDefaultProjectId(
     )
 }
 
+/**
+ * Lead skill names with no standardized match. An API that does not match skills yet leaves
+ * `requiredSkills` unset, and then every name counts as unmatched.
+ */
+function getUnmatchedLeadSkillNames(leadPrefill?: EngagementLeadPrefill): string[] {
+    if (!leadPrefill) {
+        return []
+    }
+
+    return leadPrefill.requiredSkills
+        ? leadPrefill.unresolvedSkillNames || []
+        : leadPrefill.requiredSkillNames || []
+}
+
+/**
+ * Skills to prefill from a lead: the matched standardized skills, then the unmatched names as
+ * new skills, which the API creates when the engagement is saved.
+ */
+function getLeadPrefillSkills(leadPrefill: EngagementLeadPrefill): Skill[] {
+    const newSkills: Skill[] = getUnmatchedLeadSkillNames(leadPrefill)
+        .map(name => ({ id: `new:${name.toLowerCase()}`, isNew: true, name }))
+
+    return [...(leadPrefill.requiredSkills || []), ...newSkills]
+}
+
 function getDefaultValues(
     engagement: Engagement | undefined,
     projectId: number | string,
@@ -415,7 +440,7 @@ function getDefaultValues(
                 ? String(leadPrefill.requiredMemberCount)
                 : '',
             roleLevel: leadPrefill.roleLevel || '',
-            skills: leadPrefill.requiredSkills || [],
+            skills: getLeadPrefillSkills(leadPrefill),
             smu: leadPrefill.smu || '',
             spoc: leadPrefill.spoc || '',
             timezones: leadPrefill.timeZones || [],
@@ -1021,11 +1046,9 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
         }
     }, [getValues, isGeneratingDescription, setValue])
 
-    // Matched skills are prefilled, so only the misses need the TM's attention. An API that does
-    // not match skills yet leaves `requiredSkills` unset, and then every name is still listed.
-    const unmatchedLeadSkillNames = props.leadPrefill?.requiredSkills
-        ? props.leadPrefill.unresolvedSkillNames || []
-        : props.leadPrefill?.requiredSkillNames || []
+    // Unmatched lead skills are prefilled as new skills; the notice tells the TM they will be
+    // added to the platform on save, so any unwanted ones can be removed first.
+    const unmatchedLeadSkillNames = getUnmatchedLeadSkillNames(props.leadPrefill)
 
     const onSubmit = useCallback(async (nextValues: EngagementEditorFormData): Promise<void> => {
         await saveEngagement(nextValues)
@@ -1036,10 +1059,11 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
             <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
                 {unmatchedLeadSkillNames.length ? (
                     <div className={styles.leadPrefillNotice}>
-                        <strong>Skills from intake form not found on the platform:</strong>
+                        <strong>New skills from the intake form:</strong>
                         {' '}
                         {unmatchedLeadSkillNames.join(', ')}
-                        . Please add matching platform skills below.
+                        . They are not platform skills yet and will be added to the platform when you
+                        save this engagement. Remove any you do not want from the skills below.
                     </div>
                 ) : undefined}
 

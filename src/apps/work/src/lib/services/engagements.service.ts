@@ -178,6 +178,18 @@ function normalizePaginatedResponse(
     }
 }
 
+function normalizeNewSkillNames(skills: Skill[] | undefined): string[] {
+    if (!Array.isArray(skills)) {
+        return []
+    }
+
+    return skills
+        .filter(skill => !!skill && typeof skill === 'object' && skill.isNew)
+        .map(skill => String(skill.name || '')
+            .trim())
+        .filter(Boolean)
+}
+
 function normalizeSkillIds(skills: Skill[] | undefined): string[] {
     if (!Array.isArray(skills)) {
         return []
@@ -189,7 +201,7 @@ function normalizeSkillIds(skills: Skill[] | undefined): string[] {
                 return skill
             }
 
-            if (!skill || typeof skill !== 'object') {
+            if (!skill || typeof skill !== 'object' || skill.isNew) {
                 return ''
             }
 
@@ -480,6 +492,11 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
     const requiredSkills = normalizeSkillIds(data.skills)
     if (requiredSkills.length) {
         payload.requiredSkills = requiredSkills
+    }
+
+    const newSkillNames = normalizeNewSkillNames(data.skills)
+    if (newSkillNames.length) {
+        payload.newSkillNames = newSkillNames
     }
 
     if (data.smu !== undefined) {

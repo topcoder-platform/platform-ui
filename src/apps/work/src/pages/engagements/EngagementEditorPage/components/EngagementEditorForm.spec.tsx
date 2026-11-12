@@ -536,7 +536,7 @@ describe('EngagementEditorForm', () => {
             title: 'Backend Developer',
         }
 
-        it('prefills the skills matched from the lead and lists only the unmatched ones', () => {
+        it('prefills matched skills, then the unmatched ones as new skills', () => {
             render(
                 <MemoryRouter>
                     <EngagementEditorForm
@@ -555,15 +555,15 @@ describe('EngagementEditorForm', () => {
             )
 
             expect(screen.getByTestId('selected-skills').textContent)
-                .toBe('Java, Spring Boot')
-            expect(screen.getByText(/Skills from intake form not found on the platform/).parentElement?.textContent)
+                .toBe('Java, Spring Boot, Legacy Skill')
+            expect(screen.getByText(/New skills from the intake form/).parentElement?.textContent)
                 .toContain('Legacy Skill')
-            expect(screen.getByText(/Skills from intake form not found on the platform/).parentElement?.textContent)
+            expect(screen.getByText(/New skills from the intake form/).parentElement?.textContent)
                 .not
                 .toContain('Spring Boot')
         })
 
-        it('hides the skills notice when every lead skill was matched', () => {
+        it('hides the new skills notice when every lead skill was matched', () => {
             render(
                 <MemoryRouter>
                     <EngagementEditorForm
@@ -581,11 +581,11 @@ describe('EngagementEditorForm', () => {
 
             expect(screen.getByTestId('selected-skills').textContent)
                 .toBe('Java')
-            expect(screen.queryByText(/Skills from intake form not found on the platform/))
+            expect(screen.queryByText(/New skills from the intake form/))
                 .toBeNull()
         })
 
-        it('lists every lead skill when the API did not match them', () => {
+        it('treats every lead skill as new when the API did not match them', () => {
             render(
                 <MemoryRouter>
                     <EngagementEditorForm
@@ -596,7 +596,9 @@ describe('EngagementEditorForm', () => {
                 </MemoryRouter>,
             )
 
-            expect(screen.getByText(/Skills from intake form not found on the platform/).parentElement?.textContent)
+            expect(screen.getByTestId('selected-skills').textContent)
+                .toBe('Java, Spring Boot, Legacy Skill')
+            expect(screen.getByText(/New skills from the intake form/).parentElement?.textContent)
                 .toContain('Java, Spring Boot, Legacy Skill')
         })
     })
