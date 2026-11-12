@@ -390,6 +390,7 @@
 .ratedRegistrantTable,
 .designRegistrantTable,
 .developmentSubmissionTable,
+.developmentResultsTable,
 .designSubmissionTable,
 .qaSubmissionTable,
 .marathonTable,
@@ -412,6 +413,16 @@
     th:nth-child(2) { width: 160px; }
     th:nth-child(3) { width: 352px; }
     th:nth-child(4) { width: 200px; }
+}
+
+.developmentResultsTable {
+    th:first-child { width: 80px; }
+    th:nth-child(2) { width: 256px; }
+    th:nth-child(3) { width: 120px; }
+    th:nth-child(4) { width: 216px; }
+    th:nth-child(5),
+    th:nth-child(6),
+    th:nth-child(7) { width: 160px; }
 }
 
 .designSubmissionTable {
@@ -1393,6 +1404,7 @@
     .ratedRegistrantTable,
     .designRegistrantTable,
     .developmentSubmissionTable,
+    .developmentResultsTable,
     .designSubmissionTable,
     .qaSubmissionTable,
     .marathonTable,
