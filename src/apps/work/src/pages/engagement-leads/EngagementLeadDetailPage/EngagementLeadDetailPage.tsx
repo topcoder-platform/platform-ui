@@ -40,7 +40,10 @@ import {
     getLeadDisplayStatus,
     getLeadStatusTransitions,
 } from '../../../lib/utils/engagement-leads.utils'
-import { withQueryParams } from '../../../lib/utils/navigation.utils'
+import {
+    openResolvedUrlInNewTab,
+    withQueryParams,
+} from '../../../lib/utils/navigation.utils'
 
 import styles from './EngagementLeadDetailPage.module.scss'
 
@@ -167,31 +170,32 @@ export const EngagementLeadDetailPage: FC = () => {
     }, [leadId, navigate, projectId])
 
     const handleViewEngagement = useCallback(async (): Promise<void> => {
-        if (!lead?.convertedEngagementId || viewingEngagement) {
+        const engagementId = lead?.convertedEngagementId
+
+        if (!engagementId || viewingEngagement) {
             return
         }
 
         setViewingEngagement(true)
 
         try {
-            const engagement = await fetchEngagement(lead.convertedEngagementId)
-            const engagementProjectId = String(engagement.projectId || engagement.project?.id || '')
-                .trim()
+            await openResolvedUrlInNewTab(async () => {
+                const engagement = await fetchEngagement(engagementId)
+                const engagementProjectId = String(engagement.projectId || engagement.project?.id || '')
+                    .trim()
 
-            if (!engagementProjectId) {
-                showErrorToast('Unable to locate the project for this engagement.')
-                return
-            }
+                if (!engagementProjectId) {
+                    throw new Error('Unable to locate the project for this engagement.')
+                }
 
-            navigate(
-                `${rootRoute}/projects/${engagementProjectId}/engagements/${lead.convertedEngagementId}/view`,
-            )
+                return `${rootRoute}/projects/${engagementProjectId}/engagements/${engagementId}/view`
+            })
         } catch (err: unknown) {
             showErrorToast(extractErrorMessage(err, 'Unable to open engagement.'))
         } finally {
             setViewingEngagement(false)
         }
-    }, [lead?.convertedEngagementId, navigate, viewingEngagement])
+    }, [lead?.convertedEngagementId, viewingEngagement])
 
     const statusTransitions = lead ? getLeadStatusTransitions(String(lead.status)) : []
     const canCreateEngagement = lead && canCreateEngagementFromLead(lead)
