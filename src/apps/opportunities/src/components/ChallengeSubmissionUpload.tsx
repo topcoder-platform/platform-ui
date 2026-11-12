@@ -124,26 +124,55 @@ export function validateChallengeSubmissionUrl(value: string): string | undefine
     }
 }
 
+/** Track-specific wording for the AI-usage question on the submit form. */
+export interface ChallengeAiUsageCopy {
+    note: string
+    question: string
+}
+
+const AI_CODE_QUESTION = 'Did AI tools write most of your submission\'s code?'
+
 /**
- * Selects the explanation shown under the AI-usage question for the challenge's track.
+ * Selects the AI-usage question and its explanation for the challenge's track.
  *
  * @param trackKey normalized challenge track key (for example `development`).
  * @param typeKey normalized challenge type key (for example `marathonmatch`).
- * @returns member-facing note describing how the answer is used.
+ * @returns member-facing question and note describing how the answer is used.
  * @throws Does not throw.
  */
-export function challengeAiUsageNote(trackKey: string, typeKey: string): string {
+export function challengeAiUsageCopy(trackKey: string, typeKey: string): ChallengeAiUsageCopy {
     if (typeKey === 'marathonmatch') {
-        return 'This helps shape future match formats. It has no impact on scoring or rating.'
+        return {
+            note: 'This helps shape future match formats. It has no impact on scoring or rating.',
+            question: AI_CODE_QUESTION,
+        }
     }
 
     if (trackKey === 'development') {
-        return 'This helps shape future development challenges. It has no impact on scoring or rating.'
+        return {
+            note: 'This helps shape future development challenges. It has no impact on scoring or rating.',
+            question: AI_CODE_QUESTION,
+        }
     }
 
-    if (trackKey === 'qualityassurance') return 'This helps shape future QA challenges. It has no impact on scoring.'
-    if (trackKey === 'design') return 'This helps shape future design challenges. It has no impact on scoring.'
-    return 'This helps shape future challenges. It has no impact on scoring.'
+    if (trackKey === 'qualityassurance') {
+        return {
+            note: 'This helps shape future QA challenges. It has no impact on scoring.',
+            question: 'Did AI tools find or write up most of the issues you reported?',
+        }
+    }
+
+    if (trackKey === 'design') {
+        return {
+            note: 'This helps shape future design challenges. It has no impact on scoring.',
+            question: 'Did AI tools create most of your submission\'s designs?',
+        }
+    }
+
+    return {
+        note: 'This helps shape future challenges. It has no impact on scoring.',
+        question: AI_CODE_QUESTION,
+    }
 }
 
 /**
@@ -185,6 +214,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
     const pluralUpload = trackKey === 'qualityassurance' || typeKey === 'marathonmatch'
     const submissionMode = challengeSubmissionMode(props.challenge)
     const urlMode = submissionMode === 'url'
+    const aiUsageCopy = challengeAiUsageCopy(trackKey, typeKey)
     const selectionReady = urlMode ? !!submissionUrl : !!file
     // Every submission must answer the AI-usage question before submitting.
     const aiAnswerReady = aiAssisted !== undefined
@@ -745,7 +775,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                             )}
                             <fieldset className={styles.aiUsage}>
                                 <legend>
-                                    Did AI tools write most of your submission&apos;s code?
+                                    {aiUsageCopy.question}
                                     <span>*</span>
                                 </legend>
                                 <div className={styles.aiUsageOptions}>
@@ -770,7 +800,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                         <span>No</span>
                                     </label>
                                 </div>
-                                <p>{challengeAiUsageNote(trackKey, typeKey)}</p>
+                                <p>{aiUsageCopy.note}</p>
                             </fieldset>
                             <div className={styles.declaration}>
                                 <h3>Declaration</h3>
