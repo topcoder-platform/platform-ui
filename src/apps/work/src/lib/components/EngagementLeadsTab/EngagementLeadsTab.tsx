@@ -61,7 +61,10 @@ import {
     extractErrorMessage,
     showErrorToast,
 } from '../../utils'
-import { withQueryParams } from '../../utils/navigation.utils'
+import {
+    openResolvedUrlInNewTab,
+    withQueryParams,
+} from '../../utils/navigation.utils'
 
 import styles from './EngagementLeadsTab.module.scss'
 
@@ -299,22 +302,23 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
         setViewingEngagementId(engagementId)
 
         try {
-            const engagement = await fetchEngagement(engagementId)
-            const projectId = String(engagement.projectId || engagement.project?.id || '')
-                .trim()
+            await openResolvedUrlInNewTab(async () => {
+                const engagement = await fetchEngagement(engagementId)
+                const projectId = String(engagement.projectId || engagement.project?.id || '')
+                    .trim()
 
-            if (!projectId) {
-                showErrorToast('Unable to locate the project for this engagement.')
-                return
-            }
+                if (!projectId) {
+                    throw new Error('Unable to locate the project for this engagement.')
+                }
 
-            navigate(`${rootRoute}/projects/${projectId}/engagements/${engagementId}/view`)
+                return `${rootRoute}/projects/${projectId}/engagements/${engagementId}/view`
+            })
         } catch (err: unknown) {
             showErrorToast(extractErrorMessage(err, 'Unable to open engagement.'))
         } finally {
             setViewingEngagementId(undefined)
         }
-    }, [navigate, viewingEngagementId])
+    }, [viewingEngagementId])
 
     const getLeadDetailUrl = useCallback((leadId: string): string => (
         `${rootRoute}/${engagementLeadsRouteId}/${leadId}`

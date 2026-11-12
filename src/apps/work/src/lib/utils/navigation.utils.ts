@@ -131,3 +131,36 @@ export function buildProjectLandingPath(
         ? `/projects/${projectId}/invitations`
         : buildProjectChallengesPath(project.id)
 }
+
+/**
+ * Opens a URL that has to be resolved asynchronously in a new browser tab.
+ *
+ * The tab is opened synchronously, while the click is still being handled, so popup blockers allow it,
+ * and is pointed at the URL once it is resolved. If resolving fails the blank tab is closed and the
+ * error is rethrown so the caller can report it.
+ *
+ * @param resolveUrl resolves the URL to open.
+ */
+export async function openResolvedUrlInNewTab(resolveUrl: () => Promise<string>): Promise<void> {
+    const newTab = window.open('', '_blank')
+
+    if (newTab) {
+        // Detach the new tab from this page, as `noopener` would; the DOM API requires `null` here.
+        // eslint-disable-next-line unicorn/no-null
+        newTab.opener = null
+    }
+
+    try {
+        const url = await resolveUrl()
+
+        if (newTab) {
+            newTab.location.href = url
+            return
+        }
+
+        window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (err: unknown) {
+        newTab?.close()
+        throw err
+    }
+}
