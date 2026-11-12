@@ -113,31 +113,36 @@ describe('Forms reporting page', () => {
         expect(screen.queryByRole('table')).not.toBeInTheDocument()
     })
 
-    it('links each Let’s talk submission to the SendGrid logs of its emails', async () => {
+    it('links Let’s talk submissions to a SendGrid search by email and shows recorded message IDs', async () => {
         (fetchFormSubmissions as jest.Mock).mockResolvedValue({
             ...report,
             columns: ['email', 'sendgrid_message_ids'],
             data: [
-                { ...report.data[0], sendgrid_message_ids: ['abc123', 'def/456'] },
+                { ...report.data[0], sendgrid_message_ids: ['abc123', 'def456'] },
                 { email: 'older@example.com', sendgrid_message_ids: [], submission_id: 'two' },
+                { sendgrid_message_ids: [], submission_id: 'three' },
             ],
             labels: { ...report.labels, sendgrid_message_ids: 'SendGrid logs' },
         })
         render(<FormsPage />)
         await selectForm()
         const cards = screen.getAllByRole('article')
-        const links = within(cards[0])
-            .getAllByRole('link')
-        expect(links.map(link => [link.textContent, link.getAttribute('href')]))
-            .toEqual([
-                ['View SendGrid logs (1)', 'https://app.sendgrid.com/email_logs/abc123/details'],
-                ['View SendGrid logs (2)', 'https://app.sendgrid.com/email_logs/def%2F456/details'],
-            ])
-        expect(links[0])
+        const link = within(cards[0])
+            .getByRole('link', { name: 'View SendGrid logs' })
+        expect(link)
+            .toHaveAttribute('href', 'https://app.sendgrid.com/email_logs?recipientEmail=first%40example.com')
+        expect(link)
             .toHaveAttribute('target', '_blank')
-        expect(links[0])
+        expect(link)
             .toHaveAttribute('rel', 'noopener noreferrer')
+        expect(cards[0])
+            .toHaveTextContent('SendGrid message IDs: abc123, def456')
         expect(within(cards[1])
+            .getByRole('link', { name: 'View SendGrid logs' }))
+            .toBeInTheDocument()
+        expect(cards[1])
+            .not.toHaveTextContent('SendGrid message ID')
+        expect(within(cards[2])
             .getByText('No SendGrid emails recorded'))
             .toBeInTheDocument()
         expect(within(cards[0])
@@ -145,7 +150,7 @@ describe('Forms reporting page', () => {
             .not.toBeInTheDocument()
     })
 
-    it('renders SendGrid log links in the table for other forms', async () => {
+    it('renders the SendGrid search and message ID in the table for other forms', async () => {
         (fetchFormSubmissions as jest.Mock).mockResolvedValue({
             ...report,
             columns: ['email', 'sendgrid_message_ids'],
@@ -154,9 +159,12 @@ describe('Forms reporting page', () => {
         })
         render(<FormsPage />)
         await selectForm()
-        expect(within(screen.getByRole('table'))
+        const table = screen.getByRole('table')
+        expect(within(table)
             .getByRole('link', { name: 'View SendGrid logs' }))
-            .toHaveAttribute('href', 'https://app.sendgrid.com/email_logs/abc123/details')
+            .toBeInTheDocument()
+        expect(table)
+            .toHaveTextContent('SendGrid message ID: abc123')
     })
 
     it('retains all table columns for other forms', async () => {
