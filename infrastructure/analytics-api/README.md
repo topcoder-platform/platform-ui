@@ -160,3 +160,51 @@ Provision production as a separate stack and database role. Change the shared
 API ID/domain, workgroup, database, Auth0 issuer, audience, and role claim to
 production values. Do not reuse the development Clickstream project, app ID,
 S3 prefixes, Redshift namespace, Lambda role, or collector hostname.
+
+## SpaceTech campaign (PM-6712)
+
+`GET /v1/analytics/spacetech` accepts inclusive `from`/`to` dates (up to
+366 days) and exact `source`, `medium`, `campaign`, and `content` UTM filters.
+It uses the existing JWT/analytics-role gate, parameterized Data API queries,
+cache and resumable-query protocol. The SpaceTech tab defaults to 90 days.
+
+Apply the `spacetech_events_v1` view and its GRANT at the end of `bootstrap.sql`
+before deploying this Lambda and the two new API Gateway routes. It selects
+only marketing-site `/space-tech` events, including the optional trailing
+slash, and only `topcoder:space_tech_challenge` form events. The Lambda reader
+still has no access to raw events or lead answers. No new service is required.
+
+The report counts page views, distinct visitors, starts, accepted submissions,
+form-section viewers, CTA clicks and FAQ opens. Submission rate is accepted
+submission events divided by distinct page visitors; repeat submissions can
+make this exceed 100%. Average engaged time is foreground engagement milliseconds
+converted to seconds and divided by page views. Daily series use event dates
+and include quiet days. UTM breakdowns use each event's attribution, including
+`utm_content` for post-level analysis; a visitor can appear in several campaign
+rows if they visit using several links. Unknown attribution stays empty in the
+API and is labeled in the UI. The latest processed SpaceTech event date is shown
+so warehouse delay is visible.
+
+Country and device use the AWS `event_v2.geo_country` and
+`event_v2.device_ua_device_category` columns, verified against the
+[AWS schema](https://github.com/aws-solutions/clickstream-analytics-on-aws/blob/main/src/analytics/private/sqls/redshift/event-v2.sql).
+Do not infer country from browser language or treat a missing device as desktop.
+The current infrastructure ADR documents IP-location enrichment as disabled.
+PM-6712 supplies the country-reporting use case: the pipeline owner must enable
+country enrichment in each campaign environment for populated country reports.
+Until then the report explicitly shows unknown country. This PR does not
+reconfigure running pipelines or backfill historical events.
+
+Lead details remain under Reports → Forms → `space_tech_challenge`, with the
+existing Forms API authorization. That table loads all pages in the selected
+UTC date range before applying column filters, sorting, and local pagination.
+All eight requested headers are sortable and independently filterable, with
+filters combined using AND and case-insensitive substring matching. The date
+range CSV export retains its server-generated full-range behavior.
+
+The published development schema already contains `full_name`, `email`,
+`company`, `challenge`, `utm_source`, `utm_medium`, and `utm_campaign`; submission
+metadata supplies the date. Confirm the production form has those optional UTM
+text fields before launch. No form schema or historical lead data is rewritten.
+Website instrumentation must be deployed alongside this report; historical
+FAQ opens and form-section exposure cannot be reconstructed.

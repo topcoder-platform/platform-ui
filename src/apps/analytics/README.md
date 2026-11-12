@@ -19,9 +19,10 @@ The route tree is:
   -> /analytics/campaigns
   /campaigns
   /general
+  /spacetech
 ```
 
-On `analytics.<domain>`, the same children are `/campaigns` and `/general`.
+On `analytics.<domain>`, the same children are `/campaigns`, `/general`, and `/spacetech`.
 
 ## Reports
 
@@ -93,6 +94,14 @@ The report spinner stays in a contained region below the filters, leaving
 filters and Analytics navigation usable. Polling is bounded to twelve requests
 (roughly five minutes at the API's maximum query wait); after that, or after a
 genuine failure, the explicit retry action is shown.
+
+SpaceTech Analytics reports `/space-tech` traffic, engagement, FAQ opens,
+form-section reach and accepted form submissions with source, medium, campaign
+and content filters. It defaults to 90 days and supports the same 366-day limit.
+The daily chart compares visitors with form submissions. Lead details and
+sorting/filtering for every requested lead column remain in Reports → Forms →
+`space_tech_challenge`, protected by the existing Forms reporting permissions.
+See [deployment requirements and metric definitions](../../../infrastructure/analytics-api/README.md#spacetech-campaign-pm-6712).
 
 ## Privacy
 

@@ -8,6 +8,7 @@ import {
     downloadFormSubmissions,
     fetchFormSubmissions,
     fetchReportForms,
+    fetchSpaceTechSubmissions,
     formatFormValue,
     FormDates,
     FormReport,
@@ -17,6 +18,7 @@ import { downloadBlobFile } from '../../lib/services/reports.service'
 
 import LetsTalkSubmissions from './LetsTalkSubmissions'
 import SendGridLogLinks, { sendGridMessageIdsColumn } from './SendGridLogLinks'
+import SpaceTechSubmissions from './SpaceTechSubmissions'
 import styles from './FormsPage.module.scss'
 
 interface Selection extends FormDates {
@@ -65,7 +67,10 @@ const FormsPage: FC = () => {
         }
 
         setLoading(true)
-        fetchFormSubmissions(selection.key, selection, selection.cursors[selection.cursors.length - 1])
+        const request = selection.key === 'space_tech_challenge'
+            ? fetchSpaceTechSubmissions(selection, () => active)
+            : fetchFormSubmissions(selection.key, selection, selection.cursors[selection.cursors.length - 1])
+        request
             .then(result => { if (active) setReport(result) })
             .catch(() => { if (active) setReportError('Unable to load submissions. Check your access or retry.') })
             .finally(() => { if (active) setLoading(false) })
@@ -161,7 +166,7 @@ const FormsPage: FC = () => {
                     disabled={!selection.key || exporting || invalidRange}
                     onClick={() => exportCsv(true)}
                 >
-                    Export filtered CSV
+                    {selection.key === 'space_tech_challenge' ? 'Export date range CSV' : 'Export filtered CSV'}
                 </button>
                 {exporting && <span role='status'>Preparing CSV…</span>}
             </div>
@@ -174,9 +179,14 @@ const FormsPage: FC = () => {
             {!selection.key && <p>Select a form to view submissions.</p>}
             {report && !loading && (
                 <>
-                    <p role='status'>{`${report.total} submissions · Page ${page}`}</p>
+                    <p role='status'>
+                        {report.form === 'space_tech_challenge'
+                            ? `${report.total} submissions` : `${report.total} submissions · Page ${page}`}
+                    </p>
                     {report.data.length === 0 ? (
                         <p>No submissions match these dates.</p>
+                    ) : report.form === 'space_tech_challenge' ? (
+                        <SpaceTechSubmissions key={`${selection.startDate}:${selection.endDate}`} report={report} />
                     ) : report.form === 'lets_talk' ? (
                         <LetsTalkSubmissions report={report} />
                     ) : (
@@ -209,26 +219,28 @@ const FormsPage: FC = () => {
                             </table>
                         </div>
                     )}
-                    <nav className={styles.actions} aria-label='Submission pages'>
-                        <button
-                            type='button'
-                            disabled={page === 1}
-                            onClick={() => setSelection(current => ({
-                                ...current, cursors: current.cursors.slice(0, -1),
-                            }))}
-                        >
-                            Previous
-                        </button>
-                        <button
-                            type='button'
-                            disabled={!report.nextCursor}
-                            onClick={() => setSelection(current => ({
-                                ...current, cursors: [...current.cursors, report.nextCursor || undefined],
-                            }))}
-                        >
-                            Next
-                        </button>
-                    </nav>
+                    {report.form !== 'space_tech_challenge' && (
+                        <nav className={styles.actions} aria-label='Submission pages'>
+                            <button
+                                type='button'
+                                disabled={page === 1}
+                                onClick={() => setSelection(current => ({
+                                    ...current, cursors: current.cursors.slice(0, -1),
+                                }))}
+                            >
+                                Previous
+                            </button>
+                            <button
+                                type='button'
+                                disabled={!report.nextCursor}
+                                onClick={() => setSelection(current => ({
+                                    ...current, cursors: [...current.cursors, report.nextCursor || undefined],
+                                }))}
+                            >
+                                Next
+                            </button>
+                        </nav>
+                    )}
                 </>
             )}
         </div>
