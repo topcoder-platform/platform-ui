@@ -17,7 +17,7 @@ import {
 import { downloadBlobFile } from '../../lib/services/reports.service'
 
 import LetsTalkSubmissions from './LetsTalkSubmissions'
-import SendGridLogLinks, { sendGridMessageIdsColumn } from './SendGridLogLinks'
+import SendGridLogLinks, { sendGridMessageIdsColumn, submitterEmailColumn } from './SendGridLogLinks'
 import SpaceTechSubmissions from './SpaceTechSubmissions'
 import styles from './FormsPage.module.scss'
 
@@ -209,7 +209,12 @@ const FormsPage: FC = () => {
                                             {report.columns.map(column => (
                                                 <td key={column}>
                                                     {column === sendGridMessageIdsColumn
-                                                        ? <SendGridLogLinks value={row[column]} />
+                                                        ? (
+                                                            <SendGridLogLinks
+                                                                value={row[column]}
+                                                                email={row[submitterEmailColumn]}
+                                                            />
+                                                        )
                                                         : formatFormValue(row[column])}
                                                 </td>
                                             ))}
