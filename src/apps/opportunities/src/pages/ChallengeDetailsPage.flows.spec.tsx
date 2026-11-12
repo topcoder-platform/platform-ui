@@ -2683,6 +2683,122 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
     })
 
+    it('shows released development ranks and scores with mobile labels and sortable columns', () => {
+        const utils = jest.requireMock('../utils')
+        const actual = jest.requireActual('../utils/marathon-match.utils')
+        jest.spyOn(utils, 'marathonSubmissionScores')
+            .mockImplementation(actual.marathonSubmissionScores)
+        mockProfile = { handle: 'viewer', userId: 123 }
+        mockChallenge = {
+            ...mockChallenge,
+            phases: [],
+            status: 'COMPLETED',
+            winners: [{ placement: 1, userId: '42' }],
+        }
+        mockSubmissions = [
+            {
+                id: 'winner',
+                review: [{ finalScore: 99.5, initialScore: 90 }],
+                submitterHandle: 'winner',
+            },
+            { finalScore: 99.5, id: 'tied', initialScore: 91, submitterHandle: 'tied' },
+            { finalScore: 0, id: 'zero', initialScore: 0, submitterHandle: 'zero' },
+            { id: 'unscored', submitterHandle: 'unscored' },
+        ]
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+
+        expect(screen.getAllByRole('columnheader')
+            .map(header => header.textContent))
+            .toEqual(['Rank', 'Handle', 'Rating', 'Submission Date', 'Initial Score', 'Final Score', 'Action'])
+        const rows = screen.getAllByRole('row')
+            .slice(1)
+        expect(rows.map(row => within(row)
+            .getAllByRole('cell')[0].textContent))
+            .toEqual(['1', '1', '3', 'N/A'])
+        expect(within(rows[0])
+            .getByRole('cell', { name: '90' }))
+            .toHaveAttribute('data-mobile-label', 'Initial Score')
+        expect(within(rows[0])
+            .getByRole('cell', { name: '99.5' }))
+            .toHaveAttribute('data-mobile-label', 'Final Score')
+        expect(within(rows[0])
+            .getByRole('cell', { name: '1' }))
+            .toHaveAttribute('data-mobile-label', 'Rank')
+        expect(within(rows[3])
+            .getAllByRole('cell')[4])
+            .toHaveTextContent('N/A')
+        expect(within(rows[3])
+            .getAllByRole('cell')[5])
+            .toHaveTextContent('-')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Final Score' }))
+        expect(screen.getAllByRole('row')[1])
+            .toHaveTextContent('zero')
+        fireEvent.click(screen.getByRole('button', { name: 'Initial Score' }))
+        expect(screen.getAllByRole('row')[1])
+            .toHaveTextContent('zero')
+        fireEvent.change(screen.getByRole('combobox', { name: 'Sort submissions by' }), {
+            target: { value: 'finalRank' },
+        })
+        expect(screen.getAllByRole('row')[1])
+            .toHaveTextContent('winner')
+        expect(screen.getByRole('button', { name: 'Sort by Rank' }))
+            .toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'Rank' }))
+        expect(screen.getAllByRole('row')[1])
+            .toHaveTextContent('zero')
+        expect(screen.getAllByRole('row')[4])
+            .toHaveTextContent('unscored')
+    })
+
+    it('keeps development ranks global across pagination and sorting', () => {
+        mockProfile = { handle: 'viewer', userId: 123 }
+        mockChallenge = {
+            ...mockChallenge,
+            phases: [],
+            status: 'COMPLETED',
+            winners: [{ placement: 1, userId: '42' }],
+        }
+        mockSubmissions = Array.from({ length: 12 }, (_value, index) => ({
+            finalScore: index,
+            id: `submission-${index}`,
+            submittedDate: `2026-06-${String(20 - index)
+                .padStart(2, '0')}T09:30:00.000Z`,
+            submitterHandle: `coder${index}`,
+        }))
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        expect(within(screen.getAllByRole('row')[1])
+            .getAllByRole('cell')[0])
+            .toHaveTextContent('12')
+        fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+        expect(within(screen.getAllByRole('row')[1])
+            .getAllByRole('cell')[0])
+            .toHaveTextContent('2')
+        fireEvent.click(screen.getByRole('button', { name: 'Rank' }))
+        expect(screen.getAllByRole('row')[1])
+            .toHaveTextContent('coder11')
+        expect(screen.getByText('1 - 10 of 12 items'))
+            .toBeInTheDocument()
+    })
+
+    it.each([
+        ['ACTIVE', [{ placement: 1, userId: '42' }], 'Development'],
+        ['COMPLETED', [], 'Development'],
+        ['COMPLETED', [{ placement: 1, userId: '42' }], 'Design'],
+    ])('does not release development results for %s with winners %j on %s', (status, winners, track) => {
+        mockProfile = { handle: 'viewer', userId: 123 }
+        mockChallenge = { ...mockChallenge, status, track, winners }
+        mockSubmissions = [{ finalScore: 100, id: 'submission', submitterHandle: 'coder' }]
+        renderPage()
+        fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
+        for (const label of ['Rank', 'Initial Score', 'Final Score']) {
+            expect(screen.queryByRole('columnheader', { name: label })).not.toBeInTheDocument()
+            expect(screen.queryByRole('option', { name: label })).not.toBeInTheDocument()
+        }
+    })
+
     it('matches the Design Registrants columns and the QA submission score columns', () => {
         mockProfile = { handle: 'viewer', userId: 123 }
         mockRegistration = { id: 'resource-id' }
