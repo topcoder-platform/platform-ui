@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define, ordered-imports/ordered-imports, react/jsx-no-bind */
-import { ChangeEvent, FC, FormEvent, Fragment, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import useSWR, { SWRResponse } from 'swr'
+import { ChangeEvent, FC, FormEvent, Fragment, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 
 import { BaseModal, ConfirmModal, IconOutline } from '~/libs/ui'
 import { pickForumAttachments } from '../services/forum-attachments.service'
@@ -38,6 +38,7 @@ import { OpportunityTabLoading } from './OpportunityTabLoading'
 import { challengeForumUrl, memberProfileUrl } from '../utils'
 import { challengeForumLink } from '../utils/challenge-detail-route.utils'
 import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
+import { isMarathonForumArchive } from '../utils/marathon-forum-archives'
 import { ForumMarkdown } from './ForumMarkdown'
 import { ForumMentionTextarea } from './ForumMentionTextarea'
 import { MemberAvatar } from './MemberAvatar'
@@ -384,6 +385,7 @@ const ForumFallback: FC<ForumFallbackProps> = props => (
  * @throws Does not throw.
  */
 const ForumOverview: FC<{
+    readOnly?: boolean
     onCreate: () => void
     onWatch: () => void
     watchDisabled: boolean
@@ -416,10 +418,14 @@ const ForumOverview: FC<{
                 </span>
             </div>
             <div className={styles.overviewActions}>
-                <button onClick={props.onCreate} type='button'>
-                    <IconOutline.PlusCircleIcon aria-hidden='true' />
-                    Create new topic
-                </button>
+                {props.readOnly ? (
+                    <p>This completed match’s forum is read-only.</p>
+                ) : (
+                    <button onClick={props.onCreate} type='button'>
+                        <IconOutline.PlusCircleIcon aria-hidden='true' />
+                        Create new topic
+                    </button>
+                )}
                 <button
                     aria-pressed={props.watching ?? false}
                     disabled={props.watchDisabled}
@@ -569,7 +575,8 @@ export const ForumTopicCard: FC<{
 }> = props => {
     const participants = topicParticipants(props.topic)
     const excerpt = props.topic.starterPostExcerpt?.trim()
-    const owner = props.topic.authorMemberId === props.memberId
+    const readOnly = props.topic.readOnly || isMarathonForumArchive(props.topic.challengeId)
+    const owner = !readOnly && props.topic.authorMemberId === props.memberId
     const cardClass = props.topic.isAnnouncement
         ? `${styles.topicCard} ${styles.announcementCard}`
         : styles.topicCard
@@ -640,7 +647,7 @@ export const ForumTopicCard: FC<{
                                 Edit
                             </button>
                         )}
-                        {props.canDelete && !props.topic.locked && (
+                        {!readOnly && props.canDelete && !props.topic.locked && (
                             <button onClick={() => props.onDelete(props.topic)} type='button'>
                                 <ForumIcon name='delete' />
                                 Delete
@@ -1259,7 +1266,8 @@ const ForumPostCard: FC<{
     canReply?: boolean
 }> = props => {
     const post = props.item.post
-    const owner = post.authorMemberId === props.memberId
+    const readOnly = props.detail.topic.readOnly || isMarathonForumArchive(props.detail.topic.challengeId)
+    const owner = !readOnly && post.authorMemberId === props.memberId
     const articleRef = useRef<HTMLElement>(null)
     const depthClass = props.item.depth > 0 ? styles.replyPost : styles.post
     const postClass = props.linked ? `${depthClass} ${styles.linkedPost}` : depthClass
@@ -1342,7 +1350,7 @@ const ForumPostCard: FC<{
                         className={
                             post.viewerReaction === 'THUMBS_UP' ? styles.reactionActive : undefined
                         }
-                        disabled={props.reactionPending}
+                        disabled={readOnly || props.reactionPending}
                         onClick={() => props.onReact(post, 'THUMBS_UP')}
                         type='button'
                     >
@@ -1357,7 +1365,7 @@ const ForumPostCard: FC<{
                         className={
                             post.viewerReaction === 'THUMBS_DOWN' ? styles.reactionActive : undefined
                         }
-                        disabled={props.reactionPending}
+                        disabled={readOnly || props.reactionPending}
                         onClick={() => props.onReact(post, 'THUMBS_DOWN')}
                         type='button'
                     >
@@ -1365,7 +1373,7 @@ const ForumPostCard: FC<{
                         {post.thumbsDownCount ?? 0}
                     </button>
                     {hasPostActions && <span aria-hidden className={styles.postActionDivider} />}
-                    {!props.detail.topic.locked && props.canReply !== false && (
+                    {!readOnly && !props.detail.topic.locked && props.canReply !== false && (
                         <>
                             <button onClick={() => props.onReply(post)} type='button'>
                                 <ForumIcon name='reply' />
@@ -1383,7 +1391,7 @@ const ForumPostCard: FC<{
                             Edit
                         </button>
                     )}
-                    {props.canDelete && !props.detail.topic.locked && (
+                    {!readOnly && props.canDelete && !props.detail.topic.locked && (
                         <button onClick={() => props.onDelete(post)} type='button'>
                             <ForumIcon name='delete' />
                             Delete
@@ -1433,6 +1441,7 @@ export const ForumTopicView: FC<{
     onChanged: () => Promise<void>
     profilesByMemberId: MemberProfilesById
 }> = props => {
+    const readOnly = props.detail.topic.readOnly || isMarathonForumArchive(props.detail.topic.challengeId)
     const [comment, setComment] = useState('')
     const [commentError, setCommentError] = useState<string>()
     const [error, setError] = useState<string>()
@@ -1669,7 +1678,7 @@ export const ForumTopicView: FC<{
                     {!flatPosts.length && (
                         <div className={styles.noPosts}>
                             <h2>No comments yet</h2>
-                            <p>Start the conversation below.</p>
+                            {!readOnly && <p>Start the conversation below.</p>}
                         </div>
                     )}
                     {!props.memberId && (
@@ -1679,7 +1688,9 @@ export const ForumTopicView: FC<{
                             </button>
                         </p>
                     )}
+                    {readOnly && <p className={styles.lockedNotice}>This completed match’s forum is read-only.</p>}
                     {!!props.memberId
+                        && !readOnly
                         && !props.detail.topic.locked
                         && props.detail.permissions?.createPost !== false && (
                         <form className={styles.commentForm} onSubmit={submitComment}>
@@ -1780,6 +1791,7 @@ function resetForumScroll(): void {
  * @throws Does not throw; API failures render stable, actionable UI states.
  */
 export const ChallengeForum: FC<ChallengeForumProps> = props => {
+    const readOnly = isMarathonForumArchive(props.challenge.id)
     const externalUrl = challengeForumUrl(props.challenge)
     const [creatingTopic, setCreatingTopic] = useState(false)
     const [editingTopicDetail, setEditingTopicDetail] = useState<ForumTopicDetail>()
@@ -2093,7 +2105,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         return <ForumFallback externalUrl={externalUrl} title='Forum temporarily unavailable' />
     }
 
-    if (creatingTopic) {
+    if (creatingTopic && !readOnly) {
         return (
             <>
                 {mutationError && (
@@ -2135,7 +2147,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
 
         return (
             <ForumTopicView
-                canDeletePosts={!!props.canDeleteTopics}
+                canDeletePosts={!readOnly && !!props.canDeleteTopics}
                 detail={detailResponse.data}
                 linkedPostId={linkedPostId}
                 memberId={props.memberId}
@@ -2159,6 +2171,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
         <div className={styles.forumLayout}>
             <aside className={styles.leftPanel}>
                 <ForumOverview
+                    readOnly={readOnly}
                     onWatch={toggleForumWatch}
                     watchDisabled={!watchResponse.data || !!watchResponse.error || pendingAction === 'forum-watch'}
                     watching={watchResponse.data?.watching}
@@ -2219,7 +2232,7 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                 )}
                 {visibleTopics.map(topic => (
                     <ForumTopicCard
-                        canDelete={!!props.canDeleteTopics}
+                        canDelete={!readOnly && !!props.canDeleteTopics}
                         key={topic.id}
                         memberId={props.memberId as string}
                         onCopyLink={item => copyForumLink(item.id)}
@@ -2239,7 +2252,8 @@ export const ChallengeForum: FC<ChallengeForumProps> = props => {
                         <p>
                             {topics.length
                                 ? 'Try another search or reset the forum filters.'
-                                : 'Create the first topic to start the challenge discussion.'}
+                                : readOnly ? 'No archived discussions are available for this match.'
+                                    : 'Create the first topic to start the challenge discussion.'}
                         </p>
                     </div>
                 )}

@@ -1,0 +1,112 @@
+/** Completed numbered Marathon Matches approved for authenticated, read-only access.
+ * Frozen scope reviewed on 2026-11-13 MM102 and group-restricted MM127 are excluded.
+ */
+const ARCHIVED_CHALLENGE_IDS = new Set([
+    'cda1d53e-57b3-4bfd-bda0-350796437e48', // Marathon Match 49
+    '9ab6fe29-48ae-4a6e-96b9-4f073250736f', // Marathon Match 50
+    '2abf30b6-b296-46c6-8fa8-74a7f27c3632', // Marathon Match 51
+    '738ca0cd-a292-4fdf-85fe-152f8eaedea5', // Marathon Match 52
+    'e4cded85-7c72-490f-bc23-9638f0413b3c', // Marathon Match 53
+    'bf5ed506-24ad-4ab0-a58d-4b437e0968d6', // Marathon Match 54
+    'c369bbb9-0c32-4398-8728-731fa5c4d9b3', // Marathon Match 57
+    '6941526f-e72a-4551-96a7-2b9455ffc391', // Marathon Match 58
+    '3c30c5c4-9197-4f23-bdd6-a42834a5a674', // Marathon Match 59
+    '852f5fff-20bc-4483-ab60-681fa894ae89', // Marathon Match 60
+    '85870307-f1c9-430c-b9c2-f1e0e4cff228', // Marathon Match 61
+    '06e7b6e8-3582-4958-9830-51bd1a22f6c5', // Marathon Match 63
+    'ef4f2d39-a474-48ec-8c28-62a6dac34464', // Marathon Match 64
+    '6e3c42ac-33a4-4030-a590-f1a26f1a22ba', // Marathon Match 65
+    'cfb23085-4049-4d7b-8f58-23d5a4e43bcf', // Marathon Match 67
+    'da31f097-82ff-41e8-bbf5-63773b23c3c6', // Marathon Match 68
+    '0d53d18c-8b74-4375-a6a8-497927b36148', // Marathon Match 70
+    '257e752a-427e-41fe-8453-20e86f7a6432', // Marathon Match 71
+    '75d88308-975b-44a3-98b0-c272361ac530', // Marathon Match 72
+    '3877a98d-d679-4fc9-91f9-49e73a9e65ac', // Marathon Match 73
+    'b05545b0-2fbe-4ae1-9f02-422475a6ec60', // Marathon Match 74
+    '353cf586-2efd-47bc-b49c-6bcd70fb6cae', // Marathon Match 75
+    'cdfccb1c-cbc5-48aa-a956-02be2ea23a21', // Marathon Match 77
+    '5ef05841-918c-40e9-834e-ddeb9675b7f2', // Marathon Match 79
+    'ac4672ec-6b4d-493d-9aa2-32b76d2cfd9c', // Marathon Match 80
+    'ff49ebf9-1b2d-4b16-9966-61231b798d57', // Marathon Match 81
+    '5c47651f-aca9-4477-9387-f67a247dd70f', // Marathon Match 82
+    'a10f5879-ec26-4d3e-9d43-080e8a814fb9', // Marathon Match 83
+    '4b2624f9-e152-4652-8f6f-eabcd0e932c2', // Marathon Match 84
+    '39affd2d-2a29-4fa0-bbb3-f5668b0375d0', // Marathon Match 85
+    '562e9650-aa20-4e54-9fe3-d52e21bb9cbe', // Marathon Match 86
+    '8665d4e2-0d50-4774-9405-349b369ea66a', // Marathon Match 87
+    '5f39bfc3-173d-4d0b-9566-3808595ac597', // Marathon Match 88
+    'f436f6b5-2291-4cf5-b2ce-b277674c5ad0', // Marathon Match 89
+    'c02b9634-9c5d-4047-b6ae-ab4f37349772', // Marathon Match 90
+    '3aeb8a28-b0d9-431b-8054-cb3e93597283', // Marathon Match 91
+    '1f50e447-1380-494f-9836-61e70045da7c', // Marathon Match 92
+    'c7b48979-41c3-4cd5-9173-c5662d34e8c6', // Marathon Match 93
+    '8e605379-88a3-43ed-8cf8-e53c228f2f10', // Marathon Match 95
+    '359cb9b9-bf7d-490b-8f4d-86e72ca8d8cd', // Marathon Match 96
+    '4fb6687d-7e3f-49c7-8317-314a34733d4e', // Marathon Match 97
+    'f536b1d1-6716-449a-98c1-1a8460a38d38', // Marathon Match 98
+    '43f7fc9e-b3e3-4fb5-be3b-4d654bb5cf77', // Marathon Match 99
+    '78a8de65-b160-4a01-9905-7c81613e0011', // Marathon Match 100
+    'b0ba927c-398e-4572-9bf4-83e0719ee90c', // Marathon Match 103
+    '388ffeac-d6ab-41af-9cb2-b071daa5402f', // Marathon Match 105
+    '17b21fa6-29b0-4df9-953d-1359d11ce321', // Marathon Match 106
+    '1509a15b-cbc4-4151-bd5e-75592c0db842', // Marathon Match 107
+    '98515bad-3971-4b3b-956f-36435121341c', // Marathon Match 110
+    'a12e9ddd-73e7-47d5-b304-7141df1b5226', // Marathon Match 111
+    '05c14b76-988f-48f3-a2ea-f950400da304', // Marathon Match 112
+    'd86a743e-be8e-49d7-b83b-6d5261e264dc', // Marathon Match 113
+    'f0581e30-6830-48a6-b890-594dd1b625a8', // Marathon Match 114
+    'd57f2711-3cef-4520-8af4-b1a083f841ab', // Marathon Match 116
+    '70402b3e-fb5b-4d3d-9277-20c1fa512806', // Marathon Match 118
+    '9a7c7da8-dcec-4fa2-8581-7d5774b52d1b', // Marathon Match 119
+    '457fe241-0687-4f60-a379-a3979a0d7210', // Marathon Match 120
+    '71581555-b87a-4930-b37e-d78357073479', // Marathon Match 121
+    'bb7a2759-8aa3-464e-8300-fb175a8efcae', // Marathon Match 122
+    'b846362a-218e-4a3d-b86c-3d38f472e199', // Marathon Match 123
+    '7ba727e5-452b-493a-b829-341ea8888aff', // Marathon Match 124
+    '39f57908-803c-4b69-b208-4fc03717ab12', // Marathon Match 125
+    '82eb883d-85e9-442f-b0eb-91631d3d2a8f', // Marathon Match 126
+    'c522c9e3-29d3-4788-98db-05748f0842dc', // Marathon Match 129
+    'eab61248-dcf2-4a3b-aa72-62c703d9a7dd', // Marathon Match 130
+    '00b375b6-1f64-4702-baeb-28a7b00b64d1', // Marathon Match 131
+    '3a6b8bf2-1e02-4acb-a50a-09a13ed9ba34', // Marathon Match 132
+    '5fb2b54f-055e-4059-8687-ebaa8dbd8a18', // Marathon Match 133
+    '5ac77343-7f2f-4635-8aff-bbf49c700fda', // Marathon Match 134
+    'ef5d19d2-de9b-4e37-b428-e7e103458425', // Marathon Match 135
+    '9bb1c5e1-dbb3-4407-be0e-3cc0dc45bf1a', // Marathon Match 136
+    'd9570afb-dfde-43b0-b4e1-20434933c8cc', // Marathon Match 137
+    '81d26476-fb3c-4e4e-9ffe-7ee17c0438ab', // Marathon Match 138
+    '05bd815f-0e25-4268-a02d-7b8233d710dc', // Marathon Match 139
+    'd6b59637-343d-47b3-ac1e-8b45b2416b09', // Marathon Match 140
+    '8fe73e58-d883-41bd-9028-b1c925c380e5', // Marathon Match 141
+    '39537a8f-3c6f-4c97-b943-d3434606aede', // Marathon Match 142
+    'fd50f067-5d3e-4bef-9157-0274bab7ce3b', // Marathon Match 143
+    'd8803445-3ae4-4ce6-9949-6fea9313368e', // Marathon Match 144
+    '7289e32b-a4d8-4349-9060-192a512368f8', // Marathon Match 145
+    '9e14555a-a853-4137-8902-cd118f7ea5dc', // Marathon Match 146
+    '44dab465-2574-48de-bf5f-8a40ea02f567', // Marathon Match 147
+    '8da75645-3b0d-43f3-af4e-fbd2096ab76d', // Marathon Match 148
+    '13d71244-c38c-49eb-84f1-c4951c1a771e', // Marathon Match 149
+    'fd5f10e0-34de-4fdc-9df1-6bd8681debf3', // Marathon Match 150
+    'e74b6fb4-13b4-4b5d-b5cf-6d72757eca4c', // Marathon Match 151
+    '6f72c847-d8d7-4ac8-9668-89766660c922', // Marathon Match 152
+    'f472598c-9022-444a-be87-66c3af4b7fae', // Marathon Match 153
+    '7a247ad8-0ae4-47f0-94de-59541be3c469', // Marathon Match 154
+    '4a89bbc5-1d56-41a0-a284-3e3ec5859b28', // Marathon Match 155
+    '240acb6f-5e29-4d52-9c3d-5ac139dcf3d3', // Marathon Match 156
+    'bdd94102-9b21-4542-b38f-76d56891248d', // Marathon Match 157
+    '56d1a9a0-b39c-402b-bc67-8d4b2c9ed373', // Marathon Match 158
+    '119e0f53-8ffe-43c5-abaa-c4348e0515dc', // Marathon Match 159
+    '80d19de8-91f2-47fa-b08d-af71e4ca2fbb', // Marathon Match 160
+    '9e87736a-3977-499e-a963-70466b81c948', // Marathon Match 161
+    '883d6bcd-3749-427a-964a-ac8435737228', // Marathon Match 162
+    'd6afa51e-e32b-4776-90ce-218cf65031d4', // Marathon Match 163
+    '911c1486-fc09-4c40-8a45-a46ad38fad3e', // Marathon Match 164
+    '48826d67-3354-4191-8c8f-5aa07c84dbdf', // Marathon Match 165
+    '15f1c681-42b2-4f62-99c7-6f61fe5c57d9', // Marathon Match 166
+    '0b11e0fd-3e2d-46dc-8f7b-27c9f49d63cb', // Marathon Match 167
+])
+
+/** Checks the explicit archive scope names never grant access. */
+export function isMarathonForumArchive(challengeId: string | null | undefined): boolean {
+    return !!challengeId && ARCHIVED_CHALLENGE_IDS.has(challengeId)
+}
