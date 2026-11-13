@@ -1082,6 +1082,21 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
     })
 
+    it.each([
+        ['0b11e0fd-3e2d-46dc-8f7b-27c9f49d63cb', 'COMPLETED', true, true],
+        ['0b11e0fd-3e2d-46dc-8f7b-27c9f49d63cb', 'ACTIVE', true, false],
+        ['0b11e0fd-3e2d-46dc-8f7b-27c9f49d63cb', 'COMPLETED', false, false],
+        ['eab5c386-3f0e-46c2-a4a8-475b72104f89', 'COMPLETED', true, false],
+        ['0f483320-428b-4891-83e8-9caa80c7d931', 'COMPLETED', true, false],
+        ['future-match', 'COMPLETED', true, false],
+    ])('gates archive Forum tab for %s, %s, signed in=%s', (id, status, signedIn, visible) => {
+        mockProfile = signedIn ? { handle: 'viewer', userId: 123 } : undefined
+        mockChallenge = { ...mockChallenge, id, name: 'Marathon Match 167', status, type: 'Marathon Match' }
+        renderPage(`/opportunities/challenge/${id}`)
+        expect(!!screen.queryByRole('tab', { name: /^Forum/ }))
+            .toBe(visible)
+    })
+
     it('matches community-app by showing all submissions to a signed-in unregistered member', () => {
         mockProfile = { handle: 'viewer', userId: 123 }
 

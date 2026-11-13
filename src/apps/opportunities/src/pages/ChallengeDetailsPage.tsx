@@ -112,6 +112,7 @@ import {
     FORUM_TOPIC_QUERY_PARAM,
 } from '../utils/challenge-detail-route.utils'
 import { formatOpportunityDateTime } from '../utils/opportunity-date.utils'
+import { isMarathonForumArchive } from '../utils/marathon-forum-archives'
 import { ReactComponent as EmptyInfoIcon } from '../assets/empty-info.svg'
 import { ReactComponent as SortIcon } from '../assets/sort.svg'
 import { ReactComponent as DeleteIcon } from '../assets/submission-delete.svg'
@@ -424,7 +425,9 @@ export const ChallengeDetailsPage: FC = () => {
         { revalidateOnFocus: false, shouldRetryOnError: false },
     )
     const hasMemberTabAccess = !taskChallenge && (isRegistered || isAdministrator)
-    const hasForumAccess = !taskChallenge && (hasMemberTabAccess || !!memberResourceResponse.data)
+    const hasArchiveAccess = !!memberId && isMarathonForumArchive(challengeId)
+        && challenge?.status?.toUpperCase() === 'COMPLETED'
+    const hasForumAccess = !taskChallenge && (hasArchiveAccess || hasMemberTabAccess || !!memberResourceResponse.data)
     const mySubmissionCountResponse: SWRResponse<number, Error> = useSWR(
         challengeId && memberId && isRegistered
             ? ['opportunities:my-submission-count', challengeId, memberId]
