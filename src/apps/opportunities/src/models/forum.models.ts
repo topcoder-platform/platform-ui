@@ -14,6 +14,8 @@ export interface ForumTopicParticipant {
 
 /** Topic summary returned by the Forums API for list and detail views. */
 export interface ForumTopicSummary {
+    /** Discussion content cannot be changed, even by its author or an administrator. */
+    readOnly?: boolean
     authorHandle: string
     authorMemberId: string
     challengeId: string | null
