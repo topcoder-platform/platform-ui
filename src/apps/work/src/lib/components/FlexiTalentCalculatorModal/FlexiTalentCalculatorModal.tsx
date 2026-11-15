@@ -638,6 +638,9 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
 
                 <section className={styles.section}>
                     <h4 className={styles.sectionTitle}>Commercials</h4>
+                    <p className={styles.subtitle}>
+                        Enter any one commercial value; the others are calculated from it.
+                    </p>
                     <div className={styles.grid}>
                         {COMMERCIAL_FIELDS.map(definition => (
                             <InputText
@@ -739,7 +742,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
         >
             <div className={styles.content}>
                 <p className={styles.subtitle}>
-                    {`Lead ${lead.id}. Enter any one commercial value; the others are calculated from it.`}
+                    {`Lead ${lead.id}`}
                 </p>
 
                 {loading && <LoadingSpinner />}

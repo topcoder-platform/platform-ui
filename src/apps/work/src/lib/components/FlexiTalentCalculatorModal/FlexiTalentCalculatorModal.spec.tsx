@@ -200,6 +200,17 @@ describe('FlexiTalentCalculatorModal', () => {
             .toBeInTheDocument()
     })
 
+    it('explains the commercial values in the Commercials section', async () => {
+        await renderCalculator()
+
+        const hint = screen.getByText('Enter any one commercial value; the others are calculated from it.')
+
+        expect(hint.previousElementSibling)
+            .toHaveTextContent('Commercials')
+        expect(screen.getByText('Lead lead-1'))
+            .toBeInTheDocument()
+    })
+
     it('recalculates from the last edited commercial value', async () => {
         const user = userEvent.setup()
         await renderCalculator()
