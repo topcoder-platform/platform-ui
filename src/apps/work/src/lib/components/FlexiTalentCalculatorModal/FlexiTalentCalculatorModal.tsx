@@ -41,8 +41,10 @@ import {
     FLEXI_TALENT_SMU_OPTIONS,
     formatCalculatorAmount,
     formatCalculatorInputValue,
-    getSmuOption,
+    isOtherSmu,
+    isValidCostTransferPercent,
     MemberInputField,
+    OTHER_SMU_CODE,
     parseCalculatorNumber,
 } from '../../utils/flexi-talent-calculator.utils'
 import {
@@ -92,10 +94,25 @@ const COMMERCIAL_FIELDS: ReadonlyArray<AmountFieldDefinition<CommercialInputFiel
     { field: 'tcMarginPercent', label: 'TC Margin %' },
 ]
 
-const SMU_SELECT_OPTIONS: ReadonlyArray<InputSelectOption> = FLEXI_TALENT_SMU_OPTIONS.map(option => ({
-    label: `${option.label} (${(option.costTransferRate * 100).toFixed(2)}%)`,
-    value: option.code,
-}))
+const SMU_SELECT_OPTIONS: ReadonlyArray<InputSelectOption> = [
+    ...FLEXI_TALENT_SMU_OPTIONS.map(option => ({
+        label: `${option.label} (${(option.costTransferRate * 100).toFixed(2)}%)`,
+        value: option.code,
+    })),
+    // No fixed cost transfer %: the user enters it.
+    { label: 'Others', value: OTHER_SMU_CODE },
+]
+
+/** Error for a typed cost transfer % that cannot be used; none while it is empty. */
+function getCostTransferPercentError(raw: string): string | undefined {
+    if (!raw.trim()) {
+        return undefined
+    }
+
+    return isValidCostTransferPercent(parseCalculatorNumber(raw))
+        ? undefined
+        : 'Enter a percentage above 0 and up to 100.'
+}
 
 const REFERRAL_OPTIONS: ReadonlyArray<InputSelectOption> = [
     { label: 'No', value: 'no' },
@@ -319,6 +336,10 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
         updateActiveDraft({ smuCode: event.target.value })
     }, [updateActiveDraft])
 
+    const handleCostTransferPercentChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
+        updateActiveDraft({ costTransferPercentRaw: event.target.value })
+    }, [updateActiveDraft])
+
     const handleHoursPerDayChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
         updateActiveDraft({ hoursPerDayRaw: event.target.value })
     }, [updateActiveDraft])
@@ -439,7 +460,6 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
             .catch(() => undefined)
     }, [loadCalculations])
 
-    const selectedSmu = getSmuOption(activeDraft?.smuCode)
     const activeSaveStatus = activeKey ? saveStatuses[activeKey] : undefined
 
     function renderCalculationActions(): JSX.Element {
@@ -538,6 +558,21 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                             placeholder='Select SMU'
                             value={draft.smuCode}
                         />
+                        {isOtherSmu(draft.smuCode) && (
+                            <InputText
+                                dirty
+                                error={getCostTransferPercentError(draft.costTransferPercentRaw)}
+                                forceUpdateValue
+                                label='Cost Transfer %'
+                                name='costTransferPercent'
+                                onBlur={handleFieldBlur}
+                                onChange={handleCostTransferPercentChange}
+                                placeholder='e.g. 72.5'
+                                tabIndex={0}
+                                type='text'
+                                value={draft.costTransferPercentRaw}
+                            />
+                        )}
                         <InputText
                             forceUpdateValue
                             label='Duration (Weeks)'
@@ -626,8 +661,12 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                             The actual cost is lower than the total member cost, so the TC margin is negative.
                         </p>
                     )}
-                    {!selectedSmu && (
-                        <p className={styles.hint}>Select an SMU to calculate the booking cost.</p>
+                    {result.costTransferRate === undefined && (
+                        <p className={styles.hint}>
+                            {isOtherSmu(draft.smuCode)
+                                ? 'Enter the cost transfer % for the Others SMU to calculate the booking cost.'
+                                : 'Select an SMU to calculate the booking cost.'}
+                        </p>
                     )}
                 </section>
 
