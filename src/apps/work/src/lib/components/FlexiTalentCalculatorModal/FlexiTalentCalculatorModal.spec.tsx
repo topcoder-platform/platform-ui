@@ -75,6 +75,7 @@ jest.mock('~/libs/ui', () => ({
         </label>
     ),
     InputText: (props: {
+        error?: string
         label: string
         name: string
         onBlur?: () => void
@@ -83,17 +84,20 @@ jest.mock('~/libs/ui', () => ({
         readonly?: boolean
         value?: string
     }): JSX.Element => (
-        <label>
-            {props.label}
-            <input
-                name={props.name}
-                placeholder={props.placeholder}
-                readOnly={props.readonly}
-                value={props.value}
-                onBlur={props.onBlur}
-                onChange={props.onChange}
-            />
-        </label>
+        <>
+            <label>
+                {props.label}
+                <input
+                    name={props.name}
+                    placeholder={props.placeholder}
+                    readOnly={props.readonly}
+                    value={props.value}
+                    onBlur={props.onBlur}
+                    onChange={props.onChange}
+                />
+            </label>
+            {props.error && <span>{props.error}</span>}
+        </>
     ),
     Tooltip: (props: { children: JSX.Element }): JSX.Element => props.children,
 }), { virtual: true })
@@ -155,8 +159,8 @@ const savedCalculation: EngagementLeadCalculation = {
     updatedAt: '2026-11-10T00:00:00.000Z',
 }
 
-async function renderCalculator(): Promise<void> {
-    render(<FlexiTalentCalculatorModal lead={lead} onClose={jest.fn()} />)
+async function renderCalculator(calculatorLead: EngagementLead = lead): Promise<void> {
+    render(<FlexiTalentCalculatorModal lead={calculatorLead} onClose={jest.fn()} />)
     await screen.findByLabelText('Member Name')
 }
 
@@ -196,6 +200,17 @@ describe('FlexiTalentCalculatorModal', () => {
             .toBeInTheDocument()
     })
 
+    it('explains the commercial values in the Commercials section', async () => {
+        await renderCalculator()
+
+        const hint = screen.getByText('Enter any one commercial value; the others are calculated from it.')
+
+        expect(hint.previousElementSibling)
+            .toHaveTextContent('Commercials')
+        expect(screen.getByText('Lead lead-1'))
+            .toBeInTheDocument()
+    })
+
     it('recalculates from the last edited commercial value', async () => {
         const user = userEvent.setup()
         await renderCalculator()
@@ -221,6 +236,56 @@ describe('FlexiTalentCalculatorModal', () => {
             .toHaveValue('20')
         expect(screen.getByLabelText('Actual Cost (USD)'))
             .toHaveValue('143000')
+    })
+
+    it('calculates with the cost transfer % entered for the Others SMU and saves it', async () => {
+        const user = userEvent.setup()
+        await renderCalculator({ ...lead, smu: 'Others' })
+
+        expect(screen.getByLabelText('SMU'))
+            .toHaveValue('Others')
+        expect(screen.getByText('Enter the cost transfer % for the Others SMU to calculate the booking cost.'))
+            .toBeInTheDocument()
+
+        await user.type(screen.getByLabelText('Booking Cost (USD)'), '40000')
+
+        expect(screen.getByLabelText('Actual Cost (USD)'))
+            .toHaveValue('')
+
+        await user.type(screen.getByLabelText('Cost Transfer %'), '150')
+
+        expect(screen.getByText('Enter a percentage above 0 and up to 100.'))
+            .toBeInTheDocument()
+
+        await user.type(screen.getByLabelText('Cost Transfer %'), '{Control>}a{/Control}75')
+
+        expect(screen.queryByText('Enter a percentage above 0 and up to 100.'))
+            .not.toBeInTheDocument()
+        expect(screen.getByLabelText('Actual Cost (USD)'))
+            .toHaveValue('30000')
+
+        await waitFor(() => {
+            // Leaving Booking Cost created the calculation, so the % is saved as an update.
+            expect(updateEngagementLeadCalculation)
+                .toHaveBeenLastCalledWith(
+                    'lead-1',
+                    'calc-new',
+                    expect.objectContaining({ costTransferPercent: 75, smu: 'Others' }),
+                )
+        })
+    })
+
+    it('only asks for the cost transfer % when the Others SMU is selected', async () => {
+        const user = userEvent.setup()
+        await renderCalculator()
+
+        expect(screen.queryByLabelText('Cost Transfer %'))
+            .not.toBeInTheDocument()
+
+        await user.selectOptions(screen.getByLabelText('SMU'), 'Others')
+
+        expect(screen.getByLabelText('Cost Transfer %'))
+            .toBeInTheDocument()
     })
 
     it('copies the cost proposal', async () => {

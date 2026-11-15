@@ -22,6 +22,8 @@ export interface EngagementLeadCalculationInput {
     accountName?: string
     commercialInputField?: LeadCalculationCommercialInput
     commercialInputValue?: number
+    /** Cost transfer % entered for the Others SMU, e.g. 72.5. */
+    costTransferPercent?: number
     durationWeeks?: number
     hoursPerDay?: number
     memberInputField?: LeadCalculationMemberInput
@@ -36,6 +38,7 @@ export interface EngagementLeadCalculation {
     accountName?: string | null
     commercialInputField?: LeadCalculationCommercialInput | null
     commercialInputValue?: number | null
+    costTransferPercent?: number | null
     createdAt: string
     createdBy?: string | null
     durationWeeks?: number | null

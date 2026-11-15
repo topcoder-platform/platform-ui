@@ -29,6 +29,11 @@ export const FLEXI_TALENT_SMU_OPTIONS: ReadonlyArray<FlexiTalentSmuOption> = [
     { code: 'Wipro-Internal', costTransferRate: 0.75, label: 'Wipro-Internal' },
 ]
 
+/**
+ * SMU for accounts outside the predefined ones. It has no fixed cost transfer %, so the user enters it.
+ */
+export const OTHER_SMU_CODE = 'Others'
+
 export type MemberInputField = 'memberCost' | 'memberRate'
 
 export type CommercialInputField =
@@ -48,6 +53,8 @@ export interface FlexiTalentCalculatorInputs {
     commercialInput?: CalculatorInput<CommercialInputField>
     durationWeeks?: number
     hoursPerDay?: number
+    /** Cost transfer % entered for the Others SMU, e.g. 72.5 for 72.50%. Ignored for the other SMUs. */
+    costTransferPercent?: number
     memberInput?: CalculatorInput<MemberInputField>
     referral: boolean
     smuCode?: string
@@ -112,6 +119,32 @@ export function getSmuOption(smu: string | undefined): FlexiTalentSmuOption | un
     return FLEXI_TALENT_SMU_OPTIONS.find(option => (
         option.code.toLowerCase() === normalized || option.label.toLowerCase() === normalized
     ))
+}
+
+export function isOtherSmu(smu: string | undefined): boolean {
+    return String(smu || '')
+        .trim()
+        .toLowerCase() === OTHER_SMU_CODE.toLowerCase()
+}
+
+/** Whether an entered cost transfer % can be used: above 0 and at most 100. */
+export function isValidCostTransferPercent(value: number | undefined): value is number {
+    return isPositive(value) && value <= 100
+}
+
+/**
+ * The share of the booking cost transferred to Topcoder, as a fraction: fixed for the predefined SMUs,
+ * entered by the user for Others. `undefined` when there is no SMU or the entered % is not valid.
+ */
+export function getCostTransferRate(
+    smuCode: string | undefined,
+    costTransferPercent: number | undefined,
+): number | undefined {
+    if (isOtherSmu(smuCode)) {
+        return isValidCostTransferPercent(costTransferPercent) ? costTransferPercent / 100 : undefined
+    }
+
+    return getSmuOption(smuCode)?.costTransferRate
 }
 
 /**
@@ -203,7 +236,7 @@ function calculateActualCost(
 export function calculateFlexiTalentCosts(
     inputs: FlexiTalentCalculatorInputs,
 ): FlexiTalentCalculatorResult {
-    const costTransferRate = getSmuOption(inputs.smuCode)?.costTransferRate
+    const costTransferRate = getCostTransferRate(inputs.smuCode, inputs.costTransferPercent)
     const totalBillingHours = isPositive(inputs.hoursPerDay) && isPositive(inputs.durationWeeks)
         ? inputs.hoursPerDay * WORKING_DAYS_PER_WEEK * inputs.durationWeeks
         : undefined

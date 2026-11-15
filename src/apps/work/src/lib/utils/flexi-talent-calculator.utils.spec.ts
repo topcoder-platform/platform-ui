@@ -2,6 +2,7 @@ import {
     buildCostProposal,
     calculateFlexiTalentCosts,
     FlexiTalentCalculatorInputs,
+    getCostTransferRate,
     getSmuOption,
     parseCalculatorNumber,
     parseDurationToWeeks,
@@ -32,6 +33,37 @@ describe('calculateFlexiTalentCosts', () => {
             .toBe(2000)
         expect(result.memberMonthlyRate)
             .toBeCloseTo(8666.67, 2)
+    })
+
+    it('calculates with the cost transfer % entered for the Others SMU', () => {
+        const result = calculateFlexiTalentCosts({
+            ...baseInputs,
+            commercialInput: { field: 'bookingCost', value: 40000 },
+            costTransferPercent: 75,
+            smuCode: 'Others',
+        })
+
+        expect(result.costTransferRate)
+            .toBe(0.75)
+        expect(result.actualCost)
+            .toBe(30000)
+        expect(result.wiproCostBenefit)
+            .toBe(10000)
+        expect(result.wiproCostBenefitPercent)
+            .toBe(25)
+    })
+
+    it('cannot calculate the cost transfer for the Others SMU until its % is entered', () => {
+        const result = calculateFlexiTalentCosts({
+            ...baseInputs,
+            commercialInput: { field: 'bookingCost', value: 40000 },
+            smuCode: 'Others',
+        })
+
+        expect(result.bookingCost)
+            .toBe(40000)
+        expect(result.actualCost)
+            .toBeUndefined()
     })
 
     it('derives the member rate when the member cost is entered', () => {
@@ -217,6 +249,33 @@ describe('getSmuOption', () => {
         expect(getSmuOption('americas 2')?.code)
             .toBe('AMR2')
         expect(getSmuOption('Others'))
+            .toBeUndefined()
+    })
+})
+
+describe('getCostTransferRate', () => {
+    it('uses the fixed % of a predefined SMU, ignoring an entered one', () => {
+        expect(getCostTransferRate('EURP', 50))
+            .toBe(0.733)
+    })
+
+    it('uses the entered % for the Others SMU', () => {
+        expect(getCostTransferRate('Others', 72.5))
+            .toBe(0.725)
+        expect(getCostTransferRate('others', 100))
+            .toBe(1)
+    })
+
+    it.each([undefined, 0, -5, 100.5, Number.NaN])(
+        'has no rate for the Others SMU when the entered % is %p',
+        value => {
+            expect(getCostTransferRate('Others', value))
+                .toBeUndefined()
+        },
+    )
+
+    it('has no rate without an SMU', () => {
+        expect(getCostTransferRate(undefined, 72.5))
             .toBeUndefined()
     })
 })
