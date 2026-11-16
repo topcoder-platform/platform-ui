@@ -120,25 +120,27 @@ export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
     return (
         <figure aria-label={props.ariaLabel} className={styles.figure}>
             <HighchartsReact highcharts={Highcharts} options={options} />
-            <table className={styles.screenReaderOnly}>
-                <caption>{props.ariaLabel}</caption>
-                <thead>
-                    <tr>
-                        <th scope='col'>Date</th>
-                        {props.series.map(series => <th key={series.key} scope='col'>{series.label}</th>)}
-                    </tr>
-                </thead>
-                <tbody>
-                    {props.points.map(point => (
-                        <tr key={String((point as Record<string, unknown>).date)}>
-                            <th scope='row'>{String((point as Record<string, unknown>).date)}</th>
-                            {props.series.map(series => (
-                                <td key={series.key}>{pointValue(point, series.key)}</td>
-                            ))}
+            <div className={styles.screenReaderOnly}>
+                <table>
+                    <caption>{props.ariaLabel}</caption>
+                    <thead>
+                        <tr>
+                            <th scope='col'>Date</th>
+                            {props.series.map(series => <th key={series.key} scope='col'>{series.label}</th>)}
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {props.points.map(point => (
+                            <tr key={String((point as Record<string, unknown>).date)}>
+                                <th scope='row'>{String((point as Record<string, unknown>).date)}</th>
+                                {props.series.map(series => (
+                                    <td key={series.key}>{pointValue(point, series.key)}</td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </figure>
     )
 }

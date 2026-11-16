@@ -5,7 +5,13 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { SpaceTechAnalyticsPage } from './SpaceTechAnalyticsPage'
 import { getSpaceTechReport } from '../lib/services'
 
-jest.mock('~/libs/ui', () => ({ PageTitle: () => null }), { virtual: true })
+jest.mock('~/libs/ui', () => ({
+    Button: (props: { children: React.ReactNode }) => <button type='submit'>{props.children}</button>,
+    PageTitle: () => null,
+}), { virtual: true })
+jest.mock('./SpaceTechLeads', () => function MockLeads() {
+    return <div>Lead attribution</div>
+})
 jest.mock('../lib/services', () => ({ getSpaceTechReport: jest.fn() }))
 jest.mock('../lib/components', () => ({
     MetricCard: (props: { label: string; value: number }) => <p>{`${props.label}: ${props.value}`}</p>,
@@ -18,7 +24,16 @@ jest.mock('../lib/components', () => ({
 const totals = {
     averageEngagementSeconds: 5, pageViews: 20, reached: 8, starts: 4, submissionRate: 20, submissions: 2, visitors: 10,
 }
-const report = { campaigns: [], countries: [], ctas: [], devices: [], faqs: [], series: [], totals }
+const report = {
+    campaigns: [],
+    countries: [],
+    ctas: [],
+    devices: [],
+    faqs: [],
+    filterOptions: { campaign: ['george'], medium: ['social'], source: ['linkedin', 'email'] },
+    series: [],
+    totals,
+}
 
 describe('SpaceTech Analytics', () => {
     beforeEach(() => { jest.clearAllMocks(); (getSpaceTechReport as jest.Mock).mockResolvedValue(report) })
@@ -32,16 +47,26 @@ describe('SpaceTech Analytics', () => {
         fireEvent.change(screen.getByLabelText('utm_source'), { target: { value: 'linkedin' } })
         fireEvent.change(screen.getByLabelText('utm_medium'), { target: { value: 'social' } })
         fireEvent.change(screen.getByLabelText('utm_campaign'), { target: { value: 'george' } })
-        fireEvent.change(screen.getByLabelText('utm_content'), { target: { value: 'post_1' } })
+        expect(screen.queryByLabelText('utm_content')).not.toBeInTheDocument()
+        expect(screen.getByRole('combobox', { name: 'utm_source' }))
+            .toBeInTheDocument()
         fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
         await waitFor(() => expect(getSpaceTechReport)
             .toHaveBeenLastCalledWith(expect.objectContaining({
-                campaign: 'george', content: 'post_1', medium: 'social', source: 'linkedin',
+                campaign: 'george', medium: 'social', source: 'linkedin',
             })))
         expect(await screen.findByText('Daily SpaceTech visitors and submissions'))
             .toBeInTheDocument()
         expect(screen.getByText('Submission rate (%): 20'))
             .toBeInTheDocument()
+    })
+
+    it('refreshes unchanged filters so new activity can be requested without reloading', async () => {
+        render(<SpaceTechAnalyticsPage />)
+        await screen.findByText('Submissions: 2')
+        fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
+        await waitFor(() => expect(getSpaceTechReport)
+            .toHaveBeenCalledTimes(2))
     })
 
     it('does not submit reversed dates and renders retryable API failures', async () => {

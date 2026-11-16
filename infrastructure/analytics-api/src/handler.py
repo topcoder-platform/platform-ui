@@ -378,17 +378,19 @@ ORDER BY row_type, date_value, metric_1 DESC
 
 
 SPACETECH_SQL = """
-WITH events AS (
-    SELECT * FROM topcoder_web.spacetech_events_v1
+WITH date_events AS (
+    SELECT * FROM topcoder_web.spacetech_events_mv_v2
     WHERE event_timestamp >= CAST(:from_date AS timestamp)
       AND event_timestamp < DATEADD(day, 1, CAST(:to_date AS timestamp))
-      AND (:source = '*' OR source = :source)
+) , events AS (
+    SELECT * FROM date_events
+    WHERE (:source = '*' OR source = :source)
       AND (:medium = '*' OR medium = :medium)
       AND (:campaign = '*' OR campaign = :campaign)
       AND (:content = '*' OR content = :content)
 )
 SELECT 'summary'::varchar AS row_type, NULL::varchar AS dimension_1, NULL::varchar AS dimension_2, NULL::varchar AS dimension_3,
-    (SELECT MAX(event_timestamp)::date::varchar FROM topcoder_web.spacetech_events_v1) AS dimension_4,
+    (SELECT MAX(event_timestamp)::varchar FROM topcoder_web.spacetech_events_mv_v2) AS dimension_4,
 
     COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
     COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
@@ -413,7 +415,7 @@ SELECT 'daily'::varchar AS row_type, event_timestamp::date::varchar AS dimension
 FROM events
 GROUP BY 2
 UNION ALL
-SELECT 'campaign'::varchar AS row_type, source AS dimension_1, medium AS dimension_2, campaign AS dimension_3, content AS dimension_4,
+SELECT 'campaign'::varchar AS row_type, source AS dimension_1, medium AS dimension_2, campaign AS dimension_3, NULL::varchar AS dimension_4,
 
     COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
     COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
@@ -424,7 +426,7 @@ SELECT 'campaign'::varchar AS row_type, source AS dimension_1, medium AS dimensi
     COUNT(*)::bigint AS events,
     COUNT(DISTINCT analytics_user_id)::bigint AS users
 FROM events
-GROUP BY 2, 3, 4, 5
+GROUP BY 2, 3, 4
 UNION ALL
 SELECT 'country'::varchar AS row_type, country AS dimension_1, NULL::varchar AS dimension_2, NULL::varchar AS dimension_3, NULL::varchar AS dimension_4,
 
@@ -477,6 +479,21 @@ SELECT 'faq'::varchar AS row_type, faq_id AS dimension_1, NULL::varchar AS dimen
     COUNT(DISTINCT analytics_user_id)::bigint AS users
 FROM events WHERE event_name = 'faq_opened'
 GROUP BY 2
+
+UNION ALL
+SELECT 'option_source'::varchar, source, NULL::varchar, NULL::varchar, NULL::varchar,
+    0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint
+FROM date_events WHERE source IS NOT NULL AND source <> '' GROUP BY source
+
+UNION ALL
+SELECT 'option_medium'::varchar, medium, NULL::varchar, NULL::varchar, NULL::varchar,
+    0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint
+FROM date_events WHERE medium IS NOT NULL AND medium <> '' GROUP BY medium
+
+UNION ALL
+SELECT 'option_campaign'::varchar, campaign, NULL::varchar, NULL::varchar, NULL::varchar,
+    0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint
+FROM date_events WHERE campaign IS NOT NULL AND campaign <> '' GROUP BY campaign
 ORDER BY row_type, dimension_1, dimension_2, dimension_3, dimension_4
 """
 
@@ -791,8 +808,20 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         An API Gateway proxy response containing a JSON analytics document.
 
     Raises:
-        No exceptions escape; failures are converted to sanitized HTTP errors.
+        HTTP failures become sanitized responses; scheduled refresh failures
+        propagate so Lambda can retry and record an error.
     """
+
+    # Only the dedicated EventBridge rule may take the maintenance path. HTTP
+    # requests have requestContext and cannot manufacture this top-level envelope.
+    if (event.get("source") == "aws.events"
+            and event.get("detail-type") == "Scheduled Event"
+            and not event.get("requestContext")
+            and os.environ.get("SPACETECH_REFRESH_RULE_ARN")
+            and os.environ["SPACETECH_REFRESH_RULE_ARN"] in event.get("resources", [])):
+        _execute_query("CALL topcoder_web.refresh_spacetech_report()", [], context, maximum_wait_seconds=150.0)
+        _cache.clear()
+        return {"refreshed": True}
 
     request_id = _request_id(event, context)
     asynchronous = False
@@ -1492,6 +1521,10 @@ def _safe_filter(value: Any, label: str) -> str:
 
     if value in (None, ""):
         return ""
+    # Clickstream supplies this built-in medium for referrer-attributed visits.
+    # It is returned by filterOptions even though it is not a client UTM token.
+    if label == "medium" and value == "(Referral)":
+        return value
     if not isinstance(value, str) or not SAFE_FILTER_PATTERN.fullmatch(value):
         raise ValueError(f"The {label} filter contains unsupported characters")
     return value
@@ -1559,6 +1592,7 @@ def _execute_query(
     parameters: list[dict[str, str]],
     context: Any,
     query_token: str | None = None,
+    maximum_wait_seconds: float = 24.0,
 ) -> list[dict[str, Any]]:
     """Execute a fixed parameterized query with resumable timeout handling.
 
@@ -1587,7 +1621,7 @@ def _execute_query(
     }
     if parameters:
         request["Parameters"] = parameters
-    deadline = time.monotonic() + _query_wait_seconds(context)
+    deadline = time.monotonic() + _query_wait_seconds(context, maximum_wait_seconds)
     initial_attempt = _query_token_attempt(sql, parameters, query_token) if query_token else 0
     for attempt in range(initial_attempt, MAX_QUERY_ATTEMPTS):
         client_token = query_token if query_token and attempt == initial_attempt else _query_client_token(
@@ -1601,6 +1635,8 @@ def _execute_query(
         while time.monotonic() < deadline:
             status = _redshift_data.describe_statement(Id=statement_id)
             if status["Status"] == "FINISHED":
+                if status.get("HasResultSet") is False:
+                    return []
                 return _statement_rows(statement_id)
             if status["Status"] in {"FAILED", "ABORTED"}:
                 if attempt + 1 < MAX_QUERY_ATTEMPTS:
@@ -1675,22 +1711,22 @@ def _query_token_attempt(
     raise ValueError("The query token is invalid or expired")
 
 
-def _query_wait_seconds(context: Any) -> float:
+def _query_wait_seconds(context: Any, maximum: float = 24.0) -> float:
     """Calculate a provider wait that leaves time for a sanitized HTTP response.
 
     Args:
         context: Lambda invocation context, or null in direct unit calls.
 
     Returns:
-        Wait duration between one and 24 seconds.
+        Wait duration between one second and the supplied maximum (24 for HTTP).
 
     Raises:
         Does not raise.
     """
 
     if context and hasattr(context, "get_remaining_time_in_millis"):
-        return max(1.0, min(24.0, (context.get_remaining_time_in_millis() / 1_000) - 2.0))
-    return 24.0
+        return max(1.0, min(maximum, (context.get_remaining_time_in_millis() / 1_000) - 2.0))
+    return maximum
 
 
 def _statement_rows(statement_id: str) -> list[dict[str, Any]]:
@@ -2006,7 +2042,12 @@ def _spacetech_report(filters: dict[str, str], context: Any, query_token: str | 
         "dataThrough": next((row.get("dimension_4") for row in rows if row.get("row_type") == "summary"), None),
         "totals": metrics(next((row for row in rows if row.get("row_type") == "summary"), {})),
         "series": series,
-        "campaigns": groups("campaign", ["source", "medium", "campaign", "content"]),
+        "campaigns": groups("campaign", ["source", "medium", "campaign"]),
+        "filterOptions": {
+            key: sorted({row["dimension_1"] for row in rows
+                         if row.get("row_type") == f"option_{key}" and row.get("dimension_1")})
+            for key in ("source", "medium", "campaign")
+        },
         "countries": groups("country", ["country"]),
         "devices": groups("device", ["device"]),
         "ctas": groups("cta", ["placement", "elementId"]),

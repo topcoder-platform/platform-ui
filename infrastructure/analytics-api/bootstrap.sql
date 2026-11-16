@@ -133,7 +133,14 @@ SELECT
     traffic_source_campaign AS campaign,
     traffic_source_content AS content,
     geo_country AS country,
-    device_ua_device_category AS device,
+    CASE
+        WHEN LOWER(device_ua_device_category) IN ('pc', 'desktop') THEN 'Desktop'
+        WHEN LOWER(device_ua_device_category) IN ('mobile', 'tablet') THEN INITCAP(device_ua_device_category)
+        WHEN COALESCE(LOWER(device_ua_device_category), 'other') IN ('other', '')
+            AND device_ua_os IN ('Windows', 'Mac OS X', 'Linux', 'Chrome OS', 'Ubuntu') THEN 'Desktop'
+        WHEN COALESCE(LOWER(device_ua_device_category), 'other') IN ('other', '') THEN 'Unknown'
+        ELSE device_ua_device_category
+    END AS device,
     user_engagement_time_msec,
     JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'placement', true) AS placement,
     JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'element_id', true) AS element_id,
@@ -148,3 +155,54 @@ AND (event_name IN ('_page_view', '_user_engagement', 'ui_click', 'faq_opened')
     OR (event_name IN ('form_started', 'form_completed', 'form_section_reached')
         AND JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'form_id', true) = 'topcoder:space_tech_challenge'));
 GRANT SELECT ON topcoder_web.spacetech_events_v1 TO ROLE analytics_api_reader;
+
+-- Precompute the narrow campaign projection once per warehouse refresh instead
+-- of extracting raw event JSON for every report and breakdown. Incremental
+-- autorefresh follows event_v2 loads; the read-only API cannot refresh or write.
+CREATE MATERIALIZED VIEW topcoder_web.spacetech_events_mv_v2
+BACKUP NO
+DISTSTYLE ALL
+SORTKEY(event_timestamp)
+AUTO REFRESH YES AS
+SELECT
+    event_timestamp,
+    COALESCE(NULLIF(user_id, ''), user_pseudo_id) AS analytics_user_id,
+    event_name,
+    traffic_source_source AS source,
+    traffic_source_medium AS medium,
+    traffic_source_campaign AS campaign,
+    traffic_source_content AS content,
+    geo_country AS country,
+    CASE
+        WHEN LOWER(device_ua_device_category) IN ('pc', 'desktop') THEN 'Desktop'
+        WHEN LOWER(device_ua_device_category) IN ('mobile', 'tablet') THEN INITCAP(device_ua_device_category)
+        WHEN COALESCE(LOWER(device_ua_device_category), 'other') IN ('other', '')
+            AND device_ua_os IN ('Windows', 'Mac OS X', 'Linux', 'Chrome OS', 'Ubuntu') THEN 'Desktop'
+        WHEN COALESCE(LOWER(device_ua_device_category), 'other') IN ('other', '') THEN 'Unknown'
+        ELSE device_ua_device_category
+    END AS device,
+    user_engagement_time_msec,
+    JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'placement', true) AS placement,
+    JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'element_id', true) AS element_id,
+    JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'faq_id', true) AS faq_id
+FROM topcoder_web.event_v2
+WHERE COALESCE(
+    NULLIF(JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'page_path', true), ''),
+    page_view_page_url_path
+) IN ('/space-tech', '/space-tech/')
+AND JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'surface', true) = 'topcoder_website'
+AND (event_name IN ('_page_view', '_user_engagement', 'ui_click', 'faq_opened')
+    OR (event_name IN ('form_started', 'form_completed', 'form_section_reached')
+        AND JSON_EXTRACT_PATH_TEXT(custom_parameters_json_str, 'form_id', true) = 'topcoder:space_tech_challenge'));
+GRANT SELECT ON topcoder_web.spacetech_events_mv_v2 TO ROLE analytics_api_reader;
+
+-- The scheduler can refresh only this projection, without raw-table access or
+-- administrator credentials. SECURITY DEFINER uses fully qualified static SQL.
+CREATE OR REPLACE PROCEDURE topcoder_web.refresh_spacetech_report()
+AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW topcoder_web.spacetech_events_mv_v2;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+REVOKE ALL ON PROCEDURE topcoder_web.refresh_spacetech_report() FROM PUBLIC;
+GRANT EXECUTE ON PROCEDURE topcoder_web.refresh_spacetech_report() TO ROLE analytics_api_reader;

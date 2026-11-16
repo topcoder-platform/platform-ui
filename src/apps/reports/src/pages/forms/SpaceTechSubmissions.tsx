@@ -9,7 +9,7 @@ import styles from './FormsPage.module.scss'
 export const spaceTechColumns = [
     ['submitted_at', 'Date Submitted'], ['full_name', 'Name'], ['email', 'Work Email'],
     ['company', 'Company'], ['challenge', 'Problem'], ['utm_source', 'utm_source'],
-    ['utm_medium', 'utm_medium'], ['utm_campaign', 'utm_campaign'],
+    ['utm_medium', 'utm_medium'], ['utm_campaign', 'utm_campaign'], ['form_status', 'form_status'],
 ]
 
 /** Filters the complete lead set before sorting, leaving the original API rows unchanged. */
@@ -28,19 +28,25 @@ export function selectSpaceTechLeads(
             .localeCompare(formatFormValue(b[sort]), undefined, { numeric: true }))
 }
 
-/** Shows campaign leads with independent filters and sorting for all eight requested columns. */
+/** Shows campaign leads with independent filters and sorting for all requested columns. */
 const SpaceTechSubmissions: FC<{ report: FormReport }> = props => {
     const [filters, setFilters] = useState<Record<string, string>>({})
     const [sort, setSort] = useState('submitted_at')
     const [descending, setDescending] = useState(true)
     const [page, setPage] = useState(0)
     const rows = useMemo(
-        () => selectSpaceTechLeads(props.report.data, filters, sort, descending),
+        () => {
+            const submitted = props.report.data.map(row => ({ ...row, form_status: 'Submitted' }))
+            return selectSpaceTechLeads(submitted, filters, sort, descending)
+        },
         [props.report, filters, sort, descending],
     )
     const pageCount = Math.max(1, Math.ceil(rows.length / 25))
     return (
-        <>
+        <div className={styles.leadTable}>
+            <p>
+                Lead details are saved on submission. Starts and incomplete visits are counted in aggregate analytics.
+            </p>
             <p role='status'>{`${rows.length} matching leads of ${props.report.data.length}`}</p>
             <button type='button' onClick={() => { setFilters({}); setPage(0) }}>Clear column filters</button>
             {/* Keyboard users must be able to scroll to offscreen columns. */}
@@ -84,7 +90,9 @@ const SpaceTechSubmissions: FC<{ report: FormReport }> = props => {
                                     {spaceTechColumns.map(([key]) => <td key={key}>{formatFormValue(row[key])}</td>)}
                                 </tr>
                             ))}
-                        {!rows.length && <tr><td colSpan={8}>No leads match these filters.</td></tr>}
+                        {!rows.length && (
+                            <tr><td colSpan={spaceTechColumns.length}>No leads match these filters.</td></tr>
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -93,7 +101,7 @@ const SpaceTechSubmissions: FC<{ report: FormReport }> = props => {
                 <span>{`Page ${page + 1} of ${pageCount}`}</span>
                 <button type='button' disabled={page + 1 >= pageCount} onClick={() => setPage(page + 1)}>Next</button>
             </nav>
-        </>
+        </div>
     )
 }
 

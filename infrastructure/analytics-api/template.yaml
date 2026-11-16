@@ -133,12 +133,15 @@ Resources:
           REDSHIFT_DATABASE: !Ref DatabaseName
           REDSHIFT_WORKGROUP: !Ref WorkgroupName
           REQUIRED_ROLE: analytics
+          SPACETECH_REFRESH_RULE_ARN: !Sub 'arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/topcoder-spacetech-refresh-dev'
       Handler: handler.handler
       MemorySize: 256
       ReservedConcurrentExecutions: 5
       Role: !GetAtt AnalyticsFunctionRole.Arn
       Runtime: python3.12
-      Timeout: 28
+      # HTTP query waits remain capped at 24 seconds; scheduled refresh can wait
+      # for a cold warehouse without starting another REFRESH on every retry.
+      Timeout: 180
       Tags:
         - Key: Application
           Value: topcoder-web-analytics
@@ -146,6 +149,28 @@ Resources:
           Value: product-analytics
         - Key: Environment
           Value: dev
+
+  SpaceTechRefreshRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: topcoder-spacetech-refresh-dev
+      Description: Refresh SpaceTech after hourly ingestion; normal end-to-end target is under three hours.
+      ScheduleExpression: rate(1 hour)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt AnalyticsFunction.Arn
+          Id: SpaceTechRefresh
+          RetryPolicy:
+            MaximumEventAgeInSeconds: 3600
+            MaximumRetryAttempts: 2
+
+  SpaceTechRefreshInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AnalyticsFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt SpaceTechRefreshRule.Arn
 
   AnalyticsPrewarmRule:
     Type: AWS::Events::Rule
