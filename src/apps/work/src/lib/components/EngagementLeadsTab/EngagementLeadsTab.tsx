@@ -151,6 +151,19 @@ function areLeadFiltersEqual(
         && left.sortOrder === right.sortOrder
 }
 
+/**
+ * Removes focus from a tooltip trigger that opens a modal.
+ *
+ * The modal restores focus to the previously focused element when it closes,
+ * and focus re-opens `click-hover` tooltips, which would then stay visible.
+ *
+ * @param {MouseEvent<HTMLButtonElement>} event - Click event from the trigger button.
+ * @returns {void}
+ */
+function blurModalTrigger(event: MouseEvent<HTMLButtonElement>): void {
+    event.currentTarget.blur()
+}
+
 interface EngagementLeadsTabProps {
     leadType: EngagementLeadType
 }
@@ -440,7 +453,8 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
                                                             !!lead.notes?.length && styles.actionIconActive,
                                                         )}
                                                         type='button'
-                                                        onClick={() => {
+                                                        onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                                                            blurModalTrigger(event)
                                                             setNotesLead(lead)
                                                         }}
                                                     >
@@ -458,7 +472,8 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
                                                         aria-label='Cost Calculator'
                                                         className={styles.actionIconButton}
                                                         type='button'
-                                                        onClick={() => {
+                                                        onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                                                            blurModalTrigger(event)
                                                             setCalculatorLead(lead)
                                                         }}
                                                     >
@@ -506,7 +521,8 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
                                                                     aria-label='Create Engagement'
                                                                     className={styles.actionIconButton}
                                                                     type='button'
-                                                                    onClick={() => {
+                                                                    onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                                                                        blurModalTrigger(event)
                                                                         handleCreateEngagementOpen(lead)
                                                                     }}
                                                                 >
