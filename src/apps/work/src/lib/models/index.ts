@@ -1,4 +1,5 @@
 export * from './ApprovedTimesheet.model'
+export * from './PendingApprovalTimesheet.model'
 export * from './Attachment.model'
 export * from './AiReview.model'
 export * from './Engagement.model'

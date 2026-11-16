@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
 import { ChangeEvent, FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { debounce } from 'lodash'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 
 import {
     Button,
@@ -81,6 +81,22 @@ const getDefaultFilters = (isAdmin: boolean): Filters => (
     isAdmin ? { ...EMPTY_FILTERS, status: '' } : EMPTY_FILTERS
 )
 
+/**
+ * The landing list can be opened on a status from a link, e.g. the approval reminder email's
+ * `?status=pending-approval`. Anything else is ignored and the role's default applies.
+ */
+const STATUS_QUERY_PARAM = 'status'
+const STATUS_FROM_QUERY: Record<string, TimesheetRollupStatus> = {
+    approved: 'Approved',
+    'pending-approval': 'Pending Approval',
+}
+
+const getInitialFilters = (isAdmin: boolean, requestedStatus?: TimesheetRollupStatus): Filters => (
+    requestedStatus
+        ? { ...EMPTY_FILTERS, status: requestedStatus }
+        : getDefaultFilters(isAdmin)
+)
+
 const toPickerDate = (value: string): Date | undefined => {
     if (!value) {
         return undefined
@@ -103,15 +119,24 @@ const TimesheetEngagementsPage: FC = () => {
     // `viewerRole` - so it comes from the caller's roles. Everything else still follows viewerRole.
     const authCtx: AuthCtx = useAuth()
     const isAdmin = authCtx.isAdmin
-    const isStatusTouchedRef = useRef<boolean>(false)
+    const [searchParams] = useSearchParams()
+    const requestedStatus: TimesheetRollupStatus | undefined
+        = STATUS_FROM_QUERY[String(searchParams.get(STATUS_QUERY_PARAM) || '')
+            .trim()
+            .toLowerCase()]
+    // A status asked for in the link counts as the user's own pick, so the admin default never
+    // replaces it.
+    const isStatusTouchedRef = useRef<boolean>(!!requestedStatus)
 
     const [rows, setRows] = useState<TimesheetEngagementRow[]>([])
     const [viewerRole, setViewerRole] = useState<TimesheetViewerRole | undefined>()
     const [page, setPage] = useState<number>(1)
     const [totalPages, setTotalPages] = useState<number>(1)
     const [totalCount, setTotalCount] = useState<number>(0)
-    const [filters, setFilters] = useState<Filters>(() => getDefaultFilters(isAdmin))
-    const [appliedFilters, setAppliedFilters] = useState<Filters>(() => getDefaultFilters(isAdmin))
+    const [filters, setFilters] = useState<Filters>(() => getInitialFilters(isAdmin, requestedStatus))
+    const [appliedFilters, setAppliedFilters] = useState<Filters>(
+        () => getInitialFilters(isAdmin, requestedStatus),
+    )
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | undefined>()
 
