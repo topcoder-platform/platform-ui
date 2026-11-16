@@ -55,6 +55,7 @@ import {
     LoadingSpinner,
     Pagination,
     PendingTimesheetApprovalsTab,
+    PendingTimesheetSubmissionsTab,
     ProjectBillingAccountExpiredNotice,
     ProjectListTabs,
     ProjectStatus,
@@ -84,6 +85,7 @@ type EngagementsPageTab =
     | 'engagements'
     | 'leads'
     | 'pending-timesheet-approvals'
+    | 'pending-timesheet-submissions'
 
 const TAB_QUERY_PARAM = 'tab'
 
@@ -91,6 +93,7 @@ const noopCheckboxChange = (() => undefined) as (event: Event) => void
 const ASSIGNMENTS_TAB: EngagementsPageTab = 'assignments'
 const APPROVED_TIMESHEETS_TAB: EngagementsPageTab = 'approved-timesheets'
 const PENDING_TIMESHEET_APPROVALS_TAB: EngagementsPageTab = 'pending-timesheet-approvals'
+const PENDING_TIMESHEET_SUBMISSIONS_TAB: EngagementsPageTab = 'pending-timesheet-submissions'
 const LEADS_TAB: EngagementsPageTab = ENGAGEMENTS_LEADS_TAB
 
 type EngagementSortField =
@@ -455,7 +458,13 @@ export const EngagementsListPage: FC = () => {
             || requestedTab === APPROVED_TIMESHEETS_TAB
             || requestedTab === LEADS_TAB
             // Administrators only; anyone else asking for it lands on the Engagements tab.
-            || (requestedTab === PENDING_TIMESHEET_APPROVALS_TAB && contextValue.isAdmin)
+            || (
+                (
+                    requestedTab === PENDING_TIMESHEET_APPROVALS_TAB
+                    || requestedTab === PENDING_TIMESHEET_SUBMISSIONS_TAB
+                )
+                && contextValue.isAdmin
+            )
         )
         ? requestedTab
         : 'engagements'
@@ -466,7 +475,11 @@ export const EngagementsListPage: FC = () => {
     const isLeadsTab = activeTab === LEADS_TAB
     // The pending approvals tab loads its own rows too.
     const isPendingTimesheetApprovalsTab = activeTab === PENDING_TIMESHEET_APPROVALS_TAB
-    const skipsEngagementFetches = isApprovedTimesheetsTab || isLeadsTab || isPendingTimesheetApprovalsTab
+    const isPendingTimesheetSubmissionsTab = activeTab === PENDING_TIMESHEET_SUBMISSIONS_TAB
+    const skipsEngagementFetches = isApprovedTimesheetsTab
+        || isLeadsTab
+        || isPendingTimesheetApprovalsTab
+        || isPendingTimesheetSubmissionsTab
 
     const isTalentManagerOnly = !contextValue.isAdmin
         && checkTalentManager(contextValue.userRoles)
@@ -801,7 +814,9 @@ export const EngagementsListPage: FC = () => {
                     ? 'Approved Timesheets'
                     : isPendingTimesheetApprovalsTab
                         ? 'Pending Timesheet Approvals'
-                        : (isAssignmentsTab ? 'All Assignments' : 'All Engagements')
+                        : isPendingTimesheetSubmissionsTab
+                            ? 'Pending Timesheet Submissions'
+                            : (isAssignmentsTab ? 'All Assignments' : 'All Engagements')
         )
         : (
             projectResult.project?.name
@@ -895,6 +910,22 @@ export const EngagementsListPage: FC = () => {
                 {contextValue.isAdmin
                     ? (
                         <button
+                            aria-selected={isPendingTimesheetSubmissionsTab}
+                            className={classNames(
+                                styles.tab,
+                                isPendingTimesheetSubmissionsTab ? styles.activeTab : undefined,
+                            )}
+                            onClick={() => handleTabChange(PENDING_TIMESHEET_SUBMISSIONS_TAB)}
+                            role='tab'
+                            type='button'
+                        >
+                            Pending Timesheet Submissions
+                        </button>
+                    )
+                    : undefined}
+                {contextValue.isAdmin
+                    ? (
+                        <button
                             aria-selected={isPendingTimesheetApprovalsTab}
                             className={classNames(
                                 styles.tab,
@@ -981,6 +1012,19 @@ export const EngagementsListPage: FC = () => {
             >
                 {pageTabs}
                 <EngagementLeadsPanel />
+            </PageWrapper>
+        )
+    }
+
+    if (isPendingTimesheetSubmissionsTab) {
+        return (
+            <PageWrapper
+                pageTitle={pageTitle}
+                breadCrumb={[]}
+            >
+                {pageTabs}
+                {testProjectsToggle}
+                <PendingTimesheetSubmissionsTab excludeTestProjects={hideTestProjects} />
             </PageWrapper>
         )
     }

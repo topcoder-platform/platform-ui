@@ -12,6 +12,7 @@ import { getTimesheet } from '../../lib/services'
 
 import TimesheetsPage from './TimesheetsPage'
 
+let mockSearch = ''
 const mockParams = {
     assignmentId: 'asg-1',
     engagementId: 'eng-1',
@@ -20,7 +21,7 @@ const mockParams = {
 jest.mock('react-router-dom', () => ({
     useNavigate: () => jest.fn(),
     useParams: () => mockParams,
-    useSearchParams: () => [new URLSearchParams(), jest.fn()],
+    useSearchParams: () => [new URLSearchParams(mockSearch), jest.fn()],
 }))
 jest.mock('../../engagements.routes', () => ({
     rootRoute: '',
@@ -77,7 +78,14 @@ jest.mock('./ManagerTimesheetView', () => ({
 }))
 jest.mock('./MemberTimesheetView', () => ({
     __esModule: true,
-    default: () => <div>member-view</div>,
+    default: (props: { initialRange?: { fromDate: string, toDate: string } }) => (
+        <div>
+            member-view
+            {props.initialRange
+                ? <span>{`range ${props.initialRange.fromDate} ${props.initialRange.toDate}`}</span>
+                : undefined}
+        </div>
+    ),
 }))
 jest.mock('./TmTimesheetView', () => ({
     __esModule: true,
@@ -131,6 +139,29 @@ describe('TimesheetsPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         mockAuth.isTm = false
+        mockSearch = ''
+    })
+
+    it('opens the member view on the work period in the link', async () => {
+        mockSearch = 'fromDate=2026-11-09&toDate=2026-11-13'
+        mockGetTimesheet.mockResolvedValue(timesheet(TimesheetViewerRole.MEMBER))
+
+        render(<TimesheetsPage />)
+
+        expect(await screen.findByText('range 2026-11-09 2026-11-13'))
+            .toBeInTheDocument()
+    })
+
+    it('ignores a work period the member could not open', async () => {
+        mockSearch = 'fromDate=2026-11-13&toDate=2026-11-09'
+        mockGetTimesheet.mockResolvedValue(timesheet(TimesheetViewerRole.MEMBER))
+
+        render(<TimesheetsPage />)
+
+        expect(await screen.findByText('member-view'))
+            .toBeInTheDocument()
+        expect(screen.queryByText(/^range /))
+            .not.toBeInTheDocument()
     })
 
     it('treats a talent manager viewing their own assignment as the member', async () => {

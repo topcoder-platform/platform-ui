@@ -25,6 +25,9 @@ import {
     PendingApprovalReminderResult,
     PendingApprovalTimesheetListResponse,
     PendingApprovalTimesheetQuery,
+    PendingSubmissionReminderResult,
+    PendingSubmissionTimesheetListResponse,
+    PendingSubmissionTimesheetQuery,
     Skill,
     TimesheetPaymentEntry,
     TimesheetPaymentSummary,
@@ -1097,6 +1100,64 @@ export async function sendPendingApprovalReminders(
         )
     } catch (error) {
         throw normalizeError(error, 'Failed to send approval reminders')
+    }
+}
+
+/**
+ * Active assignments with nothing submitted for a work period, for the administrator-only Pending
+ * Timesheet Submissions tab.
+ */
+export async function fetchPendingSubmissionTimesheets(
+    query: PendingSubmissionTimesheetQuery,
+): Promise<PendingSubmissionTimesheetListResponse> {
+    try {
+        const params = new URLSearchParams({
+            fromDate: query.fromDate,
+            toDate: query.toDate,
+        })
+
+        if (query.engagement?.trim()) {
+            params.set('engagement', query.engagement.trim())
+        }
+
+        if (query.excludeTestProjects) {
+            params.set('excludeTestProjects', 'true')
+        }
+
+        if (query.page) {
+            params.set('page', String(query.page))
+        }
+
+        if (query.perPage) {
+            params.set('perPage', String(query.perPage))
+        }
+
+        return await xhrGetAsync<PendingSubmissionTimesheetListResponse>(
+            `${ENGAGEMENTS_ROOT_API_URL}/timesheets/pending-submission?${params.toString()}`,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to load pending timesheet submissions')
+    }
+}
+
+/**
+ * Emails the members of these assignments to submit their timesheets for the work period.
+ */
+export async function sendPendingSubmissionReminders(
+    assignmentIds: string[],
+    fromDate: string,
+    toDate: string,
+): Promise<PendingSubmissionReminderResult> {
+    try {
+        return await xhrPostAsync<
+            { assignmentIds: string[], fromDate: string, toDate: string },
+            PendingSubmissionReminderResult
+        >(
+            `${ENGAGEMENTS_ROOT_API_URL}/timesheets/pending-submission/reminders`,
+            { assignmentIds, fromDate, toDate },
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to send submission reminders')
     }
 }
 

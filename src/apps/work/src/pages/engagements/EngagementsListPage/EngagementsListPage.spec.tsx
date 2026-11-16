@@ -208,6 +208,12 @@ jest.mock('../../../lib/components', () => ({
             data-testid='pending-timesheet-approvals-tab'
         />
     ),
+    PendingTimesheetSubmissionsTab: (props: { excludeTestProjects?: boolean }) => (
+        <div
+            data-exclude-test-projects={props.excludeTestProjects ? 'true' : 'false'}
+            data-testid='pending-timesheet-submissions-tab'
+        />
+    ),
     ProjectBillingAccountExpiredNotice: () => <div>Billing Notice</div>,
     ProjectListTabs: () => <div>Project Tabs</div>,
     ProjectStatus: (props: { status: string }) => <div>{`Project Status: ${props.status}`}</div>,
@@ -944,6 +950,30 @@ describe('EngagementsListPage', () => {
                 .toBeTruthy()
             expect(screen.getByRole('heading', { name: 'Pending Timesheet Approvals' }))
                 .toBeTruthy()
+        })
+
+        it('offers administrators the pending timesheet submissions tab', () => {
+            renderPage('/engagements', '/engagements')
+
+            fireEvent.click(screen.getByRole('tab', { name: 'Pending Timesheet Submissions' }))
+
+            expect(screen.getByTestId('pending-timesheet-submissions-tab'))
+                .toBeTruthy()
+            expect(screen.getByRole('heading', { name: 'Pending Timesheet Submissions' }))
+                .toBeTruthy()
+        })
+
+        it('keeps the pending timesheet submissions tab from non-administrators', () => {
+            renderPage(
+                '/engagements?tab=pending-timesheet-submissions',
+                '/engagements',
+                talentManagerContextValue,
+            )
+
+            expect(screen.queryByRole('tab', { name: 'Pending Timesheet Submissions' }))
+                .toBeNull()
+            expect(screen.queryByTestId('pending-timesheet-submissions-tab'))
+                .toBeNull()
         })
 
         it('keeps the pending timesheet approvals tab from non-administrators', () => {

@@ -19,12 +19,16 @@ import { PAGE_SIZE } from '../../constants'
 import { useFetchPendingApprovalTimesheets } from '../../hooks'
 import {
     PendingApprovalReminderResult,
-    PendingApprovalTimesheetApprover,
     PendingApprovalTimesheetRow,
 } from '../../models'
 import { sendPendingApprovalReminders } from '../../services'
 import { formatApprovedTimesheetWorkPeriod } from '../../utils/approved-timesheet.utils'
 import { formatDate } from '../../utils/date.utils'
+import {
+    formatApprovers,
+    pluralize,
+    toWorkDateString,
+} from '../../utils/timesheet-reminder.utils'
 import {
     showErrorToast,
     showInfoToast,
@@ -46,35 +50,6 @@ const columnLabels = [
     'Submitted Date',
     'Approver',
 ]
-
-/** Local calendar day as the YYYY-MM-DD the API filters work dates by. */
-function toWorkDateString(date: Date): string {
-    const month = String(date.getMonth() + 1)
-        .padStart(2, '0')
-    const day = String(date.getDate())
-        .padStart(2, '0')
-
-    return `${date.getFullYear()}-${month}-${day}`
-}
-
-/** "Mary Jones (maryj)" when the manager's name is known, otherwise the handle alone. */
-function formatApprover(approver: PendingApprovalTimesheetApprover): string {
-    const name = String(approver.name || '')
-        .trim()
-
-    return name ? `${name} (${approver.handle})` : approver.handle
-}
-
-function formatApprovers(row: PendingApprovalTimesheetRow): string {
-    return row.approvers.length
-        ? row.approvers.map(formatApprover)
-            .join(', ')
-        : 'No manager assigned'
-}
-
-function pluralize(count: number, singular: string, plural: string): string {
-    return `${count} ${count === 1 ? singular : plural}`
-}
 
 /**
  * Tells the administrator who was reminded, and calls out anyone who could not be: managers without
@@ -287,7 +262,7 @@ export const PendingTimesheetApprovalsTab: FC<PendingTimesheetApprovalsTabProps>
                 <td className={styles.noWrap}>{formatApprovedTimesheetWorkPeriod(row)}</td>
                 <td className={styles.noWrap}>{formatDate(row.submittedAt)}</td>
                 <td className={row.approvers.length ? undefined : styles.noApprover}>
-                    {formatApprovers(row)}
+                    {formatApprovers(row.approvers)}
                 </td>
             </tr>
         ))

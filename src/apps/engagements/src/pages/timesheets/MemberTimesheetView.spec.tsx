@@ -174,12 +174,17 @@ const timesheet = (
     viewerRole: TimesheetViewerRole.MEMBER,
 })
 
-const renderView = (entries?: TimesheetEntry[], assignmentStatus?: string): {
+const renderView = (
+    entries?: TimesheetEntry[],
+    assignmentStatus?: string,
+    initialRange?: { fromDate: string, toDate: string },
+): {
     onTimesheetChange: jest.Mock
 } & ReturnType<typeof render> => {
     const onTimesheetChange = jest.fn()
     const utils = render(
         <MemberTimesheetView
+            initialRange={initialRange}
             onDirtyChange={jest.fn()}
             onTimesheetChange={onTimesheetChange}
             timesheet={timesheet(entries, assignmentStatus)}
@@ -234,6 +239,17 @@ describe('MemberTimesheetView', () => {
 
         expect(await screen.findByRole('alert'))
             .toHaveTextContent('The to date cannot be earlier than the from date.')
+    })
+
+    it('opens on the range a link asks for', async () => {
+        renderView(undefined, undefined, { fromDate: '2026-11-09', toDate: '2026-11-11' })
+
+        expect(await screen.findByText('09-11-2026'))
+            .toBeInTheDocument()
+        expect(screen.getByText('11-11-2026'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('12-11-2026'))
+            .not.toBeInTheDocument()
     })
 
     it('blocks a range longer than 31 days', async () => {

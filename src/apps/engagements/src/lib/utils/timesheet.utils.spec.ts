@@ -15,6 +15,7 @@ import {
     hasRowValidationError,
     isRowReadOnly,
     isRowReopened,
+    parseTimesheetRangeParams,
     parseTimesheetReviewStatus,
     sumSelectedTotals,
     validateDateRange,
@@ -413,5 +414,24 @@ describe('timesheet.utils', () => {
                     .toBe(TimesheetEntryStatus.SUBMITTED)
             },
         )
+    })
+
+    describe('parseTimesheetRangeParams', () => {
+        it('reads a work period from the URL', () => {
+            expect(parseTimesheetRangeParams(' 2026-11-09 ', '2026-11-13'))
+                .toEqual({ fromDate: '2026-11-09', toDate: '2026-11-13' })
+        })
+
+        it.each([
+            [null, null],
+            ['2026-11-09', undefined],
+            ['2026-11-13', '2026-11-09'],
+            ['2026-09-01', '2026-10-05'],
+            ['2026-02-29', '2026-03-02'],
+            ['09-11-2026', '13-11-2026'],
+        ])('ignores %p to %p', (fromDate, toDate) => {
+            expect(parseTimesheetRangeParams(fromDate, toDate))
+                .toBeUndefined()
+        })
     })
 })
