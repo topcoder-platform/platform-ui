@@ -22,6 +22,7 @@ import {
     WorkAppContext,
 } from '../../../lib/contexts'
 import {
+    useFetchApplications,
     useFetchEngagement,
     useFetchProject,
 } from '../../../lib/hooks'
@@ -116,6 +117,11 @@ function renderDetailField(label: string, value: string): JSX.Element {
     )
 }
 
+/** "Applications (3)"; just the label while the count is unknown, so a failed lookup never shows 0. */
+function formatLinkLabel(label: string, count: number | undefined): string {
+    return count === undefined ? label : `${label} (${count})`
+}
+
 export const EngagementDetailsPage: FC = () => {
     const navigate = useNavigate()
     const params: Readonly<{ engagementId?: string; projectId?: string }> = useParams<'engagementId' | 'projectId'>()
@@ -130,6 +136,8 @@ export const EngagementDetailsPage: FC = () => {
 
     const engagementResult = useFetchEngagement(canView ? engagementId : undefined)
     const projectResult = useFetchProject(canView ? projectId || undefined : undefined)
+    // Same request as the Applications page, so the count matches it and opening that page is instant.
+    const applicationsResult = useFetchApplications(canView ? engagementId : undefined)
 
     const engagement = engagementResult.engagement
     const backUrl = `${rootRoute}/engagements`
@@ -153,6 +161,18 @@ export const EngagementDetailsPage: FC = () => {
             .map(skill => skill?.name)
             .filter((name): name is string => !!name)
     ), [engagement?.skills])
+
+    const applicationsLabel = formatLinkLabel(
+        'Applications',
+        applicationsResult.isLoading || applicationsResult.error
+            ? undefined
+            : applicationsResult.applications.length,
+    )
+    // The Assignments page lists every assignment on the engagement, whatever its status.
+    const assignmentsLabel = formatLinkLabel(
+        'Assignments',
+        Array.isArray(engagement?.assignments) ? engagement?.assignments.length : undefined,
+    )
 
     const assignedMembers = useMemo(() => (
         (engagement?.assignedMemberHandles || [])
@@ -221,13 +241,13 @@ export const EngagementDetailsPage: FC = () => {
                                     className={styles.actionLink}
                                     to={`${rootRoute}/projects/${projectId}/engagements/${engagement.id}/applications`}
                                 >
-                                    Applications
+                                    {applicationsLabel}
                                 </Link>
                                 <Link
                                     className={styles.actionLink}
                                     to={`${rootRoute}/projects/${projectId}/engagements/${engagement.id}/assignments`}
                                 >
-                                    Assignments
+                                    {assignmentsLabel}
                                 </Link>
                             </div>
 

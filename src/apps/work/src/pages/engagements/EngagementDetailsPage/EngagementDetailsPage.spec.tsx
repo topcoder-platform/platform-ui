@@ -3,12 +3,14 @@
 import type { Context, PropsWithChildren } from 'react'
 import {
     render,
+    RenderResult,
     screen,
 } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import { WorkAppContextModel } from '../../../lib/models/WorkAppContextModel.model'
 import {
+    useFetchApplications,
     useFetchEngagement,
     useFetchProject,
 } from '../../../lib/hooks'
@@ -74,6 +76,7 @@ jest.mock('../../../lib/contexts', () => {
     }
 })
 jest.mock('../../../lib/hooks', () => ({
+    useFetchApplications: jest.fn(),
     useFetchEngagement: jest.fn(),
     useFetchProject: jest.fn(),
 }))
@@ -93,6 +96,7 @@ jest.mock('../../../lib/utils', () => ({
 
 const mockedCanCreateEngagement = canCreateEngagement as jest.Mock
 const mockedCanViewAllEngagements = canViewAllEngagements as jest.Mock
+const mockedUseFetchApplications = useFetchApplications as jest.Mock
 const mockedUseFetchEngagement = useFetchEngagement as jest.Mock
 const mockedUseFetchProject = useFetchProject as jest.Mock
 
@@ -113,10 +117,10 @@ const defaultContextValue: WorkAppContextModel = {
     userRoles: ['administrator'],
 }
 
-function renderPage(): void {
+function renderPage(): RenderResult {
     const MockWorkAppContext = mockWorkAppContext
 
-    render(
+    return render(
         <MockWorkAppContext.Provider value={defaultContextValue}>
             <MemoryRouter initialEntries={['/projects/200/engagements/111/view']}>
                 <Routes>
@@ -138,6 +142,11 @@ describe('EngagementDetailsPage', () => {
         mockedCanViewAllEngagements.mockImplementation((roles: string[] = []) => (
             roles.includes('administrator') || roles.includes('talent manager')
         ))
+        mockedUseFetchApplications.mockReturnValue({
+            applications: [{ id: 'a1' }, { id: 'a2' }, { id: 'a3' }],
+            error: undefined,
+            isLoading: false,
+        })
         mockedUseFetchProject.mockReturnValue({
             error: undefined,
             isLoading: false,
@@ -206,5 +215,69 @@ describe('EngagementDetailsPage', () => {
         expect(screen.getByRole('link', { name: /View Post/i })
             .getAttribute('target'))
             .toBe('_blank')
+    })
+
+    it('shows the application and assignment counts next to their links', () => {
+        mockedUseFetchEngagement.mockReturnValue({
+            ...mockedUseFetchEngagement(),
+            engagement: {
+                ...mockedUseFetchEngagement().engagement,
+                assignments: [
+                    { id: 'as1', status: 'ASSIGNED' },
+                    { id: 'as2', status: 'COMPLETED' },
+                ],
+            },
+        })
+
+        renderPage()
+
+        expect(mockedUseFetchApplications)
+            .toHaveBeenCalledWith('111')
+        expect(screen.getByRole('link', { name: 'Applications (3)' })
+            .getAttribute('href'))
+            .toBe('/work/projects/200/engagements/111/applications')
+        expect(screen.getByRole('link', { name: 'Assignments (2)' })
+            .getAttribute('href'))
+            .toBe('/work/projects/200/engagements/111/assignments')
+    })
+
+    it('shows zero counts when there are none', () => {
+        mockedUseFetchApplications.mockReturnValue({
+            applications: [],
+            error: undefined,
+            isLoading: false,
+        })
+
+        renderPage()
+
+        expect(screen.getByRole('link', { name: 'Applications (0)' }))
+            .toBeTruthy()
+        expect(screen.getByRole('link', { name: 'Assignments (0)' }))
+            .toBeTruthy()
+    })
+
+    it('leaves the applications count out while loading or after a failed lookup', () => {
+        mockedUseFetchApplications.mockReturnValue({
+            applications: [],
+            error: undefined,
+            isLoading: true,
+        })
+
+        const { unmount }: RenderResult = renderPage()
+
+        expect(screen.getByRole('link', { name: 'Applications' }))
+            .toBeTruthy()
+        unmount()
+
+        mockedUseFetchApplications.mockReturnValue({
+            applications: [],
+            error: new Error('boom'),
+            isLoading: false,
+        })
+
+        renderPage()
+
+        expect(screen.getByRole('link', { name: 'Applications' }))
+            .toBeTruthy()
     })
 })
