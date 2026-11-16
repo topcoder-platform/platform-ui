@@ -181,6 +181,8 @@ timestamp, not proof that traffic has occurred recently.
 Apply the `spacetech_events_mv_v2` materialized projection, SELECT grant and
 `refresh_spacetech_report()` procedure/GRANT at the end of `bootstrap.sql` before
 deploying the Lambda and hourly EventBridge refresh rule in `template.yaml`.
+The dev refresh runs at :30 UTC, after the existing :18 ingestion normally
+finishes its warehouse load around :24. A late load is picked up next hour.
 On existing installations, skip existing CREATE ROLE/materialized-view statements;
 create v2 alongside v1. Retain v1 until the rollback window closes. The existing
 logical view can also be updated for reconciliation.

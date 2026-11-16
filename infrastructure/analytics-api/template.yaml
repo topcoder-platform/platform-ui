@@ -155,7 +155,8 @@ Resources:
     Properties:
       Name: topcoder-spacetech-refresh-dev
       Description: Refresh SpaceTech after hourly ingestion; normal end-to-end target is under three hours.
-      ScheduleExpression: rate(1 hour)
+      # The existing dev ingest starts near :18 and normally loads by :24 UTC.
+      ScheduleExpression: cron(30 * * * ? *)
       State: ENABLED
       Targets:
         - Arn: !GetAtt AnalyticsFunction.Arn
