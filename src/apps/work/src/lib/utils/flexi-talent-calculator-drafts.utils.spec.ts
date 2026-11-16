@@ -73,13 +73,11 @@ describe('createDraftFromLead', () => {
             .toBe('')
     })
 
-    it('selects the Others SMU and leaves its cost transfer % to be entered', () => {
-        const draft = createDraftFromLead({ ...lead, smu: 'Others' })
-
-        expect(draft.smuCode)
+    it('selects the SMU by code from older SMU names and the Others SMU', () => {
+        expect(createDraftFromLead({ ...lead, smu: 'Europe' }).smuCode)
+            .toBe('EURP')
+        expect(createDraftFromLead({ ...lead, smu: 'Others' }).smuCode)
             .toBe('Others')
-        expect(draft.costTransferPercentRaw)
-            .toBe('')
     })
 })
 
@@ -89,7 +87,6 @@ describe('createDraftFromCalculation', () => {
             .toEqual({
                 accountName: 'Acme',
                 commercialDraft: { field: 'bookingRate', raw: '75.5' },
-                costTransferPercentRaw: '',
                 durationWeeksRaw: '12',
                 hoursPerDayRaw: '8',
                 id: 'calc-1',
@@ -139,27 +136,6 @@ describe('getDraftSavePayload', () => {
                 referral: true,
                 smu: 'EURP',
             })
-    })
-
-    it('round-trips the cost transfer % entered for the Others SMU', () => {
-        const draft = createDraftFromCalculation({ ...calculation, costTransferPercent: 72.5, smu: 'Others' })
-
-        expect(draft.costTransferPercentRaw)
-            .toBe('72.5')
-        expect(getDraftSavePayload(draft))
-            .toEqual(expect.objectContaining({ costTransferPercent: 72.5, smu: 'Others' }))
-    })
-
-    it('only saves a valid cost transfer %, and only for the Others SMU', () => {
-        const others: CalculatorDraft = { ...createDraftFromLead(lead), smuCode: 'Others' }
-
-        expect(getDraftSavePayload({ ...others, costTransferPercentRaw: '150' }).costTransferPercent)
-            .toBeUndefined()
-        expect(getDraftSavePayload({ ...others, costTransferPercentRaw: '72.555' }).costTransferPercent)
-            .toBe(72.56)
-        expect(getDraftSavePayload({ ...others, costTransferPercentRaw: '72.5', smuCode: 'EURP' })
-            .costTransferPercent)
-            .toBeUndefined()
     })
 
     it('leaves out empty text and values that are not numbers', () => {

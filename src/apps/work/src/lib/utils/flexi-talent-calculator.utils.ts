@@ -14,25 +14,21 @@ const WEEKS_PER_YEAR = 52
 const MONTHS_PER_YEAR = 12
 
 export interface FlexiTalentSmuOption {
-    /** Code used in the cost proposal and on engagement leads. */
+    /** Code shown in the SMU dropdown and the cost proposal, and stored on engagement leads. */
     code: string
     /** Share of the booking cost transferred to Topcoder, as a fraction. */
     costTransferRate: number
-    label: string
+    /** Older names the SMU may be stored under, e.g. on leads created before the codes were used. */
+    aliases?: ReadonlyArray<string>
 }
 
 export const FLEXI_TALENT_SMU_OPTIONS: ReadonlyArray<FlexiTalentSmuOption> = [
-    { code: 'AMPE', costTransferRate: 0.749, label: 'APMEA' },
-    { code: 'EURP', costTransferRate: 0.733, label: 'Europe' },
-    { code: 'AMR1', costTransferRate: 0.731, label: 'Americas 1' },
-    { code: 'AMR2', costTransferRate: 0.697, label: 'Americas 2' },
-    { code: 'Wipro-Internal', costTransferRate: 0.75, label: 'Wipro-Internal' },
+    { aliases: ['APMEA'], code: 'AMPE', costTransferRate: 0.749 },
+    { aliases: ['Europe'], code: 'EURP', costTransferRate: 0.733 },
+    { aliases: ['Americas 1'], code: 'AMR1', costTransferRate: 0.731 },
+    { aliases: ['Americas 2'], code: 'AMR2', costTransferRate: 0.697 },
+    { code: 'Others', costTransferRate: 0.25 },
 ]
-
-/**
- * SMU for accounts outside the predefined ones. It has no fixed cost transfer %, so the user enters it.
- */
-export const OTHER_SMU_CODE = 'Others'
 
 export type MemberInputField = 'memberCost' | 'memberRate'
 
@@ -53,8 +49,6 @@ export interface FlexiTalentCalculatorInputs {
     commercialInput?: CalculatorInput<CommercialInputField>
     durationWeeks?: number
     hoursPerDay?: number
-    /** Cost transfer % entered for the Others SMU, e.g. 72.5 for 72.50%. Ignored for the other SMUs. */
-    costTransferPercent?: number
     memberInput?: CalculatorInput<MemberInputField>
     referral: boolean
     smuCode?: string
@@ -117,34 +111,8 @@ export function getSmuOption(smu: string | undefined): FlexiTalentSmuOption | un
     }
 
     return FLEXI_TALENT_SMU_OPTIONS.find(option => (
-        option.code.toLowerCase() === normalized || option.label.toLowerCase() === normalized
+        [option.code, ...(option.aliases ?? [])].some(name => name.toLowerCase() === normalized)
     ))
-}
-
-export function isOtherSmu(smu: string | undefined): boolean {
-    return String(smu || '')
-        .trim()
-        .toLowerCase() === OTHER_SMU_CODE.toLowerCase()
-}
-
-/** Whether an entered cost transfer % can be used: above 0 and at most 100. */
-export function isValidCostTransferPercent(value: number | undefined): value is number {
-    return isPositive(value) && value <= 100
-}
-
-/**
- * The share of the booking cost transferred to Topcoder, as a fraction: fixed for the predefined SMUs,
- * entered by the user for Others. `undefined` when there is no SMU or the entered % is not valid.
- */
-export function getCostTransferRate(
-    smuCode: string | undefined,
-    costTransferPercent: number | undefined,
-): number | undefined {
-    if (isOtherSmu(smuCode)) {
-        return isValidCostTransferPercent(costTransferPercent) ? costTransferPercent / 100 : undefined
-    }
-
-    return getSmuOption(smuCode)?.costTransferRate
 }
 
 /**
@@ -236,7 +204,7 @@ function calculateActualCost(
 export function calculateFlexiTalentCosts(
     inputs: FlexiTalentCalculatorInputs,
 ): FlexiTalentCalculatorResult {
-    const costTransferRate = getCostTransferRate(inputs.smuCode, inputs.costTransferPercent)
+    const costTransferRate = getSmuOption(inputs.smuCode)?.costTransferRate
     const totalBillingHours = isPositive(inputs.hoursPerDay) && isPositive(inputs.durationWeeks)
         ? inputs.hoursPerDay * WORKING_DAYS_PER_WEEK * inputs.durationWeeks
         : undefined
