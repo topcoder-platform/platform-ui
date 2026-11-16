@@ -7,6 +7,7 @@ import { PageTitle, TabsNavbar, TabsNavItem } from '~/libs/ui'
 import { getHashFromTabId, getTabIdFromHash, getWalletAdminTabs, WalletAdminTabViews } from './config'
 import { PaymentsTab } from './payments'
 import { TrolleyLogsTab } from './trolley-logs'
+import { ActionLogTab } from './action-log'
 import { HomeTab } from './home'
 import styles from './WalletAdminTabs.module.scss'
 
@@ -53,6 +54,8 @@ const WalletAdminTabs: FC<WalletHomeProps> = (props: WalletHomeProps) => {
             {activeTab === WalletAdminTabViews.payments && <PaymentsTab profile={props.profile} />}
 
             {activeTab === WalletAdminTabViews.trolleyLogs && <TrolleyLogsTab />}
+
+            {activeTab === WalletAdminTabViews.actionLog && <ActionLogTab />}
         </div>
     )
 }

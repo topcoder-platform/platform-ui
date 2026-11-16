@@ -25,7 +25,7 @@ export const TROLLEY_LOGS_ROLE = 'administrator'
 
 /**
  * Roles that can open Wallet Admin: the payment roles, plus Admins for the
- * Trolley Logs report.
+ * Trolley Logs and Action Log reports.
  */
 export const WALLET_ADMIN_ALLOWED_ROLES: ReadonlyArray<string> = [
     ...WALLET_ADMIN_PAYMENT_ROLES,
@@ -66,5 +66,19 @@ export function canAccessPayments(roles: string[] | undefined): boolean {
  * @returns True when the member is an Admin.
  */
 export function canAccessTrolleyLogs(roles: string[] | undefined): boolean {
+    return hasAnyRole(roles, [TROLLEY_LOGS_ROLE])
+}
+
+/**
+ * Returns whether the member can see the Action Log report.
+ *
+ * The report lists manual payment changes for every member, with the email of
+ * the admin who made them, so like Trolley Logs it is limited to platform
+ * Admins. Keep aligned with tc-finance-api `GET /admin/action-log`.
+ *
+ * @param roles Profile roles from Auth0.
+ * @returns True when the member is an Admin.
+ */
+export function canAccessActionLog(roles: string[] | undefined): boolean {
     return hasAnyRole(roles, [TROLLEY_LOGS_ROLE])
 }

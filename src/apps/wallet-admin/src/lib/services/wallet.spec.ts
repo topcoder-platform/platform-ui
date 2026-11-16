@@ -3,11 +3,18 @@ import { xhrGetAsync } from '~/libs/core'
 
 import { Winning } from '../models/WinningDetail'
 import {
+    fetchActionLog,
     fetchChallengePaymentSummary,
     fetchTrolleyLogs,
     fetchWinningPaymentDetails,
+    getMemberContacts,
 } from './wallet'
 
+jest.mock('~/apps/work/src/lib/services/challenges.service', () => ({
+    fetchChallenge: jest.fn(),
+}), {
+    virtual: true,
+})
 jest.mock('~/config/environments/default.env', () => ({
     CHALLENGE_API_URL: 'https://example.com/v6/challenges',
     CHALLENGE_API_VERSION: 'v5',
@@ -287,5 +294,101 @@ describe('fetchTrolleyLogs', () => {
         await expect(fetchTrolleyLogs())
             .rejects
             .toThrow('Error fetching Trolley logs')
+    })
+})
+
+describe('fetchActionLog', () => {
+    const mockedXhrGetAsync = xhrGetAsync as jest.Mock
+
+    beforeEach(() => {
+        mockedXhrGetAsync.mockReset()
+    })
+
+    it('leaves the period to the API when none is given', async () => {
+        mockedXhrGetAsync.mockResolvedValueOnce({ data: [], status: 'success' })
+
+        await fetchActionLog()
+
+        expect(mockedXhrGetAsync)
+            .toHaveBeenCalledWith('https://example.com/v6/finance/admin/action-log')
+    })
+
+    it('passes the period in days', async () => {
+        mockedXhrGetAsync.mockResolvedValueOnce({ data: [], status: 'success' })
+
+        await fetchActionLog(90)
+
+        expect(mockedXhrGetAsync)
+            .toHaveBeenCalledWith('https://example.com/v6/finance/admin/action-log?days=90')
+    })
+
+    it('throws when the API reports an error', async () => {
+        mockedXhrGetAsync.mockResolvedValueOnce({ data: undefined, status: 'error' })
+
+        await expect(fetchActionLog())
+            .rejects
+            .toThrow('Error fetching action log')
+    })
+})
+
+describe('getMemberContacts', () => {
+    const mockedXhrGetAsync = xhrGetAsync as jest.Mock
+
+    beforeEach(() => {
+        mockedXhrGetAsync.mockReset()
+    })
+
+    it('requests handle, email and name for each member once', async () => {
+        mockedXhrGetAsync.mockResolvedValueOnce([
+            {
+                email: 'wallet.admin@topcoder.com',
+                firstName: 'Wallet',
+                handle: 'wallet_admin',
+                lastName: 'Admin',
+                userId: 88774634,
+            },
+        ])
+
+        const result = await getMemberContacts(['88774634', '88774634', ''])
+
+        expect(mockedXhrGetAsync)
+            .toHaveBeenCalledWith(
+                'https://example.com/v6/members?userIds[]=88774634'
+                + '&fields=userId,handle,email,firstName,lastName&perPage=1',
+            )
+        expect(result.get('88774634')?.email)
+            .toBe('wallet.admin@topcoder.com')
+    })
+
+    it('requests at most 50 members at a time', async () => {
+        mockedXhrGetAsync.mockResolvedValue([])
+
+        await getMemberContacts(Array.from({ length: 51 }, (_, i) => String(i + 1)))
+
+        expect(mockedXhrGetAsync)
+            .toHaveBeenCalledTimes(2)
+        expect(mockedXhrGetAsync.mock.calls[0][0])
+            .toContain('?userIds[]=1&userIds[]=2&')
+        expect(mockedXhrGetAsync.mock.calls[1][0])
+            .toContain('?userIds[]=51&fields=')
+    })
+
+    it('skips user IDs that are not numeric', async () => {
+        mockedXhrGetAsync.mockResolvedValueOnce([])
+
+        await getMemberContacts(['88774634', 'abc123@clients', ' 500021412 ', '[5]'])
+
+        expect(mockedXhrGetAsync)
+            .toHaveBeenCalledWith(
+                'https://example.com/v6/members?userIds[]=88774634&userIds[]=500021412'
+                + '&fields=userId,handle,email,firstName,lastName&perPage=2',
+            )
+    })
+
+    it('makes no request when there are no members', async () => {
+        await getMemberContacts([])
+
+        expect(mockedXhrGetAsync)
+            .not.toHaveBeenCalled()
     })
 })
