@@ -43,7 +43,9 @@ function formatTitleDate(value: string): string {
 /**
  * "Oct 5, 2026 - Oct 9, 2026", the date format the Assignees page payment title uses.
  */
-export function formatApprovedTimesheetWorkPeriod(row: ApprovedTimesheetRow): string {
+export function formatApprovedTimesheetWorkPeriod(
+    row: Pick<ApprovedTimesheetRow, 'workPeriodEnd' | 'workPeriodStart'>,
+): string {
     return `${formatTitleDate(row.workPeriodStart)} - ${formatTitleDate(row.workPeriodEnd)}`
 }
 

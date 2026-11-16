@@ -202,6 +202,12 @@ jest.mock('../../../lib/components', () => ({
     ErrorMessage: (props: { message: string }) => <div>{props.message}</div>,
     LoadingSpinner: () => <div>Loading</div>,
     Pagination: () => <div>Pagination</div>,
+    PendingTimesheetApprovalsTab: (props: { excludeTestProjects?: boolean }) => (
+        <div
+            data-exclude-test-projects={props.excludeTestProjects ? 'true' : 'false'}
+            data-testid='pending-timesheet-approvals-tab'
+        />
+    ),
     ProjectBillingAccountExpiredNotice: () => <div>Billing Notice</div>,
     ProjectListTabs: () => <div>Project Tabs</div>,
     ProjectStatus: (props: { status: string }) => <div>{`Project Status: ${props.status}`}</div>,
@@ -926,6 +932,33 @@ describe('EngagementsListPage', () => {
 
             expect(screen.getByTestId('approved-timesheets-tab')
                 .getAttribute('data-exclude-test-projects'))
+                .toBe('true')
+        })
+
+        it('offers administrators the pending timesheet approvals tab', () => {
+            renderPage('/engagements', '/engagements')
+
+            fireEvent.click(screen.getByRole('tab', { name: 'Pending Timesheet Approvals' }))
+
+            expect(screen.getByTestId('pending-timesheet-approvals-tab'))
+                .toBeTruthy()
+            expect(screen.getByRole('heading', { name: 'Pending Timesheet Approvals' }))
+                .toBeTruthy()
+        })
+
+        it('keeps the pending timesheet approvals tab from non-administrators', () => {
+            renderPage(
+                '/engagements?tab=pending-timesheet-approvals',
+                '/engagements',
+                talentManagerContextValue,
+            )
+
+            expect(screen.queryByRole('tab', { name: 'Pending Timesheet Approvals' }))
+                .toBeNull()
+            expect(screen.queryByTestId('pending-timesheet-approvals-tab'))
+                .toBeNull()
+            expect(screen.getByRole('tab', { name: 'Engagements' })
+                .getAttribute('aria-selected'))
                 .toBe('true')
         })
 
