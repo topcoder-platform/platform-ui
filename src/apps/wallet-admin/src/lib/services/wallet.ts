@@ -24,6 +24,7 @@ import { PaginationInfo } from '../models/PaginationInfo'
 import { WinningsAudit } from '../models/WinningsAudit'
 import { PayoutAudit } from '../models/PayoutAudit'
 import { TrolleyLogReleasePair } from '../models/TrolleyLogReleasePair'
+import { ActionLogEntry, MemberContact } from '../models/ActionLogEntry'
 import ApiResponse from '../models/ApiResponse'
 
 const baseUrl = `${EnvironmentConfig.TC_FINANCE_API}`
@@ -327,6 +328,19 @@ export async function fetchTrolleyLogs(days?: number): Promise<TrolleyLogRelease
 
     if (response.status === 'error') {
         throw new Error('Error fetching Trolley logs')
+    }
+
+    return response.data
+}
+
+export async function fetchActionLog(days?: number): Promise<ActionLogEntry[]> {
+    const query = days ? `?days=${days}` : ''
+    const response = await xhrGetAsync<ApiResponse<ActionLogEntry[]>>(
+        `${baseUrl}/admin/action-log${query}`,
+    )
+
+    if (response.status === 'error') {
+        throw new Error('Error fetching action log')
     }
 
     return response.data
@@ -729,4 +743,33 @@ export async function getMemberHandle(userIds: string[]): Promise<Map<number, st
     }
 
     return handleMap
+}
+
+/**
+ * Looks up handle, email and name for the given members. Email and the full
+ * last name are only returned to Admins.
+ *
+ * @param userIds User IDs to look up. IDs that are not numeric (e.g. M2M
+ *                client IDs) are skipped, as the members API rejects them.
+ * @returns A map of user ID to member contact details. Members that are not
+ *          found are left out.
+ */
+export async function getMemberContacts(userIds: string[]): Promise<Map<string, MemberContact>> {
+    const BATCH_SIZE = 50
+    const uniqueUserIds = [...new Set(userIds.map(userId => userId?.trim())
+        .filter(userId => /^\d+$/.test(userId ?? '')))]
+
+    const batches: string[][] = []
+    for (let i = 0; i < uniqueUserIds.length; i += BATCH_SIZE) {
+        batches.push(uniqueUserIds.slice(i, i + BATCH_SIZE))
+    }
+
+    const responses = await Promise.all(batches.map(batch => xhrGetAsync<MemberContact[]>(
+        `${memberApiBaseUrl}?${batch.map(userId => `userIds[]=${encodeURIComponent(userId)}`)
+            .join('&')}`
+        + `&fields=userId,handle,email,firstName,lastName&perPage=${batch.length}`,
+    )))
+
+    return new Map(responses.flat()
+        .map(member => [String(member.userId), member]))
 }

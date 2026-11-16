@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import {
+    canAccessActionLog,
     canAccessPayments,
     canAccessTrolleyLogs,
     canAccessWalletAdmin,
@@ -59,6 +60,27 @@ describe('canAccessTrolleyLogs', () => {
         expect(canAccessTrolleyLogs([]))
             .toBe(false)
         expect(canAccessTrolleyLogs(undefined))
+            .toBe(false)
+    })
+})
+
+describe('canAccessActionLog', () => {
+    it('allows Admins regardless of casing', () => {
+        expect(canAccessActionLog(['administrator']))
+            .toBe(true)
+        expect(canAccessActionLog([' Administrator ']))
+            .toBe(true)
+    })
+
+    it.each([...WALLET_ADMIN_PAYMENT_ROLES])('denies %s', role => {
+        expect(canAccessActionLog([role]))
+            .toBe(false)
+    })
+
+    it('denies members without roles', () => {
+        expect(canAccessActionLog([]))
+            .toBe(false)
+        expect(canAccessActionLog(undefined))
             .toBe(false)
     })
 })

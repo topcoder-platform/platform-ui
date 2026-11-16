@@ -1,0 +1,174 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background-color: $black-5;
+    padding: $sp-6;
+    margin: $sp-8 0;
+    border-radius: 6px;
+
+    @include ltelg {
+        padding: $sp-4;
+    }
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: $sp-4;
+    margin: $sp-4 0;
+}
+
+.periodButtons {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-1;
+    padding: $sp-1;
+    border: 1px solid $black-20;
+    border-radius: 999px;
+    background-color: white;
+}
+
+.periodButton {
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: $black-60;
+    cursor: pointer;
+    padding: $sp-2 $sp-4;
+
+    &:focus-visible {
+        outline: 2px solid $turq-160;
+        outline-offset: 2px;
+    }
+}
+
+.periodButtonActive {
+    background-color: $turq-160;
+    color: white;
+}
+
+.summary {
+    margin-bottom: $sp-2;
+}
+
+.tableContainer {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    table {
+        width: 100%;
+        min-width: 1000px;
+        border-collapse: separate;
+        border-spacing: 0;
+
+        th,
+        td {
+            text-align: left;
+            padding: $sp-2;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: white;
+            text-transform: uppercase;
+
+            &:first-child {
+                width: 10%;
+            }
+
+            &:nth-child(2),
+            &:last-child {
+                width: 16%;
+            }
+
+            &:nth-child(3),
+            &:nth-child(4) {
+                width: 29%;
+            }
+        }
+
+        tbody tr {
+            &:nth-child(odd) {
+                background-color: #f4f4f4;
+            }
+
+            &:nth-child(even) {
+                background-color: #ffffff;
+            }
+        }
+    }
+}
+
+.toolbarActions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $sp-2;
+}
+
+.search {
+    min-width: 260px;
+    padding: $sp-2 $sp-3;
+    border: 1px solid $black-20;
+    border-radius: 4px;
+    background-color: white;
+
+    &:focus-visible {
+        outline: 2px solid $turq-160;
+        outline-offset: 2px;
+    }
+}
+
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.badge {
+    align-self: flex-start;
+    padding: 0 $sp-2;
+    border-radius: 999px;
+    background-color: $turq-160;
+    color: white;
+    font-weight: 600;
+}
+
+.status {
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.wrap {
+    overflow-wrap: anywhere;
+}
+
+.mono {
+    font-family: monospace;
+    overflow-wrap: anywhere;
+}
+
+.muted {
+    color: $black-60;
+}
+
+.error {
+    color: $red-100;
+}
+
+.centered {
+    min-height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
