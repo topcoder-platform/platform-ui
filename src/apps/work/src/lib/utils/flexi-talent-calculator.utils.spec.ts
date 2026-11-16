@@ -2,7 +2,6 @@ import {
     buildCostProposal,
     calculateFlexiTalentCosts,
     FlexiTalentCalculatorInputs,
-    getCostTransferRate,
     getSmuOption,
     parseCalculatorNumber,
     parseDurationToWeeks,
@@ -35,29 +34,28 @@ describe('calculateFlexiTalentCosts', () => {
             .toBeCloseTo(8666.67, 2)
     })
 
-    it('calculates with the cost transfer % entered for the Others SMU', () => {
+    it('calculates with the fixed 25% cost transfer of the Others SMU', () => {
         const result = calculateFlexiTalentCosts({
             ...baseInputs,
             commercialInput: { field: 'bookingCost', value: 40000 },
-            costTransferPercent: 75,
             smuCode: 'Others',
         })
 
         expect(result.costTransferRate)
-            .toBe(0.75)
+            .toBe(0.25)
         expect(result.actualCost)
-            .toBe(30000)
-        expect(result.wiproCostBenefit)
             .toBe(10000)
+        expect(result.wiproCostBenefit)
+            .toBe(30000)
         expect(result.wiproCostBenefitPercent)
-            .toBe(25)
+            .toBe(75)
     })
 
-    it('cannot calculate the cost transfer for the Others SMU until its % is entered', () => {
+    it('cannot calculate the cost transfer for an SMU that is no longer offered', () => {
         const result = calculateFlexiTalentCosts({
             ...baseInputs,
             commercialInput: { field: 'bookingCost', value: 40000 },
-            smuCode: 'Others',
+            smuCode: 'Wipro-Internal',
         })
 
         expect(result.bookingCost)
@@ -243,39 +241,14 @@ describe('parseCalculatorNumber', () => {
 })
 
 describe('getSmuOption', () => {
-    it('matches lead SMU codes and labels', () => {
-        expect(getSmuOption('EURP')?.label)
-            .toBe('Europe')
+    it('matches SMU codes and older SMU names', () => {
+        expect(getSmuOption('Europe')?.code)
+            .toBe('EURP')
         expect(getSmuOption('americas 2')?.code)
             .toBe('AMR2')
-        expect(getSmuOption('Others'))
-            .toBeUndefined()
-    })
-})
-
-describe('getCostTransferRate', () => {
-    it('uses the fixed % of a predefined SMU, ignoring an entered one', () => {
-        expect(getCostTransferRate('EURP', 50))
-            .toBe(0.733)
-    })
-
-    it('uses the entered % for the Others SMU', () => {
-        expect(getCostTransferRate('Others', 72.5))
-            .toBe(0.725)
-        expect(getCostTransferRate('others', 100))
-            .toBe(1)
-    })
-
-    it.each([undefined, 0, -5, 100.5, Number.NaN])(
-        'has no rate for the Others SMU when the entered % is %p',
-        value => {
-            expect(getCostTransferRate('Others', value))
-                .toBeUndefined()
-        },
-    )
-
-    it('has no rate without an SMU', () => {
-        expect(getCostTransferRate(undefined, 72.5))
+        expect(getSmuOption('others')?.costTransferRate)
+            .toBe(0.25)
+        expect(getSmuOption('Wipro-Internal'))
             .toBeUndefined()
     })
 })

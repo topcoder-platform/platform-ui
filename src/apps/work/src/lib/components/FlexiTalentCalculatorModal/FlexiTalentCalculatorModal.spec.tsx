@@ -238,54 +238,37 @@ describe('FlexiTalentCalculatorModal', () => {
             .toHaveValue('143000')
     })
 
-    it('calculates with the cost transfer % entered for the Others SMU and saves it', async () => {
+    it('lists the SMUs by code with their cost transfer %', async () => {
+        await renderCalculator()
+
+        expect(Array.from(
+            (screen.getByLabelText('SMU') as HTMLSelectElement).options,
+            option => option.textContent,
+        ))
+            .toEqual(expect.arrayContaining([
+                'AMPE (74.90%)',
+                'EURP (73.30%)',
+                'AMR1 (73.10%)',
+                'AMR2 (69.70%)',
+                'Others (25.00%)',
+            ]))
+        expect(screen.queryByRole('option', { name: /Wipro-Internal/ }))
+            .not.toBeInTheDocument()
+    })
+
+    it('calculates with the fixed 25% cost transfer for the Others SMU', async () => {
         const user = userEvent.setup()
         await renderCalculator({ ...lead, smu: 'Others' })
 
         expect(screen.getByLabelText('SMU'))
             .toHaveValue('Others')
-        expect(screen.getByText('Enter the cost transfer % for the Others SMU to calculate the booking cost.'))
-            .toBeInTheDocument()
+        expect(screen.queryByLabelText('Cost Transfer %'))
+            .not.toBeInTheDocument()
 
         await user.type(screen.getByLabelText('Booking Cost (USD)'), '40000')
 
         expect(screen.getByLabelText('Actual Cost (USD)'))
-            .toHaveValue('')
-
-        await user.type(screen.getByLabelText('Cost Transfer %'), '150')
-
-        expect(screen.getByText('Enter a percentage above 0 and up to 100.'))
-            .toBeInTheDocument()
-
-        await user.type(screen.getByLabelText('Cost Transfer %'), '{Control>}a{/Control}75')
-
-        expect(screen.queryByText('Enter a percentage above 0 and up to 100.'))
-            .not.toBeInTheDocument()
-        expect(screen.getByLabelText('Actual Cost (USD)'))
-            .toHaveValue('30000')
-
-        await waitFor(() => {
-            // Leaving Booking Cost created the calculation, so the % is saved as an update.
-            expect(updateEngagementLeadCalculation)
-                .toHaveBeenLastCalledWith(
-                    'lead-1',
-                    'calc-new',
-                    expect.objectContaining({ costTransferPercent: 75, smu: 'Others' }),
-                )
-        })
-    })
-
-    it('only asks for the cost transfer % when the Others SMU is selected', async () => {
-        const user = userEvent.setup()
-        await renderCalculator()
-
-        expect(screen.queryByLabelText('Cost Transfer %'))
-            .not.toBeInTheDocument()
-
-        await user.selectOptions(screen.getByLabelText('SMU'), 'Others')
-
-        expect(screen.getByLabelText('Cost Transfer %'))
-            .toBeInTheDocument()
+            .toHaveValue('10000')
     })
 
     it('copies the cost proposal', async () => {

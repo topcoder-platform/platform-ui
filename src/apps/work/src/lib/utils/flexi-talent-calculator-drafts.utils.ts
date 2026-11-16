@@ -10,10 +10,7 @@ import {
     CommercialInputField,
     FlexiTalentCalculatorInputs,
     getSmuOption,
-    isOtherSmu,
-    isValidCostTransferPercent,
     MemberInputField,
-    OTHER_SMU_CODE,
     parseCalculatorNumber,
     parseDurationToWeeks,
 } from './flexi-talent-calculator.utils'
@@ -30,8 +27,6 @@ export interface DraftInput<TField extends string> {
 export interface CalculatorDraft {
     accountName: string
     commercialDraft?: DraftInput<CommercialInputField>
-    /** Cost transfer % as typed; only used for the Others SMU. */
-    costTransferPercentRaw: string
     durationWeeksRaw: string
     hoursPerDayRaw: string
     /** Set once the calculation has been saved. */
@@ -92,18 +87,10 @@ function toDraftInput<TField extends string>(
     return field ? { field, raw: numberToRaw(value) } : undefined
 }
 
-function getLeadSmuCode(smu: string | undefined): string {
-    return getSmuOption(smu)?.code || (isOtherSmu(smu) ? OTHER_SMU_CODE : '')
-}
-
-/**
- * A new, unsaved calculation prefilled from the lead: account, SMU, hours per day and duration. A lead
- * with the Others SMU leaves the cost transfer % for the user to enter.
- */
+/** A new, unsaved calculation prefilled from the lead: account, SMU, hours per day and duration. */
 export function createDraftFromLead(lead: EngagementLead): CalculatorDraft {
     return {
         accountName: lead.accountName || '',
-        costTransferPercentRaw: '',
         durationWeeksRaw: numberToRaw(parseDurationToWeeks(lead.engagementDuration)),
         hoursPerDayRaw: String(lead.workingHoursPerDay || DEFAULT_HOURS_PER_DAY),
         key: createDraftKey(),
@@ -111,7 +98,7 @@ export function createDraftFromLead(lead: EngagementLead): CalculatorDraft {
         referral: false,
         revision: 0,
         savedRevision: 0,
-        smuCode: getLeadSmuCode(lead.smu),
+        smuCode: getSmuOption(lead.smu)?.code || '',
     }
 }
 
@@ -125,7 +112,6 @@ export function createDraftFromCalculation(calculation: EngagementLeadCalculatio
                 : undefined,
             calculation.commercialInputValue,
         ),
-        costTransferPercentRaw: numberToRaw(calculation.costTransferPercent),
         durationWeeksRaw: numberToRaw(calculation.durationWeeks),
         hoursPerDayRaw: numberToRaw(calculation.hoursPerDay),
         id: calculation.id,
@@ -151,7 +137,6 @@ export function getDraftCalculatorInputs(draft: CalculatorDraft): FlexiTalentCal
             field: draft.commercialDraft.field,
             value: parseCalculatorNumber(draft.commercialDraft.raw),
         },
-        costTransferPercent: parseCalculatorNumber(draft.costTransferPercentRaw),
         durationWeeks: parseCalculatorNumber(draft.durationWeeksRaw),
         hoursPerDay: parseCalculatorNumber(draft.hoursPerDayRaw),
         memberInput: draft.memberDraft && {
@@ -180,13 +165,11 @@ function round(value: number | undefined, decimals: number): number | undefined 
 /**
  * What to send to the API to save a draft. Empty values are left out, which clears them. A value
  * that is not a number is left out along with the field it was typed in, so the calculation
- * reopens with nothing to calculate from. The cost transfer % is only kept for the Others SMU, and
- * only when it is valid.
+ * reopens with nothing to calculate from.
  */
 export function getDraftSavePayload(draft: CalculatorDraft): EngagementLeadCalculationInput {
     const memberValue = round(parseCalculatorNumber(draft.memberDraft?.raw), 4)
     const commercialValue = round(parseCalculatorNumber(draft.commercialDraft?.raw), 4)
-    const costTransferPercent = round(parseCalculatorNumber(draft.costTransferPercentRaw), 2)
 
     return {
         accountName: emptyToUndefined(draft.accountName),
@@ -194,9 +177,6 @@ export function getDraftSavePayload(draft: CalculatorDraft): EngagementLeadCalcu
             ? COMMERCIAL_FIELD_TO_API[draft.commercialDraft.field]
             : undefined,
         commercialInputValue: commercialValue,
-        costTransferPercent: isOtherSmu(draft.smuCode) && isValidCostTransferPercent(costTransferPercent)
-            ? costTransferPercent
-            : undefined,
         durationWeeks: round(parseCalculatorNumber(draft.durationWeeksRaw), 2),
         hoursPerDay: round(parseCalculatorNumber(draft.hoursPerDayRaw), 2),
         memberInputField: draft.memberDraft && memberValue !== undefined
