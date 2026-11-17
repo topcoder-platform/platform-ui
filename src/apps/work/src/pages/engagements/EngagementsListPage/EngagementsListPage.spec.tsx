@@ -934,6 +934,7 @@ describe('EngagementsListPage', () => {
                     }))
             })
 
+            fireEvent.click(screen.getByRole('tab', { name: 'Timesheets' }))
             fireEvent.click(screen.getByRole('tab', { name: 'Approved Timesheets' }))
 
             expect(screen.getByTestId('approved-timesheets-tab')
@@ -941,51 +942,83 @@ describe('EngagementsListPage', () => {
                 .toBe('true')
         })
 
-        it('offers administrators the pending timesheet approvals tab', () => {
+        it('groups the timesheet tabs under a Timesheets tab', () => {
             renderPage('/engagements', '/engagements')
+
+            expect(screen.getAllByRole('tab')
+                .map(tab => tab.textContent))
+                .toEqual(['Engagements', 'Assignments', 'Timesheets', 'Leads'])
+
+            fireEvent.click(screen.getByRole('tab', { name: 'Timesheets' }))
+
+            const timesheetTabs = screen.getByRole('tablist', { name: 'Timesheets' })
+
+            expect(Array.from(timesheetTabs.querySelectorAll('[role="tab"]'))
+                .map(tab => tab.textContent))
+                .toEqual([
+                    'Pending Timesheet Submissions',
+                    'Pending Timesheet Approvals',
+                    'Approved Timesheets',
+                ])
+            expect(screen.getByRole('tab', { name: 'Timesheets' })
+                .getAttribute('aria-selected'))
+                .toBe('true')
+            // An administrator opens on the first timesheet tab.
+            expect(screen.getByTestId('pending-timesheet-submissions-tab'))
+                .toBeTruthy()
+            expect(screen.getByRole('heading', { name: 'Pending Timesheet Submissions' }))
+                .toBeTruthy()
 
             fireEvent.click(screen.getByRole('tab', { name: 'Pending Timesheet Approvals' }))
 
             expect(screen.getByTestId('pending-timesheet-approvals-tab'))
                 .toBeTruthy()
-            expect(screen.getByRole('heading', { name: 'Pending Timesheet Approvals' }))
+            expect(screen.getByRole('tab', { name: 'Pending Timesheet Approvals' })
+                .getAttribute('aria-selected'))
+                .toBe('true')
+            expect(screen.getByRole('tab', { name: 'Timesheets' })
+                .getAttribute('aria-selected'))
+                .toBe('true')
+        })
+
+        it.each([
+            ['pending-timesheet-submissions', 'pending-timesheet-submissions-tab'],
+            ['pending-timesheet-approvals', 'pending-timesheet-approvals-tab'],
+            ['approved-timesheets', 'approved-timesheets-tab'],
+            ['timesheets', 'pending-timesheet-submissions-tab'],
+        ])('opens ?tab=%s inside the Timesheets tab', (tab, testId) => {
+            renderPage(`/engagements?tab=${tab}`, '/engagements')
+
+            expect(screen.getByTestId(testId))
+                .toBeTruthy()
+            expect(screen.getByRole('tab', { name: 'Timesheets' })
+                .getAttribute('aria-selected'))
+                .toBe('true')
+        })
+
+        it('shows non-administrators only the approved timesheets under Timesheets', () => {
+            renderPage('/engagements', '/engagements', talentManagerContextValue)
+
+            fireEvent.click(screen.getByRole('tab', { name: 'Timesheets' }))
+
+            const timesheetTabs = screen.getByRole('tablist', { name: 'Timesheets' })
+
+            expect(Array.from(timesheetTabs.querySelectorAll('[role="tab"]'))
+                .map(tab => tab.textContent))
+                .toEqual(['Approved Timesheets'])
+            expect(screen.getByTestId('approved-timesheets-tab'))
                 .toBeTruthy()
         })
 
-        it('offers administrators the pending timesheet submissions tab', () => {
-            renderPage('/engagements', '/engagements')
+        it.each([
+            'pending-timesheet-submissions',
+            'pending-timesheet-approvals',
+        ])('keeps ?tab=%s from non-administrators', tab => {
+            renderPage(`/engagements?tab=${tab}`, '/engagements', talentManagerContextValue)
 
-            fireEvent.click(screen.getByRole('tab', { name: 'Pending Timesheet Submissions' }))
-
-            expect(screen.getByTestId('pending-timesheet-submissions-tab'))
-                .toBeTruthy()
-            expect(screen.getByRole('heading', { name: 'Pending Timesheet Submissions' }))
-                .toBeTruthy()
-        })
-
-        it('keeps the pending timesheet submissions tab from non-administrators', () => {
-            renderPage(
-                '/engagements?tab=pending-timesheet-submissions',
-                '/engagements',
-                talentManagerContextValue,
-            )
-
-            expect(screen.queryByRole('tab', { name: 'Pending Timesheet Submissions' }))
+            expect(screen.queryByTestId(`${tab}-tab`))
                 .toBeNull()
-            expect(screen.queryByTestId('pending-timesheet-submissions-tab'))
-                .toBeNull()
-        })
-
-        it('keeps the pending timesheet approvals tab from non-administrators', () => {
-            renderPage(
-                '/engagements?tab=pending-timesheet-approvals',
-                '/engagements',
-                talentManagerContextValue,
-            )
-
-            expect(screen.queryByRole('tab', { name: 'Pending Timesheet Approvals' }))
-                .toBeNull()
-            expect(screen.queryByTestId('pending-timesheet-approvals-tab'))
+            expect(screen.queryByRole('tablist', { name: 'Timesheets' }))
                 .toBeNull()
             expect(screen.getByRole('tab', { name: 'Engagements' })
                 .getAttribute('aria-selected'))

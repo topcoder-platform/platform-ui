@@ -1,8 +1,8 @@
 /* eslint-disable react/jsx-no-bind */
 
 import {
-    ChangeEvent,
     FC,
+    FocusEvent,
     useCallback,
     useEffect,
     useMemo,
@@ -11,8 +11,8 @@ import {
 
 import {
     Button,
-    IconOutline,
     InputDatePicker,
+    InputText,
 } from '~/libs/ui'
 
 import { PAGE_SIZE } from '../../constants'
@@ -235,7 +235,7 @@ export const PendingTimesheetSubmissionsTab: FC<PendingTimesheetSubmissionsTabPr
         }
     }, [fromDateFilter, pendingResult, periodError, selected, toDateFilter])
 
-    function handleEngagementChange(event: ChangeEvent<HTMLInputElement>): void {
+    function handleEngagementChange(event: FocusEvent<HTMLInputElement>): void {
         setEngagementInput(event.target.value)
     }
 
@@ -332,24 +332,22 @@ export const PendingTimesheetSubmissionsTab: FC<PendingTimesheetSubmissionsTabPr
         <div className={styles.container}>
             <div className={styles.filters}>
                 <div className={styles.filterField}>
-                    <label htmlFor='work-pending-submissions-engagement-search'>Search by engagement name</label>
-                    <div className={styles.searchInputWrap}>
-                        <IconOutline.SearchIcon className={styles.searchIcon} />
-                        <input
-                            id='work-pending-submissions-engagement-search'
-                            aria-label='Search pending submissions by engagement name'
-                            className={styles.searchInput}
-                            onChange={handleEngagementChange}
-                            placeholder='Search by engagement name'
-                            type='text'
-                            value={engagementInput}
-                        />
-                    </div>
+                    <InputText
+                        dirty
+                        forceUpdateValue
+                        label='Engagement name'
+                        name='work-pending-submissions-engagement'
+                        onChange={handleEngagementChange}
+                        placeholder='Search by engagement name'
+                        type='text'
+                        value={engagementInput}
+                    />
                 </div>
 
                 <div className={styles.filterField}>
                     <InputDatePicker
-                        classNameWrapper={styles.datePicker}
+                        className={styles.datePicker}
+                        classNameWrapper={styles.datePickerWrapper}
                         date={fromDate}
                         disabled={false}
                         isClearable
@@ -361,7 +359,8 @@ export const PendingTimesheetSubmissionsTab: FC<PendingTimesheetSubmissionsTabPr
 
                 <div className={styles.filterField}>
                     <InputDatePicker
-                        classNameWrapper={styles.datePicker}
+                        className={styles.datePicker}
+                        classNameWrapper={styles.datePickerWrapper}
                         date={toDate}
                         disabled={false}
                         isClearable

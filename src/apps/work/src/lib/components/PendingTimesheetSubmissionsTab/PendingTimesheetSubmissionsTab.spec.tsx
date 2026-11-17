@@ -23,9 +23,6 @@ jest.mock('~/libs/ui', () => ({
     Button: (props: { disabled?: boolean, label: string, onClick?: () => void }) => (
         <button disabled={props.disabled} onClick={props.onClick} type='button'>{props.label}</button>
     ),
-    IconOutline: {
-        SearchIcon: () => <span>search-icon</span>,
-    },
     // Shows the picked day, and reports a change only for a complete YYYY-MM-DD value or a clear.
     InputDatePicker: (props: {
         date?: Date
@@ -51,6 +48,17 @@ jest.mock('~/libs/ui', () => ({
             }}
             type='text'
         />
+    ),
+    InputText: (props: {
+        label: string
+        name: string
+        onChange: (event: { target: { value: string } }) => void
+        value?: string
+    }) => (
+        <label>
+            <span>{props.label}</span>
+            <input aria-label={props.label} name={props.name} onChange={props.onChange} value={props.value} />
+        </label>
     ),
 }), {
     virtual: true,
@@ -198,7 +206,7 @@ describe('PendingTimesheetSubmissionsTab', () => {
     it('filters by engagement name and a picked work period', async () => {
         render(<PendingTimesheetSubmissionsTab excludeTestProjects />)
 
-        fireEvent.change(screen.getByLabelText('Search pending submissions by engagement name'), {
+        fireEvent.change(screen.getByLabelText('Engagement name'), {
             target: { value: ' Frontend ' },
         })
         fireEvent.change(screen.getByLabelText('Work period from'), { target: { value: '2026-11-02' } })
