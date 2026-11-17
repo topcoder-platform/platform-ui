@@ -388,6 +388,14 @@ WITH date_events AS (
       AND (:medium = '*' OR medium = :medium)
       AND (:campaign = '*' OR campaign = :campaign)
       AND (:content = '*' OR content = :content)
+), persona_events AS (
+    SELECT *,
+        CASE WHEN LOWER(SPLIT_PART(campaign, '_', 1)) = 'customer'
+                  AND LOWER(SPLIT_PART(campaign, '_', 2)) = 'spacetech'
+                  AND LOWER(SPLIT_PART(campaign, '_', 4)) IN ('topcoder', 'george', 'anita', 'tony')
+             THEN LOWER(SPLIT_PART(campaign, '_', 4)) END AS persona,
+        DATE_TRUNC('week', event_timestamp)::date AS week_start
+    FROM events
 )
 SELECT 'summary'::varchar AS row_type, NULL::varchar AS dimension_1, NULL::varchar AS dimension_2, NULL::varchar AS dimension_3,
     (SELECT MAX(event_timestamp)::varchar FROM topcoder_web.spacetech_events_mv_v2) AS dimension_4,
@@ -427,6 +435,32 @@ SELECT 'campaign'::varchar AS row_type, source AS dimension_1, medium AS dimensi
     COUNT(DISTINCT analytics_user_id)::bigint AS users
 FROM events
 GROUP BY 2, 3, 4
+UNION ALL
+SELECT 'persona'::varchar AS row_type, persona AS dimension_1, NULL::varchar AS dimension_2,
+    NULL::varchar AS dimension_3, NULL::varchar AS dimension_4,
+    COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
+    COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
+    COUNT(CASE WHEN event_name = 'form_started' THEN 1 END)::bigint AS starts,
+    COUNT(CASE WHEN event_name = 'form_completed' THEN 1 END)::bigint AS submissions,
+    COUNT(DISTINCT CASE WHEN event_name = 'form_section_reached' THEN analytics_user_id END)::bigint AS reached,
+    COALESCE(SUM(CASE WHEN event_name = '_user_engagement' THEN user_engagement_time_msec ELSE 0 END), 0)::bigint AS engagement_ms,
+    COUNT(*)::bigint AS events,
+    COUNT(DISTINCT analytics_user_id)::bigint AS users
+FROM persona_events WHERE persona IS NOT NULL
+GROUP BY persona
+UNION ALL
+SELECT 'persona_weekly'::varchar AS row_type, persona AS dimension_1, week_start::varchar AS dimension_2,
+    NULL::varchar AS dimension_3, NULL::varchar AS dimension_4,
+    COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
+    COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
+    COUNT(CASE WHEN event_name = 'form_started' THEN 1 END)::bigint AS starts,
+    COUNT(CASE WHEN event_name = 'form_completed' THEN 1 END)::bigint AS submissions,
+    COUNT(DISTINCT CASE WHEN event_name = 'form_section_reached' THEN analytics_user_id END)::bigint AS reached,
+    COALESCE(SUM(CASE WHEN event_name = '_user_engagement' THEN user_engagement_time_msec ELSE 0 END), 0)::bigint AS engagement_ms,
+    COUNT(*)::bigint AS events,
+    COUNT(DISTINCT analytics_user_id)::bigint AS users
+FROM persona_events WHERE persona IS NOT NULL
+GROUP BY persona, week_start
 UNION ALL
 SELECT 'country'::varchar AS row_type, country AS dimension_1, NULL::varchar AS dimension_2, NULL::varchar AS dimension_3, NULL::varchar AS dimension_4,
 
@@ -2037,11 +2071,29 @@ def _spacetech_report(filters: dict[str, str], context: Any, query_token: str | 
     for offset in range((end - start).days + 1):
         day = (start + timedelta(days=offset)).isoformat()
         series.append(daily.get(day, {"date": day, **metrics({})}))
+    # Compute distinct visitors over each whole persona/period in SQL; never
+    # sum daily or campaign-level uniques or average already-calculated rates.
+    personas = ("topcoder", "george", "anita", "tony")
+    persona_totals = {row["dimension_1"]: metrics(row)
+                      for row in rows if row.get("row_type") == "persona"}
+    persona_weekly = {(row["dimension_1"], row["dimension_2"]): metrics(row)
+                      for row in rows if row.get("row_type") == "persona_weekly"}
+    first_week = start - timedelta(days=start.weekday())
+    persona_series = []
+    for offset in range(0, (end - first_week).days + 1, 7):
+        week = (first_week + timedelta(days=offset)).isoformat()
+        persona_series.append({"date": week, **{
+            persona: persona_weekly.get((persona, week), metrics({}))
+            for persona in personas
+        }})
     return {
         "generatedAt": _now_iso(), "filters": filters,
         "dataThrough": next((row.get("dimension_4") for row in rows if row.get("row_type") == "summary"), None),
         "totals": metrics(next((row for row in rows if row.get("row_type") == "summary"), {})),
         "series": series,
+        "personas": [{"persona": persona, **persona_totals.get(persona, metrics({}))}
+                     for persona in personas],
+        "personaSeries": persona_series,
         "campaigns": groups("campaign", ["source", "medium", "campaign"]),
         "filterOptions": {
             key: sorted({row["dimension_1"] for row in rows

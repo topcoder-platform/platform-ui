@@ -44,6 +44,7 @@ describe('SpaceTech Analytics', () => {
 
     it('loads ninety days and applies every UTM filter together', async () => {
         render(<SpaceTechAnalyticsPage />)
+        fireEvent.click(screen.getByRole('tab', { name: 'Details' }))
         await screen.findByText('Submissions: 2')
         const initial = (getSpaceTechReport as jest.Mock).mock.calls[0][0]
         expect((Date.parse(initial.to) - Date.parse(initial.from)) / 86400000)
@@ -73,7 +74,7 @@ describe('SpaceTech Analytics', () => {
         fireEvent.change(screen.getByLabelText('Start date'), { target: { value: initial.to } })
         fireEvent.change(screen.getByLabelText('utm_campaign'), { target: { value: 'george' } })
         fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
-        await screen.findByText('Submissions: 2')
+        await screen.findByText(/Latest processed event/)
         fireEvent.change(screen.getByLabelText('End date'), { target: { value: initial.from } })
         fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
         expect(screen.getByRole('alert'))
@@ -93,6 +94,7 @@ describe('SpaceTech Analytics', () => {
 
     it('refreshes unchanged filters so new activity can be requested without reloading', async () => {
         render(<SpaceTechAnalyticsPage />)
+        fireEvent.click(screen.getByRole('tab', { name: 'Details' }))
         await screen.findByText('Submissions: 2')
         fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
         await waitFor(() => expect(getSpaceTechReport)
@@ -102,6 +104,7 @@ describe('SpaceTech Analytics', () => {
     it('does not submit reversed dates and renders retryable API failures', async () => {
         (getSpaceTechReport as jest.Mock).mockRejectedValueOnce(new Error('offline'))
         render(<SpaceTechAnalyticsPage />)
+        fireEvent.click(screen.getByRole('tab', { name: 'Details' }))
         const retry = await screen.findByRole('button', { name: 'Analytics data could not be loaded. Try again.' })
         fireEvent.click(retry)
         await screen.findByText('Submissions: 2')

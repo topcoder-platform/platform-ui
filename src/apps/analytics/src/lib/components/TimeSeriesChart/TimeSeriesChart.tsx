@@ -19,6 +19,10 @@ interface TimeSeriesChartProps {
     points: object[]
     series: TimeSeriesDefinition[]
     variant?: 'area' | 'line'
+    valueDecimals?: number
+    valueSuffix?: string
+    xAxisTitle?: string
+    yAxisTitle?: string
 }
 
 /**
@@ -83,8 +87,10 @@ export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
         title: { text: undefined },
         tooltip: {
             headerFormat: '<strong>{point.key}</strong><br/>',
-            pointFormat: '<span style="color:{series.color}">●</span> {series.name}: <b>{point.y:,.0f}</b><br/>',
+            pointFormat: '<span style="color:{series.color}">●</span> {series.name}: <b>{point.y}</b><br/>',
             shared: true,
+            valueDecimals: props.valueDecimals ?? 0,
+            valueSuffix: props.valueSuffix ?? '',
         },
         xAxis: {
             categories: props.points.map(point => formatReportDate(String(
@@ -93,15 +99,17 @@ export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
             labels: { style: { color: '#5a6f78', fontSize: '11px' } },
             lineColor: '#dce3e9',
             tickColor: '#dce3e9',
+            title: { text: props.xAxisTitle },
         },
         yAxis: {
-            allowDecimals: false,
+            allowDecimals: (props.valueDecimals ?? 0) > 0,
             gridLineColor: '#e7edf1',
             labels: { style: { color: '#5a6f78', fontSize: '11px' } },
             min: 0,
-            title: { text: undefined },
+            title: { text: props.yAxisTitle },
         },
-    }), [chartType, props.points, props.series])
+    }), [chartType, props.points, props.series, props.valueDecimals, props.valueSuffix,
+        props.xAxisTitle, props.yAxisTitle])
 
     if (!hasData) {
         return <div className={styles.empty} role='status'>No activity is available for this period.</div>

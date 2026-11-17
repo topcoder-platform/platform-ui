@@ -10,6 +10,7 @@ import { SpaceTechFilters, SpaceTechGroup, SpaceTechReport } from '../lib/models
 import { getSpaceTechReport } from '../lib/services'
 import { defaultAnalyticsDateRange, formatAnalyticsFreshness, validateAnalyticsDateRange } from '../lib/utils'
 
+import { SpaceTechDashboard, spaceTechMetrics as metrics } from './SpaceTechDashboard'
 import SpaceTechLeads from './SpaceTechLeads'
 import styles from './AnalyticsPages.module.scss'
 
@@ -19,12 +20,6 @@ const series = [
 ]
 const dimensions = ['source', 'medium', 'campaign'] as const
 const attributionKeys = new Set<string>(dimensions)
-const metrics = [
-    ['pageViews', 'Page views'], ['visitors', 'Unique visitors'], ['starts', 'Form starts'],
-    ['submissions', 'Submissions'], ['submissionRate', 'Submission rate (%)'],
-    ['reached', 'Visitors reaching form'], ['averageEngagementSeconds', 'Engaged seconds / page view'],
-] as const
-
 /** Public CMS question IDs keep reports readable without collecting rendered browser text. */
 const labels: Record<string, string> = {
     'spacetech-faq-after': 'What happens after I submit?',
@@ -77,6 +72,7 @@ function defaultSpaceTechFilters(): SpaceTechFilters {
 /** Shows UTM-attributed SpaceTech traffic, engagement, and accepted form submissions. */
 export const SpaceTechAnalyticsPage: FC = () => {
     const [draft, setDraft] = useState(defaultSpaceTechFilters)
+    const [tab, setTab] = useState<'dashboard' | 'details'>('dashboard')
     const [filters, setFilters] = useState(draft)
     const [leadRevision, setLeadRevision] = useState(0)
     const [error, setError] = useState<string>()
@@ -101,6 +97,33 @@ export const SpaceTechAnalyticsPage: FC = () => {
         <div className={styles.page}>
             <PageTitle>SpaceTech Analytics</PageTitle>
             <h1>SpaceTech</h1>
+            <div aria-label='SpaceTech views' className={styles.reportTabs} role='tablist'>
+                {(['dashboard', 'details'] as const).map(view => (
+                    <button
+                        key={view}
+                        aria-controls={`spacetech-${view}`}
+                        aria-selected={tab === view}
+                        id={`spacetech-${view}-tab`}
+                        onClick={() => setTab(view)}
+                        onKeyDown={event => {
+                            if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+                                event.preventDefault()
+                                const next = event.key === 'Home' ? 'dashboard'
+                                    : event.key === 'End' ? 'details'
+                                        : view === 'dashboard' ? 'details' : 'dashboard'
+                                setTab(next)
+                                document.getElementById(`spacetech-${next}-tab`)
+                                    ?.focus()
+                            }
+                        }}
+                        role='tab'
+                        tabIndex={tab === view ? 0 : -1}
+                        type='button'
+                    >
+                        {view === 'dashboard' ? 'Dashboard' : 'Details'}
+                    </button>
+                ))}
+            </div>
             <p>Traffic and accepted form submissions for /space-tech. Dates are inclusive and use UTC.</p>
             <form
                 className={styles.filters}
@@ -155,59 +178,73 @@ export const SpaceTechAnalyticsPage: FC = () => {
                             : 'No processed SpaceTech events'}
                         . Aggregate data refreshes hourly. New activity normally appears within 3 hours.
                     </p>
-                    <div className={styles.metricGrid}>
-                        {metrics.map(([key, label]) => (
-                            <MetricCard key={key} label={label} value={report.data?.totals[key]} />
-                        ))}
-                    </div>
-                    <p>
-                        Submission rate is submissions ÷ unique visitors. Engagement counts foreground time only.
-                        Apply filters to fetch the latest report.
-                    </p>
-                    <TimeSeriesChart
-                        ariaLabel='Daily SpaceTech visitors and submissions'
-                        points={report.data.series}
-                        series={series}
-                    />
-                    <Breakdown
-                        title='Campaign attribution'
-                        rows={report.data.campaigns}
-                        columns={[
-                            ...dimensions.map(key => [key, `utm_${key}`]),
-                            ['visitors', 'Visitors'], ['starts', 'Form starts'],
-                            ['submissions', 'Submissions'], ['submissionRate', 'Submission rate (%)'],
-                        ]}
-                    />
-                    <Breakdown
-                        title='CTA clicks'
-                        rows={report.data.ctas}
-                        columns={[
-                            ['placement', 'Section'], ['elementId', 'CTA'], ['events', 'Clicks'], ['users', 'Visitors'],
-                        ]}
-                    />
-                    <Breakdown
-                        title='FAQ questions opened'
-                        rows={report.data.faqs}
-                        columns={[
-                            ['faqId', 'Question'], ['events', 'Opens'], ['users', 'Visitors'],
-                        ]}
-                    />
-                    <Breakdown
-                        title='Country'
-                        rows={report.data.countries}
-                        columns={[
-                            ['country', 'Country'], ['visitors', 'Visitors'],
-                        ]}
-                    />
-                    <p>Country is unknown when collector location enrichment is unavailable.</p>
-                    <Breakdown
-                        title='Device'
-                        rows={report.data.devices}
-                        columns={[
-                            ['device', 'Device category'], ['visitors', 'Visitors'],
-                        ]}
-                    />
-                    <SpaceTechLeads key={leadRevision} filters={filters} />
+                    <section
+                        aria-labelledby={`spacetech-${tab}-tab`}
+                        className={styles.reportContent}
+                        id={`spacetech-${tab}`}
+                        role='tabpanel'
+                        tabIndex={0}
+                    >
+                        {tab === 'dashboard' ? <SpaceTechDashboard report={report.data} /> : (
+                            <>
+                                <div className={styles.metricGrid}>
+                                    {metrics.map(([key, label]) => (
+                                        <MetricCard key={key} label={label} value={report.data?.totals[key]} />
+                                    ))}
+                                </div>
+                                <p>
+                                    Submission rate is submissions ÷ unique visitors.
+                                    Engagement counts foreground time only.
+                                    Apply filters to fetch the latest report.
+                                </p>
+                                <TimeSeriesChart
+                                    ariaLabel='Daily SpaceTech visitors and submissions'
+                                    points={report.data.series}
+                                    series={series}
+                                />
+                                <Breakdown
+                                    title='Campaign attribution'
+                                    rows={report.data.campaigns}
+                                    columns={[
+                                        ...dimensions.map(key => [key, `utm_${key}`]),
+                                        ['visitors', 'Visitors'], ['starts', 'Form starts'],
+                                        ['submissions', 'Submissions'], ['submissionRate', 'Submission rate (%)'],
+                                    ]}
+                                />
+                                <Breakdown
+                                    title='CTA clicks'
+                                    rows={report.data.ctas}
+                                    columns={[
+                                        ['placement', 'Section'], ['elementId', 'CTA'],
+                                        ['events', 'Clicks'], ['users', 'Visitors'],
+                                    ]}
+                                />
+                                <Breakdown
+                                    title='FAQ questions opened'
+                                    rows={report.data.faqs}
+                                    columns={[
+                                        ['faqId', 'Question'], ['events', 'Opens'], ['users', 'Visitors'],
+                                    ]}
+                                />
+                                <Breakdown
+                                    title='Country'
+                                    rows={report.data.countries}
+                                    columns={[
+                                        ['country', 'Country'], ['visitors', 'Visitors'],
+                                    ]}
+                                />
+                                <p>Country is unknown when collector location enrichment is unavailable.</p>
+                                <Breakdown
+                                    title='Device'
+                                    rows={report.data.devices}
+                                    columns={[
+                                        ['device', 'Device category'], ['visitors', 'Visitors'],
+                                    ]}
+                                />
+                                <SpaceTechLeads key={leadRevision} filters={filters} />
+                            </>
+                        )}
+                    </section>
                 </>
             )}
         </div>
