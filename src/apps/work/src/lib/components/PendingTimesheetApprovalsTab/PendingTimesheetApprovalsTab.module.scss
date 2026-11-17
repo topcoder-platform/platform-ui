@@ -10,7 +10,8 @@
     display: grid;
     gap: 16px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-items: end;
+    // Every filter is a form field with its label on top, so their tops line up.
+    align-items: start;
     margin-top: 8px;
     padding: 20px;
     border-radius: 8px;
@@ -18,38 +19,7 @@
 }
 
 .filterField {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-
-    label {
-        color: $black-80;
-        font-size: 13px;
-    }
-}
-
-.searchInputWrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border: 1px solid $black-20;
-    border-radius: 4px;
-    background: #fff;
-    padding: 8px 12px;
-}
-
-.searchIcon {
-    color: $black-60;
-    width: 18px;
-    height: 18px;
-}
-
-.searchInput {
-    border: 0;
-    background: transparent;
-    color: $black-80;
-    outline: none;
-    width: 100%;
+    min-width: 0;
 }
 
 .toolbar {
@@ -140,8 +110,22 @@
     font-style: italic;
 }
 
+// The date pickers sit in the same row as a text field, so they drop the form spacing the text
+// field does not have.
 .datePicker {
     margin-bottom: 0;
+
+    &Wrapper {
+        justify-content: flex-end;
+
+        > * {
+            margin-bottom: 0;
+
+            button {
+                margin-top: 0;
+            }
+        }
+    }
 }
 
 .emptyRow {

@@ -1,8 +1,8 @@
 /* eslint-disable react/jsx-no-bind */
 
 import {
-    ChangeEvent,
     FC,
+    FocusEvent,
     useCallback,
     useEffect,
     useMemo,
@@ -11,20 +11,24 @@ import {
 
 import {
     Button,
-    IconOutline,
     InputDatePicker,
+    InputText,
 } from '~/libs/ui'
 
 import { PAGE_SIZE } from '../../constants'
 import { useFetchPendingApprovalTimesheets } from '../../hooks'
 import {
     PendingApprovalReminderResult,
-    PendingApprovalTimesheetApprover,
     PendingApprovalTimesheetRow,
 } from '../../models'
 import { sendPendingApprovalReminders } from '../../services'
 import { formatApprovedTimesheetWorkPeriod } from '../../utils/approved-timesheet.utils'
 import { formatDate } from '../../utils/date.utils'
+import {
+    formatApprovers,
+    pluralize,
+    toWorkDateString,
+} from '../../utils/timesheet-reminder.utils'
 import {
     showErrorToast,
     showInfoToast,
@@ -46,35 +50,6 @@ const columnLabels = [
     'Submitted Date',
     'Approver',
 ]
-
-/** Local calendar day as the YYYY-MM-DD the API filters work dates by. */
-function toWorkDateString(date: Date): string {
-    const month = String(date.getMonth() + 1)
-        .padStart(2, '0')
-    const day = String(date.getDate())
-        .padStart(2, '0')
-
-    return `${date.getFullYear()}-${month}-${day}`
-}
-
-/** "Mary Jones (maryj)" when the manager's name is known, otherwise the handle alone. */
-function formatApprover(approver: PendingApprovalTimesheetApprover): string {
-    const name = String(approver.name || '')
-        .trim()
-
-    return name ? `${name} (${approver.handle})` : approver.handle
-}
-
-function formatApprovers(row: PendingApprovalTimesheetRow): string {
-    return row.approvers.length
-        ? row.approvers.map(formatApprover)
-            .join(', ')
-        : 'No manager assigned'
-}
-
-function pluralize(count: number, singular: string, plural: string): string {
-    return `${count} ${count === 1 ? singular : plural}`
-}
 
 /**
  * Tells the administrator who was reminded, and calls out anyone who could not be: managers without
@@ -249,7 +224,7 @@ export const PendingTimesheetApprovalsTab: FC<PendingTimesheetApprovalsTabProps>
         }
     }, [pendingResult, selectedAssignmentIds])
 
-    function handleEngagementChange(event: ChangeEvent<HTMLInputElement>): void {
+    function handleEngagementChange(event: FocusEvent<HTMLInputElement>): void {
         setEngagementInput(event.target.value)
     }
 
@@ -287,7 +262,7 @@ export const PendingTimesheetApprovalsTab: FC<PendingTimesheetApprovalsTabProps>
                 <td className={styles.noWrap}>{formatApprovedTimesheetWorkPeriod(row)}</td>
                 <td className={styles.noWrap}>{formatDate(row.submittedAt)}</td>
                 <td className={row.approvers.length ? undefined : styles.noApprover}>
-                    {formatApprovers(row)}
+                    {formatApprovers(row.approvers)}
                 </td>
             </tr>
         ))
@@ -343,24 +318,22 @@ export const PendingTimesheetApprovalsTab: FC<PendingTimesheetApprovalsTabProps>
         <div className={styles.container}>
             <div className={styles.filters}>
                 <div className={styles.filterField}>
-                    <label htmlFor='work-pending-timesheets-engagement-search'>Search by engagement name</label>
-                    <div className={styles.searchInputWrap}>
-                        <IconOutline.SearchIcon className={styles.searchIcon} />
-                        <input
-                            id='work-pending-timesheets-engagement-search'
-                            aria-label='Search pending timesheets by engagement name'
-                            className={styles.searchInput}
-                            onChange={handleEngagementChange}
-                            placeholder='Search by engagement name'
-                            type='text'
-                            value={engagementInput}
-                        />
-                    </div>
+                    <InputText
+                        dirty
+                        forceUpdateValue
+                        label='Engagement name'
+                        name='work-pending-timesheets-engagement'
+                        onChange={handleEngagementChange}
+                        placeholder='Search by engagement name'
+                        type='text'
+                        value={engagementInput}
+                    />
                 </div>
 
                 <div className={styles.filterField}>
                     <InputDatePicker
-                        classNameWrapper={styles.datePicker}
+                        className={styles.datePicker}
+                        classNameWrapper={styles.datePickerWrapper}
                         date={fromDate}
                         disabled={false}
                         isClearable
@@ -372,7 +345,8 @@ export const PendingTimesheetApprovalsTab: FC<PendingTimesheetApprovalsTabProps>
 
                 <div className={styles.filterField}>
                     <InputDatePicker
-                        classNameWrapper={styles.datePicker}
+                        className={styles.datePicker}
+                        classNameWrapper={styles.datePickerWrapper}
                         date={toDate}
                         disabled={false}
                         isClearable

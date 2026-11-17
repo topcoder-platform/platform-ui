@@ -37,6 +37,8 @@ interface MemberTimesheetViewProps {
     onTimesheetChange: (timesheet: TimesheetView) => void
     /** Reports whether the view holds unsaved edits, so the page can guard navigation. */
     onDirtyChange: (isDirty: boolean) => void
+    /** The range to open on, e.g. from a submission reminder link; the current week otherwise. */
+    initialRange?: { fromDate: string, toDate: string }
 }
 
 const normalizeRemarks = (remarks: string | null | undefined): string => (
@@ -89,7 +91,8 @@ const toPickerDate = (value: string): Date | undefined => {
  * pulls in the markdown-rendering cards this view has no use for.
  */
 const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimesheetViewProps) => {
-    const defaultRange = useMemo(getDefaultRange, [])
+    // Read once: the member changes the range freely after the page opens.
+    const defaultRange = useMemo(() => props.initialRange ?? getDefaultRange(), [])
     const [fromDate, setFromDate] = useState<string>(defaultRange.fromDate)
     const [toDate, setToDate] = useState<string>(defaultRange.toDate)
     const [rows, setRows] = useState<TimesheetRow[]>([])
