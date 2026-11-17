@@ -263,3 +263,41 @@ cannot be reconstructed.
 Rollback: redeploy the previous Lambda CodeKey and template; restore the previous
 processing enrichment parameter if needed. Leave the additive v2 projection and
 procedure in place until no deployment uses them. No data deletion is needed.
+
+### SpaceTech source dashboard (PM-6775)
+
+The same endpoint now adds `personas` (full-period totals) and `personaSeries`
+(weekly metrics), both for Topcoder, George, Anita and Tony. The persona is the
+fourth underscore-delimited token in `customer_spacetech_[period]_[persona]_…`,
+matched case-insensitively from **utm_campaign only**. Source, medium and content
+never assign a persona. Unknown names and unattributed traffic remain in the
+existing totals and Details breakdowns, but do not enter the four-source comparison.
+
+Each source's visitors and form-section viewers are distinct across all its
+campaign links within the aggregation period; the same visitor can appear under
+multiple sources. Rates use aggregate numerators/denominators, never sums or
+averages of daily/campaign rates. Submissions/visitors can exceed 100%; zero
+denominators yield zero. Weekly buckets start Monday at 00:00 UTC, and first/last
+weeks include only events inside the requested inclusive dates. Quiet weeks and
+missing sources are zero-filled. At the maximum 366-day range, the new SQL adds
+at most 220 aggregate rows (four totals plus four × 54 weeks), retaining the
+existing 2,000-row result limit and bounded polling protocol.
+
+Deploy the updated `handler.py` to the existing development analytics Lambda
+using a versioned S3 zip and the stack's `CodeKey` parameter. No warehouse DDL,
+refresh schedule, IAM, ingestion, Forms API or reports-api change is required.
+The response additions are backward compatible. Deploy the API before the UI;
+an older API produces an explicit dashboard-unavailable message, while Details
+remains usable. Rollback uses the prior `CodeKey` with the previous template.
+
+Run the SQL regression tests as well as the handler tests:
+
+```bash
+python3 -m pip install -r infrastructure/analytics-api/tests/requirements.txt
+python3 -m unittest discover -s infrastructure/analytics-api/tests -v
+```
+
+The SQL tests run real aggregates on synthetic repeated-visitor events using
+DuckDB, adapting only named parameters and `DATEADD`. Verify the unmodified
+report query through the Redshift Data API before deploying: Redshift does not
+support every query form accepted by local SQL engines.
