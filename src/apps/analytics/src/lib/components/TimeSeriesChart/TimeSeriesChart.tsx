@@ -4,6 +4,8 @@ import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 import { FC, useMemo } from 'react'
 
+import { formatReportDate } from '../../../../../../libs/shared/lib/utils/report-date'
+
 import styles from './TimeSeriesChart.module.scss'
 
 export interface TimeSeriesDefinition {
@@ -30,18 +32,6 @@ interface TimeSeriesChartProps {
 function pointValue(point: object, key: string): number {
     const value = (point as Record<string, unknown>)[key]
     return typeof value === 'number' && Number.isFinite(value) ? value : 0
-}
-
-/**
- * Formats an ISO date without allowing local timezone offsets to change the day.
- *
- * @param value YYYY-MM-DD value.
- * @returns compact month/day label.
- * @throws Does not throw; malformed values are returned unchanged.
- */
-function dateLabel(value: string): string {
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
-    return match ? `${match[2]}/${match[3]}` : value
 }
 
 /**
@@ -97,7 +87,7 @@ export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
             shared: true,
         },
         xAxis: {
-            categories: props.points.map(point => dateLabel(String(
+            categories: props.points.map(point => formatReportDate(String(
                 (point as Record<string, unknown>).date ?? '',
             ))),
             labels: { style: { color: '#5a6f78', fontSize: '11px' } },
@@ -132,7 +122,7 @@ export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
                     <tbody>
                         {props.points.map(point => (
                             <tr key={String((point as Record<string, unknown>).date)}>
-                                <th scope='row'>{String((point as Record<string, unknown>).date)}</th>
+                                <th scope='row'>{formatReportDate(String((point as Record<string, unknown>).date))}</th>
                                 {props.series.map(series => (
                                     <td key={series.key}>{pointValue(point, series.key)}</td>
                                 ))}

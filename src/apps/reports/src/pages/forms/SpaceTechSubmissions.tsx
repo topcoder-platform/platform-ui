@@ -2,6 +2,7 @@
 /* eslint-disable react/jsx-no-bind */
 import { FC, useMemo, useState } from 'react'
 
+import { formatReportDate } from '../../../../../libs/shared/lib/utils/report-date'
 import { formatFormValue, FormReport } from '../../lib/services/forms.service'
 
 import styles from './FormsPage.module.scss'
@@ -12,6 +13,10 @@ export const spaceTechColumns = [
     ['utm_medium', 'utm_medium'], ['utm_campaign', 'utm_campaign'], ['form_status', 'form_status'],
 ]
 
+function leadCellText(key: string, raw: string): string {
+    return key === 'submitted_at' ? formatReportDate(raw) : raw
+}
+
 /** Filters the complete lead set before sorting, leaving the original API rows unchanged. */
 export function selectSpaceTechLeads(
     rows: FormReport['data'],
@@ -20,10 +25,17 @@ export function selectSpaceTechLeads(
     descending: boolean,
 ): FormReport['data'] {
     return rows.filter(row => Object.entries(filters)
-        .every(([key, value]) => !value || formatFormValue(row[key])
-            .toLowerCase()
-            .includes(value.trim()
-                .toLowerCase())))
+        .every(([key, value]) => {
+            const query = value.trim()
+                .toLowerCase()
+            const raw = formatFormValue(row[key])
+            const matchesRaw = raw.toLowerCase()
+                .includes(query)
+            if (matchesRaw || key !== 'submitted_at') return matchesRaw
+            return formatReportDate(raw)
+                .toLowerCase()
+                .includes(query)
+        }))
         .sort((a, b) => (descending ? -1 : 1) * formatFormValue(a[sort])
             .localeCompare(formatFormValue(b[sort]), undefined, { numeric: true }))
 }
@@ -48,7 +60,9 @@ const SpaceTechSubmissions: FC<{ report: FormReport }> = props => {
                 Lead details are saved on submission. Starts and incomplete visits are counted in aggregate analytics.
             </p>
             <p role='status'>{`${rows.length} matching leads of ${props.report.data.length}`}</p>
-            <button type='button' onClick={() => { setFilters({}); setPage(0) }}>Clear column filters</button>
+            <button className={styles.clearColumnFilters} type='button' onClick={() => { setFilters({}); setPage(0) }}>
+                Clear column filters
+            </button>
             {/* Keyboard users must be able to scroll to offscreen columns. */}
             {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
             <div className={styles.tableScroll} tabIndex={0} role='region' aria-label='SpaceTech leads'>
@@ -98,7 +112,9 @@ const SpaceTechSubmissions: FC<{ report: FormReport }> = props => {
                         {rows.slice(page * 25, (page + 1) * 25)
                             .map(row => (
                                 <tr key={String(row.submission_id)}>
-                                    {spaceTechColumns.map(([key]) => <td key={key}>{formatFormValue(row[key])}</td>)}
+                                    {spaceTechColumns.map(([key]) => (
+                                        <td key={key}>{leadCellText(key, formatFormValue(row[key]))}</td>
+                                    ))}
                                 </tr>
                             ))}
                         {!rows.length && (

@@ -78,6 +78,18 @@
     }
 }
 
+.campaignFilter,
+.spaceTechFilterActions {
+    grid-column: span 2;
+}
+
+.spaceTechFilterActions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-3;
+}
+
 .filterHeading {
     grid-column: 1 / -1;
 
@@ -462,6 +474,11 @@
 }
 
 @include ltesm {
+    .campaignFilter,
+    .spaceTechFilterActions {
+        grid-column: 1 / -1;
+    }
+
     .filters,
     .metricGrid,
     .twoColumnGrid,
