@@ -84,5 +84,21 @@
     button { cursor: pointer; }
     button:disabled { cursor: default; opacity: .5; }
     button:focus-visible, input:focus-visible { outline: 2px solid #137d60; outline-offset: 2px; }
-    th input { display: block; margin-top: 8px; width: 100%; min-width: 140px; }
+    th { padding-bottom: 0; border-bottom: 0; }
+    .sortButton {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        min-height: 32px;
+        padding: 4px 0;
+        border: 0;
+        background: transparent;
+        font-weight: 600;
+        text-align: left;
+        white-space: nowrap;
+    }
+    .sortButton:hover { color: #137d60; }
+    .columnFilters td { padding-top: 8px; background: #f4f4f4; }
+    .columnFilters input { display: block; width: 100%; min-width: 140px; padding: 8px; }
 }
