@@ -85,6 +85,16 @@
     button:disabled { cursor: default; opacity: .5; }
     button:focus-visible, input:focus-visible { outline: 2px solid #137d60; outline-offset: 2px; }
     th { padding-bottom: 0; border-bottom: 0; }
+    .clearColumnFilters {
+        margin: 8px 0 12px;
+        padding: 6px 16px;
+        border: 2px solid #137d60;
+        border-radius: 24px;
+        color: #137d60;
+        font-weight: 600;
+
+        &:hover { background: #eef8f5; }
+    }
     .sortButton {
         display: flex;
         align-items: center;

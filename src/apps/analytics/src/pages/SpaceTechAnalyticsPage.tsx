@@ -8,7 +8,7 @@ import { MetricCard, ReportError, TimeSeriesChart } from '../lib/components'
 import { useAnalyticsResource } from '../lib/hooks'
 import { SpaceTechFilters, SpaceTechGroup, SpaceTechReport } from '../lib/models'
 import { getSpaceTechReport } from '../lib/services'
-import { defaultAnalyticsDateRange, validateAnalyticsDateRange } from '../lib/utils'
+import { defaultAnalyticsDateRange, formatAnalyticsFreshness, validateAnalyticsDateRange } from '../lib/utils'
 
 import { SpaceTechDashboard, spaceTechMetrics as metrics } from './SpaceTechDashboard'
 import SpaceTechLeads from './SpaceTechLeads'
@@ -59,16 +59,19 @@ const Breakdown: FC<{ title: string; rows: SpaceTechGroup[]; columns: string[][]
     </section>
 )
 
+/** SpaceTech opens on the last 90 UTC calendar days with all attribution values included. */
+function defaultSpaceTechFilters(): SpaceTechFilters {
+    const to = defaultAnalyticsDateRange().to
+    const start = new Date(`${to}T00:00:00Z`)
+    start.setUTCDate(start.getUTCDate() - 89)
+    const from = start.toISOString()
+        .slice(0, 10)
+    return { from, to }
+}
+
 /** Shows UTM-attributed SpaceTech traffic, engagement, and accepted form submissions. */
 export const SpaceTechAnalyticsPage: FC = () => {
-    const [draft, setDraft] = useState<SpaceTechFilters>(() => {
-        const range = defaultAnalyticsDateRange()
-        const start = new Date(`${range.to}T00:00:00Z`)
-        start.setUTCDate(start.getUTCDate() - 89)
-        return { ...range,
-            from: start.toISOString()
-                .slice(0, 10) }
-    })
+    const [draft, setDraft] = useState(defaultSpaceTechFilters)
     const [tab, setTab] = useState<'dashboard' | 'details'>('dashboard')
     const [filters, setFilters] = useState(draft)
     const [leadRevision, setLeadRevision] = useState(0)
@@ -77,6 +80,19 @@ export const SpaceTechAnalyticsPage: FC = () => {
         `spacetech:${JSON.stringify(filters)}`,
         () => getSpaceTechReport(filters),
     )
+    function applyFilters(next: SpaceTechFilters): void {
+        if (JSON.stringify(next) === JSON.stringify(filters)) report.refresh()
+        setFilters(next)
+        setLeadRevision(value => value + 1)
+    }
+
+    function clearFilters(): void {
+        const defaults = defaultSpaceTechFilters()
+        setDraft(defaults)
+        setError(undefined)
+        applyFilters(defaults)
+    }
+
     return (
         <div className={styles.page}>
             <PageTitle>SpaceTech Analytics</PageTitle>
@@ -115,11 +131,7 @@ export const SpaceTechAnalyticsPage: FC = () => {
                     event.preventDefault()
                     const validation = validateAnalyticsDateRange(draft)
                     setError(validation)
-                    if (!validation) {
-                        if (JSON.stringify(draft) === JSON.stringify(filters)) report.refresh()
-                        setFilters({ ...draft })
-                        setLeadRevision(value => value + 1)
-                    }
+                    if (!validation) applyFilters(draft)
                 }}
             >
                 {(['from', 'to'] as const).map(key => (
@@ -134,7 +146,7 @@ export const SpaceTechAnalyticsPage: FC = () => {
                     </label>
                 ))}
                 {dimensions.map(key => (
-                    <label key={key}>
+                    <label className={key === 'campaign' ? styles.campaignFilter : undefined} key={key}>
                         {`utm_${key}`}
                         <select
                             value={draft[key] || ''}
@@ -148,7 +160,10 @@ export const SpaceTechAnalyticsPage: FC = () => {
                         </select>
                     </label>
                 ))}
-                <Button primary type='submit'>Apply filters</Button>
+                <div className={styles.spaceTechFilterActions}>
+                    <Button primary type='submit'>Apply filters</Button>
+                    <Button secondary type='button' onClick={clearFilters}>Clear filters</Button>
+                </div>
             </form>
             {error && <p role='alert'>{error}</p>}
             {report.error && <ReportError error={report.error} onRetry={report.refresh} />}
@@ -156,7 +171,12 @@ export const SpaceTechAnalyticsPage: FC = () => {
             {report.data && (
                 <>
                     <p>
-                        {`Latest processed event (UTC): ${report.data.dataThrough || 'No processed SpaceTech events'}`}
+                        Latest processed event (UTC):
+                        {' '}
+                        {report.data.dataThrough
+                            ? formatAnalyticsFreshness(report.data.dataThrough)
+                            : 'No processed SpaceTech events'}
+                        . Aggregate data refreshes hourly. New activity normally appears within 3 hours.
                     </p>
                     <section
                         aria-labelledby={`spacetech-${tab}-tab`}
@@ -175,7 +195,6 @@ export const SpaceTechAnalyticsPage: FC = () => {
                                 <p>
                                     Submission rate is submissions ÷ unique visitors.
                                     Engagement counts foreground time only.
-                                    New activity normally appears within 3 hours.
                                     Apply filters to fetch the latest report.
                                 </p>
                                 <TimeSeriesChart
