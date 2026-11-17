@@ -62,6 +62,7 @@ const SpaceTechSubmissions: FC<{ report: FormReport }> = props => {
                                     aria-sort={sort === key ? (descending ? 'descending' : 'ascending') : 'none'}
                                 >
                                     <button
+                                        className={styles.sortButton}
                                         type='button'
                                         onClick={() => {
                                             setDescending(sort === key ? !descending : false)
@@ -70,16 +71,26 @@ const SpaceTechSubmissions: FC<{ report: FormReport }> = props => {
                                         }}
                                     >
                                         {label}
+                                        <span aria-hidden='true'>
+                                            {sort === key ? (descending ? '↓' : '↑') : '↕'}
+                                        </span>
                                     </button>
+                                </th>
+                            ))}
+                        </tr>
+                        <tr className={styles.columnFilters}>
+                            {spaceTechColumns.map(([key, label]) => (
+                                <td key={key}>
                                     <input
                                         aria-label={`Filter ${label}`}
+                                        placeholder='Filter…'
                                         value={filters[key] || ''}
                                         onChange={event => {
                                             setFilters({ ...filters, [key]: event.target.value })
                                             setPage(0)
                                         }}
                                     />
-                                </th>
+                                </td>
                             ))}
                         </tr>
                     </thead>
