@@ -4,6 +4,8 @@ import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 import { FC, useMemo } from 'react'
 
+import { formatReportDate } from '../../../../../../libs/shared/lib/utils/report-date'
+
 import styles from './TimeSeriesChart.module.scss'
 
 export interface TimeSeriesDefinition {
@@ -17,6 +19,10 @@ interface TimeSeriesChartProps {
     points: object[]
     series: TimeSeriesDefinition[]
     variant?: 'area' | 'line'
+    valueDecimals?: number
+    valueSuffix?: string
+    xAxisTitle?: string
+    yAxisTitle?: string
 }
 
 /**
@@ -30,18 +36,6 @@ interface TimeSeriesChartProps {
 function pointValue(point: object, key: string): number {
     const value = (point as Record<string, unknown>)[key]
     return typeof value === 'number' && Number.isFinite(value) ? value : 0
-}
-
-/**
- * Formats an ISO date without allowing local timezone offsets to change the day.
- *
- * @param value YYYY-MM-DD value.
- * @returns compact month/day label.
- * @throws Does not throw; malformed values are returned unchanged.
- */
-function dateLabel(value: string): string {
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
-    return match ? `${match[2]}/${match[3]}` : value
 }
 
 /**
@@ -93,25 +87,29 @@ export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
         title: { text: undefined },
         tooltip: {
             headerFormat: '<strong>{point.key}</strong><br/>',
-            pointFormat: '<span style="color:{series.color}">●</span> {series.name}: <b>{point.y:,.0f}</b><br/>',
+            pointFormat: '<span style="color:{series.color}">●</span> {series.name}: <b>{point.y}</b><br/>',
             shared: true,
+            valueDecimals: props.valueDecimals ?? 0,
+            valueSuffix: props.valueSuffix ?? '',
         },
         xAxis: {
-            categories: props.points.map(point => dateLabel(String(
+            categories: props.points.map(point => formatReportDate(String(
                 (point as Record<string, unknown>).date ?? '',
             ))),
             labels: { style: { color: '#5a6f78', fontSize: '11px' } },
             lineColor: '#dce3e9',
             tickColor: '#dce3e9',
+            title: { text: props.xAxisTitle },
         },
         yAxis: {
-            allowDecimals: false,
+            allowDecimals: (props.valueDecimals ?? 0) > 0,
             gridLineColor: '#e7edf1',
             labels: { style: { color: '#5a6f78', fontSize: '11px' } },
             min: 0,
-            title: { text: undefined },
+            title: { text: props.yAxisTitle },
         },
-    }), [chartType, props.points, props.series])
+    }), [chartType, props.points, props.series, props.valueDecimals, props.valueSuffix,
+        props.xAxisTitle, props.yAxisTitle])
 
     if (!hasData) {
         return <div className={styles.empty} role='status'>No activity is available for this period.</div>
@@ -120,25 +118,27 @@ export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
     return (
         <figure aria-label={props.ariaLabel} className={styles.figure}>
             <HighchartsReact highcharts={Highcharts} options={options} />
-            <table className={styles.screenReaderOnly}>
-                <caption>{props.ariaLabel}</caption>
-                <thead>
-                    <tr>
-                        <th scope='col'>Date</th>
-                        {props.series.map(series => <th key={series.key} scope='col'>{series.label}</th>)}
-                    </tr>
-                </thead>
-                <tbody>
-                    {props.points.map(point => (
-                        <tr key={String((point as Record<string, unknown>).date)}>
-                            <th scope='row'>{String((point as Record<string, unknown>).date)}</th>
-                            {props.series.map(series => (
-                                <td key={series.key}>{pointValue(point, series.key)}</td>
-                            ))}
+            <div className={styles.screenReaderOnly}>
+                <table>
+                    <caption>{props.ariaLabel}</caption>
+                    <thead>
+                        <tr>
+                            <th scope='col'>Date</th>
+                            {props.series.map(series => <th key={series.key} scope='col'>{series.label}</th>)}
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {props.points.map(point => (
+                            <tr key={String((point as Record<string, unknown>).date)}>
+                                <th scope='row'>{formatReportDate(String((point as Record<string, unknown>).date))}</th>
+                                {props.series.map(series => (
+                                    <td key={series.key}>{pointValue(point, series.key)}</td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </figure>
     )
 }

@@ -19,9 +19,10 @@ The route tree is:
   -> /analytics/campaigns
   /campaigns
   /general
+  /spacetech
 ```
 
-On `analytics.<domain>`, the same children are `/campaigns` and `/general`.
+On `analytics.<domain>`, the same children are `/campaigns`, `/general`, and `/spacetech`.
 
 ## Reports
 
@@ -94,13 +95,24 @@ filters and Analytics navigation usable. Polling is bounded to twelve requests
 (roughly five minutes at the API's maximum query wait); after that, or after a
 genuine failure, the explicit retry action is shown.
 
+SpaceTech Analytics reports `/space-tech` traffic, engagement, FAQ opens,
+form-section reach and accepted form submissions with source, medium, campaign
+dropdown filters. It defaults to 90 days and supports the same 366-day limit.
+The daily chart compares visitors with form submissions. Lead details appear below
+the aggregates for users with existing Forms reporting permission, with all-column
+sorting/filtering and Submitted status. The same table remains in Reports → Forms →
+`space_tech_challenge`. New aggregate activity normally appears within three hours;
+lead details are available immediately after submission.
+See [deployment requirements and metric definitions](../../../infrastructure/analytics-api/README.md#spacetech-campaign-pm-6712).
+
 ## Privacy
 
-The UI receives aggregate counts only. It never receives member IDs,
+The analytics API returns aggregate counts only. It never returns member IDs,
 pseudonymous analytics IDs, handles, email addresses, rendered click text, form
 values, raw destination queries, or raw click coordinates. API errors are
 mapped to safe categories before display, and last-good data remains visible if
-a refresh fails.
+a refresh fails. The separately authorized Forms API supplies private lead answers
+to the SpaceTech lead table; analytics access alone does not grant access to leads.
 
 ## Configuration
 
@@ -138,3 +150,20 @@ yarn run build
 The AWS API source, database grants, deployment sequence, and operational
 checks are documented in
 [`../../../infrastructure/analytics-api/README.md`](../../../infrastructure/analytics-api/README.md).
+
+
+### SpaceTech Dashboard and Details
+
+SpaceTech opens on Dashboard, with a seven-metric selector, weekly line chart
+for Topcoder, George, Anita and Tony, and a table of all seven full-period metrics.
+The shared inclusive UTC date and UTM filters apply to both views. Details keeps
+the existing totals, daily chart, attribution/CTA/FAQ/country/device tables and
+permission-gated leads. Tabs support arrow, Home and End keys.
+
+Sources come only from the persona token in `utm_campaign`, following
+`customer_spacetech_[period]_[persona]_…`; they are independent of `utm_source`.
+Unmatched campaigns remain in Details. Weekly buckets start Monday; partial
+weeks respect the selected dates. Distinct visitors and rates are computed by
+the API for each source and period, not combined from displayed campaign rows.
+The frontend preserves decimals for percentage and engagement metrics. An older
+API without the new fields shows an unavailable message instead of false zeros.

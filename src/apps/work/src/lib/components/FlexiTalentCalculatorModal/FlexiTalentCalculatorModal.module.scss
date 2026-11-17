@@ -1,0 +1,179 @@
+@import '@libs/ui/styles/includes';
+
+.content {
+    display: grid;
+    gap: 20px;
+}
+
+.subtitle {
+    margin: 0;
+    color: $black-60;
+    font-size: 14px;
+}
+
+.section {
+    display: grid;
+    gap: 10px;
+}
+
+.sectionTitle {
+    margin: 0;
+    color: $black-80;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.activeField {
+    :global(.input-el) {
+        border-color: $turq-160;
+        box-shadow: 0 0 0 1px $turq-160;
+    }
+}
+
+.cards {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.card {
+    display: grid;
+    gap: 4px;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    padding: 12px 16px;
+    background: #f7f8fa;
+}
+
+.cardLabel {
+    color: $black-60;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.cardValue {
+    color: $black-80;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.smallPrint,
+.hint {
+    margin: 0;
+    color: $black-60;
+    font-size: 12px;
+}
+
+.warning {
+    margin: 0;
+    color: #991b1b;
+    font-size: 12px;
+}
+
+.proposal {
+    margin: 0;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    padding: 12px 16px;
+    background: #f7f8fa;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px solid $black-10;
+    padding-bottom: 8px;
+}
+
+.tab,
+.addTab {
+    appearance: none;
+    border: 1px solid $black-20;
+    border-radius: 999px;
+    padding: 6px 14px;
+    background: $tc-white;
+    color: $black-80;
+    cursor: pointer;
+    font: inherit;
+    font-size: 14px;
+
+    &:hover {
+        border-color: $turq-160;
+    }
+}
+
+.activeTab {
+    border-color: $turq-160;
+    background: $turq-160;
+    color: $tc-white;
+}
+
+.addTab {
+    border-style: dashed;
+    color: $turq-160;
+}
+
+.calculationActions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.saveStatus {
+    color: $black-60;
+    font-size: 12px;
+}
+
+.saveStatusError {
+    color: #991b1b;
+}
+
+.deleteConfirm {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: $black-80;
+    font-size: 14px;
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.copyButton {
+    display: inline-flex;
+    align-items: center;
+    appearance: none;
+    border: none;
+    border-radius: 4px;
+    padding: 4px;
+    background: transparent;
+    color: $turq-160;
+    cursor: pointer;
+
+    &:hover {
+        background: rgb(19 125 96 / 8%);
+    }
+}
+
+.copyIcon {
+    width: 20px;
+    height: 20px;
+}

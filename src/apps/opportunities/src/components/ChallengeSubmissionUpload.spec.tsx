@@ -16,6 +16,7 @@ import {
 } from '../services'
 
 import {
+    challengeAiUsageCopy,
     ChallengeSubmissionUpload,
     challengeSubmissionType,
     validateChallengeSubmissionFile,
@@ -122,7 +123,7 @@ describe('ChallengeSubmissionUpload', () => {
             .toBeInTheDocument()
         expect(screen.getByLabelText(/Upload File\*/))
             .toBeInTheDocument()
-        expect(screen.getByRole('group', { name: /Did AI tools write most of your submission's code\?/ }))
+        expect(screen.getByRole('group', { name: /Did AI tools create most of your submission's designs\?/ }))
             .toBeInTheDocument()
     })
 
@@ -505,6 +506,35 @@ describe('ChallengeSubmissionUpload', () => {
                 member_id: '123',
                 submission_type: 'CHECKPOINT_SUBMISSION',
             }, true)
+    })
+
+    it('words the AI-usage question per challenge track', () => {
+        const codeQuestion = 'Did AI tools write most of your submission\'s code?'
+        expect(challengeAiUsageCopy('datascience', 'marathonmatch'))
+            .toEqual({
+                note: 'This helps shape future match formats. It has no impact on scoring or rating.',
+                question: codeQuestion,
+            })
+        expect(challengeAiUsageCopy('development', 'challenge'))
+            .toEqual({
+                note: 'This helps shape future development challenges. It has no impact on scoring or rating.',
+                question: codeQuestion,
+            })
+        expect(challengeAiUsageCopy('qualityassurance', 'challenge'))
+            .toEqual({
+                note: 'This helps shape future QA challenges. It has no impact on scoring.',
+                question: 'Did AI tools find or write up most of the issues you reported?',
+            })
+        expect(challengeAiUsageCopy('design', 'challenge'))
+            .toEqual({
+                note: 'This helps shape future design challenges. It has no impact on scoring.',
+                question: 'Did AI tools create most of your submission\'s designs?',
+            })
+        expect(challengeAiUsageCopy('datascience', 'challenge'))
+            .toEqual({
+                note: 'This helps shape future challenges. It has no impact on scoring.',
+                question: codeQuestion,
+            })
     })
 
     it('requires and sends the AI-usage answer with every submission', async () => {

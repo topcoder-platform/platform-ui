@@ -48,6 +48,9 @@ import {
     EngagementLeadNotesModal,
 } from '../EngagementLeadNotesModal'
 import {
+    FlexiTalentCalculatorModal,
+} from '../FlexiTalentCalculatorModal'
+import {
     canCreateEngagementFromLead,
     formatLeadAge,
     formatLeadDate,
@@ -58,7 +61,10 @@ import {
     extractErrorMessage,
     showErrorToast,
 } from '../../utils'
-import { withQueryParams } from '../../utils/navigation.utils'
+import {
+    openResolvedUrlInNewTab,
+    withQueryParams,
+} from '../../utils/navigation.utils'
 
 import styles from './EngagementLeadsTab.module.scss'
 
@@ -145,6 +151,19 @@ function areLeadFiltersEqual(
         && left.sortOrder === right.sortOrder
 }
 
+/**
+ * Removes focus from a tooltip trigger that opens a modal.
+ *
+ * The modal restores focus to the previously focused element when it closes,
+ * and focus re-opens `click-hover` tooltips, which would then stay visible.
+ *
+ * @param {MouseEvent<HTMLButtonElement>} event - Click event from the trigger button.
+ * @returns {void}
+ */
+function blurModalTrigger(event: MouseEvent<HTMLButtonElement>): void {
+    event.currentTarget.blur()
+}
+
 interface EngagementLeadsTabProps {
     leadType: EngagementLeadType
 }
@@ -164,6 +183,7 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
     const [filters, setFilters] = useState<EngagementLeadsListFilters>(DEFAULT_FILTERS)
     const [selectedLead, setSelectedLead] = useState<EngagementLead | undefined>(undefined)
     const [notesLead, setNotesLead] = useState<EngagementLead | undefined>(undefined)
+    const [calculatorLead, setCalculatorLead] = useState<EngagementLead | undefined>(undefined)
     const [viewingEngagementId, setViewingEngagementId] = useState<string | undefined>(undefined)
 
     const loadLeads = useCallback(async (): Promise<void> => {
@@ -261,6 +281,10 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
         setNotesLead(undefined)
     }, [])
 
+    const handleCalculatorClose = useCallback((): void => {
+        setCalculatorLead(undefined)
+    }, [])
+
     const handleCreateEngagementOpen = useCallback((lead: EngagementLead): void => {
         setSelectedLead(lead)
     }, [])
@@ -291,22 +315,23 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
         setViewingEngagementId(engagementId)
 
         try {
-            const engagement = await fetchEngagement(engagementId)
-            const projectId = String(engagement.projectId || engagement.project?.id || '')
-                .trim()
+            await openResolvedUrlInNewTab(async () => {
+                const engagement = await fetchEngagement(engagementId)
+                const projectId = String(engagement.projectId || engagement.project?.id || '')
+                    .trim()
 
-            if (!projectId) {
-                showErrorToast('Unable to locate the project for this engagement.')
-                return
-            }
+                if (!projectId) {
+                    throw new Error('Unable to locate the project for this engagement.')
+                }
 
-            navigate(`${rootRoute}/projects/${projectId}/engagements/${engagementId}/view`)
+                return `${rootRoute}/projects/${projectId}/engagements/${engagementId}/view`
+            })
         } catch (err: unknown) {
             showErrorToast(extractErrorMessage(err, 'Unable to open engagement.'))
         } finally {
             setViewingEngagementId(undefined)
         }
-    }, [navigate, viewingEngagementId])
+    }, [viewingEngagementId])
 
     const getLeadDetailUrl = useCallback((leadId: string): string => (
         `${rootRoute}/${engagementLeadsRouteId}/${leadId}`
@@ -428,11 +453,31 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
                                                             !!lead.notes?.length && styles.actionIconActive,
                                                         )}
                                                         type='button'
-                                                        onClick={() => {
+                                                        onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                                                            blurModalTrigger(event)
                                                             setNotesLead(lead)
                                                         }}
                                                     >
                                                         <IconOutline.DocumentAddIcon
+                                                            aria-hidden
+                                                            className={styles.actionIcon}
+                                                        />
+                                                    </button>
+                                                </Tooltip>
+                                                <Tooltip
+                                                    content='Cost Calculator'
+                                                    triggerOn='click-hover'
+                                                >
+                                                    <button
+                                                        aria-label='Cost Calculator'
+                                                        className={styles.actionIconButton}
+                                                        type='button'
+                                                        onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                                                            blurModalTrigger(event)
+                                                            setCalculatorLead(lead)
+                                                        }}
+                                                    >
+                                                        <IconOutline.CalculatorIcon
                                                             aria-hidden
                                                             className={styles.actionIcon}
                                                         />
@@ -476,7 +521,8 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
                                                                     aria-label='Create Engagement'
                                                                     className={styles.actionIconButton}
                                                                     type='button'
-                                                                    onClick={() => {
+                                                                    onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                                                                        blurModalTrigger(event)
                                                                         handleCreateEngagementOpen(lead)
                                                                     }}
                                                                 >
@@ -530,6 +576,13 @@ export const EngagementLeadsTab: FC<EngagementLeadsTabProps> = (props: Engagemen
                     lead={notesLead}
                     onClose={handleNotesClose}
                     onSaved={handleNotesSaved}
+                />
+            )}
+
+            {calculatorLead && (
+                <FlexiTalentCalculatorModal
+                    lead={calculatorLead}
+                    onClose={handleCalculatorClose}
                 />
             )}
         </div>

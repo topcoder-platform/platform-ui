@@ -316,6 +316,39 @@ describe('ChallengeForum', () => {
         })
     })
 
+    it('shows an approved archive without topic creation controls', () => {
+        render(<ChallengeForum
+            challenge={{ id: '0b11e0fd-3e2d-46dc-8f7b-27c9f49d63cb', name: 'Marathon Match 167' }}
+            memberId='10'
+        />)
+        expect(screen.getByText('This completed match’s forum is read-only.'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: /Create new topic/ })).not.toBeInTheDocument()
+    })
+
+    it('keeps archived posts read-only for their author with administrator delete permission', () => {
+        const original = topicDetail as ForumTopicDetail
+        const detail = { ...original, topic: { ...original.topic, readOnly: true } }
+        render(<ForumTopicView
+            canDeletePosts
+            detail={detail}
+            memberId={detail.posts[0].authorMemberId}
+            onBack={jest.fn()}
+            onChanged={jest.fn()}
+            profilesByMemberId={new Map()}
+        />)
+        for (const name of ['Reply', 'Quote', 'Edit', 'Delete', 'Post comment']) {
+            expect(screen.queryByRole('button', { name })).not.toBeInTheDocument()
+        }
+
+        expect(screen.getByText('This completed match’s forum is read-only.'))
+            .toBeInTheDocument()
+        for (const button of screen.getAllByRole('button', { name: /thumbs (up|down)/ })) {
+            expect(button)
+                .toBeDisabled()
+        }
+    })
+
     it('keeps guest threads read-only and routes replies and reactions to sign in', () => {
         const onSignIn = jest.fn()
         render(<ForumTopicView

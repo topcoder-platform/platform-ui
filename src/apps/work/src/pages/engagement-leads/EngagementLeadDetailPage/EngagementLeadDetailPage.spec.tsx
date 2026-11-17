@@ -16,6 +16,9 @@ import {
     updateEngagementLeadStatus,
 } from '../../../lib/services/engagement-leads.service'
 
+import { fetchEngagement } from '../../../lib/services/engagements.service'
+import { openResolvedUrlInNewTab } from '../../../lib/utils/navigation.utils'
+
 import { EngagementLeadDetailPage } from './EngagementLeadDetailPage'
 
 jest.mock('~/apps/review/src/lib', () => ({
@@ -55,6 +58,9 @@ jest.mock('../../../lib/services/engagement-leads.service', () => ({
     updateEngagementLeadStatus: jest.fn(),
 }))
 jest.mock('../../../lib/utils/navigation.utils', () => ({
+    openResolvedUrlInNewTab: jest.fn(async (resolveUrl: () => Promise<string>): Promise<void> => {
+        await resolveUrl()
+    }),
     withQueryParams: (url: string): string => url,
 }))
 jest.mock('../../../lib/services/engagements.service', () => ({
@@ -229,6 +235,26 @@ describe('EngagementLeadDetailPage', () => {
             .toBeInTheDocument()
         expect(screen.getByText('View Engagement'))
             .toBeInTheDocument()
+    })
+
+    it('opens the converted engagement in a new tab', async () => {
+        const mockFetchEngagement = fetchEngagement as jest.MockedFunction<typeof fetchEngagement>
+        const mockOpenInNewTab = openResolvedUrlInNewTab as jest.MockedFunction<typeof openResolvedUrlInNewTab>
+        mockFetchEngagement.mockResolvedValue({ projectId: 'project-9' } as Awaited<ReturnType<typeof fetchEngagement>>)
+        await renderLead({
+            ...baseLead,
+            convertedEngagementId: 'eng-1',
+            status: EngagementLeadStatus.UNDER_REVIEW,
+        })
+
+        fireEvent.click(screen.getByText('View Engagement'))
+
+        await waitFor(() => expect(mockOpenInNewTab)
+            .toHaveBeenCalledTimes(1))
+        const resolveUrl = mockOpenInNewTab.mock.calls[0][0]
+        await expect(resolveUrl())
+            .resolves
+            .toBe('/work/projects/project-9/engagements/eng-1/view')
     })
 
     it('asks for a reason before rejecting a lead', async () => {

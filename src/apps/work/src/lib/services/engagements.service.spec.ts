@@ -1,12 +1,12 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
-import { xhrGetPaginatedAsync } from '~/libs/core'
+import { xhrGetPaginatedAsync, xhrPostAsync } from '~/libs/core'
 
 import {
     normalizeEngagement,
     toEngagementStatusApi,
 } from '../utils'
 
-import { fetchEngagements } from './engagements.service'
+import { createEngagement, fetchEngagements } from './engagements.service'
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
@@ -53,7 +53,8 @@ jest.mock('../utils', () => ({
     toEngagementWorkloadApi: jest.fn((value?: string) => value || ''),
 }))
 jest.mock('./skills.service', () => ({
-    fetchSkillsByIds: jest.fn(),
+    fetchSkillsByIds: jest.fn()
+        .mockResolvedValue([]),
 }))
 jest.mock('./projects.service', () => ({
     fetchProjectById: jest.fn(),
@@ -167,5 +168,27 @@ describe('fetchEngagements', () => {
             })
         expect(mockedGetPaginatedAsync)
             .not.toHaveBeenCalled()
+    })
+})
+
+describe('createEngagement', () => {
+    it('sends new lead skills by name and standardized skills by id', async () => {
+        const mockedXhrPostAsync = xhrPostAsync as jest.MockedFunction<typeof xhrPostAsync>
+        const mockedNormalizeEngagement = normalizeEngagement as jest.Mock
+        mockedXhrPostAsync.mockResolvedValue({ id: 'eng-1' } as never)
+        mockedNormalizeEngagement.mockImplementation((engagement: unknown) => engagement)
+
+        await createEngagement({
+            skills: [
+                { id: 'skill-java', name: 'Java' },
+                { id: 'new:legacy skill', isNew: true, name: ' Legacy Skill ' },
+            ],
+        } as never)
+
+        const payload = mockedXhrPostAsync.mock.calls[0][1] as Record<string, unknown>
+        expect(payload.requiredSkills)
+            .toEqual(['skill-java'])
+        expect(payload.newSkillNames)
+            .toEqual(['Legacy Skill'])
     })
 })

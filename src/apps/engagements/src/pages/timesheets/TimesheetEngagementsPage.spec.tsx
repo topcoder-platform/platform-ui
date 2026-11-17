@@ -11,10 +11,13 @@ import { getTimesheetEngagements } from '../../lib/services'
 
 import TimesheetEngagementsPage from './TimesheetEngagementsPage'
 
+let mockSearch = ''
+
 jest.mock('react-router-dom', () => ({
     Link: (props: { children: React.ReactNode, to: string }) => (
         <a href={props.to}>{props.children}</a>
     ),
+    useSearchParams: () => [new URLSearchParams(mockSearch)],
 }))
 
 jest.mock('~/libs/ui', () => ({
@@ -184,6 +187,40 @@ describe('TimesheetEngagementsPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         mockAuth.isAdmin = false
+        mockSearch = ''
+    })
+
+    it('opens an administrator on Pending Approval when the link asks for it', async () => {
+        mockAuth.isAdmin = true
+        mockSearch = 'status=pending-approval'
+        mockGetEngagements.mockResolvedValue(response(
+            [row({ viewerRole: TimesheetViewerRole.ADMINISTRATOR })],
+            TimesheetViewerRole.ADMINISTRATOR,
+        ))
+
+        render(<TimesheetEngagementsPage />)
+
+        await waitFor(() => {
+            expect(mockGetEngagements)
+                .toHaveBeenCalledWith(expect.objectContaining({ status: 'Pending Approval' }))
+        })
+        expect(mockGetEngagements).not.toHaveBeenCalledWith(
+            expect.objectContaining({ status: undefined }),
+        )
+        expect(await screen.findByLabelText('Status'))
+            .toHaveValue('Pending Approval')
+    })
+
+    it('ignores an unknown status in the link', async () => {
+        mockSearch = 'status=nonsense'
+        mockGetEngagements.mockResolvedValue(response([row()], TimesheetViewerRole.MANAGER))
+
+        render(<TimesheetEngagementsPage />)
+
+        await waitFor(() => {
+            expect(mockGetEngagements)
+                .toHaveBeenCalledWith(expect.objectContaining({ status: 'Pending Approval' }))
+        })
     })
 
     it('opens an administrator on All timesheets rather than Pending Approval', async () => {

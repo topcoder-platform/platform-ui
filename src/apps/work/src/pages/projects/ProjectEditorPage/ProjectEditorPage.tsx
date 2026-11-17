@@ -25,15 +25,13 @@ import {
 import {
     ErrorMessage,
     LoadingSpinner,
+    ProjectEditorForm,
 } from '../../../lib/components'
 import {
     checkCanEditProjectDetails,
     checkCanManageProject,
 } from '../../../lib/utils'
 
-import {
-    ProjectEditorForm,
-} from './components'
 import styles from './ProjectEditorPage.module.scss'
 
 function getErrorMessage(error: Error | undefined): string {

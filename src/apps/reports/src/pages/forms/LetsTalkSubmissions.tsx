@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 import { formatFormValue, FormReport } from '../../lib/services/forms.service'
 
-import SendGridLogLinks, { sendGridMessageIdsColumn } from './SendGridLogLinks'
+import SendGridLogLinks, { sendGridMessageIdsColumn, submitterEmailColumn } from './SendGridLogLinks'
 import styles from './FormsPage.module.scss'
 
 const hiddenColumns = new Set([
@@ -23,8 +23,8 @@ const labels: Record<string, string> = {
 /**
  * Displays contact submissions in API order with compact details above the full-width inquiry.
  * @param props Report page with published field labels, typed answers, and submission metadata.
- * @returns Responsive, labelled submissions without repetitive campaign fields, each with links to the SendGrid
- * logs of the emails sent for it when the API reports any; CSV data is unchanged.
+ * @returns Responsive, labelled submissions without repetitive campaign fields, each with a SendGrid search for
+ * its submitter's emails and the recorded SendGrid message IDs when the API reports them; CSV data is unchanged.
  * @throws Does not throw for API JSON reports.
  */
 const LetsTalkSubmissions: FC<{ report: FormReport }> = (props: { report: FormReport }) => {
@@ -49,6 +49,7 @@ const LetsTalkSubmissions: FC<{ report: FormReport }> = (props: { report: FormRe
                         <p className={styles.emailLogs}>
                             <SendGridLogLinks
                                 value={row[sendGridMessageIdsColumn]}
+                                email={row[submitterEmailColumn]}
                                 empty='No SendGrid emails recorded'
                             />
                         </p>

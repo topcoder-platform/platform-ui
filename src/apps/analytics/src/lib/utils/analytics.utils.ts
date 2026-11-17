@@ -1,15 +1,7 @@
+import { formatReportDate } from '../../../../../libs/shared/lib/utils/report-date'
 import { AnalyticsDateRange } from '../models'
 
 const integerFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
-const calendarDateFormatter = new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-    timeZone: 'UTC',
-})
-const timestampFormatter = new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-})
-
 /**
  * Returns the default inclusive 30-day analytics range in UTC.
  *
@@ -118,21 +110,14 @@ export function normalizeAnalyticsPagePath(value: string): string | undefined {
 }
 
 /**
- * Formats API freshness metadata in the viewer's local timezone.
+ * Formats API freshness metadata in UTC.
  *
  * @param value ISO timestamp, YYYY-MM-DD, or absent value.
  * @returns display label or "Not available".
  * @throws Does not throw for malformed inputs.
  */
 export function formatAnalyticsFreshness(value?: string): string {
-    if (!value) return 'Not available'
-    const isCalendarDate = /^\d{4}-\d{2}-\d{2}$/.test(value)
-    const candidate = isCalendarDate ? `${value}T00:00:00Z` : value
-    const parsed = new Date(candidate)
-    if (Number.isNaN(parsed.getTime())) return value
-    return isCalendarDate
-        ? calendarDateFormatter.format(parsed)
-        : timestampFormatter.format(parsed)
+    return value ? formatReportDate(value) : 'Not available'
 }
 
 /**

@@ -57,9 +57,18 @@ describe('Analytics utilities', () => {
         expect(formatAnalyticsSurface('topcoder_website'))
             .toBe('Topcoder Website')
         expect(formatAnalyticsFreshness('2026-08-30'))
-            .toBe('Aug 30, 2026')
+            .toBe('30 Aug 2026')
         expect(formatAnalyticsFreshness('not-a-date'))
             .toBe('not-a-date')
+    })
+
+    it.each([
+        '2026-11-11T13:46:40.771Z',
+        '2026-11-11 13:46:40.771',
+        '2026-11-12T00:46:40+11:00',
+    ])('formats the report timestamp %s in UTC', value => {
+        expect(formatAnalyticsFreshness(value))
+            .toBe('11 Nov 2026, 13:46')
     })
 
     it('normalizes a route or full page URL without retaining queries or fragments', () => {

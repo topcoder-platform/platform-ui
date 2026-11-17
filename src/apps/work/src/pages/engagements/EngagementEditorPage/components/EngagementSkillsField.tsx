@@ -41,6 +41,7 @@ interface EngagementSkillsFieldProps {
 }
 
 interface SkillOption extends FormSelectOption {
+    isNew?: boolean
     name: string
 }
 
@@ -70,6 +71,7 @@ function toSelectedOptions(value: unknown): SkillOption[] {
             if (typeof item === 'object' && item) {
                 const skillValue = item as {
                     id?: string
+                    isNew?: boolean
                     name?: string
                     value?: string
                     label?: string
@@ -83,7 +85,8 @@ function toSelectedOptions(value: unknown): SkillOption[] {
                 }
 
                 return {
-                    label: name,
+                    isNew: skillValue.isNew,
+                    label: skillValue.isNew ? `${name} (new)` : name,
                     name,
                     value: id,
                 }
@@ -98,6 +101,7 @@ function toFieldValue(options: SkillOption[]): Skill[] {
     return options.map(option => ({
         id: option.value,
         name: option.name,
+        ...(option.isNew ? { isNew: true } : {}),
     }))
 }
 

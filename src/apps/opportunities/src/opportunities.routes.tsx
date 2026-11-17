@@ -63,6 +63,12 @@ export const legacyOpportunityRoutes: ReadonlyArray<PlatformRoute> = (
             title: 'Review Opportunity',
         },
         {
+            element: <LegacyOpportunityRedirectPage submit />,
+            id: 'Legacy challenge submission redirect',
+            route: '/challenges/:challengeId/submit',
+            title: 'My Submissions',
+        },
+        {
             element: <LegacyOpportunityRedirectPage />,
             id: 'Legacy challenge detail redirect',
             route: '/challenges/:challengeId',

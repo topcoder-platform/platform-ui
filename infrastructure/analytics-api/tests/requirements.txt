@@ -1,0 +1,2 @@
+# Local SQL regression engine; not packaged with the Lambda.
+duckdb==2.0.0

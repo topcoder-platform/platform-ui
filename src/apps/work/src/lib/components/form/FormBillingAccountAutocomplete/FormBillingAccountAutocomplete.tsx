@@ -179,6 +179,14 @@ function filterOptionsByInputValue(
         .includes(normalizedInputValue))
 }
 
+// The menu is rendered into the page body, so it needs to sit above modals the field is shown in.
+const SELECT_STYLES = {
+    menuPortal: (provided: Record<string, unknown>) => ({
+        ...provided,
+        zIndex: 9999,
+    }),
+}
+
 function createDebouncedLoader(
     loader: (value: string) => Promise<BillingAccountOption[]>,
 ): (value: string) => Promise<BillingAccountOption[]> {
@@ -493,6 +501,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
                 onBlur={field.onBlur}
                 onChange={handleSelectionChange}
                 placeholder={props.placeholder || 'Search billing account by name'}
+                styles={SELECT_STYLES}
                 value={selectedValue}
             />
         </FormFieldWrapper>

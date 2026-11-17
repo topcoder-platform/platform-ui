@@ -12,9 +12,13 @@ function tabIds(roles: string[]): string[] {
 }
 
 describe('getWalletAdminTabs', () => {
-    it('shows Trolley Logs, and not Payments, to Admins without a payment role', () => {
+    it('shows Trolley Logs and Action Log, and not Payments, to Admins without a payment role', () => {
         expect(tabIds(['administrator']))
-            .toEqual([WalletAdminTabViews.home, WalletAdminTabViews.trolleyLogs])
+            .toEqual([
+                WalletAdminTabViews.home,
+                WalletAdminTabViews.trolleyLogs,
+                WalletAdminTabViews.actionLog,
+            ])
     })
 
     it('shows every tab to Admins who also have a payment role', () => {
@@ -23,6 +27,7 @@ describe('getWalletAdminTabs', () => {
                 WalletAdminTabViews.home,
                 WalletAdminTabViews.payments,
                 WalletAdminTabViews.trolleyLogs,
+                WalletAdminTabViews.actionLog,
             ])
     })
 
@@ -30,7 +35,7 @@ describe('getWalletAdminTabs', () => {
         ['Payment Admin'],
         ['Payment BA Admin'],
         ['Payment Viewer'],
-    ])('hides Trolley Logs from %s', role => {
+    ])('hides Trolley Logs and Action Log from %s', role => {
         expect(tabIds([role]))
             .toEqual([WalletAdminTabViews.home, WalletAdminTabViews.payments])
     })
@@ -40,6 +45,12 @@ describe('getWalletAdminTabs', () => {
             .find(tab => tab.id === WalletAdminTabViews.trolleyLogs)?.title)
             .toBe('Trolley Logs')
     })
+
+    it('titles the tab Action Log', () => {
+        expect(getWalletAdminTabs(['administrator'])
+            .find(tab => tab.id === WalletAdminTabViews.actionLog)?.title)
+            .toBe('Action Log')
+    })
 })
 
 describe('trolley logs tab hash', () => {
@@ -48,5 +59,14 @@ describe('trolley logs tab hash', () => {
             .toBe('#trolley-logs')
         expect(getTabIdFromHash('#trolley-logs'))
             .toBe(WalletAdminTabViews.trolleyLogs)
+    })
+})
+
+describe('action log tab hash', () => {
+    it('maps the tab to #action-log and back', () => {
+        expect(getHashFromTabId(WalletAdminTabViews.actionLog))
+            .toBe('#action-log')
+        expect(getTabIdFromHash('#action-log'))
+            .toBe(WalletAdminTabViews.actionLog)
     })
 })

@@ -1,11 +1,12 @@
 import { TabsNavItem } from '~/libs/ui'
 
-import { canAccessPayments, canAccessTrolleyLogs } from '../../../config/access.config'
+import { canAccessActionLog, canAccessPayments, canAccessTrolleyLogs } from '../../../config/access.config'
 
 export enum WalletAdminTabViews {
     home = '0',
     payments = '1',
     trolleyLogs = '2',
+    actionLog = '3',
 }
 
 const DashboardTabConfig: TabsNavItem = {
@@ -23,17 +24,23 @@ const TrolleyLogsTabConfig: TabsNavItem = {
     title: 'Trolley Logs',
 }
 
+const ActionLogTabConfig: TabsNavItem = {
+    id: WalletAdminTabViews.actionLog,
+    title: 'Action Log',
+}
+
 /**
  * Returns the tabs the member can see.
  *
  * @param roles Profile roles from Auth0.
- * @returns Dashboard, plus Payments for payment roles and Trolley Logs for Admins.
+ * @returns Dashboard, plus Payments for payment roles and Trolley Logs and Action Log for Admins.
  */
 export function getWalletAdminTabs(roles: string[] | undefined): TabsNavItem[] {
     return [
         DashboardTabConfig,
         ...(canAccessPayments(roles) ? [PaymentsTabConfig] : []),
         ...(canAccessTrolleyLogs(roles) ? [TrolleyLogsTabConfig] : []),
+        ...(canAccessActionLog(roles) ? [ActionLogTabConfig] : []),
     ]
 }
 
@@ -45,6 +52,8 @@ export function getHashFromTabId(tabId: string): string {
             return '#payments'
         case WalletAdminTabViews.trolleyLogs:
             return '#trolley-logs'
+        case WalletAdminTabViews.actionLog:
+            return '#action-log'
         default:
             return '#home'
     }
@@ -56,6 +65,8 @@ export function getTabIdFromHash(hash: string): string {
             return WalletAdminTabViews.payments
         case '#trolley-logs':
             return WalletAdminTabViews.trolleyLogs
+        case '#action-log':
+            return WalletAdminTabViews.actionLog
         default:
             return WalletAdminTabViews.home
     }

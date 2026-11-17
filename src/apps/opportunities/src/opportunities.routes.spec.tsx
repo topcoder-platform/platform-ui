@@ -37,6 +37,18 @@ describe('Opportunities application routes', () => {
         jest.resetModules()
     })
 
+    it.each(['www', 'platform-ui', 'topgear'])('redirects legacy submission links on %s', host => {
+        const route = loadRoutes(host).legacyOpportunityRoutes.find(
+            candidate => candidate.route === '/challenges/:challengeId/submit',
+        )
+
+        expect(route)
+            .toBeDefined()
+        expect(route?.element.props)
+            .toEqual({ submit: true })
+        expect(route?.authRequired).not.toBe(true)
+    })
+
     it('sends the TopGear host root to the Opportunities listing and keeps legacy challenge aliases', () => {
         const routes = loadRoutes('topgear')
 

@@ -22,6 +22,12 @@ import {
     EngagementFilters,
     EngagementManager,
     PaginationModel,
+    PendingApprovalReminderResult,
+    PendingApprovalTimesheetListResponse,
+    PendingApprovalTimesheetQuery,
+    PendingSubmissionReminderResult,
+    PendingSubmissionTimesheetListResponse,
+    PendingSubmissionTimesheetQuery,
     Skill,
     TimesheetPaymentEntry,
     TimesheetPaymentSummary,
@@ -178,6 +184,18 @@ function normalizePaginatedResponse(
     }
 }
 
+function normalizeNewSkillNames(skills: Skill[] | undefined): string[] {
+    if (!Array.isArray(skills)) {
+        return []
+    }
+
+    return skills
+        .filter(skill => !!skill && typeof skill === 'object' && skill.isNew)
+        .map(skill => String(skill.name || '')
+            .trim())
+        .filter(Boolean)
+}
+
 function normalizeSkillIds(skills: Skill[] | undefined): string[] {
     if (!Array.isArray(skills)) {
         return []
@@ -189,7 +207,7 @@ function normalizeSkillIds(skills: Skill[] | undefined): string[] {
                 return skill
             }
 
-            if (!skill || typeof skill !== 'object') {
+            if (!skill || typeof skill !== 'object' || skill.isNew) {
                 return ''
             }
 
@@ -480,6 +498,11 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
     const requiredSkills = normalizeSkillIds(data.skills)
     if (requiredSkills.length) {
         payload.requiredSkills = requiredSkills
+    }
+
+    const newSkillNames = normalizeNewSkillNames(data.skills)
+    if (newSkillNames.length) {
+        payload.newSkillNames = newSkillNames
     }
 
     if (data.smu !== undefined) {
@@ -1017,6 +1040,124 @@ export async function fetchApprovedTimesheets(
         )
     } catch (error) {
         throw normalizeError(error, 'Failed to load approved timesheets')
+    }
+}
+
+/**
+ * Submitted timesheets still waiting for approval, for the administrator-only Pending Timesheet
+ * Approvals tab.
+ */
+export async function fetchPendingApprovalTimesheets(
+    query: PendingApprovalTimesheetQuery = {},
+): Promise<PendingApprovalTimesheetListResponse> {
+    try {
+        const params = new URLSearchParams()
+
+        if (query.engagement?.trim()) {
+            params.set('engagement', query.engagement.trim())
+        }
+
+        if (query.fromDate) {
+            params.set('fromDate', query.fromDate)
+        }
+
+        if (query.toDate) {
+            params.set('toDate', query.toDate)
+        }
+
+        if (query.excludeTestProjects) {
+            params.set('excludeTestProjects', 'true')
+        }
+
+        if (query.page) {
+            params.set('page', String(query.page))
+        }
+
+        if (query.perPage) {
+            params.set('perPage', String(query.perPage))
+        }
+
+        const queryString = params.toString()
+
+        return await xhrGetAsync<PendingApprovalTimesheetListResponse>(
+            `${ENGAGEMENTS_ROOT_API_URL}/timesheets/pending-approval${queryString ? `?${queryString}` : ''}`,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to load pending timesheet approvals')
+    }
+}
+
+/**
+ * Emails the managers of these assignments' engagements, once each, to approve what is waiting.
+ */
+export async function sendPendingApprovalReminders(
+    assignmentIds: string[],
+): Promise<PendingApprovalReminderResult> {
+    try {
+        return await xhrPostAsync<{ assignmentIds: string[] }, PendingApprovalReminderResult>(
+            `${ENGAGEMENTS_ROOT_API_URL}/timesheets/pending-approval/reminders`,
+            { assignmentIds },
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to send approval reminders')
+    }
+}
+
+/**
+ * Active assignments with nothing submitted for a work period, for the administrator-only Pending
+ * Timesheet Submissions tab.
+ */
+export async function fetchPendingSubmissionTimesheets(
+    query: PendingSubmissionTimesheetQuery,
+): Promise<PendingSubmissionTimesheetListResponse> {
+    try {
+        const params = new URLSearchParams({
+            fromDate: query.fromDate,
+            toDate: query.toDate,
+        })
+
+        if (query.engagement?.trim()) {
+            params.set('engagement', query.engagement.trim())
+        }
+
+        if (query.excludeTestProjects) {
+            params.set('excludeTestProjects', 'true')
+        }
+
+        if (query.page) {
+            params.set('page', String(query.page))
+        }
+
+        if (query.perPage) {
+            params.set('perPage', String(query.perPage))
+        }
+
+        return await xhrGetAsync<PendingSubmissionTimesheetListResponse>(
+            `${ENGAGEMENTS_ROOT_API_URL}/timesheets/pending-submission?${params.toString()}`,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to load pending timesheet submissions')
+    }
+}
+
+/**
+ * Emails the members of these assignments to submit their timesheets for the work period.
+ */
+export async function sendPendingSubmissionReminders(
+    assignmentIds: string[],
+    fromDate: string,
+    toDate: string,
+): Promise<PendingSubmissionReminderResult> {
+    try {
+        return await xhrPostAsync<
+            { assignmentIds: string[], fromDate: string, toDate: string },
+            PendingSubmissionReminderResult
+        >(
+            `${ENGAGEMENTS_ROOT_API_URL}/timesheets/pending-submission/reminders`,
+            { assignmentIds, fromDate, toDate },
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to send submission reminders')
     }
 }
 

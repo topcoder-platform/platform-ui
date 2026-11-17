@@ -97,3 +97,27 @@ export function formatFormValue(value: unknown): string {
     if (value === null || value === undefined) return '—'
     return Array.isArray(value) ? value.join(', ') : String(value)
 }
+
+/**
+ * Loads every SpaceTech lead in the selected date range before sorting/filtering.
+ * @param dates Inclusive dates. @param active Stops further pagination when the selection changes.
+ * @returns Complete rows; cancelled results are ignored by the caller. @throws API or repeated-cursor errors.
+ */
+export async function fetchSpaceTechSubmissions(dates: FormDates, active: () => boolean): Promise<FormReport> {
+    const first = await fetchFormSubmissions('space_tech_challenge', dates)
+    const data = [...first.data]
+    const seen = new Set<string>()
+    let cursor = first.nextCursor
+    while (cursor && active()) {
+        if (seen.has(cursor)) throw new Error('Invalid submissions cursor')
+        seen.add(cursor)
+        // Sorting must include all pages, and each request requires the previous cursor.
+        // eslint-disable-next-line no-await-in-loop
+        const page = await fetchFormSubmissions('space_tech_challenge', dates, cursor)
+        data.push(...page.data)
+        cursor = page.nextCursor
+    }
+
+    // eslint-disable-next-line unicorn/no-null -- Forms API uses null for the end of pagination.
+    return { ...first, data, nextCursor: null, total: data.length }
+}

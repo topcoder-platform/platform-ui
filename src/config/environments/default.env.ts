@@ -333,8 +333,7 @@ export const ADMIN = {
 
 const REVIEW_OPPORTUNITIES_URL_DEFAULT = getReactEnv<string>(
     'REVIEW_OPPORTUNITIES_URL',
-    'https://www.topcoder-dev.com/challenges/?bucket=reviewOpportunities&'
-        + 'tracks[DS]=true&tracks[Des]=true&tracks[Dev]=true&tracks[QA]=true',
+    'https://www.topcoder-dev.com/opportunities/reviews',
 )
 
 export const REVIEW = {

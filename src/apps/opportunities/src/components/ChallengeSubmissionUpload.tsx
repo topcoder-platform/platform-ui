@@ -124,6 +124,57 @@ export function validateChallengeSubmissionUrl(value: string): string | undefine
     }
 }
 
+/** Track-specific wording for the AI-usage question on the submit form. */
+export interface ChallengeAiUsageCopy {
+    note: string
+    question: string
+}
+
+const AI_CODE_QUESTION = 'Did AI tools write most of your submission\'s code?'
+
+/**
+ * Selects the AI-usage question and its explanation for the challenge's track.
+ *
+ * @param trackKey normalized challenge track key (for example `development`).
+ * @param typeKey normalized challenge type key (for example `marathonmatch`).
+ * @returns member-facing question and note describing how the answer is used.
+ * @throws Does not throw.
+ */
+export function challengeAiUsageCopy(trackKey: string, typeKey: string): ChallengeAiUsageCopy {
+    if (typeKey === 'marathonmatch') {
+        return {
+            note: 'This helps shape future match formats. It has no impact on scoring or rating.',
+            question: AI_CODE_QUESTION,
+        }
+    }
+
+    if (trackKey === 'development') {
+        return {
+            note: 'This helps shape future development challenges. It has no impact on scoring or rating.',
+            question: AI_CODE_QUESTION,
+        }
+    }
+
+    if (trackKey === 'qualityassurance') {
+        return {
+            note: 'This helps shape future QA challenges. It has no impact on scoring.',
+            question: 'Did AI tools find or write up most of the issues you reported?',
+        }
+    }
+
+    if (trackKey === 'design') {
+        return {
+            note: 'This helps shape future design challenges. It has no impact on scoring.',
+            question: 'Did AI tools create most of your submission\'s designs?',
+        }
+    }
+
+    return {
+        note: 'This helps shape future challenges. It has no impact on scoring.',
+        question: AI_CODE_QUESTION,
+    }
+}
+
 /**
  * Formats the compact whole-megabyte size displayed beside an uploaded archive.
  *
@@ -163,6 +214,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
     const pluralUpload = trackKey === 'qualityassurance' || typeKey === 'marathonmatch'
     const submissionMode = challengeSubmissionMode(props.challenge)
     const urlMode = submissionMode === 'url'
+    const aiUsageCopy = challengeAiUsageCopy(trackKey, typeKey)
     const selectionReady = urlMode ? !!submissionUrl : !!file
     // Every submission must answer the AI-usage question before submitting.
     const aiAnswerReady = aiAssisted !== undefined
@@ -723,7 +775,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                             )}
                             <fieldset className={styles.aiUsage}>
                                 <legend>
-                                    Did AI tools write most of your submission&apos;s code?
+                                    {aiUsageCopy.question}
                                     <span>*</span>
                                 </legend>
                                 <div className={styles.aiUsageOptions}>
@@ -748,7 +800,7 @@ export const ChallengeSubmissionUpload: FC<ChallengeSubmissionUploadProps> = pro
                                         <span>No</span>
                                     </label>
                                 </div>
-                                <p>This helps shape future match formats. It has no impact on scoring or rating.</p>
+                                <p>{aiUsageCopy.note}</p>
                             </fieldset>
                             <div className={styles.declaration}>
                                 <h3>Declaration</h3>

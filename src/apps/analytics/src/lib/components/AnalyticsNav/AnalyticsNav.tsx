@@ -9,6 +9,7 @@ import {
     buildAnalyticsPath,
     campaignsRouteId,
     generalRouteId,
+    spaceTechRouteId,
 } from '../../../config/routes.config'
 
 import styles from './AnalyticsNav.module.scss'
@@ -21,6 +22,7 @@ interface AnalyticsTab {
 const ANALYTICS_TABS: AnalyticsTab[] = [
     { id: campaignsRouteId, label: 'Campaigns' },
     { id: generalRouteId, label: 'General' },
+    { id: spaceTechRouteId, label: 'SpaceTech' },
 ]
 
 /**
@@ -38,7 +40,7 @@ export function getActiveAnalyticsTab(pathname: string): string {
 }
 
 /**
- * Renders only the Campaigns and General tabs with a mobile disclosure.
+ * Renders the Campaigns, General, and SpaceTech tabs with a mobile disclosure.
  *
  * @returns responsive Analytics tab navigation.
  * @throws Does not throw.

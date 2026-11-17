@@ -10,6 +10,7 @@ import { isTopgearCommunity, TOPGEAR_CHALLENGES_ROUTE } from '../utils/topgear.u
 interface LegacyOpportunityRedirectPageProps {
     list?: boolean
     review?: boolean
+    submit?: boolean
     terms?: boolean
 }
 
@@ -37,8 +38,9 @@ export function buildLegacyOpportunityRedirect(
  * Review URLs resolve `opportunityId` from the query string and fall back to
  * the challenge detail when it is absent. List/detail redirects preserve the
  * remaining query string and hash for compatible filters and deep links.
+ * Submission URLs open the challenge's My Submissions tab.
  *
- * @param props legacy list, terms, or review route type; omitted means challenge detail.
+ * @param props legacy list, terms, review, or submit route type; omitted means challenge detail.
  * @returns a replace-navigation to the canonical Opportunities route.
  * @throws Does not throw for missing route/query parameters.
  */
@@ -81,10 +83,12 @@ export const LegacyOpportunityRedirectPage: FC<LegacyOpportunityRedirectPageProp
     const pathname = props.list || !challengeId
         ? listingPath
         : `/opportunities/challenge/${encodeURIComponent(challengeId)}`
+    if (props.submit) query.set('tab', 'mine')
+    const search = props.submit ? `?${query.toString()}` : location.search
     return (
         <Navigate
             replace
-            to={buildLegacyOpportunityRedirect(pathname, location.search, location.hash)}
+            to={buildLegacyOpportunityRedirect(pathname, search, location.hash)}
         />
     )
 }

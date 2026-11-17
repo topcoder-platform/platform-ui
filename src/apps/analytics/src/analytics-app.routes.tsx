@@ -12,6 +12,7 @@ import {
     campaignsRouteId,
     generalRouteId,
     rootRoute,
+    spaceTechRouteId,
 } from './config/routes.config'
 
 const AnalyticsApp: LazyLoadedComponent = lazyLoad(() => import('./AnalyticsApp'))
@@ -22,6 +23,11 @@ const CampaignAnalyticsPage: LazyLoadedComponent = lazyLoad(
 const GeneralAnalyticsPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/GeneralAnalyticsPage'),
     'GeneralAnalyticsPage',
+)
+
+const SpaceTechAnalyticsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/SpaceTechAnalyticsPage'),
+    'SpaceTechAnalyticsPage',
 )
 
 export const toolTitle: string = ToolTitle.analytics
@@ -46,6 +52,12 @@ export const analyticsRoutes: ReadonlyArray<PlatformRoute> = [{
             element: <GeneralAnalyticsPage />,
             rolesRequired: [UserRole.analytics],
             route: generalRouteId,
+        },
+        {
+            authRequired: true,
+            element: <SpaceTechAnalyticsPage />,
+            rolesRequired: [UserRole.analytics],
+            route: spaceTechRouteId,
         },
     ],
     domain: AppSubdomain.analytics,

@@ -377,6 +377,160 @@ ORDER BY row_type, date_value, metric_1 DESC
 """
 
 
+SPACETECH_SQL = """
+WITH date_events AS (
+    SELECT * FROM topcoder_web.spacetech_events_mv_v2
+    WHERE event_timestamp >= CAST(:from_date AS timestamp)
+      AND event_timestamp < DATEADD(day, 1, CAST(:to_date AS timestamp))
+) , events AS (
+    SELECT * FROM date_events
+    WHERE (:source = '*' OR source = :source)
+      AND (:medium = '*' OR medium = :medium)
+      AND (:campaign = '*' OR campaign = :campaign)
+      AND (:content = '*' OR content = :content)
+), persona_events AS (
+    SELECT *,
+        CASE WHEN LOWER(SPLIT_PART(campaign, '_', 1)) = 'customer'
+                  AND LOWER(SPLIT_PART(campaign, '_', 2)) = 'spacetech'
+                  AND LOWER(SPLIT_PART(campaign, '_', 4)) IN ('topcoder', 'george', 'anita', 'tony')
+             THEN LOWER(SPLIT_PART(campaign, '_', 4)) END AS persona,
+        DATE_TRUNC('week', event_timestamp)::date AS week_start
+    FROM events
+)
+SELECT 'summary'::varchar AS row_type, NULL::varchar AS dimension_1, NULL::varchar AS dimension_2, NULL::varchar AS dimension_3,
+    (SELECT MAX(event_timestamp)::varchar FROM topcoder_web.spacetech_events_mv_v2) AS dimension_4,
+
+    COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
+    COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
+    COUNT(CASE WHEN event_name = 'form_started' THEN 1 END)::bigint AS starts,
+    COUNT(CASE WHEN event_name = 'form_completed' THEN 1 END)::bigint AS submissions,
+    COUNT(DISTINCT CASE WHEN event_name = 'form_section_reached' THEN analytics_user_id END)::bigint AS reached,
+    COALESCE(SUM(CASE WHEN event_name = '_user_engagement' THEN user_engagement_time_msec ELSE 0 END), 0)::bigint AS engagement_ms,
+    COUNT(*)::bigint AS events,
+    COUNT(DISTINCT analytics_user_id)::bigint AS users
+FROM events
+UNION ALL
+SELECT 'daily'::varchar AS row_type, event_timestamp::date::varchar AS dimension_1, NULL::varchar AS dimension_2, NULL::varchar AS dimension_3, NULL::varchar AS dimension_4,
+
+    COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
+    COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
+    COUNT(CASE WHEN event_name = 'form_started' THEN 1 END)::bigint AS starts,
+    COUNT(CASE WHEN event_name = 'form_completed' THEN 1 END)::bigint AS submissions,
+    COUNT(DISTINCT CASE WHEN event_name = 'form_section_reached' THEN analytics_user_id END)::bigint AS reached,
+    COALESCE(SUM(CASE WHEN event_name = '_user_engagement' THEN user_engagement_time_msec ELSE 0 END), 0)::bigint AS engagement_ms,
+    COUNT(*)::bigint AS events,
+    COUNT(DISTINCT analytics_user_id)::bigint AS users
+FROM events
+GROUP BY 2
+UNION ALL
+SELECT 'campaign'::varchar AS row_type, source AS dimension_1, medium AS dimension_2, campaign AS dimension_3, NULL::varchar AS dimension_4,
+
+    COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
+    COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
+    COUNT(CASE WHEN event_name = 'form_started' THEN 1 END)::bigint AS starts,
+    COUNT(CASE WHEN event_name = 'form_completed' THEN 1 END)::bigint AS submissions,
+    COUNT(DISTINCT CASE WHEN event_name = 'form_section_reached' THEN analytics_user_id END)::bigint AS reached,
+    COALESCE(SUM(CASE WHEN event_name = '_user_engagement' THEN user_engagement_time_msec ELSE 0 END), 0)::bigint AS engagement_ms,
+    COUNT(*)::bigint AS events,
+    COUNT(DISTINCT analytics_user_id)::bigint AS users
+FROM events
+GROUP BY 2, 3, 4
+UNION ALL
+SELECT 'persona'::varchar AS row_type, persona AS dimension_1, NULL::varchar AS dimension_2,
+    NULL::varchar AS dimension_3, NULL::varchar AS dimension_4,
+    COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
+    COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
+    COUNT(CASE WHEN event_name = 'form_started' THEN 1 END)::bigint AS starts,
+    COUNT(CASE WHEN event_name = 'form_completed' THEN 1 END)::bigint AS submissions,
+    COUNT(DISTINCT CASE WHEN event_name = 'form_section_reached' THEN analytics_user_id END)::bigint AS reached,
+    COALESCE(SUM(CASE WHEN event_name = '_user_engagement' THEN user_engagement_time_msec ELSE 0 END), 0)::bigint AS engagement_ms,
+    COUNT(*)::bigint AS events,
+    COUNT(DISTINCT analytics_user_id)::bigint AS users
+FROM persona_events WHERE persona IS NOT NULL
+GROUP BY persona
+UNION ALL
+SELECT 'persona_weekly'::varchar AS row_type, persona AS dimension_1, week_start::varchar AS dimension_2,
+    NULL::varchar AS dimension_3, NULL::varchar AS dimension_4,
+    COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
+    COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
+    COUNT(CASE WHEN event_name = 'form_started' THEN 1 END)::bigint AS starts,
+    COUNT(CASE WHEN event_name = 'form_completed' THEN 1 END)::bigint AS submissions,
+    COUNT(DISTINCT CASE WHEN event_name = 'form_section_reached' THEN analytics_user_id END)::bigint AS reached,
+    COALESCE(SUM(CASE WHEN event_name = '_user_engagement' THEN user_engagement_time_msec ELSE 0 END), 0)::bigint AS engagement_ms,
+    COUNT(*)::bigint AS events,
+    COUNT(DISTINCT analytics_user_id)::bigint AS users
+FROM persona_events WHERE persona IS NOT NULL
+GROUP BY persona, week_start
+UNION ALL
+SELECT 'country'::varchar AS row_type, country AS dimension_1, NULL::varchar AS dimension_2, NULL::varchar AS dimension_3, NULL::varchar AS dimension_4,
+
+    COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
+    COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
+    COUNT(CASE WHEN event_name = 'form_started' THEN 1 END)::bigint AS starts,
+    COUNT(CASE WHEN event_name = 'form_completed' THEN 1 END)::bigint AS submissions,
+    COUNT(DISTINCT CASE WHEN event_name = 'form_section_reached' THEN analytics_user_id END)::bigint AS reached,
+    COALESCE(SUM(CASE WHEN event_name = '_user_engagement' THEN user_engagement_time_msec ELSE 0 END), 0)::bigint AS engagement_ms,
+    COUNT(*)::bigint AS events,
+    COUNT(DISTINCT analytics_user_id)::bigint AS users
+FROM events WHERE event_name = '_page_view'
+GROUP BY 2
+UNION ALL
+SELECT 'device'::varchar AS row_type, device AS dimension_1, NULL::varchar AS dimension_2, NULL::varchar AS dimension_3, NULL::varchar AS dimension_4,
+
+    COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
+    COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
+    COUNT(CASE WHEN event_name = 'form_started' THEN 1 END)::bigint AS starts,
+    COUNT(CASE WHEN event_name = 'form_completed' THEN 1 END)::bigint AS submissions,
+    COUNT(DISTINCT CASE WHEN event_name = 'form_section_reached' THEN analytics_user_id END)::bigint AS reached,
+    COALESCE(SUM(CASE WHEN event_name = '_user_engagement' THEN user_engagement_time_msec ELSE 0 END), 0)::bigint AS engagement_ms,
+    COUNT(*)::bigint AS events,
+    COUNT(DISTINCT analytics_user_id)::bigint AS users
+FROM events WHERE event_name = '_page_view'
+GROUP BY 2
+UNION ALL
+SELECT 'cta'::varchar AS row_type, placement AS dimension_1, element_id AS dimension_2, NULL::varchar AS dimension_3, NULL::varchar AS dimension_4,
+
+    COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
+    COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
+    COUNT(CASE WHEN event_name = 'form_started' THEN 1 END)::bigint AS starts,
+    COUNT(CASE WHEN event_name = 'form_completed' THEN 1 END)::bigint AS submissions,
+    COUNT(DISTINCT CASE WHEN event_name = 'form_section_reached' THEN analytics_user_id END)::bigint AS reached,
+    COALESCE(SUM(CASE WHEN event_name = '_user_engagement' THEN user_engagement_time_msec ELSE 0 END), 0)::bigint AS engagement_ms,
+    COUNT(*)::bigint AS events,
+    COUNT(DISTINCT analytics_user_id)::bigint AS users
+FROM events WHERE event_name = 'ui_click'
+GROUP BY 2, 3
+UNION ALL
+SELECT 'faq'::varchar AS row_type, faq_id AS dimension_1, NULL::varchar AS dimension_2, NULL::varchar AS dimension_3, NULL::varchar AS dimension_4,
+
+    COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
+    COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
+    COUNT(CASE WHEN event_name = 'form_started' THEN 1 END)::bigint AS starts,
+    COUNT(CASE WHEN event_name = 'form_completed' THEN 1 END)::bigint AS submissions,
+    COUNT(DISTINCT CASE WHEN event_name = 'form_section_reached' THEN analytics_user_id END)::bigint AS reached,
+    COALESCE(SUM(CASE WHEN event_name = '_user_engagement' THEN user_engagement_time_msec ELSE 0 END), 0)::bigint AS engagement_ms,
+    COUNT(*)::bigint AS events,
+    COUNT(DISTINCT analytics_user_id)::bigint AS users
+FROM events WHERE event_name = 'faq_opened'
+GROUP BY 2
+
+UNION ALL
+SELECT 'option_source'::varchar, source, NULL::varchar, NULL::varchar, NULL::varchar,
+    0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint
+FROM date_events WHERE source IS NOT NULL AND source <> '' GROUP BY source
+
+UNION ALL
+SELECT 'option_medium'::varchar, medium, NULL::varchar, NULL::varchar, NULL::varchar,
+    0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint
+FROM date_events WHERE medium IS NOT NULL AND medium <> '' GROUP BY medium
+
+UNION ALL
+SELECT 'option_campaign'::varchar, campaign, NULL::varchar, NULL::varchar, NULL::varchar,
+    0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint
+FROM date_events WHERE campaign IS NOT NULL AND campaign <> '' GROUP BY campaign
+ORDER BY row_type, dimension_1, dimension_2, dimension_3, dimension_4
+"""
+
 ROUTE_SQL = """
 WITH date_events AS (
     SELECT *
@@ -688,8 +842,20 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         An API Gateway proxy response containing a JSON analytics document.
 
     Raises:
-        No exceptions escape; failures are converted to sanitized HTTP errors.
+        HTTP failures become sanitized responses; scheduled refresh failures
+        propagate so Lambda can retry and record an error.
     """
+
+    # Only the dedicated EventBridge rule may take the maintenance path. HTTP
+    # requests have requestContext and cannot manufacture this top-level envelope.
+    if (event.get("source") == "aws.events"
+            and event.get("detail-type") == "Scheduled Event"
+            and not event.get("requestContext")
+            and os.environ.get("SPACETECH_REFRESH_RULE_ARN")
+            and os.environ["SPACETECH_REFRESH_RULE_ARN"] in event.get("resources", [])):
+        _execute_query("CALL topcoder_web.refresh_spacetech_report()", [], context, maximum_wait_seconds=150.0)
+        _cache.clear()
+        return {"refreshed": True}
 
     request_id = _request_id(event, context)
     asynchronous = False
@@ -732,6 +898,18 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
                 cache_key,
                 REPORT_CACHE_SECONDS,
                 lambda: _general_report(filters, context, query_token),
+                context,
+            )
+            return _response(200, report)
+        if route_key == "GET /v1/analytics/spacetech":
+            filters = {**_date_filters(query), **{
+                key: _safe_filter(query.get(key), key)
+                for key in ("source", "medium", "campaign", "content")
+            }}
+            report = _cached_report(
+                f"spacetech:{json.dumps(filters, sort_keys=True)}",
+                REPORT_CACHE_SECONDS,
+                lambda: _spacetech_report(filters, context, query_token),
                 context,
             )
             return _response(200, report)
@@ -1377,6 +1555,10 @@ def _safe_filter(value: Any, label: str) -> str:
 
     if value in (None, ""):
         return ""
+    # Clickstream supplies this built-in medium for referrer-attributed visits.
+    # It is returned by filterOptions even though it is not a client UTM token.
+    if label == "medium" and value == "(Referral)":
+        return value
     if not isinstance(value, str) or not SAFE_FILTER_PATTERN.fullmatch(value):
         raise ValueError(f"The {label} filter contains unsupported characters")
     return value
@@ -1430,6 +1612,7 @@ def _sql_parameters(filters: dict[str, str]) -> list[dict[str, str]]:
         "medium": "medium",
         "surface": "surface",
         "path": "path",
+        "content": "content",
     }
     return [
         {"name": names[key], "value": value or NO_FILTER_PARAMETER}
@@ -1443,6 +1626,7 @@ def _execute_query(
     parameters: list[dict[str, str]],
     context: Any,
     query_token: str | None = None,
+    maximum_wait_seconds: float = 24.0,
 ) -> list[dict[str, Any]]:
     """Execute a fixed parameterized query with resumable timeout handling.
 
@@ -1471,7 +1655,7 @@ def _execute_query(
     }
     if parameters:
         request["Parameters"] = parameters
-    deadline = time.monotonic() + _query_wait_seconds(context)
+    deadline = time.monotonic() + _query_wait_seconds(context, maximum_wait_seconds)
     initial_attempt = _query_token_attempt(sql, parameters, query_token) if query_token else 0
     for attempt in range(initial_attempt, MAX_QUERY_ATTEMPTS):
         client_token = query_token if query_token and attempt == initial_attempt else _query_client_token(
@@ -1485,6 +1669,8 @@ def _execute_query(
         while time.monotonic() < deadline:
             status = _redshift_data.describe_statement(Id=statement_id)
             if status["Status"] == "FINISHED":
+                if status.get("HasResultSet") is False:
+                    return []
                 return _statement_rows(statement_id)
             if status["Status"] in {"FAILED", "ABORTED"}:
                 if attempt + 1 < MAX_QUERY_ATTEMPTS:
@@ -1559,22 +1745,22 @@ def _query_token_attempt(
     raise ValueError("The query token is invalid or expired")
 
 
-def _query_wait_seconds(context: Any) -> float:
+def _query_wait_seconds(context: Any, maximum: float = 24.0) -> float:
     """Calculate a provider wait that leaves time for a sanitized HTTP response.
 
     Args:
         context: Lambda invocation context, or null in direct unit calls.
 
     Returns:
-        Wait duration between one and 24 seconds.
+        Wait duration between one second and the supplied maximum (24 for HTTP).
 
     Raises:
         Does not raise.
     """
 
     if context and hasattr(context, "get_remaining_time_in_millis"):
-        return max(1.0, min(24.0, (context.get_remaining_time_in_millis() / 1_000) - 2.0))
-    return 24.0
+        return max(1.0, min(maximum, (context.get_remaining_time_in_millis() / 1_000) - 2.0))
+    return maximum
 
 
 def _statement_rows(statement_id: str) -> list[dict[str, Any]]:
@@ -1852,3 +2038,70 @@ def _now_iso() -> str:
     """
 
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _spacetech_report(filters: dict[str, str], context: Any, query_token: str | None = None) -> dict[str, Any]:
+    """Return aggregate SpaceTech traffic and form conversions; never expose lead answers or visitor IDs."""
+    rows = _execute_query(SPACETECH_SQL, _sql_parameters(filters), context, query_token)
+
+    def metrics(row: dict[str, Any]) -> dict[str, Any]:
+        """Use visitors as the submission-rate denominator and page views for engaged time."""
+        visitors = _integer(row.get("visitors"))
+        views = _integer(row.get("page_views"))
+        submissions = _integer(row.get("submissions"))
+        return {
+            "pageViews": views, "visitors": visitors,
+            "starts": _integer(row.get("starts")), "submissions": submissions,
+            "reached": _integer(row.get("reached")),
+            "submissionRate": _percentage(submissions, visitors),
+            "averageEngagementSeconds": round(_number(row.get("engagement_ms")) / 1000 / views, 2) if views else 0,
+        }
+
+    def groups(kind: str, dimensions: list[str]) -> list[dict[str, Any]]:
+        """Shape fixed aggregate dimensions without returning raw event fields."""
+        return [{
+            **{key: row.get(f"dimension_{index + 1}") or "" for index, key in enumerate(dimensions)},
+            **metrics(row), "events": _integer(row.get("events")), "users": _integer(row.get("users")),
+        } for row in rows if row.get("row_type") == kind]
+
+    daily = {row["date"]: row for row in groups("daily", ["date"])}
+    # Include quiet campaign days so a two-month chart does not collapse gaps.
+    start, end = date.fromisoformat(filters["from"]), date.fromisoformat(filters["to"])
+    series = []
+    for offset in range((end - start).days + 1):
+        day = (start + timedelta(days=offset)).isoformat()
+        series.append(daily.get(day, {"date": day, **metrics({})}))
+    # Compute distinct visitors over each whole persona/period in SQL; never
+    # sum daily or campaign-level uniques or average already-calculated rates.
+    personas = ("topcoder", "george", "anita", "tony")
+    persona_totals = {row["dimension_1"]: metrics(row)
+                      for row in rows if row.get("row_type") == "persona"}
+    persona_weekly = {(row["dimension_1"], row["dimension_2"]): metrics(row)
+                      for row in rows if row.get("row_type") == "persona_weekly"}
+    first_week = start - timedelta(days=start.weekday())
+    persona_series = []
+    for offset in range(0, (end - first_week).days + 1, 7):
+        week = (first_week + timedelta(days=offset)).isoformat()
+        persona_series.append({"date": week, **{
+            persona: persona_weekly.get((persona, week), metrics({}))
+            for persona in personas
+        }})
+    return {
+        "generatedAt": _now_iso(), "filters": filters,
+        "dataThrough": next((row.get("dimension_4") for row in rows if row.get("row_type") == "summary"), None),
+        "totals": metrics(next((row for row in rows if row.get("row_type") == "summary"), {})),
+        "series": series,
+        "personas": [{"persona": persona, **persona_totals.get(persona, metrics({}))}
+                     for persona in personas],
+        "personaSeries": persona_series,
+        "campaigns": groups("campaign", ["source", "medium", "campaign"]),
+        "filterOptions": {
+            key: sorted({row["dimension_1"] for row in rows
+                         if row.get("row_type") == f"option_{key}" and row.get("dimension_1")})
+            for key in ("source", "medium", "campaign")
+        },
+        "countries": groups("country", ["country"]),
+        "devices": groups("device", ["device"]),
+        "ctas": groups("cta", ["placement", "elementId"]),
+        "faqs": groups("faq", ["faqId"]),
+    }

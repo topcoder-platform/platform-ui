@@ -15,6 +15,7 @@ export function getAnalyticsRootRoute(subdomain: string): string {
 export const rootRoute = getAnalyticsRootRoute(EnvironmentConfig.SUBDOMAIN)
 export const campaignsRouteId = 'campaigns'
 export const generalRouteId = 'general'
+export const spaceTechRouteId = 'spacetech'
 
 /**
  * Builds an absolute in-app Analytics path for combined and dedicated hosts.

@@ -5,6 +5,7 @@ import type { Project } from '../models'
 import {
     buildProjectChallengesPath,
     buildProjectLandingPath,
+    openResolvedUrlInNewTab,
 } from './navigation.utils'
 
 jest.mock('@topcoder-platform/tc-auth-lib', () => ({
@@ -160,5 +161,64 @@ describe('buildProjectLandingPath', () => {
             ],
         }, 'token'))
             .toBe('/projects/200/challenges')
+    })
+})
+
+describe('openResolvedUrlInNewTab', () => {
+    let openSpy: jest.SpyInstance
+
+    afterEach(() => {
+        openSpy.mockRestore()
+    })
+
+    function mockNewTab(): Window {
+        const newTab = {
+            close: jest.fn(),
+            location: { href: '' },
+            opener: {},
+        } as unknown as Window
+
+        openSpy = jest.spyOn(window, 'open')
+            .mockReturnValue(newTab)
+
+        return newTab
+    }
+
+    it('opens a tab before resolving and points it at the resolved url', async () => {
+        const newTab = mockNewTab()
+        const resolveUrl = jest.fn(async (): Promise<string> => {
+            expect(openSpy)
+                .toHaveBeenCalledWith('', '_blank')
+            return '/work/projects/1/engagements/eng-1/view'
+        })
+
+        await openResolvedUrlInNewTab(resolveUrl)
+
+        expect(newTab.location.href)
+            .toBe('/work/projects/1/engagements/eng-1/view')
+        expect(newTab.opener)
+            .toBeNull()
+    })
+
+    it('closes the blank tab and rethrows when resolving fails', async () => {
+        const newTab = mockNewTab()
+        const error = new Error('boom')
+
+        await expect(openResolvedUrlInNewTab(() => Promise.reject(error)))
+            .rejects
+            .toBe(error)
+        expect(newTab.close)
+            .toHaveBeenCalled()
+    })
+
+    it('falls back to opening the resolved url when the blank tab is blocked', async () => {
+        openSpy = jest.spyOn(window, 'open')
+            // eslint-disable-next-line unicorn/no-null
+            .mockReturnValue(null)
+
+        await openResolvedUrlInNewTab(() => Promise.resolve('/work/view'))
+
+        expect(openSpy)
+            .toHaveBeenLastCalledWith('/work/view', '_blank', 'noopener,noreferrer')
     })
 })

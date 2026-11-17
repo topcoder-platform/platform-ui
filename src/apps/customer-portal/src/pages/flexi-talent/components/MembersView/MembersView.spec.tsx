@@ -38,6 +38,12 @@ jest.mock('~/apps/admin/src/lib/components/common/Pagination', () => ({
     Pagination: () => <div>pagination</div>,
 }), { virtual: true })
 
+jest.mock('~/config', () => ({
+    EnvironmentConfig: {
+        USER_PROFILE_URL: 'https://profiles.topcoder-dev.com',
+    },
+}), { virtual: true })
+
 jest.mock('~/libs/shared/lib/utils/rich-text', () => ({
     renderRichTextToHtml: jest.fn(() => ''),
 }), { virtual: true })
@@ -90,6 +96,54 @@ describe('MembersView', () => {
             totalPages: 1,
         })
         mockGetFlexiMemberDetail.mockResolvedValue({})
+    })
+
+    it.each([
+        {
+            projectUrl: 'https://work.topcoder-dev.com/projects/1',
+            engagementUrl: 'https://work.topcoder-dev.com/engagements/2',
+            assigneeDetailsUrl: 'https://work.topcoder-dev.com/engagements/2/assignments/3',
+        },
+        {},
+    ])('links to the completed member profile with work links %j', async workLinks => {
+        const member = {
+            memberId: '123',
+            handle: 'member+name',
+            isCurrentlyAssigned: false,
+            displayStatusLabel: 'Completed',
+            workLinks,
+        }
+        mockGetFlexiMemberSummary.mockResolvedValue({
+            assignedMembers: 0,
+            completedMembers: 1,
+            totalUniqueMembers: 1,
+        })
+        mockGetFlexiMemberList.mockResolvedValue({
+            data: [member],
+            page: 1,
+            perPage: 10,
+            total: 1,
+            totalPages: 1,
+        })
+        mockGetFlexiMemberDetail.mockResolvedValue(member)
+
+        render(<MembersView isActive />)
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Completed 1' }))
+
+        const profileLink = await screen.findByRole('link', { name: /View Profile/ })
+        expect(profileLink)
+            .toHaveAttribute('href', 'https://profiles.topcoder-dev.com/member%2Bname')
+        expect(profileLink)
+            .toHaveAttribute('target', '_blank')
+        expect(profileLink)
+            .toHaveAttribute('rel', 'noopener noreferrer')
+        Object.values(workLinks)
+            .forEach(url => {
+                expect(screen.getAllByRole('link')
+                    .some(link => link.getAttribute('href') === url))
+                    .toBe(true)
+            })
     })
 
     it('refreshes member bucket counts whenever the list refreshes', async () => {

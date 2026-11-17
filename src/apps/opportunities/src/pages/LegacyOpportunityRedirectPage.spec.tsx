@@ -18,6 +18,25 @@ const Destination = (): JSX.Element => {
 }
 
 describe('legacy Topgear challenge redirects', () => {
+    it.each([
+        ['', '?tab=mine'],
+        ['/', '?tab=mine'],
+        ['/?source=email&tag=one&tag=two#submission', '?source=email&tag=one&tag=two&tab=mine#submission'],
+        ['?tab=details&source=email', '?tab=mine&source=email'],
+    ])('redirects registration email submission links with suffix %s', (suffix, expectedSuffix) => {
+        const challengeId = '086d16da-e951-4ba5-abf2-2246f1d5504f'
+        render(
+            <MemoryRouter initialEntries={[`/challenges/${challengeId}/submit${suffix}`]}>
+                <Routes>
+                    <Route path='/challenges/:challengeId/submit' element={<LegacyOpportunityRedirectPage submit />} />
+                    <Route path='/opportunities/challenge/:challengeId' element={<Destination />} />
+                </Routes>
+            </MemoryRouter>,
+        )
+        expect(screen.getByTestId('destination'))
+            .toHaveTextContent(`/opportunities/challenge/${challengeId}${expectedSuffix}`)
+    })
+
     it('preserves direct terms links after the host moves to Platform UI', () => {
         render(
             <MemoryRouter initialEntries={['/challenges/terms/detail/20713?source=email#agreement']}>

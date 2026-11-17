@@ -114,6 +114,138 @@ class AnalyticsHandlerTests(unittest.TestCase):
             "routeKey": route_key,
         }
 
+    def test_spacetech_report_attribution_rates_and_quiet_days(self) -> None:
+        """Form conversions use visitors, preserve dimensions, and fill quiet dates."""
+        rows = [
+            {"row_type": "summary", "page_views": 20, "visitors": 10, "starts": 5,
+             "submissions": 2, "reached": 7, "engagement_ms": 100000},
+            {"row_type": "daily", "dimension_1": "2026-09-01", "visitors": 10, "submissions": 2},
+            {"row_type": "campaign", "dimension_1": "linkedin", "dimension_2": "social",
+             "dimension_3": "customer_spacetech_nov26_george", "dimension_4": "post_1",
+             "visitors": 10, "submissions": 2},
+            {"row_type": "faq", "dimension_1": "faq-one", "events": 3, "users": 2},
+            {"row_type": "country", "dimension_1": None, "visitors": 10},
+            {"row_type": "option_source", "dimension_1": "email"},
+            {"row_type": "option_source", "dimension_1": "linkedin"},
+        ]
+        query = {"from": "2026-09-01", "to": "2026-09-03", "source": "linkedin", "content": "post_1"}
+        with patch.object(self.module, "_execute_query", return_value=rows) as execute:
+            response = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], query), None)
+        self.assertEqual(response["statusCode"], 200)
+        report = json.loads(response["body"])
+        self.assertEqual(report["totals"]["submissionRate"], 20)
+        self.assertEqual(report["totals"]["averageEngagementSeconds"], 5)
+        self.assertEqual(report["totals"]["reached"], 7)
+        self.assertEqual([row["submissions"] for row in report["series"]], [2, 0, 0])
+        self.assertNotIn("content", report["campaigns"][0])
+        self.assertEqual(report["filterOptions"]["source"], ["email", "linkedin"])
+        self.assertEqual(report["faqs"][0]["users"], 2)
+        self.assertEqual(report["countries"][0]["country"], "")
+        self.assertNotIn("analytics_user_id", response["body"])
+        params = {item["name"]: item["value"] for item in execute.call_args.args[1]}
+        self.assertEqual(params["source"], "linkedin")
+        self.assertEqual(params["content"], "post_1")
+        self.assertIn(":content", execute.call_args.args[0])
+        self.assertNotIn("linkedin", execute.call_args.args[0])
+
+    def test_spacetech_persona_totals_and_weekly_rates(self) -> None:
+        """Use independent full-period uniques; fill all personas and quiet UTC weeks."""
+        rows = [
+            {"row_type": "persona", "dimension_1": "george", "page_views": 4,
+             "visitors": 1, "submissions": 2, "engagement_ms": 31000},
+            {"row_type": "persona_weekly", "dimension_1": "george", "dimension_2": "2026-11-02",
+             "page_views": 3, "visitors": 1, "submissions": 1, "engagement_ms": 30000},
+            {"row_type": "persona_weekly", "dimension_1": "george", "dimension_2": "2026-11-09",
+             "page_views": 1, "visitors": 1, "submissions": 1, "engagement_ms": 1000},
+        ]
+        with patch.object(self.module, "_execute_query", return_value=rows):
+            response = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], {
+                "from": "2026-11-04", "to": "2026-11-17",
+            }), None)
+        report = json.loads(response["body"])
+        self.assertEqual([row["persona"] for row in report["personas"]], ["topcoder", "george", "anita", "tony"])
+        george = report["personas"][1]
+        self.assertEqual(george["visitors"], 1)
+        self.assertEqual(george["submissionRate"], 200)
+        self.assertEqual(george["averageEngagementSeconds"], 7.75)
+        self.assertEqual([row["date"] for row in report["personaSeries"]],
+                         ["2026-11-02", "2026-11-09", "2026-11-16"])
+        self.assertEqual(report["personaSeries"][0]["george"]["averageEngagementSeconds"], 10)
+        self.assertEqual(report["personaSeries"][1]["george"]["submissionRate"], 100)
+        self.assertEqual(report["personaSeries"][2]["george"]["visitors"], 0)
+        self.assertEqual(report["personaSeries"][0]["tony"]["submissionRate"], 0)
+        self.assertNotIn("analytics_user_id", response["body"])
+
+    def test_spacetech_empty_personas_cover_maximum_range(self) -> None:
+        """All four sources and up to 54 Monday buckets remain bounded for 366 days."""
+        with patch.object(self.module, "_execute_query", return_value=[]):
+            response = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], {
+                "from": "2025-11-02", "to": "2026-11-02",
+            }), None)
+        report = json.loads(response["body"])
+        self.assertEqual(len(report["personas"]), 4)
+        self.assertEqual(len(report["personaSeries"]), 54)
+        for week in report["personaSeries"]:
+            for persona in ("topcoder", "george", "anita", "tony"):
+                self.assertEqual(week[persona]["submissionRate"], 0)
+                self.assertEqual(week[persona]["averageEngagementSeconds"], 0)
+
+    def test_http_and_scheduled_query_deadlines(self) -> None:
+        """Maintenance can wait for cold Redshift without extending HTTP waits."""
+        context = Mock()
+        context.get_remaining_time_in_millis.return_value = 180000
+        self.assertEqual(self.module._query_wait_seconds(context), 24)
+        self.assertEqual(self.module._query_wait_seconds(context, 150), 150)
+        context.get_remaining_time_in_millis.return_value = 10000
+        self.assertEqual(self.module._query_wait_seconds(context, 150), 8)
+
+    def test_builtin_referral_medium_is_selectable(self) -> None:
+        """Dropdowns must accept the built-in Clickstream referrer medium."""
+        with patch.object(self.module, "_execute_query", return_value=[]) as execute:
+            response = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], {
+                "medium": "(Referral)",
+            }), None)
+            self.assertEqual(response["statusCode"], 200)
+            self.assertIn({"name": "medium", "value": "(Referral)"}, execute.call_args.args[1])
+        with self.assertRaises(ValueError):
+            self.module._safe_filter("(Referral)' OR 1=1", "medium")
+
+    def test_refresh_only_accepts_scheduler_envelope(self) -> None:
+        """HTTP clients and other rules cannot invoke the fixed refresh procedure."""
+        with patch.dict(os.environ, {"SPACETECH_REFRESH_RULE_ARN": "arn:rule:spacetech"}):
+            event = {"source": "aws.events", "detail-type": "Scheduled Event", "resources": ["arn:rule:spacetech"]}
+            with patch.object(self.module, "_execute_query", return_value=[]) as execute:
+                self.assertEqual(self.module.handler(event, None), {"refreshed": True})
+                execute.assert_called_once_with(
+                    "CALL topcoder_web.refresh_spacetech_report()", [], None, maximum_wait_seconds=150.0,
+                )
+                execute.reset_mock()
+                self.assertEqual(self.module.handler({**event, "requestContext": {"requestId": "http"}}, None)["statusCode"], 403)
+                self.assertEqual(self.module.handler({**event, "resources": ["other"]}, None)["statusCode"], 403)
+                execute.assert_not_called()
+            with patch.object(self.module, "_execute_query", side_effect=RuntimeError("failed")):
+                with self.assertRaises(RuntimeError):
+                    self.module.handler(event, None)
+
+    def test_spacetech_empty_report_and_authorization(self) -> None:
+        """Empty campaigns are defined and unauthorized requests never reach Redshift."""
+        with patch.object(self.module, "_execute_query", return_value=[]) as execute:
+            denied = self.module.handler(self._event("GET /v1/analytics/spacetech", ["administrator"]), None)
+            self.assertEqual(denied["statusCode"], 403)
+            execute.assert_not_called()
+            invalid = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], {
+                "from": "2026-01-01", "to": "2027-01-03",
+            }), None)
+            self.assertEqual(invalid["statusCode"], 400)
+            execute.assert_not_called()
+            response = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], {
+                "from": "2026-09-01", "to": "2026-09-01",
+            }), None)
+        report = json.loads(response["body"])
+        self.assertEqual(report["totals"]["submissionRate"], 0)
+        self.assertEqual(report["totals"]["averageEngagementSeconds"], 0)
+        self.assertEqual(len(report["series"]), 1)
+
     def test_denies_missing_or_wrong_role_without_querying(self) -> None:
         """A verified token still needs the exact analytics role."""
 

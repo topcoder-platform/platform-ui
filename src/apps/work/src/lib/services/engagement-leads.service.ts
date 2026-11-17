@@ -1,7 +1,9 @@
 import {
+    xhrDeleteAsync,
     xhrGetAsync,
     xhrPatchAsync,
     xhrPostAsync,
+    xhrPutAsync,
 } from '~/libs/core'
 
 import {
@@ -13,6 +15,10 @@ import type {
     EngagementLeadListResponse,
     EngagementLeadPrefill,
 } from '../models/EngagementLead.model'
+import type {
+    EngagementLeadCalculation,
+    EngagementLeadCalculationInput,
+} from '../models/EngagementLeadCalculation.model'
 
 const LEADS_URL = `${ENGAGEMENTS_ROOT_API_URL}/engagement-leads`
 
@@ -124,3 +130,39 @@ export const markEngagementLeadConverted = async (
         { engagementId },
     )
 )
+
+/** Cost calculations saved for a lead, oldest first. */
+export const fetchEngagementLeadCalculations = async (
+    leadId: string,
+): Promise<EngagementLeadCalculation[]> => (
+    xhrGetAsync<EngagementLeadCalculation[]>(`${LEADS_URL}/${leadId}/calculations`)
+)
+
+export const createEngagementLeadCalculation = async (
+    leadId: string,
+    input: EngagementLeadCalculationInput,
+): Promise<EngagementLeadCalculation> => (
+    xhrPostAsync<EngagementLeadCalculationInput, EngagementLeadCalculation>(
+        `${LEADS_URL}/${leadId}/calculations`,
+        input,
+    )
+)
+
+/** Overwrites a saved calculation; its previous values are not kept. */
+export const updateEngagementLeadCalculation = async (
+    leadId: string,
+    calculationId: string,
+    input: EngagementLeadCalculationInput,
+): Promise<EngagementLeadCalculation> => (
+    xhrPutAsync<EngagementLeadCalculationInput, EngagementLeadCalculation>(
+        `${LEADS_URL}/${leadId}/calculations/${calculationId}`,
+        input,
+    )
+)
+
+export const deleteEngagementLeadCalculation = async (
+    leadId: string,
+    calculationId: string,
+): Promise<void> => {
+    await xhrDeleteAsync<unknown>(`${LEADS_URL}/${leadId}/calculations/${calculationId}`)
+}

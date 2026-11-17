@@ -54,6 +54,8 @@ import {
     ErrorMessage,
     LoadingSpinner,
     Pagination,
+    PendingTimesheetApprovalsTab,
+    PendingTimesheetSubmissionsTab,
     ProjectBillingAccountExpiredNotice,
     ProjectListTabs,
     ProjectStatus,
@@ -77,14 +79,39 @@ import styles from './EngagementsListPage.module.scss'
 
 type SortOrder = 'asc' | 'desc'
 
-type EngagementsPageTab = 'approved-timesheets' | 'assignments' | 'engagements' | 'leads'
+type EngagementsPageTab =
+    | 'approved-timesheets'
+    | 'assignments'
+    | 'engagements'
+    | 'leads'
+    | 'pending-timesheet-approvals'
+    | 'pending-timesheet-submissions'
 
 const TAB_QUERY_PARAM = 'tab'
 
 const noopCheckboxChange = (() => undefined) as (event: Event) => void
 const ASSIGNMENTS_TAB: EngagementsPageTab = 'assignments'
 const APPROVED_TIMESHEETS_TAB: EngagementsPageTab = 'approved-timesheets'
+const PENDING_TIMESHEET_APPROVALS_TAB: EngagementsPageTab = 'pending-timesheet-approvals'
+const PENDING_TIMESHEET_SUBMISSIONS_TAB: EngagementsPageTab = 'pending-timesheet-submissions'
 const LEADS_TAB: EngagementsPageTab = ENGAGEMENTS_LEADS_TAB
+
+/** `?tab=timesheets` opens the first timesheet tab the caller can see. */
+const TIMESHEETS_TAB_GROUP = 'timesheets'
+
+interface TimesheetSubTab {
+    /** Hidden from, and unreachable for, anyone who is not an administrator. */
+    adminOnly: boolean
+    label: string
+    tab: EngagementsPageTab
+}
+
+/** The tabs grouped under the Timesheets tab, in the order they are shown. */
+const TIMESHEET_SUB_TABS: TimesheetSubTab[] = [
+    { adminOnly: true, label: 'Pending Timesheet Submissions', tab: PENDING_TIMESHEET_SUBMISSIONS_TAB },
+    { adminOnly: true, label: 'Pending Timesheet Approvals', tab: PENDING_TIMESHEET_APPROVALS_TAB },
+    { adminOnly: false, label: 'Approved Timesheets', tab: APPROVED_TIMESHEETS_TAB },
+]
 
 type EngagementSortField =
     | 'createdAt'
@@ -438,25 +465,40 @@ export const EngagementsListPage: FC = () => {
     const projectId = params.projectId
     const isAllEngagementsPage = !projectId
     const [searchParams, setSearchParams] = useSearchParams()
-    // The tab lives in the URL so the assignment pages can link straight back to it.
-    const requestedTab = searchParams.get(TAB_QUERY_PARAM)
+    const workAppContext = useContext(WorkAppContext)
+    const contextValue = workAppContext as WorkAppContextModel
+    // Administrators see every timesheet tab; anyone else asking for an admin-only one lands on the
+    // Engagements tab.
+    const timesheetSubTabs = TIMESHEET_SUB_TABS.filter(subTab => !subTab.adminOnly || contextValue.isAdmin)
+    const defaultTimesheetTab = timesheetSubTabs[0].tab
+    // The tab lives in the URL so the assignment pages can link straight back to it. Each timesheet
+    // tab keeps its own value, so links made before they were grouped still open them.
+    const requestedTabParam = searchParams.get(TAB_QUERY_PARAM)
+    const requestedTab = requestedTabParam === TIMESHEETS_TAB_GROUP
+        ? defaultTimesheetTab
+        : requestedTabParam
+    const isTimesheetTab = timesheetSubTabs.some(subTab => subTab.tab === requestedTab)
     const activeTab: EngagementsPageTab = isAllEngagementsPage
         && (
             requestedTab === ASSIGNMENTS_TAB
-            || requestedTab === APPROVED_TIMESHEETS_TAB
             || requestedTab === LEADS_TAB
+            || isTimesheetTab
         )
-        ? requestedTab
+        ? requestedTab as EngagementsPageTab
         : 'engagements'
+    const isTimesheetsGroup = isAllEngagementsPage && isTimesheetTab
     const isAssignmentsTab = activeTab === ASSIGNMENTS_TAB
     // The approved timesheets tab loads and scopes its own rows, so the engagement fetches are skipped.
     const isApprovedTimesheetsTab = activeTab === APPROVED_TIMESHEETS_TAB
     // The leads tab loads its own rows from the leads API, so it skips the engagement fetches too.
     const isLeadsTab = activeTab === LEADS_TAB
-    const skipsEngagementFetches = isApprovedTimesheetsTab || isLeadsTab
-
-    const workAppContext = useContext(WorkAppContext)
-    const contextValue = workAppContext as WorkAppContextModel
+    // The pending approvals tab loads its own rows too.
+    const isPendingTimesheetApprovalsTab = activeTab === PENDING_TIMESHEET_APPROVALS_TAB
+    const isPendingTimesheetSubmissionsTab = activeTab === PENDING_TIMESHEET_SUBMISSIONS_TAB
+    const skipsEngagementFetches = isApprovedTimesheetsTab
+        || isLeadsTab
+        || isPendingTimesheetApprovalsTab
+        || isPendingTimesheetSubmissionsTab
 
     const isTalentManagerOnly = !contextValue.isAdmin
         && checkTalentManager(contextValue.userRoles)
@@ -789,7 +831,11 @@ export const EngagementsListPage: FC = () => {
                 ? 'Leads'
                 : isApprovedTimesheetsTab
                     ? 'Approved Timesheets'
-                    : (isAssignmentsTab ? 'All Assignments' : 'All Engagements')
+                    : isPendingTimesheetApprovalsTab
+                        ? 'Pending Timesheet Approvals'
+                        : isPendingTimesheetSubmissionsTab
+                            ? 'Pending Timesheet Submissions'
+                            : (isAssignmentsTab ? 'All Assignments' : 'All Engagements')
         )
         : (
             projectResult.project?.name
@@ -881,13 +927,13 @@ export const EngagementsListPage: FC = () => {
                     Assignments
                 </button>
                 <button
-                    aria-selected={isApprovedTimesheetsTab}
-                    className={classNames(styles.tab, isApprovedTimesheetsTab ? styles.activeTab : undefined)}
-                    onClick={() => handleTabChange(APPROVED_TIMESHEETS_TAB)}
+                    aria-selected={isTimesheetsGroup}
+                    className={classNames(styles.tab, isTimesheetsGroup ? styles.activeTab : undefined)}
+                    onClick={() => handleTabChange(defaultTimesheetTab)}
                     role='tab'
                     type='button'
                 >
-                    Approved Timesheets
+                    Timesheets
                 </button>
                 <button
                     aria-selected={isLeadsTab}
@@ -900,6 +946,27 @@ export const EngagementsListPage: FC = () => {
                 </button>
             </div>
         )
+    const timesheetTabs = isTimesheetsGroup
+        ? (
+            <div aria-label='Timesheets' className={styles.subTabs} role='tablist'>
+                {timesheetSubTabs.map(subTab => (
+                    <button
+                        aria-selected={activeTab === subTab.tab}
+                        className={classNames(
+                            styles.subTab,
+                            activeTab === subTab.tab ? styles.activeSubTab : undefined,
+                        )}
+                        key={subTab.tab}
+                        onClick={() => handleTabChange(subTab.tab)}
+                        role='tab'
+                        type='button'
+                    >
+                        {subTab.label}
+                    </button>
+                ))}
+            </div>
+        )
+        : undefined
     const testProjectsToggle = isAllEngagementsPage
         ? (
             <div className={styles.testProjectsToggle}>
@@ -957,6 +1024,34 @@ export const EngagementsListPage: FC = () => {
         )
     }
 
+    if (isPendingTimesheetSubmissionsTab) {
+        return (
+            <PageWrapper
+                pageTitle={pageTitle}
+                breadCrumb={[]}
+            >
+                {pageTabs}
+                {timesheetTabs}
+                {testProjectsToggle}
+                <PendingTimesheetSubmissionsTab excludeTestProjects={hideTestProjects} />
+            </PageWrapper>
+        )
+    }
+
+    if (isPendingTimesheetApprovalsTab) {
+        return (
+            <PageWrapper
+                pageTitle={pageTitle}
+                breadCrumb={[]}
+            >
+                {pageTabs}
+                {timesheetTabs}
+                {testProjectsToggle}
+                <PendingTimesheetApprovalsTab excludeTestProjects={hideTestProjects} />
+            </PageWrapper>
+        )
+    }
+
     if (isApprovedTimesheetsTab) {
         return (
             <PageWrapper
@@ -964,6 +1059,7 @@ export const EngagementsListPage: FC = () => {
                 breadCrumb={[]}
             >
                 {pageTabs}
+                {timesheetTabs}
                 {testProjectsToggle}
                 <ApprovedTimesheetsTab excludeTestProjects={hideTestProjects} />
             </PageWrapper>

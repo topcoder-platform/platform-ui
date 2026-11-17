@@ -341,6 +341,37 @@ export type TimesheetReviewStatus = TimesheetEntryStatus.APPROVED | TimesheetEnt
  */
 export const TIMESHEET_REVIEW_STATUS_PARAM = 'status'
 
+/** The work period a link can open the member's timesheet on, e.g. from a submission reminder. */
+export const TIMESHEET_FROM_DATE_PARAM = 'fromDate'
+export const TIMESHEET_TO_DATE_PARAM = 'toDate'
+
+/**
+ * Reads a `fromDate`/`toDate` pair from the URL. Both have to be real dates forming a range the member
+ * can enter hours for; anything else is ignored so the timesheet opens on its usual default.
+ */
+export const parseTimesheetRangeParams = (
+    fromDate?: string | null,
+    toDate?: string | null,
+): { fromDate: string, toDate: string } | undefined => {
+    const from = String(fromDate || '')
+        .trim()
+    const to = String(toDate || '')
+        .trim()
+
+    // A day that does not exist, like the 31st of February, rolls over when parsed - so compare back.
+    const isRealDate = (value: string): boolean => (
+        parseWorkDate(value)
+            ?.toISOString()
+            .slice(0, 10) === value
+    )
+
+    if (!isRealDate(from) || !isRealDate(to) || validateEntryRange(from, to)) {
+        return undefined
+    }
+
+    return { fromDate: from, toDate: to }
+}
+
 /** Reads the review status from the URL. Anything unrecognised falls back to Pending Approval. */
 export const parseTimesheetReviewStatus = (value?: string | null): TimesheetReviewStatus => (
     value === TimesheetEntryStatus.APPROVED

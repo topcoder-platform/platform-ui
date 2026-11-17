@@ -11,7 +11,7 @@ jest.mock('~/config', () => ({
 }), { virtual: true })
 
 describe('Analytics navigation tabs', () => {
-    it('renders only Campaigns and General with the current tab selected', () => {
+    it('renders Campaigns, General, and SpaceTech with the current tab selected', () => {
         render(
             <MemoryRouter initialEntries={['/analytics/general']}>
                 <AnalyticsNav />
@@ -20,7 +20,7 @@ describe('Analytics navigation tabs', () => {
 
         expect(screen.getAllByRole('link')
             .map(link => link.textContent))
-            .toEqual(['Campaigns', 'General'])
+            .toEqual(['Campaigns', 'General', 'SpaceTech'])
         expect(screen.getByRole('link', { name: 'General' }))
             .toHaveAttribute('aria-current', 'page')
         expect(screen.getByRole('button', { name: 'General' }))

@@ -237,3 +237,45 @@ export interface AnalyticsRequestError {
     message: string
     status?: number
 }
+
+/** SpaceTech uses form submissions, independently of the challenge funnel. */
+export interface SpaceTechFilters extends AnalyticsDateRange {
+    source?: string
+    medium?: string
+    campaign?: string
+}
+
+export interface SpaceTechMetrics {
+    pageViews: number
+    visitors: number
+    starts: number
+    submissions: number
+    reached: number
+    submissionRate: number
+    averageEngagementSeconds: number
+}
+
+export interface SpaceTechGroup extends SpaceTechMetrics {
+    [key: string]: string | number
+    events: number
+    users: number
+}
+
+export type SpaceTechPersona = 'topcoder' | 'george' | 'anita' | 'tony'
+
+export interface SpaceTechReport {
+    filterOptions: { source: string[]; medium: string[]; campaign: string[] }
+    generatedAt: string
+    dataThrough?: string
+    filters: Required<SpaceTechFilters>
+    totals: SpaceTechMetrics
+    series: (SpaceTechMetrics & { date: string })[]
+    /** Optional during rollout against an older API; never substitute misleading zeroes. */
+    personas?: (SpaceTechMetrics & { persona: SpaceTechPersona })[]
+    personaSeries?: ({ date: string } & Record<SpaceTechPersona, SpaceTechMetrics>)[]
+    campaigns: SpaceTechGroup[]
+    countries: SpaceTechGroup[]
+    devices: SpaceTechGroup[]
+    ctas: SpaceTechGroup[]
+    faqs: SpaceTechGroup[]
+}
