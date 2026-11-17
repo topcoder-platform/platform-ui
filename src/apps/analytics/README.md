@@ -97,19 +97,22 @@ genuine failure, the explicit retry action is shown.
 
 SpaceTech Analytics reports `/space-tech` traffic, engagement, FAQ opens,
 form-section reach and accepted form submissions with source, medium, campaign
-and content filters. It defaults to 90 days and supports the same 366-day limit.
-The daily chart compares visitors with form submissions. Lead details and
-sorting/filtering for every requested lead column remain in Reports → Forms →
-`space_tech_challenge`, protected by the existing Forms reporting permissions.
+dropdown filters. It defaults to 90 days and supports the same 366-day limit.
+The daily chart compares visitors with form submissions. Lead details appear below
+the aggregates for users with existing Forms reporting permission, with all-column
+sorting/filtering and Submitted status. The same table remains in Reports → Forms →
+`space_tech_challenge`. New aggregate activity normally appears within three hours;
+lead details are available immediately after submission.
 See [deployment requirements and metric definitions](../../../infrastructure/analytics-api/README.md#spacetech-campaign-pm-6712).
 
 ## Privacy
 
-The UI receives aggregate counts only. It never receives member IDs,
+The analytics API returns aggregate counts only. It never returns member IDs,
 pseudonymous analytics IDs, handles, email addresses, rendered click text, form
 values, raw destination queries, or raw click coordinates. API errors are
 mapped to safe categories before display, and last-good data remains visible if
-a refresh fails.
+a refresh fails. The separately authorized Forms API supplies private lead answers
+to the SpaceTech lead table; analytics access alone does not grant access to leads.
 
 ## Configuration
 

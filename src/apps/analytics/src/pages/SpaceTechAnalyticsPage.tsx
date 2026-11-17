@@ -2,7 +2,7 @@
 /* eslint-disable react/jsx-no-bind */
 import { FC, useState } from 'react'
 
-import { PageTitle } from '~/libs/ui'
+import { Button, PageTitle } from '~/libs/ui'
 
 import { MetricCard, ReportError, TimeSeriesChart } from '../lib/components'
 import { useAnalyticsResource } from '../lib/hooks'
@@ -10,13 +10,15 @@ import { SpaceTechFilters, SpaceTechGroup, SpaceTechReport } from '../lib/models
 import { getSpaceTechReport } from '../lib/services'
 import { defaultAnalyticsDateRange, validateAnalyticsDateRange } from '../lib/utils'
 
+import SpaceTechLeads from './SpaceTechLeads'
 import styles from './AnalyticsPages.module.scss'
 
 const series = [
     { color: '#2c5de5', key: 'visitors', label: 'Unique visitors' },
     { color: '#137d60', key: 'submissions', label: 'Form submissions' },
 ]
-const dimensions = ['source', 'medium', 'campaign', 'content'] as const
+const dimensions = ['source', 'medium', 'campaign'] as const
+const attributionKeys = new Set<string>(dimensions)
 const metrics = [
     ['pageViews', 'Page views'], ['visitors', 'Unique visitors'], ['starts', 'Form starts'],
     ['submissions', 'Submissions'], ['submissionRate', 'Submission rate (%)'],
@@ -46,7 +48,9 @@ const Breakdown: FC<{ title: string; rows: SpaceTechGroup[]; columns: string[][]
                         <tr key={index}>
                             {props.columns.map(([key]) => (
                                 <td key={key}>
-                                    {row[key] === '' ? 'Unknown / direct' : (labels[row[key]] || row[key])}
+                                    {row[key] === ''
+                                        ? (attributionKeys.has(key) ? 'Direct / unattributed' : 'Unknown')
+                                        : (labels[row[key]] || row[key])}
                                 </td>
                             ))}
                         </tr>
@@ -71,6 +75,7 @@ export const SpaceTechAnalyticsPage: FC = () => {
                 .slice(0, 10) }
     })
     const [filters, setFilters] = useState(draft)
+    const [leadRevision, setLeadRevision] = useState(0)
     const [error, setError] = useState<string>()
     const report = useAnalyticsResource<SpaceTechReport>(
         `spacetech:${JSON.stringify(filters)}`,
@@ -87,7 +92,11 @@ export const SpaceTechAnalyticsPage: FC = () => {
                     event.preventDefault()
                     const validation = validateAnalyticsDateRange(draft)
                     setError(validation)
-                    if (!validation) setFilters({ ...draft })
+                    if (!validation) {
+                        if (JSON.stringify(draft) === JSON.stringify(filters)) report.refresh()
+                        setFilters({ ...draft })
+                        setLeadRevision(value => value + 1)
+                    }
                 }}
             >
                 {(['from', 'to'] as const).map(key => (
@@ -104,21 +113,28 @@ export const SpaceTechAnalyticsPage: FC = () => {
                 {dimensions.map(key => (
                     <label key={key}>
                         {`utm_${key}`}
-                        <input
-                            maxLength={100}
+                        <select
                             value={draft[key] || ''}
                             onChange={event => setDraft({ ...draft, [key]: event.target.value })}
-                        />
+                        >
+                            <option value=''>All</option>
+                            {Array.from(new Set([...(report.data?.filterOptions?.[key] || []), draft[key] || '']))
+                                .filter(Boolean)
+                                .sort()
+                                .map(value => <option key={value} value={value}>{value}</option>)}
+                        </select>
                     </label>
                 ))}
-                <button type='submit'>Apply filters</button>
+                <Button primary type='submit'>Apply filters</Button>
             </form>
             {error && <p role='alert'>{error}</p>}
             {report.error && <ReportError error={report.error} onRetry={report.refresh} />}
             {(report.loading || report.refreshing) && <p role='status'>Loading SpaceTech analytics…</p>}
             {report.data && (
                 <>
-                    <p>{`Data through: ${report.data.dataThrough || 'No processed SpaceTech events'}`}</p>
+                    <p>
+                        {`Latest processed event (UTC): ${report.data.dataThrough || 'No processed SpaceTech events'}`}
+                    </p>
                     <div className={styles.metricGrid}>
                         {metrics.map(([key, label]) => (
                             <MetricCard key={key} label={label} value={report.data?.totals[key]} />
@@ -126,7 +142,7 @@ export const SpaceTechAnalyticsPage: FC = () => {
                     </div>
                     <p>
                         Submission rate is submissions ÷ unique visitors. Engagement counts foreground time only.
-                        Reports update daily.
+                        New activity normally appears within 3 hours. Apply filters to fetch the latest report.
                     </p>
                     <TimeSeriesChart
                         ariaLabel='Daily SpaceTech visitors and submissions'
@@ -171,10 +187,7 @@ export const SpaceTechAnalyticsPage: FC = () => {
                             ['device', 'Device category'], ['visitors', 'Visitors'],
                         ]}
                     />
-                    <p>
-                        Lead names, work email, company, problem, submission date and UTM values are available
-                        to authorized users in Reports → Forms → space_tech_challenge.
-                    </p>
+                    <SpaceTechLeads key={leadRevision} filters={filters} />
                 </>
             )}
         </div>

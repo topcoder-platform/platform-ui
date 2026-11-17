@@ -243,7 +243,6 @@ export interface SpaceTechFilters extends AnalyticsDateRange {
     source?: string
     medium?: string
     campaign?: string
-    content?: string
 }
 
 export interface SpaceTechMetrics {
@@ -263,6 +262,7 @@ export interface SpaceTechGroup extends SpaceTechMetrics {
 }
 
 export interface SpaceTechReport {
+    filterOptions: { source: string[]; medium: string[]; campaign: string[] }
     generatedAt: string
     dataThrough?: string
     filters: Required<SpaceTechFilters>

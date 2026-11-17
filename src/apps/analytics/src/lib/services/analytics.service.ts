@@ -39,7 +39,6 @@ const ANALYTICS_QUERY_KEYS: Array<keyof AnalyticsQueryValues> = [
     'medium',
     'surface',
     'path',
-    'content',
 ]
 
 /**

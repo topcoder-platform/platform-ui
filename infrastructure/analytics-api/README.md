@@ -164,47 +164,102 @@ S3 prefixes, Redshift namespace, Lambda role, or collector hostname.
 ## SpaceTech campaign (PM-6712)
 
 `GET /v1/analytics/spacetech` accepts inclusive `from`/`to` dates (up to
-366 days) and exact `source`, `medium`, `campaign`, and `content` UTM filters.
-It uses the existing JWT/analytics-role gate, parameterized Data API queries,
-cache and resumable-query protocol. The SpaceTech tab defaults to 90 days.
+366 days) and exact source, medium and campaign filters. The legacy content
+parameter remains accepted for API compatibility, but content no longer splits
+campaign rows or appears in the UI. Distinct visitors are recomputed across all
+content values, rather than summing distinct counts. `filterOptions` contains
+available source/medium/campaign values for the date range independently of
+selected UTM filters. The SpaceTech tab defaults to 90 days.
 
-Apply the `spacetech_events_v1` view and its GRANT at the end of `bootstrap.sql`
-before deploying this Lambda and the two new API Gateway routes. It selects
-only marketing-site `/space-tech` events, including the optional trailing
-slash, and only `topcoder:space_tech_challenge` form events. The Lambda reader
-still has no access to raw events or lead answers. No new service is required.
+The API retains its JWT/analytics-role gate, parameterized queries, 60-second
+cache and resumable-query protocol. `dataThrough` is now the UTC timestamp of
+the latest included SpaceTech event, not just its calendar date. It is an event
+timestamp, not proof that traffic has occurred recently.
 
-The report counts page views, distinct visitors, starts, accepted submissions,
-form-section viewers, CTA clicks and FAQ opens. Submission rate is accepted
-submission events divided by distinct page visitors; repeat submissions can
-make this exceed 100%. Average engaged time is foreground engagement milliseconds
-converted to seconds and divided by page views. Daily series use event dates
-and include quiet days. UTM breakdowns use each event's attribution, including
-`utm_content` for post-level analysis; a visitor can appear in several campaign
-rows if they visit using several links. Unknown attribution stays empty in the
-API and is labeled in the UI. The latest processed SpaceTech event date is shown
-so warehouse delay is visible.
+### Warehouse and freshness rollout
 
-Country and device use the AWS `event_v2.geo_country` and
-`event_v2.device_ua_device_category` columns, verified against the
-[AWS schema](https://github.com/aws-solutions/clickstream-analytics-on-aws/blob/main/src/analytics/private/sqls/redshift/event-v2.sql).
-Do not infer country from browser language or treat a missing device as desktop.
-The current infrastructure ADR documents IP-location enrichment as disabled.
-PM-6712 supplies the country-reporting use case: the pipeline owner must enable
-country enrichment in each campaign environment for populated country reports.
-Until then the report explicitly shows unknown country. This PR does not
-reconfigure running pipelines or backfill historical events.
+Apply the `spacetech_events_mv_v2` materialized projection, SELECT grant and
+`refresh_spacetech_report()` procedure/GRANT at the end of `bootstrap.sql` before
+deploying the Lambda and hourly EventBridge refresh rule in `template.yaml`.
+The dev refresh runs at :30 UTC, after the existing :18 ingestion normally
+finishes its warehouse load around :24. A late load is picked up next hour.
+On existing installations, skip existing CREATE ROLE/materialized-view statements;
+create v2 alongside v1. Retain v1 until the rollback window closes. The existing
+logical view can also be updated for reconciliation.
 
-Lead details remain under Reports → Forms → `space_tech_challenge`, with the
-existing Forms API authorization. That table loads all pages in the selected
-UTC date range before applying column filters, sorting, and local pagination.
-All eight requested headers are sortable and independently filterable, with
-filters combined using AND and case-insensitive substring matching. The date
-range CSV export retains its server-generated full-range behavior.
+The narrow, timestamp-sorted projection preserves the earlier performance fix
+and avoids repeatedly extracting JSON from the wide raw event table. It selects
+only marketing-site `/space-tech` events (with optional trailing slash) and
+`topcoder:space_tech_challenge` form events. Automatic incremental refresh remains
+enabled; the explicit hourly refresh removes dependence on workload-dependent
+automatic scheduling. The SECURITY DEFINER procedure contains only a fully
+qualified, fixed REFRESH statement. PUBLIC execute is revoked. The API database
+role can SELECT approved projections and call this procedure, but cannot read
+raw event tables, lead answers or administrator credentials. The maintenance
+handler requires the exact scheduled-event envelope; no HTTP refresh route exists.
+Scheduled refreshes may wait up to 150 seconds for a cold warehouse within the
+180-second Lambda timeout; HTTP queries retain their 24-second wait and resumable
+202 behavior. Scheduled failures raise for Lambda retries rather than returning
+HTTP errors.
 
-The published development schema already contains `full_name`, `email`,
-`company`, `challenge`, `utm_source`, `utm_medium`, and `utm_campaign`; submission
-metadata supplies the date. Confirm the production form has those optional UTM
-text fields before launch. No form schema or historical lead data is rewritten.
-Website instrumentation must be deployed alongside this report; historical
-FAQ opens and form-section exposure cannot be reconstructed.
+Development ingestion already runs hourly. With hourly ingestion, hourly report
+refresh and the one-minute API cache, the normal end-to-end target is under three
+hours (usually substantially less). Failed processing jobs can exceed this target;
+inspect EMR, the load workflow, refresh-rule invocations and Lambda errors when
+investigating delay. This is not a guarantee during outages. Submitted lead rows
+come directly from Forms API and are available without waiting for the warehouse.
+
+For country data, enable the bundled
+`software.aws.solution.clickstream.IPEnrichmentV2` alongside TransformerV3 and
+UAEnrichmentV2 in the Clickstream processing stack's
+`TransformerAndEnrichClassNames` parameter. Use the previous template and preserve
+all other parameter values, including `ScheduleExpression=rate(1 hour)` and
+`DataFreshnessInHour=72` (the accepted event-age window, not the processing delay).
+The bundled GeoLite2 file must remain in the Spark `--files` configuration.
+Development stack: `Clickstream-DataProcessing-ead9a39a35334fafb77428073704ad7b`,
+account `811668436784`, region `us-east-1`. This parameter update is separate from
+the analytics API stack. If the Clickstream control plane recreates the stack,
+carry the enrichment selection into that pipeline configuration.
+
+No increase to ingestion frequency, EMR capacity or Redshift RPUs is required.
+The hourly narrow-view refresh adds 24 bounded queries/day; with the live 4-RPU base and a one-minute billing floor, an isolated hourly
+wakeup would add about 12 compute hours/month (about $18 at $1.50/hour).
+Overlap with the existing hourly warehouse load lowers that estimate; longer
+queries or autoscaling can increase it. This is not a billing cap. See
+[AWS pricing](https://aws.amazon.com/redshift/pricing/).
+Country lookup runs inside existing hourly jobs; monitor their runtime/cost.
+
+Country uses `event_v2.geo_country`; previously processed nulls stay Unknown.
+No historical raw data is rewritten. Device reporting maps PC/Desktop and
+recognized desktop OS values (when the parser returned Other) to Desktop,
+preserves Mobile/Tablet, and leaves unrecognized devices Unknown. Country is
+never inferred from language and unknown devices are never assumed to be desktop.
+
+### Metrics and leads
+
+Counts include page views, distinct visitors, starts, accepted submissions,
+form-section viewers, CTA clicks and FAQ opens. Submission rate is submission
+events divided by distinct page visitors; repeats can exceed 100%. Engagement
+is foreground milliseconds converted to seconds and divided by page views.
+Daily series include quiet days. A visitor can appear in several campaign rows
+if they use several links.
+
+The SpaceTech page also loads private leads through the existing Forms API,
+independently of the aggregate response. Forms reporters/administrators can see
+Date Submitted, Name, Work Email, Company, Problem, utm_source, utm_medium,
+utm_campaign and form_status. All columns support sorting and independent text
+filters; date/UTM filters also apply. Complete pagination is fetched before
+filtering/sorting. The same table remains in Reports → Forms, whose CSV export
+retains its server-generated date-range behavior. No reporting permission is
+expanded. A denied Forms request leaves aggregate analytics usable.
+
+Saved lead rows are Submitted. Partial names/answers are not collected; starts
+and incomplete visits are aggregate analytics only. The published development
+form already contains the seven answer/UTM fields above; metadata supplies the
+date. No form schema or historical lead data is rewritten. The existing website
+instrumentation remains required; historical FAQ opens and form-section exposure
+cannot be reconstructed.
+
+Rollback: redeploy the previous Lambda CodeKey and template; restore the previous
+processing enrichment parameter if needed. Leave the additive v2 projection and
+procedure in place until no deployment uses them. No data deletion is needed.
