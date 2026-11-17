@@ -261,6 +261,8 @@ export interface SpaceTechGroup extends SpaceTechMetrics {
     users: number
 }
 
+export type SpaceTechPersona = 'topcoder' | 'george' | 'anita' | 'tony'
+
 export interface SpaceTechReport {
     filterOptions: { source: string[]; medium: string[]; campaign: string[] }
     generatedAt: string
@@ -268,6 +270,9 @@ export interface SpaceTechReport {
     filters: Required<SpaceTechFilters>
     totals: SpaceTechMetrics
     series: (SpaceTechMetrics & { date: string })[]
+    /** Optional during rollout against an older API; never substitute misleading zeroes. */
+    personas?: (SpaceTechMetrics & { persona: SpaceTechPersona })[]
+    personaSeries?: ({ date: string } & Record<SpaceTechPersona, SpaceTechMetrics>)[]
     campaigns: SpaceTechGroup[]
     countries: SpaceTechGroup[]
     devices: SpaceTechGroup[]

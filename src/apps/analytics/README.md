@@ -150,3 +150,20 @@ yarn run build
 The AWS API source, database grants, deployment sequence, and operational
 checks are documented in
 [`../../../infrastructure/analytics-api/README.md`](../../../infrastructure/analytics-api/README.md).
+
+
+### SpaceTech Dashboard and Details
+
+SpaceTech opens on Dashboard, with a seven-metric selector, weekly line chart
+for Topcoder, George, Anita and Tony, and a table of all seven full-period metrics.
+The shared inclusive UTC date and UTM filters apply to both views. Details keeps
+the existing totals, daily chart, attribution/CTA/FAQ/country/device tables and
+permission-gated leads. Tabs support arrow, Home and End keys.
+
+Sources come only from the persona token in `utm_campaign`, following
+`customer_spacetech_[period]_[persona]_…`; they are independent of `utm_source`.
+Unmatched campaigns remain in Details. Weekly buckets start Monday; partial
+weeks respect the selected dates. Distinct visitors and rates are computed by
+the API for each source and period, not combined from displayed campaign rows.
+The frontend preserves decimals for percentage and engagement metrics. An older
+API without the new fields shows an unavailable message instead of false zeros.

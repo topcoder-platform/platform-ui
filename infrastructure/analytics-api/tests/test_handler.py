@@ -148,6 +148,48 @@ class AnalyticsHandlerTests(unittest.TestCase):
         self.assertIn(":content", execute.call_args.args[0])
         self.assertNotIn("linkedin", execute.call_args.args[0])
 
+    def test_spacetech_persona_totals_and_weekly_rates(self) -> None:
+        """Use independent full-period uniques; fill all personas and quiet UTC weeks."""
+        rows = [
+            {"row_type": "persona", "dimension_1": "george", "page_views": 4,
+             "visitors": 1, "submissions": 2, "engagement_ms": 31000},
+            {"row_type": "persona_weekly", "dimension_1": "george", "dimension_2": "2026-11-02",
+             "page_views": 3, "visitors": 1, "submissions": 1, "engagement_ms": 30000},
+            {"row_type": "persona_weekly", "dimension_1": "george", "dimension_2": "2026-11-09",
+             "page_views": 1, "visitors": 1, "submissions": 1, "engagement_ms": 1000},
+        ]
+        with patch.object(self.module, "_execute_query", return_value=rows):
+            response = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], {
+                "from": "2026-11-04", "to": "2026-11-17",
+            }), None)
+        report = json.loads(response["body"])
+        self.assertEqual([row["persona"] for row in report["personas"]], ["topcoder", "george", "anita", "tony"])
+        george = report["personas"][1]
+        self.assertEqual(george["visitors"], 1)
+        self.assertEqual(george["submissionRate"], 200)
+        self.assertEqual(george["averageEngagementSeconds"], 7.75)
+        self.assertEqual([row["date"] for row in report["personaSeries"]],
+                         ["2026-11-02", "2026-11-09", "2026-11-16"])
+        self.assertEqual(report["personaSeries"][0]["george"]["averageEngagementSeconds"], 10)
+        self.assertEqual(report["personaSeries"][1]["george"]["submissionRate"], 100)
+        self.assertEqual(report["personaSeries"][2]["george"]["visitors"], 0)
+        self.assertEqual(report["personaSeries"][0]["tony"]["submissionRate"], 0)
+        self.assertNotIn("analytics_user_id", response["body"])
+
+    def test_spacetech_empty_personas_cover_maximum_range(self) -> None:
+        """All four sources and up to 54 Monday buckets remain bounded for 366 days."""
+        with patch.object(self.module, "_execute_query", return_value=[]):
+            response = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], {
+                "from": "2025-11-02", "to": "2026-11-02",
+            }), None)
+        report = json.loads(response["body"])
+        self.assertEqual(len(report["personas"]), 4)
+        self.assertEqual(len(report["personaSeries"]), 54)
+        for week in report["personaSeries"]:
+            for persona in ("topcoder", "george", "anita", "tony"):
+                self.assertEqual(week[persona]["submissionRate"], 0)
+                self.assertEqual(week[persona]["averageEngagementSeconds"], 0)
+
     def test_http_and_scheduled_query_deadlines(self) -> None:
         """Maintenance can wait for cold Redshift without extending HTTP waits."""
         context = Mock()

@@ -501,3 +501,54 @@
         gap: $sp-3;
     }
 }
+
+.reportTabs {
+    border-bottom: 1px solid #dce3e9;
+    display: flex;
+    gap: $sp-6;
+
+    button {
+        background: transparent;
+        border: 0;
+        border-bottom: 3px solid transparent;
+        color: #455b65;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+        padding: $sp-3 $sp-2;
+
+        &[aria-selected='true'] {
+            border-bottom-color: #137d60;
+            color: #137d60;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #137d60;
+            outline-offset: 2px;
+        }
+    }
+}
+
+.reportContent {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-6;
+}
+
+.metricSelect {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    max-width: 100%;
+
+    select {
+        background: #fff;
+        border: 1px solid #aebbc2;
+        border-radius: 6px;
+        color: #0d3445;
+        font: inherit;
+        max-width: 100%;
+        min-height: 42px;
+        padding: 0 $sp-3;
+    }
+}
