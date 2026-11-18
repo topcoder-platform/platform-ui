@@ -59,6 +59,8 @@ export interface FlexiTalentCalculatorResult {
     actualRate?: number
     bookingCost?: number
     bookingRate?: number
+    /** Booking cost less total member cost, including any referral fee. */
+    challengeFee?: number
     /** Fraction, e.g. 0.733. */
     costTransferRate?: number
     memberCost?: number
@@ -257,6 +259,9 @@ export function calculateFlexiTalentCosts(
         actualRate: divide(actualCost, totalBillingHours),
         bookingCost,
         bookingRate: divide(bookingCost, totalBillingHours),
+        challengeFee: isFiniteNumber(bookingCost) && isFiniteNumber(totalMemberCost)
+            ? bookingCost - totalMemberCost
+            : undefined,
         costTransferRate,
         memberCost,
         memberMonthlyRate,
