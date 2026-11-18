@@ -93,7 +93,9 @@ secret values into parameters, source files, or shell history.
    managed administrator secret before deploying code that reads a new
    reporting relation. On reapplication, omit existing `CREATE ROLE` and
    `CREATE MATERIALIZED VIEW` statements, then run the replaceable view and
-   idempotent `GRANT` statements.
+   idempotent `GRANT` statements. Also apply `spacetech-form-status.sql` to
+   create/grant the narrow form-lifecycle view before deploying the form-status
+   Lambda change. It is additive and safe to reapply; no historical data is changed.
 6. Deploy `template.yaml` with `CAPABILITY_NAMED_IAM`, the shared HTTP API ID,
    and the exact workgroup, wildcard certificate, public hosted zone, code
    bucket, and code key.
@@ -253,12 +255,34 @@ filtering/sorting. The same table remains in Reports → Forms, whose CSV export
 retains its server-generated date-range behavior. No reporting permission is
 expanded. A denied Forms request leaves aggregate analytics usable.
 
-Saved lead rows are Submitted. Partial names/answers are not collected; starts
-and incomplete visits are aggregate analytics only. The published development
-form already contains the seven answer/UTM fields above; metadata supplies the
-date. No form schema or historical lead data is rewritten. The existing website
-instrumentation remains required; historical FAQ opens and form-section exposure
-cannot be reconstructed.
+Saved lead rows are Submitted. The SpaceTech analytics response also includes
+`formActivity`, anonymous unfinished attempts with only start time, source, medium,
+campaign and status. The lead table combines these with Forms-authorized submissions;
+partial names, emails and answers remain blank. Reports → Forms and its CSV export
+remain submission-only.
+
+Apply `spacetech-form-status.sql` before deploying the updated Lambda. Its narrow
+view reads the existing start, abandonment and completion events, including
+historical events, without granting access to the raw event table. No collector,
+form schema or historical data changes are required. The UI explicitly reports
+activity as unavailable when connected to an older API without `formActivity`.
+
+Started means a start was observed without completion or abandonment. Incomplete
+means an abandonment was observed without completion. Completion takes precedence
+and removes the anonymous attempt; the submitted lead comes only from Forms.
+Attempts are correlated by pseudonymous visitor and session, from each start until
+the next start. Visitor/session IDs stay in SQL and never enter the API response.
+The selected dates and UTM filters apply to the start; terminal events are checked
+even after the selected end date or with changed UTM values. The mixed table labels
+its date column Date Submitted / Started. Attribution comes from the start event.
+Missing abandonment events are not guessed from elapsed time, so a Started row
+is not a promise that the visitor is still online. Simultaneous tabs cannot be
+unambiguously distinguished without a future per-form-instance tracking ID.
+
+Activity follows warehouse ingestion, while submitted lead details remain
+immediate. The existing 2,000-row response limit still fails explicitly rather
+than silently truncating activity. Historical FAQ opens and form-section exposure
+cannot be reconstructed without the corresponding website instrumentation.
 
 Rollback: redeploy the previous Lambda CodeKey and template; restore the previous
 processing enrichment parameter if needed. Leave the additive v2 projection and

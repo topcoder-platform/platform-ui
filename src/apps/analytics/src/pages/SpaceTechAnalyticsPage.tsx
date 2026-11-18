@@ -241,7 +241,11 @@ export const SpaceTechAnalyticsPage: FC = () => {
                                         ['device', 'Device category'], ['visitors', 'Visitors'],
                                     ]}
                                 />
-                                <SpaceTechLeads key={leadRevision} filters={filters} />
+                                <SpaceTechLeads
+                                    key={leadRevision}
+                                    filters={filters}
+                                    activity={report.data.formActivity}
+                                />
                             </>
                         )}
                     </section>

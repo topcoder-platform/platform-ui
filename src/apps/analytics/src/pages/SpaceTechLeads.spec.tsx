@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, unicorn/no-null */
 import '@testing-library/jest-dom'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 
 import { fetchSpaceTechSubmissions } from '../../../reports/src/lib/services/forms.service'
 
@@ -35,6 +35,67 @@ describe('SpaceTech private leads', () => {
             .toBeInTheDocument()
         fireEvent.change(screen.getByLabelText('Filter form_status'), { target: { value: 'incomplete' } })
         expect(screen.getByText('No leads match these filters.'))
+            .toBeInTheDocument()
+    })
+
+    it('shows all statuses, filters anonymous activity, and sorts it with submitted leads', async () => {
+        render(<SpaceTechLeads
+            filters={{ ...filters, source: 'linkedin' }}
+            activity={[
+                { campaign: 'started-campaign',
+                    medium: 'social',
+                    source: 'linkedin',
+                    startedAt: '2026-11-16T11:00:00.000Z',
+                    status: 'Started' },
+                { campaign: 'incomplete-campaign',
+                    medium: 'social',
+                    source: 'linkedin',
+                    startedAt: '2026-11-16T12:00:00.000Z',
+                    status: 'Incomplete' },
+                { campaign: 'excluded-campaign',
+                    medium: 'email',
+                    source: 'email',
+                    startedAt: '2026-11-16T13:00:00.000Z',
+                    status: 'Incomplete' },
+            ]}
+        />)
+        await screen.findByText('First lead')
+        expect(screen.getByText('3 matching leads of 3'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Started'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Incomplete'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Submitted'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('excluded-campaign')).not.toBeInTheDocument()
+        const incompleteRow = screen.getByRole('row', { name: /incomplete-campaign/ })
+        expect(within(incompleteRow)
+            .getAllByText('—'))
+            .toHaveLength(4)
+        fireEvent.change(screen.getByLabelText('Filter form_status'), { target: { value: 'incomplete' } })
+        expect(screen.getByText('1 matching leads of 3'))
+            .toBeInTheDocument()
+        expect(screen.getByText('16 Nov 2026, 12:00'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('First lead')).not.toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'Clear column filters' }))
+        fireEvent.click(screen.getByRole('button', { name: 'form_status' }))
+        const tableRows = screen.getAllByRole('row')
+            .slice(2)
+        expect(tableRows.map(row => within(row)
+            .getAllByRole('cell')[8].textContent))
+            .toEqual(['Incomplete', 'Started', 'Submitted'])
+    })
+
+    it('distinguishes an older API response from an empty activity result', async () => {
+        const view = render(<SpaceTechLeads filters={filters} />)
+        await screen.findByText('First lead')
+        expect(screen.getByText('Started and Incomplete activity is currently unavailable.'))
+            .toBeInTheDocument()
+        view.rerender(<SpaceTechLeads filters={filters} activity={[]} />)
+        expect(screen.queryByText('Started and Incomplete activity is currently unavailable.')).not.toBeInTheDocument()
+        expect(screen.getByText('2 matching leads of 2'))
             .toBeInTheDocument()
     })
 
