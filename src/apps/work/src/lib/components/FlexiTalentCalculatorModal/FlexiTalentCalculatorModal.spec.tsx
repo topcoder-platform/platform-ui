@@ -220,6 +220,10 @@ describe('FlexiTalentCalculatorModal', () => {
 
         expect(screen.getByLabelText('Member Cost (USD)'))
             .toHaveValue('104000')
+        expect(screen.getByText(/Challenge fee: USD 116,000/))
+            .toBeInTheDocument()
+        expect(screen.queryByText(/Member Hourly Rate \(based on Actual Cost\)/))
+            .not.toBeInTheDocument()
         expect(screen.getByLabelText('Actual Cost (USD)'))
             .toHaveValue('161260')
 

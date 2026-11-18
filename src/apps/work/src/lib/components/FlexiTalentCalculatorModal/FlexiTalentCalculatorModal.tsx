@@ -661,8 +661,8 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                         {' · '}
                         {`Member Monthly Rate: USD ${formatCalculatorAmount(result.memberMonthlyRate)}`}
                         {' · '}
-                        {`Member Hourly Rate (based on Actual Cost): USD ${
-                            formatCalculatorAmount(result.actualRate)
+                        {`Challenge fee: USD ${
+                            formatCalculatorAmount(result.challengeFee)
                         }`}
                     </p>
                 </section>

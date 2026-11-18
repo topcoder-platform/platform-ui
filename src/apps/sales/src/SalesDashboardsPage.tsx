@@ -17,6 +17,7 @@ import { SalesDashboardSource, useSalesDashboard } from './useSalesDashboard'
 import GroupBy from './SalesDashboardGroupBy'
 import SalesCustomerTable from './SalesCustomerTable'
 import SalesDashboardChart from './SalesDashboardChart'
+import SalesGoodsSold from './SalesGoodsSold'
 import styles from './SalesDashboardsPage.module.scss'
 
 /**
@@ -308,12 +309,7 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
                     accountCategory={accountCategory || undefined}
                     offeringType={offeringType || undefined}
                 />
-                <CustomerDashboard
-                    source={payments}
-                    field='customerPayments'
-                    title='Goods Sold Customer-Wise'
-                    period={period}
-                />
+                <SalesGoodsSold source={payments} portal={portal} refreshKey={refreshKey} period={period} />
             </section>
         </div>
     )
