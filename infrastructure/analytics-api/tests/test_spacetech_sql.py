@@ -22,6 +22,10 @@ class SpaceTechSqlTests(unittest.TestCase):
             source VARCHAR, medium VARCHAR, campaign VARCHAR, content VARCHAR, country VARCHAR,
             device VARCHAR, user_engagement_time_msec BIGINT, placement VARCHAR, element_id VARCHAR, faq_id VARCHAR
         )""")
+        self.db.execute("""CREATE TABLE topcoder_web.spacetech_form_events_v1 (
+            event_timestamp TIMESTAMP, visitor_id VARCHAR, session_id VARCHAR, event_name VARCHAR,
+            source VARCHAR, medium VARCHAR, campaign VARCHAR, content VARCHAR
+        )""")
         self.params = dict(from_date="2026-11-04", to_date="2026-11-17",
                            source="*", medium="*", campaign="*", content="*")
 
@@ -97,3 +101,50 @@ class SpaceTechSqlTests(unittest.TestCase):
         self.assertEqual(george["submissions"], 1)
         self.assertEqual(george["submissionRate"], 0)
         self.assertEqual(george["averageEngagementSeconds"], 0)
+
+    def form_event(self, time, visitor, event, session="session", source="email", campaign="campaign"):
+        self.db.execute("INSERT INTO topcoder_web.spacetech_form_events_v1 VALUES (?,?,?,?,?,?,?,?)",
+                        [time, visitor, session, event, source, "social", campaign, "post"])
+
+    def test_form_status_lifecycle_repeat_attempts_and_private_fields(self):
+        self.form_event("2026-11-04 10:00:00", "started", "form_started")
+        self.form_event("2026-11-04 11:00:00", "incomplete", "form_started")
+        self.form_event("2026-11-04 11:01:00", "incomplete", "form_abandoned")
+        # A completion wins even if a pagehide abandonment arrived first.
+        self.form_event("2026-11-04 12:00:00", "completed", "form_started")
+        self.form_event("2026-11-04 12:01:00", "completed", "form_abandoned")
+        self.form_event("2026-11-04 12:02:00", "completed", "form_completed")
+        # A later successful attempt must not erase a previous incomplete one.
+        self.form_event("2026-11-04 13:00:00", "repeat", "form_started")
+        self.form_event("2026-11-04 13:01:00", "repeat", "form_abandoned")
+        self.form_event("2026-11-04 14:00:00", "repeat", "form_started")
+        self.form_event("2026-11-04 14:01:00", "repeat", "form_completed")
+        self.form_event("2026-11-04 15:00:00", "repeat", "form_started")
+        # Same visitor, different session: must not suppress the unsubmitted attempt.
+        self.form_event("2026-11-04 15:01:00", "repeat", "form_completed", session="other")
+        activity = self.report()["formActivity"]
+        self.assertEqual(len(activity), 4)
+        self.assertEqual(sorted(row["status"] for row in activity),
+                         ["Incomplete", "Incomplete", "Started", "Started"])
+        self.assertTrue(all(set(row) == {"startedAt", "status", "source", "medium", "campaign"}
+                            for row in activity))
+        self.assertTrue(all(row["source"] == "email" for row in activity))
+
+    def test_form_status_date_and_attribution_filters_do_not_hide_terminal_events(self):
+        # Status is latest observed, even when completion is outside the start date range
+        # or its UTM values differ. Starts outside the selected dates remain excluded.
+        self.form_event("2026-11-17 23:59:00", "complete", "form_started")
+        self.form_event("2026-11-18 00:01:00", "complete", "form_completed", source="changed")
+        self.form_event("2026-11-17 23:59:00", "left", "form_started")
+        self.form_event("2026-11-18 00:01:00", "left", "form_abandoned", source="changed")
+        self.form_event("2026-11-03 23:59:00", "before", "form_started")
+        self.form_event("2026-11-18 00:00:00", "after", "form_started")
+        self.form_event("2026-11-04 00:00:00", "other-source", "form_started", source="linkedin")
+        self.form_event("2026-11-04 00:00:00", "other-campaign", "form_started", campaign="other")
+        self.params.update(source="email", medium="social", campaign="campaign", content="post")
+        self.assertEqual(self.report()["formActivity"], [{
+            "startedAt": "2026-11-17T23:59:00.000Z", "source": "email", "medium": "social",
+            "campaign": "campaign", "status": "Incomplete",
+        }])
+        self.params["source"] = "missing"
+        self.assertEqual(self.report()["formActivity"], [])

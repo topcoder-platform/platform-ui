@@ -100,14 +100,18 @@ form-section reach and accepted form submissions with source, medium, campaign
 dropdown filters. It defaults to 90 days and supports the same 366-day limit.
 The daily chart compares visitors with form submissions. Lead details appear below
 the aggregates for users with existing Forms reporting permission, with all-column
-sorting/filtering and Submitted status. The same table remains in Reports → Forms →
-`space_tech_challenge`. New aggregate activity normally appears within three hours;
-lead details are available immediately after submission.
+sorting/filtering and Submitted, Started and Incomplete statuses. Unfinished attempts
+show their start time and attribution with blank personal details. Started means a
+start without an observed terminal event; Incomplete means an observed abandonment.
+Completed attempts are excluded from anonymous activity to avoid duplicating submitted
+leads. The mixed date column is labeled Date Submitted / Started. Reports → Forms →
+`space_tech_challenge` and CSV exports remain submission-only. Activity follows
+warehouse ingestion; lead details are available immediately after submission.
 See [deployment requirements and metric definitions](../../../infrastructure/analytics-api/README.md#spacetech-campaign-pm-6712).
 
 ## Privacy
 
-The analytics API returns aggregate counts only. It never returns member IDs,
+The analytics API returns aggregate counts and anonymous form activity. It never returns member IDs,
 pseudonymous analytics IDs, handles, email addresses, rendered click text, form
 values, raw destination queries, or raw click coordinates. API errors are
 mapped to safe categories before display, and last-good data remains visible if
