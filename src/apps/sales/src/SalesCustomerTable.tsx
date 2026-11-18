@@ -1,6 +1,6 @@
 /* The horizontally scrolling table region must be focusable for keyboard scrolling. */
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex */
-import { FC, useCallback, useId, useState } from 'react'
+import { FC, ReactNode, useCallback, useId, useState } from 'react'
 
 import { MonthlySalesChart, SalesDashboardPeriod } from './sales-dashboard.service'
 import { salesPeriodChart } from './sales-dashboard.utils'
@@ -15,6 +15,7 @@ import styles from './SalesDashboardsPage.module.scss'
  */
 const SalesCustomerTable: FC<{
     data: MonthlySalesChart; title: string; notices?: string[]; period?: SalesDashboardPeriod
+    controls?: ReactNode; totalLabel?: string; emptyMessage?: string
 }> = props => {
     const data = salesPeriodChart(props.data, props.period ?? 'Monthly')
     const [expanded, setExpanded] = useState(false)
@@ -23,6 +24,7 @@ const SalesCustomerTable: FC<{
     return (
         <article className={`${styles.card} ${styles.customerTable}`}>
             <h3>{props.title}</h3>
+            {props.controls}
             {props.notices?.map(notice => <p key={notice} role='status'>{notice}</p>)}
             {data.series.length ? (
                 <SalesDashboardTable
@@ -32,9 +34,10 @@ const SalesCustomerTable: FC<{
                     firstColumn='Customer'
                     limit={expanded ? undefined : 5}
                     id={tableId}
+                    totalLabel={props.totalLabel}
                     showTotal
                 />
-            ) : <p>No customer data in this fiscal year.</p>}
+            ) : <p>{props.emptyMessage ?? 'No customer data in this fiscal year.'}</p>}
             {data.series.length > 5 && (
                 <button
                     type='button'

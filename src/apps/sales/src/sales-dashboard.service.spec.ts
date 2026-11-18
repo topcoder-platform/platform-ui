@@ -102,3 +102,27 @@ describe('Sales dashboard fiscal year requests', () => {
             ])
     })
 })
+
+describe('Goods sold date and offering filters', () => {
+    it.each([
+        ['2028-02-29', '2028-03-01T00:00:00.000Z'],
+        ['2026-12-31', '2027-01-01T00:00:00.000Z'],
+    ])('includes the full To date %s in UTC', (endDate, exclusiveEnd) => {
+        jest.clearAllMocks()
+        const signal = new AbortController().signal
+        fetchSalesDashboard('payments', 'sales', 'close', signal, undefined, {
+            endDate,
+            offeringType: ['AI Training', 'Flexible Talent'],
+            startDate: '2026-05-15',
+        })
+        const params = new URL(String(jest.mocked(xhrGetAsync).mock.calls[0][0])).searchParams
+        expect(params.get('startDate'))
+            .toBe('2026-05-15T00:00:00.000Z')
+        expect(params.get('endDate'))
+            .toBe(exclusiveEnd)
+        expect(params.getAll('offeringType'))
+            .toEqual(['AI Training', 'Flexible Talent'])
+        expect(params.get('portal'))
+            .toBe('sales')
+    })
+})

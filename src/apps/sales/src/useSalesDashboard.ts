@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import {
     fetchSalesDashboard,
+    SalesCustomerPaymentFilters,
     SalesDashboardGroupBy,
     SalesDashboardPortal,
     SalesDashboardResponse,
@@ -33,6 +34,8 @@ export interface SalesDashboardSource {
  * @param dateBasis Selected bookings/pipeline date field; other sources always use close.
  * @param refreshKey Increments when the user refreshes all sources.
  * @param groupBy Independent card breakdown; changes cancel superseded requests.
+ * @param customerFilters Stable applied goods-sold filters, separate from the shared payment source.
+ * @param enabled Whether to load; false lets goods sold reuse the existing unfiltered source.
  * @returns Current response/error and a retry callback; superseded results are ignored.
  * @throws Does not throw; transport errors are exposed as user-facing messages.
  */
@@ -42,18 +45,23 @@ export function useSalesDashboard(
     dateBasis: 'close' | 'created',
     refreshKey: number,
     groupBy?: SalesDashboardGroupBy,
+    customerFilters?: SalesCustomerPaymentFilters,
+    enabled: boolean = true,
 ): SalesDashboardSource {
     const [data, setData] = useState<SalesDashboardResponse>()
     const [error, setError] = useState<string>()
     const [retryKey, setRetryKey] = useState(0)
     const basis = ['pipeline', 'bookings'].includes(section) ? dateBasis : 'close'
     useEffect(() => {
+        if (!enabled) return undefined
         const controller = new AbortController()
         setData(undefined)
         setError(undefined)
-        const request = groupBy
-            ? fetchSalesDashboard(section, portal, basis, controller.signal, groupBy)
-            : fetchSalesDashboard(section, portal, basis, controller.signal)
+        const request = customerFilters
+            ? fetchSalesDashboard(section, portal, basis, controller.signal, groupBy, customerFilters)
+            : groupBy
+                ? fetchSalesDashboard(section, portal, basis, controller.signal, groupBy)
+                : fetchSalesDashboard(section, portal, basis, controller.signal)
         request
             .then(response => {
                 if (!controller.signal.aborted) {
@@ -68,7 +76,7 @@ export function useSalesDashboard(
                         : `${dashboardTitles[section]} could not be loaded. Please try again.`)
             })
         return () => controller.abort()
-    }, [section, portal, basis, refreshKey, retryKey, groupBy])
+    }, [section, portal, basis, refreshKey, retryKey, groupBy, customerFilters, enabled])
     const retry = useCallback(() => setRetryKey(value => value + 1), [])
     return { data, error, retry }
 }

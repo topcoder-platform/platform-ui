@@ -481,3 +481,39 @@ revenue keeps report `00O1K000009GxBtUAK` and the customer matrices.
 
 Deploy the companion Reports API changes before the UI. The same shared dashboard
 also appears in the Reports portal. No browser Salesforce credentials are needed.
+
+
+### PM-6783 goods-sold customer controls
+
+Goods Sold Customer-Wise has independent inclusive **From date** / **To date**
+controls and an offering-type checkbox group (multiple selections, or **ALL**).
+**Apply filters** requests the selected range; **Reset filters** returns to the
+shared current-fiscal-year payments response. The other charts and the revenue
+customer table keep their existing scopes. The API receives UTC midnight for the
+start and midnight after the selected To day as the exclusive end. Reversed
+ranges are rejected locally. Filtered tables label their sum **Period total**.
+
+**Member Payment** shows `customerPayments`; **Booking Cost** shows
+`customerBookingCosts` (member payments plus challenge fees). Both measures use
+the same customer grouping, date/offering selection and Monthly/Quarterly view.
+Changing measures does not refetch. Missing booking-cost data is shown explicitly
+instead of substituting the member-payment matrix. Failed filtered requests have
+an independent retry and superseded requests are cancelled.
+
+**API dependency — required before enabling this change:** the current
+reports-api-v6 development payments endpoint does not yet implement offering
+filters or return booking costs. Its companion change must:
+
+- Apply repeated `offeringType` parameters with OR semantics to payment events,
+  before customer aggregation, preserving the existing portal/customer scope,
+  latest-version and cancelled-payment rules.
+- Return `filterOptions.offeringType` for the available payment offerings; omit
+  the parameter for ALL, including unknown/unmapped offerings.
+- Return `customerBookingCosts` in the same `MonthlySalesChart` shape as
+  `customerPayments`, adding each payment's challenge fee once, preserving
+  negative adjustments and distinguishing unavailable values from zero.
+- Apply the existing half-open date range to both matrices at payment-event
+  precision, including partial months.
+
+Do not deploy the UI ahead of that API change. The UI tests use the proposed
+response contract; they do not establish that the current API supplies it.
