@@ -17,6 +17,32 @@ const baseInputs: FlexiTalentCalculatorInputs = {
 }
 
 describe('calculateFlexiTalentCosts', () => {
+    it.each([
+        [false, 40000, 20000],
+        [true, 40000, 18000],
+        [false, 20000, 0],
+        [true, 20000, -2000],
+    ])('calculates challenge fee with referral=%s and booking cost=%s', (referral, bookingCost, expected) => {
+        const result = calculateFlexiTalentCosts({
+            ...baseInputs,
+            commercialInput: { field: 'bookingCost', value: bookingCost },
+            referral,
+        })
+        expect(result.challengeFee)
+            .toBe(expected)
+    })
+
+    it('leaves the challenge fee unavailable until both costs are known', () => {
+        expect(calculateFlexiTalentCosts(baseInputs).challengeFee)
+            .toBeUndefined()
+        expect(calculateFlexiTalentCosts({
+            ...baseInputs,
+            commercialInput: { field: 'bookingCost', value: 40000 },
+            memberInput: undefined,
+        }).challengeFee)
+            .toBeUndefined()
+    })
+
     it('derives the member costs', () => {
         const result = calculateFlexiTalentCosts({ ...baseInputs, referral: true })
 

@@ -148,6 +148,21 @@ class AnalyticsHandlerTests(unittest.TestCase):
         self.assertIn(":content", execute.call_args.args[0])
         self.assertNotIn("linkedin", execute.call_args.args[0])
 
+    def test_spacetech_form_activity_excludes_identifiers_and_answers(self) -> None:
+        rows = [{"row_type": kind, "dimension_1": "2026-11-04 12:00:00",
+                 "dimension_2": "linkedin", "dimension_3": "social", "dimension_4": "campaign",
+                 "visitor_id": "private", "session_id": "private", "email": "private"}
+                for kind in ("form_started", "form_incomplete")]
+        with patch.object(self.module, "_execute_query", return_value=rows):
+            response = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], {
+                "from": "2026-11-04", "to": "2026-11-04",
+            }), None)
+        activity = json.loads(response["body"])["formActivity"]
+        self.assertEqual([row["status"] for row in activity], ["Started", "Incomplete"])
+        self.assertEqual(activity[0], {"startedAt": "2026-11-04T12:00:00.000Z", "source": "linkedin",
+                                      "medium": "social", "campaign": "campaign", "status": "Started"})
+        self.assertNotIn("private", response["body"])
+
     def test_spacetech_persona_totals_and_weekly_rates(self) -> None:
         """Use independent full-period uniques; fill all personas and quiet UTC weeks."""
         rows = [

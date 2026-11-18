@@ -378,7 +378,35 @@ ORDER BY row_type, date_value, metric_1 DESC
 
 
 SPACETECH_SQL = """
-WITH date_events AS (
+WITH form_events AS (
+    SELECT * FROM topcoder_web.spacetech_form_events_v1
+    WHERE event_timestamp >= CAST(:from_date AS timestamp)
+), form_starts AS (
+    -- Attribute each attempt to its start, before applying any UTM filters.
+    -- Later starts delimit repeat attempts in the same visitor/session.
+    SELECT *, LEAD(event_timestamp) OVER (
+        PARTITION BY visitor_id, session_id ORDER BY event_timestamp
+    ) AS next_start
+    FROM form_events WHERE event_name = 'form_started'
+), form_attempts AS (
+    SELECT attempt.visitor_id, attempt.session_id, attempt.event_timestamp,
+        attempt.source, attempt.medium, attempt.campaign,
+        MAX(CASE WHEN terminal.event_name = 'form_completed' THEN 1 ELSE 0 END) AS completed,
+        MAX(CASE WHEN terminal.event_name = 'form_abandoned' THEN 1 ELSE 0 END) AS abandoned
+    FROM form_starts attempt
+    LEFT JOIN form_events terminal
+      ON terminal.visitor_id = attempt.visitor_id AND terminal.session_id = attempt.session_id
+      AND terminal.event_timestamp >= attempt.event_timestamp
+      AND (attempt.next_start IS NULL OR terminal.event_timestamp < attempt.next_start)
+      AND terminal.event_name IN ('form_completed', 'form_abandoned')
+    WHERE attempt.event_timestamp < DATEADD(day, 1, CAST(:to_date AS timestamp))
+      AND (:source = '*' OR attempt.source = :source)
+      AND (:medium = '*' OR attempt.medium = :medium)
+      AND (:campaign = '*' OR attempt.campaign = :campaign)
+      AND (:content = '*' OR attempt.content = :content)
+    GROUP BY attempt.visitor_id, attempt.session_id, attempt.event_timestamp,
+        attempt.source, attempt.medium, attempt.campaign
+), date_events AS (
     SELECT * FROM topcoder_web.spacetech_events_mv_v2
     WHERE event_timestamp >= CAST(:from_date AS timestamp)
       AND event_timestamp < DATEADD(day, 1, CAST(:to_date AS timestamp))
@@ -528,6 +556,13 @@ UNION ALL
 SELECT 'option_campaign'::varchar, campaign, NULL::varchar, NULL::varchar, NULL::varchar,
     0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint
 FROM date_events WHERE campaign IS NOT NULL AND campaign <> '' GROUP BY campaign
+UNION ALL
+-- Completed attempts are supplied by the authorized Forms API, not duplicated here.
+-- Visitor/session keys remain in SQL and never enter the response.
+SELECT CASE WHEN abandoned = 1 THEN 'form_incomplete' ELSE 'form_started' END::varchar,
+    event_timestamp::varchar, source, medium, campaign,
+    0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint
+FROM form_attempts WHERE completed = 0
 ORDER BY row_type, dimension_1, dimension_2, dimension_3, dimension_4
 """
 
@@ -2091,6 +2126,14 @@ def _spacetech_report(filters: dict[str, str], context: Any, query_token: str | 
         "dataThrough": next((row.get("dimension_4") for row in rows if row.get("row_type") == "summary"), None),
         "totals": metrics(next((row for row in rows if row.get("row_type") == "summary"), {})),
         "series": series,
+        "formActivity": [{
+            "startedAt": datetime.fromisoformat(row["dimension_1"]).replace(tzinfo=timezone.utc)
+                .isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+            "source": row.get("dimension_2") or "",
+            "medium": row.get("dimension_3") or "",
+            "campaign": row.get("dimension_4") or "",
+            "status": "Incomplete" if row["row_type"] == "form_incomplete" else "Started",
+        } for row in rows if row.get("row_type") in ("form_started", "form_incomplete")],
         "personas": [{"persona": persona, **persona_totals.get(persona, metrics({}))}
                      for persona in personas],
         "personaSeries": persona_series,

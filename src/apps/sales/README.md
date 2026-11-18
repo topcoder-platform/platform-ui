@@ -481,3 +481,35 @@ revenue keeps report `00O1K000009GxBtUAK` and the customer matrices.
 
 Deploy the companion Reports API changes before the UI. The same shared dashboard
 also appears in the Reports portal. No browser Salesforce credentials are needed.
+
+
+### PM-6783 goods-sold customer controls
+
+Goods Sold Customer-Wise has independent inclusive **From date** / **To date**
+controls and an offering-type checkbox group (multiple selections, or **ALL**).
+**Apply filters** requests the selected range; **Reset filters** returns to the
+shared current-fiscal-year payments response. The other charts and the revenue
+customer table keep their existing scopes. The API receives UTC midnight for the
+start and midnight after the selected To day as the exclusive end. Reversed
+ranges are rejected locally. Filtered tables label their sum **Period total**.
+
+**Member Payment** shows `customerPayments`; **Booking Cost** shows
+`customerBookingCosts` (member payments plus challenge fees). Both measures use
+the same customer grouping, date/offering selection and Monthly/Quarterly view.
+Changing measures does not refetch. Missing booking-cost data is shown explicitly
+instead of substituting the member-payment matrix. Failed filtered requests have
+an independent retry and superseded requests are cancelled.
+
+The companion PM-6783 Reports API change supplies `filterOptions.offeringType`
+and `customerBookingCosts`. It resolves offerings by billing-account ID through
+the linked Salesforce Opportunity, then applies the selection before payment
+aggregation. ALL includes unknown/unmapped offerings; Unknown can also be
+selected explicitly. Missing fees remain unknown, with a source notice; totals
+include known amounts only. The API retains portal scope and existing payment
+version/status rules.
+
+Deploy the companion Reports API change before this UI. Existing Salesforce
+credentials and read permissions must allow the billing-account/Opportunity
+lookup. A source failure is shown beside this report; selected offerings are
+never silently ignored. The date range is limited to 24 months, matching the API.
+Repeated quarter labels include the calendar year when a range spans fiscal years.

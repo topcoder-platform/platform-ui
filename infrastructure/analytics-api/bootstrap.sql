@@ -206,3 +206,5 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 REVOKE ALL ON PROCEDURE topcoder_web.refresh_spacetech_report() FROM PUBLIC;
 GRANT EXECUTE ON PROCEDURE topcoder_web.refresh_spacetech_report() TO ROLE analytics_api_reader;
+
+-- Also apply spacetech-form-status.sql before deploying the form-status API.

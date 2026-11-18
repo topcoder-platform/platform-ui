@@ -10,15 +10,18 @@ import styles from './SalesDashboardsPage.module.scss'
 /** A shared category-by-period matrix; sort the full dataset before limiting visible customer rows. */
 const SalesDashboardTable: FC<{
     chart: MonthlySalesChart; period?: SalesDashboardPeriod; caption: string; firstColumn?: string
-    limit?: number; id?: string; showTotal?: boolean
+    limit?: number; id?: string; showTotal?: boolean; totalLabel?: string
 }> = props => {
     const chart = props.chart
     const [sort, setSort] = useState({ ascending: true, column: 'label' })
+    const periodLabels = chart.months.map(month => salesPeriodLabel(month.month, props.period ?? 'Monthly'))
+    const repeatedLabels = new Set(periodLabels).size < periodLabels.length
     const columns = [
         { key: 'label', label: props.firstColumn ?? 'Field' },
-        { key: 'annual', label: 'Annual' },
-        ...chart.months.map(month => ({
-            key: month.month, label: salesPeriodLabel(month.month, props.period ?? 'Monthly'),
+        { key: 'annual', label: props.totalLabel ?? 'Annual' },
+        ...chart.months.map((month, index) => ({
+            key: month.month,
+            label: repeatedLabels ? `${periodLabels[index]} ${month.month.slice(0, 4)}` : periodLabels[index],
         })),
     ]
     const active = columns.some(column => column.key === sort.column) ? sort : { ascending: true, column: 'label' }

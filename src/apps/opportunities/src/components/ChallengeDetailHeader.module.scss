@@ -300,6 +300,15 @@
     }
 }
 
+.manyPrizeCard {
+    gap: 16px;
+    min-height: 256px;
+}
+
+.expandedPrizeCard {
+    gap: 40px;
+}
+
 .prizeFrame {
     align-items: center;
     display: flex;
@@ -337,9 +346,7 @@
 
         img {
             flex: 0 0 auto;
-            height: 20px;
             object-fit: contain;
-            width: 20px;
         }
     }
 
@@ -378,28 +385,71 @@
 }
 
 .denseFeaturedPrizes {
-    gap: 8px 16px;
+    gap: 4px 20px;
 }
 
 .densePrize {
     font-size: 22px !important;
+    line-height: 26px !important;
     min-width: 0;
 }
 
 .additionalPrizes {
     flex-wrap: wrap;
-    gap: 4px 12px;
+    gap: 4px 24px;
 }
 
 .secondaryPrize {
-    &,
-    img {
-        height: 16px !important;
-    }
+    font-size: 16px !important;
+}
 
-    & {
-        font-size: 16px !important;
-    }
+.medal {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 16px;
+    height: 16px;
+    justify-content: center;
+    width: 16px;
+}
+
+.featuredMedal {
+    flex-basis: 20px;
+    height: 20px;
+    width: 20px;
+}
+
+.numberedMedal {
+    height: 16px;
+    position: relative;
+    width: 16px;
+}
+
+.medalRibbon {
+    left: 4px;
+    position: absolute;
+    top: 10.318px;
+}
+
+.medalDisc {
+    left: 2.4px;
+    position: absolute;
+    top: .8px;
+}
+
+.medalNumber {
+    color: #161616;
+    font-size: 8px;
+    font-weight: 900;
+    left: 0;
+    line-height: normal;
+    position: absolute;
+    text-align: center;
+    top: 1.19px;
+    width: 16px;
+}
+
+.prizeRangeSeparator {
+    align-self: center;
 }
 
 .checkpointAward {

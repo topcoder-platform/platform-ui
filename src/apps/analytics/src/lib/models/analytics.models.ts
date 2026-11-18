@@ -263,7 +263,18 @@ export interface SpaceTechGroup extends SpaceTechMetrics {
 
 export type SpaceTechPersona = 'topcoder' | 'george' | 'anita' | 'tony'
 
+/** Anonymous unfinished attempt; personal answers exist only in submitted Forms rows. */
+export interface SpaceTechFormActivity {
+    startedAt: string
+    source: string
+    medium: string
+    campaign: string
+    status: 'Started' | 'Incomplete'
+}
+
 export interface SpaceTechReport {
+    /** Absent on older API deployments; an empty array means no unfinished attempts. */
+    formActivity?: SpaceTechFormActivity[]
     filterOptions: { source: string[]; medium: string[]; campaign: string[] }
     generatedAt: string
     dataThrough?: string

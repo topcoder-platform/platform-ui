@@ -41,14 +41,17 @@ export function selectSpaceTechLeads(
 }
 
 /** Shows campaign leads with independent filters and sorting for all requested columns. */
-const SpaceTechSubmissions: FC<{ report: FormReport }> = props => {
+const SpaceTechSubmissions: FC<{ report: FormReport; includeActivity?: boolean }> = props => {
+    const columns = spaceTechColumns.map(([key, label]) => [
+        key, key === 'submitted_at' && props.includeActivity ? 'Date Submitted / Started' : label,
+    ])
     const [filters, setFilters] = useState<Record<string, string>>({})
     const [sort, setSort] = useState('submitted_at')
     const [descending, setDescending] = useState(true)
     const [page, setPage] = useState(0)
     const rows = useMemo(
         () => {
-            const submitted = props.report.data.map(row => ({ ...row, form_status: 'Submitted' }))
+            const submitted = props.report.data.map(row => ({ ...row, form_status: row.form_status || 'Submitted' }))
             return selectSpaceTechLeads(submitted, filters, sort, descending)
         },
         [props.report, filters, sort, descending],
@@ -56,9 +59,7 @@ const SpaceTechSubmissions: FC<{ report: FormReport }> = props => {
     const pageCount = Math.max(1, Math.ceil(rows.length / 25))
     return (
         <div className={styles.leadTable}>
-            <p>
-                Lead details are saved on submission. Starts and incomplete visits are counted in aggregate analytics.
-            </p>
+            {!props.includeActivity && <p>Lead details are saved on submission.</p>}
             <p role='status'>{`${rows.length} matching leads of ${props.report.data.length}`}</p>
             <button className={styles.clearColumnFilters} type='button' onClick={() => { setFilters({}); setPage(0) }}>
                 Clear column filters
@@ -69,7 +70,7 @@ const SpaceTechSubmissions: FC<{ report: FormReport }> = props => {
                 <table>
                     <thead>
                         <tr>
-                            {spaceTechColumns.map(([key, label]) => (
+                            {columns.map(([key, label]) => (
                                 <th
                                     key={key}
                                     scope='col'
@@ -93,7 +94,7 @@ const SpaceTechSubmissions: FC<{ report: FormReport }> = props => {
                             ))}
                         </tr>
                         <tr className={styles.columnFilters}>
-                            {spaceTechColumns.map(([key, label]) => (
+                            {columns.map(([key, label]) => (
                                 <td key={key}>
                                     <input
                                         aria-label={`Filter ${label}`}
@@ -112,7 +113,7 @@ const SpaceTechSubmissions: FC<{ report: FormReport }> = props => {
                         {rows.slice(page * 25, (page + 1) * 25)
                             .map(row => (
                                 <tr key={String(row.submission_id)}>
-                                    {spaceTechColumns.map(([key]) => (
+                                    {columns.map(([key]) => (
                                         <td key={key}>{leadCellText(key, formatFormValue(row[key]))}</td>
                                     ))}
                                 </tr>
