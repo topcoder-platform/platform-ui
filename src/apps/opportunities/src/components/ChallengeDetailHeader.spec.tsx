@@ -5,7 +5,7 @@ import '@testing-library/jest-dom'
 import { fireEvent, render, RenderResult, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-import { ChallengeOpportunity } from '../models'
+import { ChallengeOpportunity, ChallengePrize } from '../models'
 
 import { ChallengeDetailHeader } from './ChallengeDetailHeader'
 
@@ -1143,5 +1143,111 @@ describe('ChallengeDetailHeader actions and presentation', () => {
         expect(within(screen.getByRole('region', { name: 'Challenge timeline' }))
             .getByText('Iterative Review'))
             .toBeInTheDocument()
+    })
+})
+
+describe('ChallengeDetailHeader placement prizes beyond tenth place', () => {
+    function renderPrizes(prizes: ChallengePrize[]): void {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({ prizeSets: [{ prizes, type: 'PLACEMENT' }] })}
+                    isRegistered
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+    }
+
+    it.each(['POINT', 'USD'])('renders all eighteen distinct %s prizes with their placements', type => {
+        renderPrizes(Array.from({ length: 18 }, (_, index) => ({ type, value: 1800 - index * 50 })))
+
+        for (let placement = 1; placement <= 18; placement += 1) {
+            const medal = screen.getByRole('img', { name: `${placement} place` })
+            const amount = (1850 - placement * 50).toLocaleString('en-US')
+            expect(medal.closest('strong'))
+                .toHaveTextContent(type === 'USD' ? `$${amount}` : `${amount} pts`)
+        }
+
+        expect(screen.getByRole('group', { name: 'Additional placement prizes' }).children)
+            .toHaveLength(15)
+        expect(screen.getByText('Prizes')
+            .closest('aside'))
+            .toHaveClass('expandedPrizeCard')
+        expect(screen.getByRole('button', { name: 'Submit a solution' }))
+            .toBeEnabled()
+    })
+
+    it('renders the Figma fourth-through-eighteenth range while keeping podium prizes separate', () => {
+        renderPrizes(Array.from({ length: 18 }, (_, index) => ({
+            type: 'POINT',
+            value: [5000, 4000, 3000][index] ?? 1000,
+        })))
+
+        const additional = screen.getByRole('group', { name: 'Additional placement prizes' })
+        expect(additional.children)
+            .toHaveLength(1)
+        expect(within(additional)
+            .getByText('1,000 pts'))
+            .toContainElement(screen.getByRole('img', { name: '4 place' }))
+        expect(within(additional)
+            .getByText('1,000 pts'))
+            .toContainElement(screen.getByRole('img', { name: '18 place' }))
+        expect(within(additional)
+            .getByRole('img', { name: 'through' }))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('img', { name: '5 place' })).not.toBeInTheDocument()
+        expect(screen.getByText('Prizes')
+            .closest('aside')).not.toHaveClass('expandedPrizeCard')
+    })
+
+    it('keeps the top three medals separate even when all rewards match, without imposing another prize limit', () => {
+        renderPrizes(Array.from({ length: 25 }, () => ({ type: 'USD', value: 100 })))
+
+        expect(screen.getAllByText('$100'))
+            .toHaveLength(4)
+        for (const placement of [1, 2, 3, 4, 25]) {
+            expect(screen.getByRole('img', { name: `${placement} place` }))
+                .toBeInTheDocument()
+        }
+    })
+
+    it('never groups across missing placements, different reward types, or intervening amounts', () => {
+        renderPrizes([
+            { value: 500 }, { value: 400 }, { value: 300 },
+            { type: 'USD', value: 100 }, { type: 'POINT', value: 100 },
+            { type: 'POINTS', value: 100 }, { type: 'POINT', value: -1 },
+            { type: 'POINT', value: 100 }, { type: 'POINT', value: 50 },
+            { type: 'POINT', value: 100 },
+        ])
+
+        const additional = screen.getByRole('group', { name: 'Additional placement prizes' })
+        expect(additional.children)
+            .toHaveLength(5)
+        expect(screen.getByRole('img', { name: '5 place' })
+            .closest('strong'))
+            .toContainElement(screen.getByRole('img', { name: '6 place' }))
+        expect(screen.queryByRole('img', { name: '7 place' })).not.toBeInTheDocument()
+        expect(screen.getByRole('img', { name: '8 place' })
+            .closest('strong'))
+            .not.toContainElement(screen.getByRole('img', { name: '10 place' }))
+    })
+
+    it('preserves original placement numbers when earlier prize values are invalid', () => {
+        renderPrizes([
+            { value: -1 }, { value: 400 }, { value: 300 },
+            { value: 200 }, { value: 100 }, { value: 100 },
+        ])
+
+        expect(screen.queryByRole('img', { name: '1 place' })).not.toBeInTheDocument()
+        const additional = screen.getByRole('group', { name: 'Additional placement prizes' })
+        expect(additional)
+            .toContainElement(screen.getByRole('img', { name: '4 place' }))
+        expect(screen.getByRole('img', { name: '5 place' })
+            .closest('strong'))
+            .toContainElement(screen.getByRole('img', { name: '6 place' }))
     })
 })
