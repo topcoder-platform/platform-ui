@@ -26,7 +26,10 @@ import medal7 from '../assets/medal-7.svg'
 import medal8 from '../assets/medal-8.svg'
 import medal9 from '../assets/medal-9.svg'
 import prizeMedal2 from '../assets/prize-medal-2.svg'
-import prizeMedal3 from '../assets/prize-medal-3.svg'
+import prizeMedal3 from '../assets/detail-prize-medal-3.svg'
+import prizeMedalDisc from '../assets/prize-medal-disc.svg'
+import prizeMedalRibbon from '../assets/prize-medal-ribbon.svg'
+import prizeRangeSeparator from '../assets/prize-range-separator.svg'
 import taskTypeIcon from '../assets/task-type.svg'
 import timelineAiScreeningIcon from '../assets/timeline-ai-screening.svg'
 import timelineAppealsIcon from '../assets/timeline-appeals.svg'
@@ -85,6 +88,51 @@ interface ChallengePhaseSummary {
 interface IndexedChallengePhase {
     index: number
     item: ChallengePhase
+}
+
+const medalAssets = [medal1, prizeMedal2, prizeMedal3, medal4, medal5, medal6, medal7, medal8, medal9, medal10]
+
+interface PlacementPrizeRange extends ChallengePlacementPrize {
+    endPlacement: number
+}
+
+/** Groups consecutive lower placements only when their amounts and reward types match. */
+function groupAdditionalPrizes(prizes: ChallengePlacementPrize[]): PlacementPrizeRange[] {
+    const ranges: PlacementPrizeRange[] = []
+    const rewardType = (type?: string): string => {
+        const normalized = type?.trim()
+            .toUpperCase() || 'USD'
+        return normalized === 'POINT' ? 'POINTS' : normalized
+    }
+
+    prizes.filter(prize => prize.placement > 3)
+        .forEach(prize => {
+            const previous = ranges[ranges.length - 1]
+            if (previous && previous.endPlacement + 1 === prize.placement
+            && previous.value === prize.value && rewardType(previous.type) === rewardType(prize.type)) {
+                previous.endPlacement = prize.placement
+            } else {
+                ranges.push({ ...prize, endPlacement: prize.placement })
+            }
+        })
+
+    return ranges
+}
+
+/** Uses the Figma medal artwork at its native size, with dynamic numbers beyond tenth place. */
+function placementMedal(placement: number): JSX.Element {
+    const medal = medalAssets[placement - 1]
+    return (
+        <span className={classNames(styles.medal, { [styles.featuredMedal]: placement <= 3 })}>
+            {medal ? <img alt={`${placement} place`} src={medal} /> : (
+                <span aria-label={`${placement} place`} className={styles.numberedMedal} role='img'>
+                    <img alt='' className={styles.medalRibbon} src={prizeMedalRibbon} />
+                    <img alt='' className={styles.medalDisc} src={prizeMedalDisc} />
+                    <span className={styles.medalNumber}>{placement}</span>
+                </span>
+            )}
+        </span>
+    )
 }
 
 /** Returns a catalog name from either v5-compatible or v6 challenge data. */
@@ -505,20 +553,8 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
         && !registrationUnavailable
         && !props.busy
     const canSubmit = props.isRegistered && submissionOpen && !registrationUnavailable && !props.busy
-    const medalAssets = [
-        medal1,
-        prizeMedal2,
-        prizeMedal3,
-        medal4,
-        medal5,
-        medal6,
-        medal7,
-        medal8,
-        medal9,
-        medal10,
-    ]
-    const featuredPrizes = challengePrizes.slice(0, 3)
-    const additionalPrizes = challengePrizes.slice(3, medalAssets.length)
+    const featuredPrizes = challengePrizes.filter(prize => prize.placement <= 3)
+    const additionalPrizes = groupAdditionalPrizes(challengePrizes)
     const featuredPrizeLabels = featuredPrizes.map(prize => formatPrize(prize))
     const compactFeaturedPrizes = featuredPrizes.some((prize, index) => {
         const prizeType = prize.type?.trim()
@@ -609,7 +645,12 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                             </button>
                         </div>
                     </div>
-                    <aside className={styles.actionCard}>
+                    <aside className={classNames(styles.actionCard, {
+                        [styles.manyPrizeCard]: !props.challenge.funChallenge
+                            && challengePrizes.some(prize => prize.placement > 10),
+                        [styles.expandedPrizeCard]: !props.challenge.funChallenge && additionalPrizes.length > 7,
+                    })}
+                    >
                         <div className={styles.prizeFrame}>
                             <small className={styles.prizeTitle}>Prizes</small>
                             <div className={styles.prizes}>
@@ -627,21 +668,18 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                                     [styles.denseFeaturedPrizes]: denseFeaturedPrizes,
                                                 })}
                                                 >
-                                                    {featuredPrizes.map((prize, index) => {
-                                                        const medal = medalAssets[prize.placement - 1]
-                                                        return (
-                                                            <strong
-                                                                className={classNames({
-                                                                    [styles.compactPrize]: compactFeaturedPrizes,
-                                                                    [styles.densePrize]: denseFeaturedPrizes,
-                                                                })}
-                                                                key={`placement-${prize.placement}`}
-                                                            >
-                                                                <img alt={`${prize.placement} place`} src={medal} />
-                                                                {featuredPrizeLabels[index]}
-                                                            </strong>
-                                                        )
-                                                    })}
+                                                    {featuredPrizes.map((prize, index) => (
+                                                        <strong
+                                                            className={classNames({
+                                                                [styles.compactPrize]: compactFeaturedPrizes,
+                                                                [styles.densePrize]: denseFeaturedPrizes,
+                                                            })}
+                                                            key={`placement-${prize.placement}`}
+                                                        >
+                                                            {placementMedal(prize.placement)}
+                                                            {featuredPrizeLabels[index]}
+                                                        </strong>
+                                                    ))}
                                                 </div>
                                                 {additionalPrizes.length > 0 && (
                                                     <div
@@ -649,18 +687,25 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                                         className={styles.additionalPrizes}
                                                         role='group'
                                                     >
-                                                        {additionalPrizes.map(prize => {
-                                                            const medal = medalAssets[prize.placement - 1]
-                                                            return (
-                                                                <strong
-                                                                    className={styles.secondaryPrize}
-                                                                    key={`placement-${prize.placement}`}
-                                                                >
-                                                                    <img alt={`${prize.placement} place`} src={medal} />
-                                                                    {formatPrize(prize)}
-                                                                </strong>
-                                                            )
-                                                        })}
+                                                        {additionalPrizes.map(prize => (
+                                                            <strong
+                                                                className={styles.secondaryPrize}
+                                                                key={`placement-${prize.placement}`}
+                                                            >
+                                                                {placementMedal(prize.placement)}
+                                                                {prize.endPlacement > prize.placement && (
+                                                                    <>
+                                                                        <img
+                                                                            alt='through'
+                                                                            className={styles.prizeRangeSeparator}
+                                                                            src={prizeRangeSeparator}
+                                                                        />
+                                                                        {placementMedal(prize.endPlacement)}
+                                                                    </>
+                                                                )}
+                                                                {formatPrize(prize)}
+                                                            </strong>
+                                                        ))}
                                                     </div>
                                                 )}
                                             </>
