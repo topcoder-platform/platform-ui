@@ -1,6 +1,7 @@
 import { EnvironmentConfig } from '~/config'
 import { getSafeCmsLink } from '~/libs/cms'
 
+import { challengeCatalogKey } from '../components/challenge-card.utils'
 import {
     ChallengeMetadata,
     ChallengeOpportunity,
@@ -152,8 +153,8 @@ export function challengeMetadataValue(
 /**
  * Resolves whether a challenge accepts a URL or the standard ZIP archive.
  *
- * TopGear challenges always use the URL flow, identified by the community host
- * or configured challenge group. Other challenges opt in through Work Manager's
+ * The Topgear Task type, community host, or configured challenge group selects
+ * the URL flow. Other challenges opt in through Work Manager's
  * `submission_type=url` metadata; all other values retain the ZIP flow.
  *
  * @param challenge raw Challenge API detail response.
@@ -161,7 +162,7 @@ export function challengeMetadataValue(
  * @throws Does not throw.
  */
 export function challengeSubmissionMode(challenge: ChallengeOpportunity): ChallengeSubmissionMode {
-    if (isTopgearChallenge(challenge)) return 'url'
+    if (challengeCatalogKey(challenge.type) === 'topgeartask' || isTopgearChallenge(challenge)) return 'url'
 
     const value = challengeMetadataValue(challenge.metadata, 'submission_type')
     return typeof value === 'string' && value.trim()

@@ -91,10 +91,13 @@ describe('Topgear submissions from the My Submissions deep link', () => {
         { groups: ['topgear-group'], metadata: undefined, subdomain: 'www' },
         { groups: [], metadata: [{ name: 'submission_type', value: 'zip' }], subdomain: 'topgear' },
         { groups: ['topgear-group'], metadata: [{ name: 'submission_type', value: 'zip' }], subdomain: 'www' },
-    ])('submits a URL for a Topgear challenge: %j', async ({ groups, metadata, subdomain }: {
+        { groups: ['another-group'], metadata: undefined, subdomain: 'www', type: { name: 'Topgear Task' } },
+        { groups: [], metadata: [{ name: 'submission_type', value: 'zip' }], subdomain: 'www', type: 'Topgear Task' },
+    ])('submits a URL for a Topgear challenge: %j', async ({ groups, metadata, subdomain, type = 'Challenge' }: {
         groups: string[]
         metadata: ChallengeOpportunity['metadata']
         subdomain: string
+        type?: ChallengeOpportunity['type']
     }) => {
         mockSubdomain = subdomain
         mockGetChallenge.mockResolvedValue({
@@ -106,7 +109,7 @@ describe('Topgear submissions from the My Submissions deep link', () => {
             phases: [{ isOpen: true, name: 'Submission' }],
             status: 'ACTIVE',
             track: 'Development',
-            type: 'Challenge',
+            type,
         })
 
         render(
@@ -131,6 +134,7 @@ describe('Topgear submissions from the My Submissions deep link', () => {
             .toHaveAttribute('href', 'https://topgear.topcoder-dev.com/challenges/terms/detail/topgear-terms')
         fireEvent.change(urlInput, { target: { value: 'https://wipro365.sharepoint.com/sites/project/deliverable' } })
         fireEvent.click(screen.getByRole('button', { name: 'Set URL' }))
+        fireEvent.click(screen.getByRole('radio', { name: 'No' }))
         fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
         fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
 
@@ -141,6 +145,7 @@ describe('Topgear submissions from the My Submissions deep link', () => {
                 'CONTEST_SUBMISSION',
                 'https://wipro365.sharepoint.com/sites/project/deliverable',
                 expect.any(AbortSignal),
+                false,
             ))
         expect(createChallengeSubmission).not.toHaveBeenCalled()
         expect(await screen.findByText('url-submission-id'))
