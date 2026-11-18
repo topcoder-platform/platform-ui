@@ -748,10 +748,10 @@ challenge track, while authored external-URL rows omit that file action. The
 browser requests a short-lived URL from
 `GET /v6/submissions/:submissionId/download-url` instead of using submission
 list URLs; Review API remains authoritative for access and signs only clean
-storage, so pending DMZ and quarantined files cannot be downloaded. TopGear
-challenges use the URL experience whenever the app is served on the TopGear host
-or the challenge belongs to the configured TopGear group, including when opened
-through `?tab=mine`. This takes precedence over missing or ZIP submission metadata.
+storage, so pending DMZ and quarantined files cannot be downloaded. Challenges with
+the `Topgear Task` type use the URL experience on every host, including when opened
+through `?tab=mine`. The TopGear host and the configured TopGear group also select
+the URL experience. These rules take precedence over ZIP submission metadata.
 For other challenges, Work Manager's case-insensitive `submission_type=url`
 metadata selects the URL experience; every other value, including missing or
 malformed metadata, retains the standard ZIP experience. URL submissions
