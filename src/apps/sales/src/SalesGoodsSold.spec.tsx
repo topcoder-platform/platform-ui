@@ -152,3 +152,29 @@ it('shows an empty filtered result and does not substitute payments for missing 
     expect(await screen.findByText('No customer data matches these filters.'))
         .toBeInTheDocument()
 })
+
+it('rejects ranges beyond the API limit without refetching', () => {
+    render(<SalesGoodsSold source={source} portal='reports' refreshKey={0} period='Monthly' />)
+    fireEvent.change(screen.getByLabelText('From date'), { target: { value: '2025-01-01' } })
+    fireEvent.change(screen.getByLabelText('To date'), { target: { value: '2027-02-01' } })
+    apply()
+    expect(screen.getByRole('alert'))
+        .toHaveTextContent('Choose a range of no more than 24 months.')
+    expect(fetchDashboard)
+        .not.toHaveBeenCalled()
+})
+
+it('distinguishes repeated quarters when the date range spans fiscal years', () => {
+    const data = {
+        ...response,
+        customerPayments: {
+            ...response.customerPayments!,
+            months: [{ month: '2026-04-01', values: { a: 100 } }, { month: '2027-04-01', values: { a: 200 } }],
+        },
+    }
+    render(<SalesGoodsSold source={{ ...source, data }} portal='reports' refreshKey={0} period='Quarterly' />)
+    expect(screen.getByRole('columnheader', { name: 'Q1 2026' }))
+        .toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Q1 2027' }))
+        .toBeInTheDocument()
+})

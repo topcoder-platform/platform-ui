@@ -50,6 +50,12 @@ const SalesGoodsSold: FC<{
             return
         }
 
+        const days = (Date.parse(`${endDate}T00:00:00Z`) - Date.parse(`${startDate}T00:00:00Z`)) / 86400000 + 1
+        if (days > 732) {
+            setValidationError('Choose a range of no more than 24 months.')
+            return
+        }
+
         setValidationError('')
         setFilters({ endDate, offeringType, startDate })
     }

@@ -500,20 +500,16 @@ Changing measures does not refetch. Missing booking-cost data is shown explicitl
 instead of substituting the member-payment matrix. Failed filtered requests have
 an independent retry and superseded requests are cancelled.
 
-**API dependency — required before enabling this change:** the current
-reports-api-v6 development payments endpoint does not yet implement offering
-filters or return booking costs. Its companion change must:
+The companion PM-6783 Reports API change supplies `filterOptions.offeringType`
+and `customerBookingCosts`. It resolves offerings by billing-account ID through
+the linked Salesforce Opportunity, then applies the selection before payment
+aggregation. ALL includes unknown/unmapped offerings; Unknown can also be
+selected explicitly. Missing fees remain unknown, with a source notice; totals
+include known amounts only. The API retains portal scope and existing payment
+version/status rules.
 
-- Apply repeated `offeringType` parameters with OR semantics to payment events,
-  before customer aggregation, preserving the existing portal/customer scope,
-  latest-version and cancelled-payment rules.
-- Return `filterOptions.offeringType` for the available payment offerings; omit
-  the parameter for ALL, including unknown/unmapped offerings.
-- Return `customerBookingCosts` in the same `MonthlySalesChart` shape as
-  `customerPayments`, adding each payment's challenge fee once, preserving
-  negative adjustments and distinguishing unavailable values from zero.
-- Apply the existing half-open date range to both matrices at payment-event
-  precision, including partial months.
-
-Do not deploy the UI ahead of that API change. The UI tests use the proposed
-response contract; they do not establish that the current API supplies it.
+Deploy the companion Reports API change before this UI. Existing Salesforce
+credentials and read permissions must allow the billing-account/Opportunity
+lookup. A source failure is shown beside this report; selected offerings are
+never silently ignored. The date range is limited to 24 months, matching the API.
+Repeated quarter labels include the calendar year when a range spans fiscal years.

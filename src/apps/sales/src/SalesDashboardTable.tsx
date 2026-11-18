@@ -14,11 +14,14 @@ const SalesDashboardTable: FC<{
 }> = props => {
     const chart = props.chart
     const [sort, setSort] = useState({ ascending: true, column: 'label' })
+    const periodLabels = chart.months.map(month => salesPeriodLabel(month.month, props.period ?? 'Monthly'))
+    const repeatedLabels = new Set(periodLabels).size < periodLabels.length
     const columns = [
         { key: 'label', label: props.firstColumn ?? 'Field' },
         { key: 'annual', label: props.totalLabel ?? 'Annual' },
-        ...chart.months.map(month => ({
-            key: month.month, label: salesPeriodLabel(month.month, props.period ?? 'Monthly'),
+        ...chart.months.map((month, index) => ({
+            key: month.month,
+            label: repeatedLabels ? `${periodLabels[index]} ${month.month.slice(0, 4)}` : periodLabels[index],
         })),
     ]
     const active = columns.some(column => column.key === sort.column) ? sort : { ascending: true, column: 'label' }
