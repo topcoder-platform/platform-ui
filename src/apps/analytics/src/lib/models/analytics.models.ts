@@ -284,6 +284,7 @@ export interface SpaceTechReport {
     /** Optional during rollout against an older API; never substitute misleading zeroes. */
     personas?: (SpaceTechMetrics & { persona: SpaceTechPersona })[]
     personaSeries?: ({ date: string } & Record<SpaceTechPersona, SpaceTechMetrics>)[]
+    dailyPersonaSeries?: ({ date: string } & Record<SpaceTechPersona, SpaceTechMetrics>)[]
     campaigns: SpaceTechGroup[]
     countries: SpaceTechGroup[]
     devices: SpaceTechGroup[]

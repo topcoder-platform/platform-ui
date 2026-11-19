@@ -206,6 +206,7 @@ class AnalyticsHandlerTests(unittest.TestCase):
         report = json.loads(response["body"])
         self.assertEqual(len(report["personas"]), 4)
         self.assertEqual(len(report["personaSeries"]), 54)
+        self.assertEqual(len(report["dailyPersonaSeries"]), 366)
         for week in report["personaSeries"]:
             for persona in ("topcoder", "george", "anita", "tony"):
                 self.assertEqual(week[persona]["submissionRate"], 0)

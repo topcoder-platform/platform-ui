@@ -23,7 +23,8 @@ strict dates, bounded UTM/surface tokens, and an exact query-free path. SQL is s
 API named parameters; callers cannot provide SQL, object names, sort clauses,
 or result limits.
 
-Reports are limited to 366 inclusive days and 2,000 decoded rows. Query waits
+Reports are limited to 366 inclusive days and 2,000 decoded rows, with an additional
+allowance of four rows per selected day for SpaceTech’s daily source metrics. Query waits
 leave time for a sanitized response. A failed or aborted statement is retried
 once within the same deadline. Clients can opt into resumable requests with
 `async=true`. If Redshift Serverless needs longer than one HTTP request, the API
@@ -282,7 +283,7 @@ is not a promise that the visitor is still online. Simultaneous tabs cannot be
 unambiguously distinguished without a future per-form-instance tracking ID.
 
 Activity follows warehouse ingestion, while submitted lead details remain
-immediate. The existing 2,000-row response limit still fails explicitly rather
+immediate. The response row limit still fails explicitly rather
 than silently truncating activity. Historical FAQ opens and form-section exposure
 cannot be reconstructed without the corresponding website instrumentation.
 
@@ -292,8 +293,8 @@ procedure in place until no deployment uses them. No data deletion is needed.
 
 ### SpaceTech source dashboard (PM-6775)
 
-The same endpoint now adds `personas` (full-period totals) and `personaSeries`
-(weekly metrics), both for Topcoder, George, Anita and Tony. The persona is the
+The endpoint returns `personas` (full-period totals), `dailyPersonaSeries` (daily metrics),
+and `personaSeries` (weekly metrics) for Topcoder, George, Anita and Tony. The persona is the
 fourth underscore-delimited token in `customer_spacetech_[period]_[persona]_…`,
 matched case-insensitively from **utm_campaign only**. Source, medium and content
 never assign a persona. Unknown names and unattributed traffic remain in the
@@ -305,9 +306,8 @@ multiple sources. Rates use aggregate numerators/denominators, never sums or
 averages of daily/campaign rates. Submissions/visitors can exceed 100%; zero
 denominators yield zero. Weekly buckets start Monday at 00:00 UTC, and first/last
 weeks include only events inside the requested inclusive dates. Quiet weeks and
-missing sources are zero-filled. At the maximum 366-day range, the new SQL adds
-at most 220 aggregate rows (four totals plus four × 54 weeks), retaining the
-existing 2,000-row result limit and bounded polling protocol.
+missing sources are zero-filled. Daily buckets follow the same attribution and date filters. The SpaceTech query
+allows four extra rows per selected day, up to 1,464 extra rows for a 366-day range.
 
 Deploy the updated `handler.py` to the existing development analytics Lambda
 using a versioned S3 zip and the stack's `CodeKey` parameter. No warehouse DDL,

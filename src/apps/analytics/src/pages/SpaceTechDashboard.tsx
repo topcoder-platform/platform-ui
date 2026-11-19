@@ -28,18 +28,18 @@ function formatMetric(key: keyof SpaceTechMetrics, value: number): string {
     return formatAnalyticsInteger(value)
 }
 
-/** Compare campaign personas using independently aggregated weekly and period totals. */
+/** Compare campaign personas using daily activity and independently aggregated period totals. */
 export const SpaceTechDashboard: FC<{ report: SpaceTechReport }> = props => {
     const report = props.report
     const [metric, setMetric] = useState<keyof SpaceTechMetrics>('pageViews')
     const label = spaceTechMetrics.find(([key]) => key === metric)?.[1] ?? 'Page views'
     const decimalMetric = metric === 'submissionRate' || metric === 'averageEngagementSeconds'
-    const points = report.personaSeries?.map(week => ({
-        date: week.date < report.filters.from ? report.filters.from : week.date,
-        ...Object.fromEntries(personas.map(persona => [persona.key, week[persona.key][metric]])),
+    const points = report.dailyPersonaSeries?.map(day => ({
+        date: day.date,
+        ...Object.fromEntries(personas.map(persona => [persona.key, day[persona.key][metric]])),
     })) ?? []
 
-    if (!report.personas || !report.personaSeries) {
+    if (!report.personas) {
         return <p role='status'>Source dashboard data is unavailable. Apply filters to retry or view Details.</p>
     }
 
@@ -49,7 +49,7 @@ export const SpaceTechDashboard: FC<{ report: SpaceTechReport }> = props => {
                 <div className={styles.panelHeader}>
                     <div>
                         <h2>Performance over time</h2>
-                        <p>Compare all four sources by week. Partial weeks include only the selected dates.</p>
+                        <p>Bars show daily values. Each line shows the seven-day moving average for its source.</p>
                     </div>
                     <label className={styles.metricSelect}>
                         <span>Metric</span>
@@ -61,15 +61,18 @@ export const SpaceTechDashboard: FC<{ report: SpaceTechReport }> = props => {
                         </select>
                     </label>
                 </div>
-                <TimeSeriesChart
-                    ariaLabel={`Weekly SpaceTech ${label.toLowerCase()} by source`}
-                    points={points}
-                    series={[...personas]}
-                    valueDecimals={decimalMetric ? 2 : 0}
-                    valueSuffix={metric === 'submissionRate' ? '%' : ''}
-                    xAxisTitle='Week starting (UTC)'
-                    yAxisTitle={label}
-                />
+                {report.dailyPersonaSeries ? (
+                    <TimeSeriesChart
+                        ariaLabel={`Daily SpaceTech ${label.toLowerCase()} by source`}
+                        points={points}
+                        series={[...personas]}
+                        variant='column-trend'
+                        valueDecimals={decimalMetric ? 2 : 0}
+                        valueSuffix={metric === 'submissionRate' ? '%' : ''}
+                        xAxisTitle='Date (UTC)'
+                        yAxisTitle={label}
+                    />
+                ) : <p role='status'>Daily source data is unavailable. Apply filters to retry.</p>}
             </section>
             <section className={styles.panel}>
                 <div className={styles.panelHeader}>

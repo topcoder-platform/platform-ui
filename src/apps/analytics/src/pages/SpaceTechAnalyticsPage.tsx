@@ -204,10 +204,15 @@ export const SpaceTechAnalyticsPage: FC = () => {
                                     Engagement counts foreground time only.
                                     Apply filters to fetch the latest report.
                                 </p>
+                                <p>
+                                    Bars show daily visitors and submissions. Lines show seven-day moving averages.
+                                </p>
                                 <TimeSeriesChart
                                     ariaLabel='Daily SpaceTech visitors and submissions'
                                     points={report.data.series}
                                     series={series}
+                                    variant='column-trend'
+                                    xAxisTitle='Date (UTC)'
                                 />
                                 <Breakdown
                                     title='Campaign attribution'

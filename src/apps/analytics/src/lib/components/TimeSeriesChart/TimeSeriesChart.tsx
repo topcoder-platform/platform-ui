@@ -1,4 +1,4 @@
-/** Reusable accessible line chart for daily analytics series. */
+/** Accessible time series chart for analytics reports. */
 /* eslint-disable ordered-imports/ordered-imports */
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
@@ -18,7 +18,7 @@ interface TimeSeriesChartProps {
     ariaLabel: string
     points: object[]
     series: TimeSeriesDefinition[]
-    variant?: 'area' | 'line'
+    variant?: 'area' | 'line' | 'column-trend'
     valueDecimals?: number
     valueSuffix?: string
     xAxisTitle?: string
@@ -38,22 +38,65 @@ function pointValue(point: object, key: string): number {
     return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
 
+/** Average up to seven consecutive UTC days from the selected range, including quiet days. */
+function sevenDayAverage(values: number[]): number[] {
+    return values.map((_, index) => {
+        const window = values.slice(Math.max(0, index - 6), index + 1)
+        const average = window.reduce((total, value) => total + value, 0) / window.length
+        return Number(average.toFixed(2))
+    })
+}
+
 /**
- * Renders a multi-series daily line chart and an equivalent screen-reader table.
+ * Renders daily series and an equivalent screen-reader table.
  *
- * @param props accessible label, normalized points, series definitions, and optional line/area variant.
+ * @param props accessible label, normalized points, series definitions, and chart variant.
  * @returns chart, accessible table, or explicit empty state.
  * @throws Does not throw.
  */
 export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
-    const hasData = props.points.some(point => props.series.some(series => pointValue(point, series.key) > 0))
-    const chartType = props.variant ?? 'line'
+    const chartType = props.variant === 'column-trend' ? 'column' : props.variant ?? 'line'
+    const plottedSeries = useMemo(() => props.series.flatMap(definition => {
+        const data = props.points.map(point => pointValue(point, definition.key))
+        const primary = {
+            color: definition.color,
+            data,
+            id: definition.key,
+            name: definition.label,
+            type: chartType,
+        }
+        if (chartType !== 'column') return [primary]
+        return [
+            {
+                ...primary,
+                color: Highcharts.color(definition.color)
+                    .setOpacity(0.48)
+                    .get('rgba') as string,
+            },
+            {
+                ...primary,
+                data: sevenDayAverage(data),
+                id: `${definition.key}-trend`,
+                linkedTo: definition.key,
+                marker: { enabled: data.length === 1 },
+                name: `${definition.label} (7-day average)`,
+                tooltip: { valueDecimals: 2 },
+                type: 'line' as const,
+                zIndex: 2,
+            },
+        ]
+    }), [chartType, props.points, props.series])
+    const hasData = plottedSeries.some(item => item.data.some(value => value > 0))
     const options = useMemo<Highcharts.Options>(() => ({
         accessibility: { enabled: false },
         chart: {
             animation: false,
             backgroundColor: 'transparent',
             height: 360,
+            // Leave each daily bar room on small screens and long date ranges.
+            scrollablePlotArea: chartType === 'column' ? {
+                minWidth: 80 + props.points.length * (6 * props.series.length + 6),
+            } : undefined,
             spacing: [16, 12, 8, 4],
             type: chartType,
         },
@@ -71,6 +114,7 @@ export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
                 fillOpacity: 0.14,
                 lineWidth: 2,
             },
+            column: { borderWidth: 0, groupPadding: 0.1, pointPadding: 0.05 },
             line: { lineWidth: 3 },
             series: {
                 animation: false,
@@ -78,12 +122,7 @@ export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
                 states: { inactive: { opacity: 1 } },
             },
         },
-        series: props.series.map(series => ({
-            color: series.color,
-            data: props.points.map(point => pointValue(point, series.key)),
-            name: series.label,
-            type: chartType,
-        })) as Highcharts.SeriesOptionsType[],
+        series: plottedSeries as Highcharts.SeriesOptionsType[],
         title: { text: undefined },
         tooltip: {
             headerFormat: '<strong>{point.key}</strong><br/>',
@@ -109,7 +148,7 @@ export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
             title: { text: props.yAxisTitle },
         },
     }), [chartType, props.points, props.series, props.valueDecimals, props.valueSuffix,
-        props.xAxisTitle, props.yAxisTitle])
+        props.xAxisTitle, props.yAxisTitle, plottedSeries])
 
     if (!hasData) {
         return <div className={styles.empty} role='status'>No activity is available for this period.</div>
@@ -124,15 +163,15 @@ export const TimeSeriesChart: FC<TimeSeriesChartProps> = props => {
                     <thead>
                         <tr>
                             <th scope='col'>Date</th>
-                            {props.series.map(series => <th key={series.key} scope='col'>{series.label}</th>)}
+                            {plottedSeries.map(item => <th key={item.id} scope='col'>{item.name}</th>)}
                         </tr>
                     </thead>
                     <tbody>
-                        {props.points.map(point => (
+                        {props.points.map((point, index) => (
                             <tr key={String((point as Record<string, unknown>).date)}>
                                 <th scope='row'>{formatReportDate(String((point as Record<string, unknown>).date))}</th>
-                                {props.series.map(series => (
-                                    <td key={series.key}>{pointValue(point, series.key)}</td>
+                                {plottedSeries.map(item => (
+                                    <td key={item.id}>{item.data[index]}</td>
                                 ))}
                             </tr>
                         ))}

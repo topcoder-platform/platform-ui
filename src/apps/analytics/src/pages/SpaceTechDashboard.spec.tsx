@@ -35,6 +35,10 @@ const report: SpaceTechReport = {
     campaigns: [],
     countries: [],
     ctas: [],
+    dailyPersonaSeries: [
+        { anita: empty, date: '2026-11-05', george, tony: empty, topcoder: empty },
+        { anita: empty, date: '2026-11-06', george: empty, tony: empty, topcoder: empty },
+    ],
     devices: [],
     faqs: [],
     filterOptions: { campaign: [], medium: [], source: [] },
@@ -44,7 +48,6 @@ const report: SpaceTechReport = {
         { ...empty, persona: 'topcoder' }, { ...george, persona: 'george' },
         { ...empty, persona: 'anita' }, { ...empty, persona: 'tony' },
     ],
-    personaSeries: [{ anita: empty, date: '2026-11-02', george, tony: empty, topcoder: empty }],
     series: [],
     totals: george,
 }
@@ -86,7 +89,12 @@ describe('SpaceTech source dashboard', () => {
             fireEvent.change(screen.getByRole('combobox', { name: 'Metric' }), { target: { value: key } })
             const props = (TimeSeriesChart as jest.Mock).mock.calls.slice(-1)[0][0]
             expect(props.points)
-                .toEqual([{ anita: 0, date: '2026-11-05', george: george[key], tony: 0, topcoder: 0 }])
+                .toEqual([
+                    { anita: 0, date: '2026-11-05', george: george[key], tony: 0, topcoder: 0 },
+                    { anita: 0, date: '2026-11-06', george: 0, tony: 0, topcoder: 0 },
+                ])
+            expect(props.variant)
+                .toBe('column-trend')
             expect(props.series.map((item: { label: string }) => item.label))
                 .toEqual(['Topcoder', 'George', 'Anita', 'Tony'])
             expect(props.yAxisTitle)
@@ -113,10 +121,15 @@ describe('SpaceTech source dashboard', () => {
         expect(screen.getByRole('status'))
             .toHaveTextContent('Source dashboard data is unavailable')
         expect(screen.queryByRole('table')).not.toBeInTheDocument()
+        view.rerender(<SpaceTechDashboard report={{ ...report, dailyPersonaSeries: undefined }} />)
+        expect(screen.getByRole('status'))
+            .toHaveTextContent('Daily source data is unavailable')
+        expect(screen.getByRole('table'))
+            .toBeInTheDocument()
         view.rerender(<SpaceTechDashboard report={{
             ...report,
+            dailyPersonaSeries: [],
             personas: report.personas?.map(row => ({ ...row, ...empty })),
-            personaSeries: [],
         }}
         />)
         expect(screen.getByRole('table'))
