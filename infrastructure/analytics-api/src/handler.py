@@ -20,6 +20,7 @@ import boto3
 
 
 MAX_DATE_RANGE_DAYS = 366
+SPACETECH_CAMPAIGN_START = "2026-11-05"
 MAX_RESULT_ROWS = 2_000
 MAX_QUERY_ATTEMPTS = 2
 REPORT_CACHE_SECONDS = 60
@@ -377,7 +378,7 @@ ORDER BY row_type, date_value, metric_1 DESC
 """
 
 
-SPACETECH_SQL = """
+SPACETECH_SQL = f"""
 WITH form_events AS (
     SELECT * FROM topcoder_web.spacetech_form_events_v1
     WHERE event_timestamp >= CAST(:from_date AS timestamp)
@@ -422,11 +423,13 @@ WITH form_events AS (
                   AND LOWER(SPLIT_PART(campaign, '_', 2)) = 'spacetech'
                   AND LOWER(SPLIT_PART(campaign, '_', 4)) IN ('topcoder', 'george', 'anita', 'tony')
              THEN LOWER(SPLIT_PART(campaign, '_', 4)) END AS persona,
+        event_timestamp::date AS event_day,
         DATE_TRUNC('week', event_timestamp)::date AS week_start
     FROM events
 )
 SELECT 'summary'::varchar AS row_type, NULL::varchar AS dimension_1, NULL::varchar AS dimension_2, NULL::varchar AS dimension_3,
-    (SELECT MAX(event_timestamp)::varchar FROM topcoder_web.spacetech_events_mv_v2) AS dimension_4,
+    (SELECT MAX(event_timestamp)::varchar FROM topcoder_web.spacetech_events_mv_v2
+     WHERE event_timestamp >= TIMESTAMP '{SPACETECH_CAMPAIGN_START}') AS dimension_4,
 
     COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
     COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
@@ -464,7 +467,10 @@ SELECT 'campaign'::varchar AS row_type, source AS dimension_1, medium AS dimensi
 FROM events
 GROUP BY 2, 3, 4
 UNION ALL
-SELECT 'persona'::varchar AS row_type, persona AS dimension_1, NULL::varchar AS dimension_2,
+SELECT CASE WHEN GROUPING(event_day) = 0 THEN 'persona_daily'
+            WHEN GROUPING(week_start) = 0 THEN 'persona_weekly'
+            ELSE 'persona' END::varchar AS row_type,
+    persona AS dimension_1, COALESCE(event_day, week_start)::varchar AS dimension_2,
     NULL::varchar AS dimension_3, NULL::varchar AS dimension_4,
     COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
     COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
@@ -475,20 +481,7 @@ SELECT 'persona'::varchar AS row_type, persona AS dimension_1, NULL::varchar AS 
     COUNT(*)::bigint AS events,
     COUNT(DISTINCT analytics_user_id)::bigint AS users
 FROM persona_events WHERE persona IS NOT NULL
-GROUP BY persona
-UNION ALL
-SELECT 'persona_weekly'::varchar AS row_type, persona AS dimension_1, week_start::varchar AS dimension_2,
-    NULL::varchar AS dimension_3, NULL::varchar AS dimension_4,
-    COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
-    COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
-    COUNT(CASE WHEN event_name = 'form_started' THEN 1 END)::bigint AS starts,
-    COUNT(CASE WHEN event_name = 'form_completed' THEN 1 END)::bigint AS submissions,
-    COUNT(DISTINCT CASE WHEN event_name = 'form_section_reached' THEN analytics_user_id END)::bigint AS reached,
-    COALESCE(SUM(CASE WHEN event_name = '_user_engagement' THEN user_engagement_time_msec ELSE 0 END), 0)::bigint AS engagement_ms,
-    COUNT(*)::bigint AS events,
-    COUNT(DISTINCT analytics_user_id)::bigint AS users
-FROM persona_events WHERE persona IS NOT NULL
-GROUP BY persona, week_start
+GROUP BY GROUPING SETS ((persona), (persona, week_start), (persona, event_day))
 UNION ALL
 SELECT 'country'::varchar AS row_type, country AS dimension_1, NULL::varchar AS dimension_2, NULL::varchar AS dimension_3, NULL::varchar AS dimension_4,
 
@@ -941,6 +934,9 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
                 key: _safe_filter(query.get(key), key)
                 for key in ("source", "medium", "campaign", "content")
             }}
+            if filters["to"] < SPACETECH_CAMPAIGN_START:
+                raise ValueError(f"SpaceTech reporting starts on {SPACETECH_CAMPAIGN_START}")
+            filters["from"] = max(filters["from"], SPACETECH_CAMPAIGN_START)
             report = _cached_report(
                 f"spacetech:{json.dumps(filters, sort_keys=True)}",
                 REPORT_CACHE_SECONDS,
@@ -1662,6 +1658,7 @@ def _execute_query(
     context: Any,
     query_token: str | None = None,
     maximum_wait_seconds: float = 24.0,
+    max_result_rows: int = MAX_RESULT_ROWS,
 ) -> list[dict[str, Any]]:
     """Execute a fixed parameterized query with resumable timeout handling.
 
@@ -1670,6 +1667,8 @@ def _execute_query(
         parameters: Validated Data API named parameters.
         context: Lambda context or null for the cached filter loader.
         query_token: Optional server-issued token that resumes a pending statement.
+        maximum_wait_seconds: Upper bound on the query wait.
+        max_result_rows: Upper bound on decoded rows for this report.
 
     Returns:
         Query rows keyed by Redshift column name.
@@ -1706,7 +1705,7 @@ def _execute_query(
             if status["Status"] == "FINISHED":
                 if status.get("HasResultSet") is False:
                     return []
-                return _statement_rows(statement_id)
+                return _statement_rows(statement_id, max_result_rows)
             if status["Status"] in {"FAILED", "ABORTED"}:
                 if attempt + 1 < MAX_QUERY_ATTEMPTS:
                     break
@@ -1798,11 +1797,12 @@ def _query_wait_seconds(context: Any, maximum: float = 24.0) -> float:
     return maximum
 
 
-def _statement_rows(statement_id: str) -> list[dict[str, Any]]:
+def _statement_rows(statement_id: str, max_result_rows: int) -> list[dict[str, Any]]:
     """Page through one Data API result without exceeding the response contract.
 
     Args:
         statement_id: Completed Data API statement identifier.
+        max_result_rows: Upper bound across all pages.
 
     Returns:
         Decoded query rows.
@@ -1821,7 +1821,7 @@ def _statement_rows(statement_id: str) -> list[dict[str, Any]]:
         columns = [column["name"] for column in page.get("ColumnMetadata", [])]
         rows.extend({name: _field_value(field) for name, field in zip(columns, record)}
                     for record in page.get("Records", []))
-        if len(rows) > MAX_RESULT_ROWS:
+        if len(rows) > max_result_rows:
             raise QueryFailure("Analytics query exceeded the result row bound")
         next_token = page.get("NextToken")
         if not next_token:
@@ -2077,7 +2077,11 @@ def _now_iso() -> str:
 
 def _spacetech_report(filters: dict[str, str], context: Any, query_token: str | None = None) -> dict[str, Any]:
     """Return aggregate SpaceTech traffic and form conversions; never expose lead answers or visitor IDs."""
-    rows = _execute_query(SPACETECH_SQL, _sql_parameters(filters), context, query_token)
+    start, end = date.fromisoformat(filters["from"]), date.fromisoformat(filters["to"])
+    personas = ("topcoder", "george", "anita", "tony")
+    days = (end - start).days + 1
+    rows = _execute_query(SPACETECH_SQL, _sql_parameters(filters), context, query_token,
+                          max_result_rows=MAX_RESULT_ROWS + len(personas) * days)
 
     def metrics(row: dict[str, Any]) -> dict[str, Any]:
         """Use visitors as the submission-rate denominator and page views for engaged time."""
@@ -2101,14 +2105,18 @@ def _spacetech_report(filters: dict[str, str], context: Any, query_token: str | 
 
     daily = {row["date"]: row for row in groups("daily", ["date"])}
     # Include quiet campaign days so a two-month chart does not collapse gaps.
-    start, end = date.fromisoformat(filters["from"]), date.fromisoformat(filters["to"])
+    persona_daily = {(row["dimension_2"], row["dimension_1"]): metrics(row)
+                     for row in rows if row["row_type"] == "persona_daily"}
     series = []
-    for offset in range((end - start).days + 1):
+    daily_persona_series = []
+    for offset in range(days):
         day = (start + timedelta(days=offset)).isoformat()
         series.append(daily.get(day, {"date": day, **metrics({})}))
+        daily_persona_series.append({"date": day, **{
+            persona: persona_daily.get((day, persona), metrics({})) for persona in personas
+        }})
     # Compute distinct visitors over each whole persona/period in SQL; never
     # sum daily or campaign-level uniques or average already-calculated rates.
-    personas = ("topcoder", "george", "anita", "tony")
     persona_totals = {row["dimension_1"]: metrics(row)
                       for row in rows if row.get("row_type") == "persona"}
     persona_weekly = {(row["dimension_1"], row["dimension_2"]): metrics(row)
@@ -2137,6 +2145,7 @@ def _spacetech_report(filters: dict[str, str], context: Any, query_token: str | 
         "personas": [{"persona": persona, **persona_totals.get(persona, metrics({}))}
                      for persona in personas],
         "personaSeries": persona_series,
+        "dailyPersonaSeries": daily_persona_series,
         "campaigns": groups("campaign", ["source", "medium", "campaign"]),
         "filterOptions": {
             key: sorted({row["dimension_1"] for row in rows

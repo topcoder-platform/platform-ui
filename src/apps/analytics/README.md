@@ -97,7 +97,8 @@ genuine failure, the explicit retry action is shown.
 
 SpaceTech Analytics reports `/space-tech` traffic, engagement, FAQ opens,
 form-section reach and accepted form submissions with source, medium, campaign
-dropdown filters. It defaults to 90 days and supports the same 366-day limit.
+dropdown filters. Reporting begins on November 5, 2026 (inclusive, UTC). The default covers up to
+90 days since launch, and custom ranges support the same 366-day limit.
 The daily chart compares visitors with form submissions. Lead details appear below
 the aggregates for users with existing Forms reporting permission, with all-column
 sorting/filtering and Submitted, Started and Incomplete statuses. Unfinished attempts
@@ -158,7 +159,7 @@ checks are documented in
 
 ### SpaceTech Dashboard and Details
 
-SpaceTech opens on Dashboard, with a seven-metric selector, weekly line chart
+SpaceTech opens on Dashboard, with a seven-metric selector, daily column chart
 for Topcoder, George, Anita and Tony, and a table of all seven full-period metrics.
 The shared inclusive UTC date and UTM filters apply to both views. Details keeps
 the existing totals, daily chart, attribution/CTA/FAQ/country/device tables and
@@ -166,8 +167,9 @@ permission-gated leads. Tabs support arrow, Home and End keys.
 
 Sources come only from the persona token in `utm_campaign`, following
 `customer_spacetech_[period]_[persona]_…`; they are independent of `utm_source`.
-Unmatched campaigns remain in Details. Weekly buckets start Monday; partial
-weeks respect the selected dates. Distinct visitors and rates are computed by
+Unmatched campaigns remain in Details. The bars show daily values in UTC. Each
+matching line averages the most recent seven daily values in the selected range,
+including zero-activity days. Details uses the same display for visitors and submissions. Distinct visitors and rates are computed by
 the API for each source and period, not combined from displayed campaign rows.
 The frontend preserves decimals for percentage and engagement metrics. An older
 API without the new fields shows an unavailable message instead of false zeros.
