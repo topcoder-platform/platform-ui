@@ -97,7 +97,8 @@ genuine failure, the explicit retry action is shown.
 
 SpaceTech Analytics reports `/space-tech` traffic, engagement, FAQ opens,
 form-section reach and accepted form submissions with source, medium, campaign
-dropdown filters. It defaults to 90 days and supports the same 366-day limit.
+dropdown filters. Reporting begins on November 5, 2026 (inclusive, UTC). The default covers up to
+90 days since launch, and custom ranges support the same 366-day limit.
 The daily chart compares visitors with form submissions. Lead details appear below
 the aggregates for users with existing Forms reporting permission, with all-column
 sorting/filtering and Submitted, Started and Incomplete statuses. Unfinished attempts

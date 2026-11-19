@@ -40,15 +40,21 @@ const report = {
 }
 
 describe('SpaceTech Analytics', () => {
-    beforeEach(() => { jest.clearAllMocks(); (getSpaceTechReport as jest.Mock).mockResolvedValue(report) })
+    beforeEach(() => {
+        jest.useFakeTimers()
+        jest.setSystemTime(new Date('2026-11-19T12:00:00Z'))
+        jest.clearAllMocks();
+        (getSpaceTechReport as jest.Mock).mockResolvedValue(report)
+    })
+    afterEach(() => { jest.useRealTimers() })
 
-    it('loads ninety days and applies every UTM filter together', async () => {
+    it('loads the campaign from launch and applies every UTM filter together', async () => {
         render(<SpaceTechAnalyticsPage />)
         fireEvent.click(screen.getByRole('tab', { name: 'Details' }))
         await screen.findByText('Submissions: 2')
         const initial = (getSpaceTechReport as jest.Mock).mock.calls[0][0]
-        expect((Date.parse(initial.to) - Date.parse(initial.from)) / 86400000)
-            .toBe(89)
+        expect(initial)
+            .toEqual({ from: '2026-11-05', to: '2026-11-19' })
         fireEvent.change(screen.getByLabelText('utm_source'), { target: { value: 'linkedin' } })
         fireEvent.change(screen.getByLabelText('utm_medium'), { target: { value: 'social' } })
         fireEvent.change(screen.getByLabelText('utm_campaign'), { target: { value: 'george' } })
@@ -64,6 +70,32 @@ describe('SpaceTech Analytics', () => {
             .toBeInTheDocument()
         expect(screen.getByText('Submission rate (%): 20'))
             .toBeInTheDocument()
+    })
+
+    it('retains the rolling 90-day default once the campaign is older', async () => {
+        jest.setSystemTime(new Date('2027-03-01T00:00:00Z'))
+        render(<SpaceTechAnalyticsPage />)
+        await screen.findByText(/Latest processed event/)
+        expect(getSpaceTechReport)
+            .toHaveBeenCalledWith({ from: '2026-12-02', to: '2027-03-01' })
+    })
+
+    it('prevents requests for pre-launch dates', async () => {
+        render(<SpaceTechAnalyticsPage />)
+        await screen.findByText(/Latest processed event/)
+        const start = screen.getByLabelText('Start date')
+        expect(start)
+            .toHaveAttribute('min', '2026-11-05')
+        expect(screen.getByLabelText('End date'))
+            .toHaveAttribute('min', '2026-11-05')
+        fireEvent.change(start, { target: { value: '2026-11-04' } })
+        expect(start)
+            .toBeInvalid()
+        fireEvent.submit(start.closest('form') as HTMLFormElement)
+        expect(screen.getByRole('alert'))
+            .toHaveTextContent('Choose a start date on or after November 5, 2026.')
+        expect(getSpaceTechReport)
+            .toHaveBeenCalledTimes(1)
     })
 
     it('clears applied filters and invalid draft dates and reloads the default report', async () => {
@@ -108,8 +140,8 @@ describe('SpaceTech Analytics', () => {
         const retry = await screen.findByRole('button', { name: 'Analytics data could not be loaded. Try again.' })
         fireEvent.click(retry)
         await screen.findByText('Submissions: 2')
-        fireEvent.change(screen.getByLabelText('Start date'), { target: { value: '2026-10-10' } })
-        fireEvent.change(screen.getByLabelText('End date'), { target: { value: '2026-10-01' } })
+        fireEvent.change(screen.getByLabelText('Start date'), { target: { value: '2026-11-10' } })
+        fireEvent.change(screen.getByLabelText('End date'), { target: { value: '2026-11-09' } })
         fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
         expect(screen.getByRole('alert'))
             .toHaveTextContent('The start date must not be after the end date.')

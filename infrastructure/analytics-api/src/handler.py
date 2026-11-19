@@ -20,6 +20,7 @@ import boto3
 
 
 MAX_DATE_RANGE_DAYS = 366
+SPACETECH_CAMPAIGN_START = "2026-11-05"
 MAX_RESULT_ROWS = 2_000
 MAX_QUERY_ATTEMPTS = 2
 REPORT_CACHE_SECONDS = 60
@@ -377,7 +378,7 @@ ORDER BY row_type, date_value, metric_1 DESC
 """
 
 
-SPACETECH_SQL = """
+SPACETECH_SQL = f"""
 WITH form_events AS (
     SELECT * FROM topcoder_web.spacetech_form_events_v1
     WHERE event_timestamp >= CAST(:from_date AS timestamp)
@@ -426,7 +427,8 @@ WITH form_events AS (
     FROM events
 )
 SELECT 'summary'::varchar AS row_type, NULL::varchar AS dimension_1, NULL::varchar AS dimension_2, NULL::varchar AS dimension_3,
-    (SELECT MAX(event_timestamp)::varchar FROM topcoder_web.spacetech_events_mv_v2) AS dimension_4,
+    (SELECT MAX(event_timestamp)::varchar FROM topcoder_web.spacetech_events_mv_v2
+     WHERE event_timestamp >= TIMESTAMP '{SPACETECH_CAMPAIGN_START}') AS dimension_4,
 
     COUNT(CASE WHEN event_name = '_page_view' THEN 1 END)::bigint AS page_views,
     COUNT(DISTINCT CASE WHEN event_name = '_page_view' THEN analytics_user_id END)::bigint AS visitors,
@@ -941,6 +943,9 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
                 key: _safe_filter(query.get(key), key)
                 for key in ("source", "medium", "campaign", "content")
             }}
+            if filters["to"] < SPACETECH_CAMPAIGN_START:
+                raise ValueError(f"SpaceTech reporting starts on {SPACETECH_CAMPAIGN_START}")
+            filters["from"] = max(filters["from"], SPACETECH_CAMPAIGN_START)
             report = _cached_report(
                 f"spacetech:{json.dumps(filters, sort_keys=True)}",
                 REPORT_CACHE_SECONDS,

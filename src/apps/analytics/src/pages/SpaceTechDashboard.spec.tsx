@@ -38,7 +38,7 @@ const report: SpaceTechReport = {
     devices: [],
     faqs: [],
     filterOptions: { campaign: [], medium: [], source: [] },
-    filters: { campaign: '', from: '2026-11-01', medium: '', source: '', to: '2026-11-18' },
+    filters: { campaign: '', from: '2026-11-05', medium: '', source: '', to: '2026-11-18' },
     generatedAt: '2026-11-18',
     personas: [
         { ...empty, persona: 'topcoder' }, { ...george, persona: 'george' },
@@ -86,7 +86,7 @@ describe('SpaceTech source dashboard', () => {
             fireEvent.change(screen.getByRole('combobox', { name: 'Metric' }), { target: { value: key } })
             const props = (TimeSeriesChart as jest.Mock).mock.calls.slice(-1)[0][0]
             expect(props.points)
-                .toEqual([{ anita: 0, date: '2026-11-02', george: george[key], tony: 0, topcoder: 0 }])
+                .toEqual([{ anita: 0, date: '2026-11-05', george: george[key], tony: 0, topcoder: 0 }])
             expect(props.series.map((item: { label: string }) => item.label))
                 .toEqual(['Topcoder', 'George', 'Anita', 'Tony'])
             expect(props.yAxisTitle)

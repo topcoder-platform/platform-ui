@@ -8,6 +8,7 @@ import os
 import sys
 import types
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -119,7 +120,7 @@ class AnalyticsHandlerTests(unittest.TestCase):
         rows = [
             {"row_type": "summary", "page_views": 20, "visitors": 10, "starts": 5,
              "submissions": 2, "reached": 7, "engagement_ms": 100000},
-            {"row_type": "daily", "dimension_1": "2026-09-01", "visitors": 10, "submissions": 2},
+            {"row_type": "daily", "dimension_1": "2026-11-05", "visitors": 10, "submissions": 2},
             {"row_type": "campaign", "dimension_1": "linkedin", "dimension_2": "social",
              "dimension_3": "customer_spacetech_nov26_george", "dimension_4": "post_1",
              "visitors": 10, "submissions": 2},
@@ -128,7 +129,7 @@ class AnalyticsHandlerTests(unittest.TestCase):
             {"row_type": "option_source", "dimension_1": "email"},
             {"row_type": "option_source", "dimension_1": "linkedin"},
         ]
-        query = {"from": "2026-09-01", "to": "2026-09-03", "source": "linkedin", "content": "post_1"}
+        query = {"from": "2026-11-01", "to": "2026-11-07", "source": "linkedin", "content": "post_1"}
         with patch.object(self.module, "_execute_query", return_value=rows) as execute:
             response = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], query), None)
         self.assertEqual(response["statusCode"], 200)
@@ -143,23 +144,26 @@ class AnalyticsHandlerTests(unittest.TestCase):
         self.assertEqual(report["countries"][0]["country"], "")
         self.assertNotIn("analytics_user_id", response["body"])
         params = {item["name"]: item["value"] for item in execute.call_args.args[1]}
+        self.assertEqual(params["from_date"], "2026-11-05")
+        self.assertEqual(report["filters"]["from"], "2026-11-05")
+        self.assertEqual(report["series"][0]["date"], "2026-11-05")
         self.assertEqual(params["source"], "linkedin")
         self.assertEqual(params["content"], "post_1")
         self.assertIn(":content", execute.call_args.args[0])
         self.assertNotIn("linkedin", execute.call_args.args[0])
 
     def test_spacetech_form_activity_excludes_identifiers_and_answers(self) -> None:
-        rows = [{"row_type": kind, "dimension_1": "2026-11-04 12:00:00",
+        rows = [{"row_type": kind, "dimension_1": "2026-11-05 12:00:00",
                  "dimension_2": "linkedin", "dimension_3": "social", "dimension_4": "campaign",
                  "visitor_id": "private", "session_id": "private", "email": "private"}
                 for kind in ("form_started", "form_incomplete")]
         with patch.object(self.module, "_execute_query", return_value=rows):
             response = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], {
-                "from": "2026-11-04", "to": "2026-11-04",
+                "from": "2026-11-05", "to": "2026-11-05",
             }), None)
         activity = json.loads(response["body"])["formActivity"]
         self.assertEqual([row["status"] for row in activity], ["Started", "Incomplete"])
-        self.assertEqual(activity[0], {"startedAt": "2026-11-04T12:00:00.000Z", "source": "linkedin",
+        self.assertEqual(activity[0], {"startedAt": "2026-11-05T12:00:00.000Z", "source": "linkedin",
                                       "medium": "social", "campaign": "campaign", "status": "Started"})
         self.assertNotIn("private", response["body"])
 
@@ -193,9 +197,11 @@ class AnalyticsHandlerTests(unittest.TestCase):
 
     def test_spacetech_empty_personas_cover_maximum_range(self) -> None:
         """All four sources and up to 54 Monday buckets remain bounded for 366 days."""
-        with patch.object(self.module, "_execute_query", return_value=[]):
+        with patch.object(self.module, "datetime", wraps=datetime) as clock, \
+                patch.object(self.module, "_execute_query", return_value=[]):
+            clock.now.return_value = datetime(2027, 11, 8, tzinfo=timezone.utc)
             response = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], {
-                "from": "2025-11-02", "to": "2026-11-02",
+                "from": "2026-11-08", "to": "2027-11-08",
             }), None)
         report = json.loads(response["body"])
         self.assertEqual(len(report["personas"]), 4)
@@ -253,8 +259,13 @@ class AnalyticsHandlerTests(unittest.TestCase):
             }), None)
             self.assertEqual(invalid["statusCode"], 400)
             execute.assert_not_called()
+            before_launch = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], {
+                "to": "2026-11-04",
+            }), None)
+            self.assertEqual(before_launch["statusCode"], 400)
+            execute.assert_not_called()
             response = self.module.handler(self._event("GET /v1/analytics/spacetech", ["analytics"], {
-                "from": "2026-09-01", "to": "2026-09-01",
+                "to": "2026-11-05",
             }), None)
         report = json.loads(response["body"])
         self.assertEqual(report["totals"]["submissionRate"], 0)

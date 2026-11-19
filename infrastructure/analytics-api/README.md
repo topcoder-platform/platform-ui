@@ -171,7 +171,9 @@ parameter remains accepted for API compatibility, but content no longer splits
 campaign rows or appears in the UI. Distinct visitors are recomputed across all
 content values, rather than summing distinct counts. `filterOptions` contains
 available source/medium/campaign values for the date range independently of
-selected UTM filters. The SpaceTech tab defaults to 90 days.
+selected UTM filters. The campaign starts on November 5, 2026 at 00:00 UTC.
+Overlapping requests use that date as their earliest start. Requests ending
+before launch return HTTP 400. The SpaceTech tab defaults to up to 90 days.
 
 The API retains its JWT/analytics-role gate, parameterized queries, 60-second
 cache and resumable-query protocol. `dataThrough` is now the UTC timestamp of

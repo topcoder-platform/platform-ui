@@ -35,7 +35,7 @@ export const SpaceTechDashboard: FC<{ report: SpaceTechReport }> = props => {
     const label = spaceTechMetrics.find(([key]) => key === metric)?.[1] ?? 'Page views'
     const decimalMetric = metric === 'submissionRate' || metric === 'averageEngagementSeconds'
     const points = report.personaSeries?.map(week => ({
-        date: week.date,
+        date: week.date < report.filters.from ? report.filters.from : week.date,
         ...Object.fromEntries(personas.map(persona => [persona.key, week[persona.key][metric]])),
     })) ?? []
 
