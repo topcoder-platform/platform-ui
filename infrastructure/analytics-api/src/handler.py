@@ -426,7 +426,7 @@ WITH form_events AS (
         event_timestamp::date AS event_day,
         DATE_TRUNC('week', event_timestamp)::date AS week_start
     FROM events
-)
+), report_rows AS (
 SELECT 'summary'::varchar AS row_type, NULL::varchar AS dimension_1, NULL::varchar AS dimension_2, NULL::varchar AS dimension_3,
     (SELECT MAX(event_timestamp)::varchar FROM topcoder_web.spacetech_events_mv_v2
      WHERE event_timestamp >= TIMESTAMP '{SPACETECH_CAMPAIGN_START}') AS dimension_4,
@@ -556,6 +556,9 @@ SELECT CASE WHEN abandoned = 1 THEN 'form_incomplete' ELSE 'form_started' END::v
     event_timestamp::varchar, source, medium, campaign,
     0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint, 0::bigint
 FROM form_attempts WHERE completed = 0
+)
+-- Redshift requires the sort outside this UNION ALL with GROUPING SETS.
+SELECT * FROM report_rows
 ORDER BY row_type, dimension_1, dimension_2, dimension_3, dimension_4
 """
 
