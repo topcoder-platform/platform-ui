@@ -14,6 +14,7 @@ import { SpaceTechDashboard, spaceTechMetrics as metrics } from './SpaceTechDash
 import SpaceTechLeads from './SpaceTechLeads'
 import styles from './AnalyticsPages.module.scss'
 
+const campaignStart = '2026-11-05'
 const series = [
     { color: '#2c5de5', key: 'visitors', label: 'Unique visitors' },
     { color: '#137d60', key: 'submissions', label: 'Form submissions' },
@@ -59,14 +60,14 @@ const Breakdown: FC<{ title: string; rows: SpaceTechGroup[]; columns: string[][]
     </section>
 )
 
-/** SpaceTech opens on the last 90 UTC calendar days with all attribution values included. */
+/** SpaceTech opens on up to 90 UTC calendar days of campaign activity. */
 function defaultSpaceTechFilters(): SpaceTechFilters {
     const to = defaultAnalyticsDateRange().to
     const start = new Date(`${to}T00:00:00Z`)
     start.setUTCDate(start.getUTCDate() - 89)
     const from = start.toISOString()
         .slice(0, 10)
-    return { from, to }
+    return { from: from < campaignStart ? campaignStart : from, to }
 }
 
 /** Shows UTM-attributed SpaceTech traffic, engagement, and accepted form submissions. */
@@ -124,12 +125,17 @@ export const SpaceTechAnalyticsPage: FC = () => {
                     </button>
                 ))}
             </div>
-            <p>Traffic and accepted form submissions for /space-tech. Dates are inclusive and use UTC.</p>
+            <p>
+                Traffic and accepted form submissions for /space-tech since November 5, 2026.
+                Dates are inclusive and use UTC.
+            </p>
             <form
                 className={styles.filters}
                 onSubmit={event => {
                     event.preventDefault()
                     const validation = validateAnalyticsDateRange(draft)
+                        || (draft.from < campaignStart
+                            ? 'Choose a start date on or after November 5, 2026.' : undefined)
                     setError(validation)
                     if (!validation) applyFilters(draft)
                 }}
@@ -138,6 +144,7 @@ export const SpaceTechAnalyticsPage: FC = () => {
                     <label key={key}>
                         {key === 'from' ? 'Start date' : 'End date'}
                         <input
+                            min={campaignStart}
                             required
                             type='date'
                             value={draft[key]}
@@ -197,10 +204,15 @@ export const SpaceTechAnalyticsPage: FC = () => {
                                     Engagement counts foreground time only.
                                     Apply filters to fetch the latest report.
                                 </p>
+                                <p>
+                                    Bars show daily visitors and submissions. Lines show seven-day moving averages.
+                                </p>
                                 <TimeSeriesChart
                                     ariaLabel='Daily SpaceTech visitors and submissions'
                                     points={report.data.series}
                                     series={series}
+                                    variant='column-trend'
+                                    xAxisTitle='Date (UTC)'
                                 />
                                 <Breakdown
                                     title='Campaign attribution'
