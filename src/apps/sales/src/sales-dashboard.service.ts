@@ -5,6 +5,7 @@ import { salesFiscalYear } from './sales-fiscal-year'
 
 export type SalesDashboardSection =
     'bookings' | 'pipeline' | 'revenue' | 'revenue-forecast' | 'payments' | 'taas-payments' | 'talent' | 'gross-margin'
+    | 'leads'
 export type SalesDashboardPortal = 'reports' | 'sales'
 export type SalesDashboardPeriod = 'Monthly' | 'Quarterly'
 export type SalesAccountCategory = 'External Revenue' | 'Through Wipro' | 'Wipro Internal'
@@ -74,6 +75,11 @@ export function fetchSalesDashboard(
     groupBy?: SalesDashboardGroupBy,
     customerFilters?: SalesCustomerPaymentFilters,
 ): Promise<SalesDashboardResponse> {
+    if (section === 'leads') {
+        return import('./sales-leads-report.service')
+            .then(service => service.fetchSalesLeadsReport(signal))
+    }
+
     const fiscalYear = salesFiscalYear() - 1
     const params = new URLSearchParams({
         dateBasis,

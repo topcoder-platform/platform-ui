@@ -296,6 +296,12 @@ failure/retry and pending-source states. Refresh reloads every active source; ch
 Close date / Created date reloads bookings and pipeline only. Requests are aborted
 on unmount or control changes.
 
+In Sales, **Leads Report** shows each month's engagement leads by their current
+Work status (New, Under Review, Fulfilled or Lost). The month is the lead's UTC
+creation month. A later status change updates its count in that original month.
+The table includes both Wipro Consumption and Wipro Direct leads from the
+Engagements API and stays monthly when the dashboard switches to Quarterly.
+
 Bookings Won, Bookings in Pipeline and Revenue Closed each have one independent
 **Filter by** dropdown. It selects the dimension shown as stacked chart series and
 table rows: **Offering Type**, **Deal Category** or **Customer Type**.

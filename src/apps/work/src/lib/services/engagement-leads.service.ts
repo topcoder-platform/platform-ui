@@ -49,6 +49,7 @@ function appendFilterParam(
 
 export const fetchEngagementLeads = async (
     filters: EngagementLeadFilters = {},
+    signal: AbortSignal | undefined = undefined,
 ): Promise<EngagementLeadListResponse> => {
     const params = new URLSearchParams()
 
@@ -69,7 +70,7 @@ export const fetchEngagementLeads = async (
     const query = params.toString()
     const url = query ? `${LEADS_URL}?${query}` : LEADS_URL
 
-    const response = await xhrGetAsync<BackendLeadListResponse>(url)
+    const response = await xhrGetAsync<BackendLeadListResponse>(url, undefined, { signal })
 
     return {
         data: response.data || [],
