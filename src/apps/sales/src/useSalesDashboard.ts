@@ -12,6 +12,7 @@ import {
 export const dashboardTitles = {
     bookings: 'Bookings won',
     'gross-margin': 'Gross margin',
+    leads: 'Leads Report',
     payments: 'Member payments',
     pipeline: 'Sales pipeline',
     revenue: 'Revenue',

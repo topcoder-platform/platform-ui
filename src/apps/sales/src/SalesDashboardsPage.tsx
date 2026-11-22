@@ -17,6 +17,7 @@ import { SalesDashboardSource, useSalesDashboard } from './useSalesDashboard'
 import GroupBy from './SalesDashboardGroupBy'
 import SalesCustomerTable from './SalesCustomerTable'
 import SalesDashboardChart from './SalesDashboardChart'
+import SalesDashboardTable from './SalesDashboardTable'
 import SalesGoodsSold from './SalesGoodsSold'
 import styles from './SalesDashboardsPage.module.scss'
 
@@ -155,6 +156,8 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
     const payments = useSalesDashboard('payments', portal, dateBasis, refreshKey)
     const taas = useSalesDashboard('taas-payments', portal, dateBasis, refreshKey)
     const talent = useSalesDashboard('talent', portal, dateBasis, refreshKey)
+    const leads = useSalesDashboard('leads', portal, 'close', refreshKey, undefined, undefined, portal === 'sales')
+    const leadsChart = leads.data?.charts[0]
     const months = [pipeline, revenue, payments, talent].map(source => source.data?.charts[0]?.months)
         .find(value => value?.length)
     const first = months?.[0]?.month
@@ -270,6 +273,22 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
                 <h2 id='monthly-talent'>Flexible Talent</h2>
                 <DashboardCard source={talent} chartId='flexible-talent' title='Members Engaged' />
             </section>
+            {portal === 'sales' && (
+                <section aria-labelledby='monthly-leads' className={styles.section}>
+                    <h2 id='monthly-leads'>Leads Report</h2>
+                    <div className={`${styles.card} ${styles.customerTable}`}>
+                        <SourceContent source={leads} title='Leads Report'>
+                            {leadsChart && (
+                                <SalesDashboardTable
+                                    chart={leadsChart}
+                                    firstColumn='Status'
+                                    caption={leadsChart.description}
+                                />
+                            )}
+                        </SourceContent>
+                    </div>
+                </section>
+            )}
             <section aria-labelledby='monthly-customer' className={styles.section}>
                 <h2 id='monthly-customer'>Customer</h2>
                 <div className={styles.filters}>
