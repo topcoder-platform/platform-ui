@@ -6,6 +6,7 @@ import type {
     ApproveTimesheetEntriesResult,
     DeleteTimesheetEntriesRequest,
     ReopenTimesheetEntriesRequest,
+    ReturnTimesheetEntriesRequest,
     RevertTimesheetEntriesToDraftRequest,
     SubmitTimesheetEntriesRequest,
     TimesheetAuditRecord,
@@ -122,6 +123,21 @@ export const reopenTimesheetEntries = async (
 ): Promise<TimesheetView> => (
     xhrPostAsync<ReopenTimesheetEntriesRequest, TimesheetView>(
         `${timesheetUrl(engagementId, assignmentId)}/reopen`,
+        data,
+    )
+)
+
+/**
+ * Returns submitted entries to the member for corrections. The corrections are required; they are shown
+ * on the returned entries and emailed to the member.
+ */
+export const returnTimesheetEntries = async (
+    engagementId: string,
+    assignmentId: string,
+    data: ReturnTimesheetEntriesRequest,
+): Promise<TimesheetView> => (
+    xhrPostAsync<ReturnTimesheetEntriesRequest, TimesheetView>(
+        `${timesheetUrl(engagementId, assignmentId)}/return`,
         data,
     )
 )

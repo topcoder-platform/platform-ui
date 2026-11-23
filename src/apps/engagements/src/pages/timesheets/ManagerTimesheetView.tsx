@@ -5,7 +5,7 @@ import { Button, InputDatePicker, InputSelect } from '~/libs/ui'
 
 import type { TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus } from '../../lib/models'
-import { approveTimesheetEntries, getTimesheet } from '../../lib/services'
+import { approveTimesheetEntries, getTimesheet, returnTimesheetEntries } from '../../lib/services'
 import type { TimesheetReviewStatus } from '../../lib/utils'
 import {
     buildRowsFromEntries,
@@ -16,6 +16,7 @@ import {
 } from '../../lib/utils'
 import { TimesheetApproveModal } from '../../components/timesheet-approve-modal'
 import { TimesheetGrid } from '../../components/timesheet-grid'
+import { TimesheetReasonModal } from '../../components/timesheet-reason-modal'
 
 import styles from './TimesheetsPage.module.scss'
 
@@ -31,7 +32,13 @@ interface ManagerTimesheetViewProps {
     initialStatus?: TimesheetReviewStatus
 }
 
-type StatusFilter = TimesheetReviewStatus
+/**
+ * Entries returned for corrections are drafts with a `returnedAt`, not a status of their own, so this
+ * filter value exists only here: it loads the drafts and keeps the returned ones.
+ */
+const RETURNED_FILTER = 'RETURNED'
+
+type StatusFilter = TimesheetReviewStatus | typeof RETURNED_FILTER
 
 const STATUS_FILTER_OPTIONS = [
     {
@@ -42,7 +49,14 @@ const STATUS_FILTER_OPTIONS = [
         label: 'Approved',
         value: TimesheetEntryStatus.APPROVED,
     },
+    {
+        label: 'Returned for Corrections',
+        value: RETURNED_FILTER,
+    },
 ]
+
+const RETURN_DESCRIPTION = 'You are about to return the following timesheet entries for correction. '
+    + 'Please provide the required corrections and confirm the action.'
 
 const extractErrorMessage = (error: unknown, fallback: string): string => {
     const typedError = error as {
@@ -80,10 +94,14 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
     const [selectedDates, setSelectedDates] = useState<string[]>([])
     const [isApproving, setIsApproving] = useState<boolean>(false)
     const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false)
+    const [isReturning, setIsReturning] = useState<boolean>(false)
+    const [isReturnOpen, setIsReturnOpen] = useState<boolean>(false)
     const [actionError, setActionError] = useState<string | undefined>()
     const [partialResult, setPartialResult] = useState<string | undefined>()
 
     const isApprovedView = statusFilter === TimesheetEntryStatus.APPROVED
+    const isReturnedView = statusFilter === RETURNED_FILTER
+    const isPendingView = statusFilter === TimesheetEntryStatus.SUBMITTED
     const rangeError = isApprovedView ? validateDateRange(fromDate, toDate) : undefined
 
     const reload = useCallback(async (): Promise<void> => {
@@ -92,13 +110,13 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
             props.timesheet.assignment.id,
             {
                 fromDate: isApprovedView ? fromDate || undefined : undefined,
-                status: statusFilter,
+                status: isReturnedView ? TimesheetEntryStatus.DRAFT : statusFilter,
                 toDate: isApprovedView ? toDate || undefined : undefined,
             },
         )
 
         props.onTimesheetChange(loaded)
-    }, [fromDate, isApprovedView, props, statusFilter, toDate])
+    }, [fromDate, isApprovedView, isReturnedView, props, statusFilter, toDate])
 
     useEffect(() => {
         if (rangeError) {
@@ -117,9 +135,11 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
 
     const rows = useMemo(
         () => buildRowsFromEntries(
-            props.timesheet.entries.filter(entry => entry.status === statusFilter),
+            props.timesheet.entries.filter(entry => (isReturnedView
+                ? entry.status === TimesheetEntryStatus.DRAFT && Boolean(entry.returnedAt)
+                : entry.status === statusFilter)),
         ),
-        [props.timesheet.entries, statusFilter],
+        [isReturnedView, props.timesheet.entries, statusFilter],
     )
     const selectedRows = useMemo(
         () => rows.filter(row => selectedDates.includes(row.workDate)),
@@ -185,24 +205,71 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
         }
     }, [props, reload, selectedRows])
 
-    const showApproveActions = !isApprovedView && !rangeError
-    const approveLabel = selectedRows.length > 0
-        ? `Approve (${selectedRows.length})`
-        : 'Approve'
+    const handleReturn = useCallback(async (returnComment: string) => {
+        const entryIds = selectedRows
+            .map(row => row.id)
+            .filter((id): id is string => Boolean(id))
+
+        if (!entryIds.length) {
+            setActionError('Select at least one submitted entry to return.')
+            return
+        }
+
+        setActionError(undefined)
+        setPartialResult(undefined)
+        setIsReturning(true)
+
+        try {
+            await returnTimesheetEntries(
+                props.timesheet.engagementId,
+                props.timesheet.assignment.id,
+                { entryIds, returnComment },
+            )
+
+            setIsReturnOpen(false)
+            setSelectedDates([])
+            toast.success(
+                `Returned ${entryIds.length} ${entryIds.length === 1 ? 'entry' : 'entries'} for corrections. `
+                + 'The member has been notified.',
+            )
+
+            await reload()
+        } catch (error) {
+            setActionError(extractErrorMessage(error, 'Failed to return the selected entries.'))
+            setIsReturnOpen(false)
+        } finally {
+            setIsReturning(false)
+        }
+    }, [props, reload, selectedRows])
+
+    const showReviewActions = isPendingView && !rangeError
+    const isActing = isApproving || isReturning
+    const selectionCount = selectedRows.length ? ` (${selectedRows.length})` : ''
 
     // Rendered at both the top and the bottom of the pending list so long lists don't force a
-    // scroll to reach it; disabled until at least one entry is selected.
-    function renderApproveButton(): JSX.Element {
+    // scroll to reach them; disabled until at least one entry is selected.
+    function renderReviewActions(): JSX.Element {
         return (
-            <Button
-                disabled={isApproving || selectedRows.length === 0}
-                label={approveLabel}
-                onClick={function onOpenConfirm() {
-                    setActionError(undefined)
-                    setIsConfirmOpen(true)
-                }}
-                primary
-            />
+            <>
+                <Button
+                    disabled={isActing || selectedRows.length === 0}
+                    label={`Return for corrections${selectionCount}`}
+                    onClick={function onOpenReturn() {
+                        setActionError(undefined)
+                        setIsReturnOpen(true)
+                    }}
+                    secondary
+                />
+                <Button
+                    disabled={isActing || selectedRows.length === 0}
+                    label={`Approve${selectionCount}`}
+                    onClick={function onOpenConfirm() {
+                        setActionError(undefined)
+                        setIsConfirmOpen(true)
+                    }}
+                    primary
+                />
+            </>
         )
     }
 
@@ -250,9 +317,9 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
                     </>
                 )}
 
-                {showApproveActions && (
+                {showReviewActions && (
                     <div className={styles.topActions}>
-                        {renderApproveButton()}
+                        {renderReviewActions()}
                     </div>
                 )}
             </section>
@@ -262,13 +329,13 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
             {!rangeError && (
                 <>
                     <TimesheetGrid
-                        emptyMessage={isApprovedView
-                            ? 'No approved entries in this period.'
-                            : 'Nothing is waiting for approval.'}
+                        emptyMessage={(isApprovedView && 'No approved entries in this period.')
+                            || (isReturnedView && 'No entries are waiting for corrections.')
+                            || 'Nothing is waiting for approval.'}
                         onSelectionChange={setSelectedDates}
                         readOnly
                         rows={rows}
-                        selectedDates={isApprovedView ? [] : selectedDates}
+                        selectedDates={isPendingView ? selectedDates : []}
                         standardHoursPerDay={props.timesheet.assignment.standardHoursPerDay}
                     />
 
@@ -277,7 +344,7 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
                         <p className={styles.partialResult} role='status'>{partialResult}</p>
                     )}
 
-                    {!isApprovedView && selectedRows.length > 0 && (
+                    {isPendingView && selectedRows.length > 0 && (
                         <section className={styles.summary}>
                             <span>
                                 Total Selected Days:
@@ -292,9 +359,9 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
                         </section>
                     )}
 
-                    {showApproveActions && (
+                    {showReviewActions && (
                         <section className={styles.actions}>
-                            {renderApproveButton()}
+                            {renderReviewActions()}
                         </section>
                     )}
                 </>
@@ -310,6 +377,20 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
                 open={isConfirmOpen}
                 requiresOverrideReason={props.requiresOverrideReason}
                 totalHours={totals.hours}
+            />
+
+            <TimesheetReasonModal
+                confirmLabel='Return'
+                description={RETURN_DESCRIPTION}
+                isSubmitting={isReturning}
+                onCancel={function onCancelReturn() {
+                    setIsReturnOpen(false)
+                }}
+                onConfirm={handleReturn}
+                open={isReturnOpen}
+                reasonLabel='Required corrections'
+                title='Return timesheet entries for corrections'
+                totals={{ entryCount: selectedRows.length, totalHours: totals.hours }}
             />
         </div>
     )

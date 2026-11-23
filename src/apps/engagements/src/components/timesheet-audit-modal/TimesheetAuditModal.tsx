@@ -24,6 +24,7 @@ const ACTION_LABELS: Record<string, string> = {
     CREATED: 'Created',
     PAYMENT_LINKED: 'Linked to a payment',
     REOPENED: 'Reopened',
+    RETURNED: 'Returned for corrections',
     SUBMITTED: 'Submitted',
     UNSUBMITTED: 'Returned to draft',
     UPDATED: 'Updated',

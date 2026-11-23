@@ -63,6 +63,8 @@
 
 .topActions {
     display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
     margin-left: auto;
 }
 
