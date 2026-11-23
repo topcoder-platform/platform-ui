@@ -4,7 +4,14 @@ import { getLeadDisplayStatus, LeadDisplayStatus } from '../../work/src/lib/util
 import type { SalesDashboardResponse } from './sales-dashboard.service'
 import { salesFiscalYear } from './sales-fiscal-year'
 
-const statuses: LeadDisplayStatus[] = ['New', 'Under Review', 'Fulfilled', 'Lost']
+const statuses: LeadDisplayStatus[] = [
+    'New',
+    'Under Review',
+    'Fulfilled',
+    'Partially Fulfilled',
+    'On Hold',
+    'Lost',
+]
 
 /** Counts each lead in its UTC creation month, using the same current status labels as Work. */
 export async function fetchSalesLeadsReport(signal: AbortSignal): Promise<SalesDashboardResponse> {

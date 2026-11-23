@@ -10,6 +10,15 @@ jest.mock('~/config', () => ({
 
 jest.mock('~/libs/core', () => ({ xhrGetAsync: jest.fn() }), { virtual: true })
 
+const NO_LEADS = {
+    Fulfilled: 0,
+    Lost: 0,
+    New: 0,
+    'On Hold': 0,
+    'Partially Fulfilled': 0,
+    'Under Review': 0,
+}
+
 describe('Sales dashboard fiscal year requests', () => {
     beforeEach(() => {
         jest.clearAllMocks()
@@ -59,16 +68,16 @@ describe('Sales dashboard fiscal year requests', () => {
         expect(chart.months[0])
             .toEqual({
                 month: '2026-04-01',
-                values: { Fulfilled: 0, Lost: 0, New: 0, 'Under Review': 2 },
+                values: { ...NO_LEADS, 'Under Review': 2 },
             })
         expect(chart.months[5].values.Lost)
             .toBe(1)
         expect(chart.months[6].values)
-            .toEqual({ Fulfilled: 1, Lost: 0, New: 1, 'Under Review': 1 })
+            .toEqual({ ...NO_LEADS, Fulfilled: 1, New: 1, 'Under Review': 1 })
         expect(chart.months[11])
             .toEqual({ month: '2027-03-01', values: {} })
         expect(chart.annual)
-            .toEqual({ Fulfilled: 1, Lost: 1, New: 1, 'Under Review': 3 })
+            .toEqual({ ...NO_LEADS, Fulfilled: 1, Lost: 1, New: 1, 'Under Review': 3 })
     })
 
     it('shows zero for every status in elapsed months when there are no leads', async () => {
@@ -76,7 +85,7 @@ describe('Sales dashboard fiscal year requests', () => {
             .mockResolvedValueOnce({ data: [], meta: { totalPages: 1 } })
         const result = await fetchSalesDashboard('leads', 'sales', 'close', new AbortController().signal)
         const chart = result.charts[0]
-        const zeros = { Fulfilled: 0, Lost: 0, New: 0, 'Under Review': 0 }
+        const zeros = NO_LEADS
         expect(chart.annual)
             .toEqual(zeros)
         expect(chart.months[6].values)

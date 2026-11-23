@@ -71,6 +71,8 @@ const STATUS_ACTION_LABELS: Partial<Record<EngagementLeadStatus, string>> = {
     [EngagementLeadStatus.UNDER_REVIEW]: 'Mark Under Review',
     [EngagementLeadStatus.FULFILLED]: 'Mark Fulfilled',
     [EngagementLeadStatus.REJECTED]: 'Mark Lost',
+    [EngagementLeadStatus.PARTIALLY_FULFILLED]: 'Mark Partially Fulfilled',
+    [EngagementLeadStatus.ON_HOLD]: 'Mark On Hold',
 }
 
 interface DetailFieldProps {
