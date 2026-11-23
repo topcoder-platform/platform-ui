@@ -179,13 +179,21 @@ describe('EngagementLeadDetailPage', () => {
         })
     })
 
-    const STATUS_BUTTONS = ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost']
+    const PARTIAL = 'Mark Partially Fulfilled'
+    const ON_HOLD = 'Mark On Hold'
+    const STATUS_BUTTONS = ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost', PARTIAL, ON_HOLD]
 
     it.each([
-        [EngagementLeadStatus.SUBMITTED, 'New', ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost']],
-        [EngagementLeadStatus.REJECTED, 'Lost', ['Mark Under Review', 'Mark Fulfilled']],
-        [EngagementLeadStatus.UNDER_REVIEW, 'Under Review', ['Mark Fulfilled', 'Mark Lost']],
-        [EngagementLeadStatus.FULFILLED, 'Fulfilled', ['Mark Under Review']],
+        [EngagementLeadStatus.SUBMITTED, 'New', ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost', PARTIAL, ON_HOLD]],
+        [EngagementLeadStatus.REJECTED, 'Lost', ['Mark Under Review', 'Mark Fulfilled', PARTIAL, ON_HOLD]],
+        [EngagementLeadStatus.UNDER_REVIEW, 'Under Review', ['Mark Fulfilled', 'Mark Lost', PARTIAL, ON_HOLD]],
+        [EngagementLeadStatus.FULFILLED, 'Fulfilled', ['Mark Under Review', PARTIAL, ON_HOLD]],
+        [
+            EngagementLeadStatus.PARTIALLY_FULFILLED,
+            'Partially Fulfilled',
+            ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost', ON_HOLD],
+        ],
+        [EngagementLeadStatus.ON_HOLD, 'On Hold', ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost', PARTIAL]],
     ])('shows a %s lead as %s with its status actions', async (status, label, buttons) => {
         await renderLead({ ...baseLead, status })
 
@@ -219,6 +227,26 @@ describe('EngagementLeadDetailPage', () => {
         expect(await screen.findByText('Fulfilled'))
             .toBeInTheDocument()
         expect(screen.queryByText('Mark Fulfilled'))
+            .not
+            .toBeInTheDocument()
+    })
+
+    it.each([
+        ['Mark Partially Fulfilled', EngagementLeadStatus.PARTIALLY_FULFILLED, 'Partially Fulfilled'],
+        ['Mark On Hold', EngagementLeadStatus.ON_HOLD, 'On Hold'],
+    ])('%s moves the lead to %s', async (button, status, label) => {
+        mockUpdateStatus.mockResolvedValue({ ...baseLead, status })
+        await renderLead({ ...baseLead, status: EngagementLeadStatus.SUBMITTED })
+
+        fireEvent.click(screen.getByText(button))
+
+        await waitFor(() => {
+            expect(mockUpdateStatus)
+                .toHaveBeenCalledWith('lead-1', status, undefined)
+        })
+        expect(await screen.findByText(label))
+            .toBeInTheDocument()
+        expect(screen.queryByText(button))
             .not
             .toBeInTheDocument()
     })

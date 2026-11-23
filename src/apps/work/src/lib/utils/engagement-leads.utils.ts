@@ -4,7 +4,13 @@ import {
     EngagementLeadType,
 } from '../models/EngagementLead.model'
 
-export type LeadDisplayStatus = 'New' | 'Under Review' | 'Fulfilled' | 'Lost'
+export type LeadDisplayStatus =
+    | 'New'
+    | 'Under Review'
+    | 'Fulfilled'
+    | 'Partially Fulfilled'
+    | 'On Hold'
+    | 'Lost'
 
 export function formatLeadLabel(value: string): string {
     return value
@@ -24,6 +30,14 @@ export function getLeadDisplayStatus(status: string): LeadDisplayStatus {
         return 'Fulfilled'
     }
 
+    if (status === EngagementLeadStatus.PARTIALLY_FULFILLED) {
+        return 'Partially Fulfilled'
+    }
+
+    if (status === EngagementLeadStatus.ON_HOLD) {
+        return 'On Hold'
+    }
+
     if (status === EngagementLeadStatus.REJECTED) {
         return 'Lost'
     }
@@ -35,14 +49,13 @@ export function getLeadDisplayStatus(status: string): LeadDisplayStatus {
     return 'New'
 }
 
-/**
- * Statuses a Talent Manager can move a lead to from the lead view page.
- * @param status Current lead status.
- * @returns The next statuses, in the order their buttons are shown.
- */
-export function getLeadStatusTransitions(status: string): EngagementLeadStatus[] {
-    const displayStatus = getLeadDisplayStatus(status)
+// Any lead can be marked partially fulfilled or on hold, whatever its current status.
+const PARTIAL_AND_ON_HOLD_STATUSES: EngagementLeadStatus[] = [
+    EngagementLeadStatus.PARTIALLY_FULFILLED,
+    EngagementLeadStatus.ON_HOLD,
+]
 
+function getBaseLeadStatusTransitions(displayStatus: LeadDisplayStatus): EngagementLeadStatus[] {
     if (displayStatus === 'New') {
         return [
             EngagementLeadStatus.UNDER_REVIEW,
@@ -59,7 +72,27 @@ export function getLeadStatusTransitions(status: string): EngagementLeadStatus[]
         return [EngagementLeadStatus.FULFILLED, EngagementLeadStatus.REJECTED]
     }
 
+    if (displayStatus === 'Partially Fulfilled' || displayStatus === 'On Hold') {
+        return [
+            EngagementLeadStatus.UNDER_REVIEW,
+            EngagementLeadStatus.FULFILLED,
+            EngagementLeadStatus.REJECTED,
+        ]
+    }
+
     return [EngagementLeadStatus.UNDER_REVIEW]
+}
+
+/**
+ * Statuses a Talent Manager can move a lead to from the lead view page.
+ * @param status Current lead status.
+ * @returns The next statuses, in the order their buttons are shown.
+ */
+export function getLeadStatusTransitions(status: string): EngagementLeadStatus[] {
+    const displayStatus = getLeadDisplayStatus(status)
+    const partialAndOnHold = PARTIAL_AND_ON_HOLD_STATUSES.filter(next => next !== status)
+
+    return [...getBaseLeadStatusTransitions(displayStatus), ...partialAndOnHold]
 }
 
 export function getLeadDisplayStatusClassName(
@@ -70,6 +103,14 @@ export function getLeadDisplayStatusClassName(
 
     if (displayStatus === 'Fulfilled') {
         return styles.statusFulfilled
+    }
+
+    if (displayStatus === 'Partially Fulfilled') {
+        return styles.statusPartiallyFulfilled
+    }
+
+    if (displayStatus === 'On Hold') {
+        return styles.statusOnHold
     }
 
     if (displayStatus === 'Lost') {

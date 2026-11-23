@@ -11,6 +11,8 @@ export enum EngagementLeadStatus {
     CONVERTED = 'CONVERTED',
     REJECTED = 'REJECTED',
     FULFILLED = 'FULFILLED',
+    PARTIALLY_FULFILLED = 'PARTIALLY_FULFILLED',
+    ON_HOLD = 'ON_HOLD',
 }
 
 export enum EngagementModel {
@@ -30,6 +32,8 @@ export enum EngagementLeadStatusGroup {
     UNDER_REVIEW = 'UNDER_REVIEW',
     FULFILLED = 'FULFILLED',
     LOST = 'LOST',
+    PARTIALLY_FULFILLED = 'PARTIALLY_FULFILLED',
+    ON_HOLD = 'ON_HOLD',
 }
 
 export enum EngagementLeadType {
