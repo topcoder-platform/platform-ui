@@ -2,6 +2,8 @@ import { FC, FocusEvent, useEffect, useState } from 'react'
 
 import { BaseModal, Button } from '~/libs/ui'
 
+import { formatHoursLabel } from '../../lib/utils'
+
 import styles from './TimesheetReasonModal.module.scss'
 
 interface TimesheetReasonModalProps {
@@ -10,6 +12,14 @@ interface TimesheetReasonModalProps {
     /** What the administrator is about to do, stated plainly. */
     description: string
     confirmLabel: string
+    /** Label of the reason field. Defaults to `Override reason`. */
+    reasonLabel?: string
+    /** Shown under the description when set, so the administrator sees what the action covers. */
+    totals?: {
+        entryCount: number
+        /** Exact decimal total, e.g. `42.50`. */
+        totalHours: string
+    }
     isSubmitting?: boolean
     onCancel: () => void
     onConfirm: (overrideReason: string) => void
@@ -57,8 +67,14 @@ const TimesheetReasonModal: FC<TimesheetReasonModalProps> = (props: TimesheetRea
         >
             <div className={styles.body}>
                 <p className={styles.description}>{props.description}</p>
+                {props.totals && (
+                    <p className={styles.totals}>
+                        <strong>{`Total Hours: ${formatHoursLabel(props.totals.totalHours)}`}</strong>
+                        <strong>{`Number of Entries: ${props.totals.entryCount}`}</strong>
+                    </p>
+                )}
                 <label className={styles.field} htmlFor='timesheet-override-reason'>
-                    Override reason
+                    {props.reasonLabel ?? 'Override reason'}
                     <textarea
                         id='timesheet-override-reason'
                         onChange={function onReasonChange(

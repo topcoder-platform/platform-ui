@@ -6,6 +6,7 @@ import type {
     ApproveTimesheetEntriesResult,
     DeleteTimesheetEntriesRequest,
     ReopenTimesheetEntriesRequest,
+    RevertTimesheetEntriesToDraftRequest,
     SubmitTimesheetEntriesRequest,
     TimesheetAuditRecord,
     TimesheetEngagementListResponse,
@@ -121,6 +122,21 @@ export const reopenTimesheetEntries = async (
 ): Promise<TimesheetView> => (
     xhrPostAsync<ReopenTimesheetEntriesRequest, TimesheetView>(
         `${timesheetUrl(engagementId, assignmentId)}/reopen`,
+        data,
+    )
+)
+
+/**
+ * Sends submitted entries back to draft, e.g. when the member submitted the wrong work period.
+ * Administrators only; the reason is required and is emailed to the member.
+ */
+export const revertTimesheetEntriesToDraft = async (
+    engagementId: string,
+    assignmentId: string,
+    data: RevertTimesheetEntriesToDraftRequest,
+): Promise<TimesheetView> => (
+    xhrPostAsync<RevertTimesheetEntriesToDraftRequest, TimesheetView>(
+        `${timesheetUrl(engagementId, assignmentId)}/revert-to-draft`,
         data,
     )
 )

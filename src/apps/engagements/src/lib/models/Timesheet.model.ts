@@ -104,6 +104,11 @@ export interface ReopenTimesheetEntriesRequest {
     overrideReason: string
 }
 
+export interface RevertTimesheetEntriesToDraftRequest {
+    entryIds: string[]
+    reason: string
+}
+
 export interface SkippedTimesheetEntry {
     approvedByHandle: string | null
     currentStatus: TimesheetEntryStatus
