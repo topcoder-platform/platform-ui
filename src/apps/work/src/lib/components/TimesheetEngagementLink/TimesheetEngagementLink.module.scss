@@ -1,0 +1,21 @@
+@import '@libs/ui/styles/includes';
+
+.link {
+    color: $link-blue-dark;
+    font-weight: 700;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        outline: none;
+        text-decoration: underline;
+    }
+}
+
+.externalIcon {
+    display: inline-block;
+    height: 12px;
+    margin-left: 4px;
+    vertical-align: middle;
+    width: 12px;
+}

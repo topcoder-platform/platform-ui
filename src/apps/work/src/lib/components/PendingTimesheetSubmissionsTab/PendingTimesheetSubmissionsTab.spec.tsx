@@ -23,6 +23,9 @@ jest.mock('~/libs/ui', () => ({
     Button: (props: { disabled?: boolean, label: string, onClick?: () => void }) => (
         <button disabled={props.disabled} onClick={props.onClick} type='button'>{props.label}</button>
     ),
+    IconOutline: {
+        ExternalLinkIcon: () => <></>,
+    },
     // Shows the picked day, and reports a change only for a complete YYYY-MM-DD value or a clear.
     InputDatePicker: (props: {
         date?: Date
@@ -64,6 +67,7 @@ jest.mock('~/libs/ui', () => ({
     virtual: true,
 })
 jest.mock('../../constants', () => ({
+    ENGAGEMENTS_APP_URL: 'https://engagements.test',
     PAGE_SIZE: 10,
 }))
 jest.mock('../../hooks', () => ({
@@ -201,6 +205,19 @@ describe('PendingTimesheetSubmissionsTab', () => {
             .toBeTruthy()
         expect(screen.getByText('Pagination: 3'))
             .toBeTruthy()
+    })
+
+    it('links the engagement name to the assignee timesheet in a new tab', () => {
+        render(<PendingTimesheetSubmissionsTab />)
+
+        const link = screen.getByRole('link', { name: 'Data Engineer' })
+
+        expect(link.getAttribute('href'))
+            .toBe('https://engagements.test/eng1/timesheets/asg2')
+        expect(link.getAttribute('target'))
+            .toBe('_blank')
+        expect(link.getAttribute('rel'))
+            .toBe('noreferrer noopener')
     })
 
     it('filters by engagement name and a picked work period', async () => {

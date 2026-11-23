@@ -23,6 +23,9 @@ jest.mock('~/libs/ui', () => ({
     Button: (props: { disabled?: boolean, label: string, onClick?: () => void }) => (
         <button disabled={props.disabled} onClick={props.onClick} type='button'>{props.label}</button>
     ),
+    IconOutline: {
+        ExternalLinkIcon: () => <></>,
+    },
     // Only a complete YYYY-MM-DD value reports a change, the way the real picker reports a whole date.
     InputDatePicker: (props: { label: string, onChange: (date: Date | null) => void }) => (
         <input
@@ -52,6 +55,7 @@ jest.mock('~/libs/ui', () => ({
     virtual: true,
 })
 jest.mock('../../constants', () => ({
+    ENGAGEMENTS_APP_URL: 'https://engagements.test',
     PAGE_SIZE: 10,
 }))
 jest.mock('../../hooks', () => ({
@@ -169,6 +173,19 @@ describe('PendingTimesheetApprovalsTab', () => {
             .toBeTruthy()
         expect(screen.getByText('Pagination: 3'))
             .toBeTruthy()
+    })
+
+    it('links the engagement name to the assignee timesheet in a new tab', () => {
+        render(<PendingTimesheetApprovalsTab />)
+
+        const link = screen.getByRole('link', { name: 'Data Engineer' })
+
+        expect(link.getAttribute('href'))
+            .toBe('https://engagements.test/eng1/timesheets/asg2')
+        expect(link.getAttribute('target'))
+            .toBe('_blank')
+        expect(link.getAttribute('rel'))
+            .toBe('noreferrer noopener')
     })
 
     it('filters by engagement name and work period', async () => {

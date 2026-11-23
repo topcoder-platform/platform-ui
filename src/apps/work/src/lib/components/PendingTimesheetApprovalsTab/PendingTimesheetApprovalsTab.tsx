@@ -38,6 +38,7 @@ import { ConfirmationModal } from '../ConfirmationModal'
 import { ErrorMessage } from '../ErrorMessage'
 import { LoadingSpinner } from '../LoadingSpinner'
 import { Pagination } from '../Pagination'
+import { TimesheetEngagementLink } from '../TimesheetEngagementLink'
 
 import styles from './PendingTimesheetApprovalsTab.module.scss'
 
@@ -257,7 +258,13 @@ export const PendingTimesheetApprovalsTab: FC<PendingTimesheetApprovalsTabProps>
                         type='checkbox'
                     />
                 </td>
-                <td className={styles.engagementTitle}>{row.engagementTitle || '-'}</td>
+                <td className={styles.engagementTitle}>
+                    <TimesheetEngagementLink
+                        assignmentId={row.assignmentId}
+                        engagementId={row.engagementId}
+                        engagementTitle={row.engagementTitle}
+                    />
+                </td>
                 <td className={styles.memberHandle}>{row.assigneeHandle || '-'}</td>
                 <td className={styles.noWrap}>{formatApprovedTimesheetWorkPeriod(row)}</td>
                 <td className={styles.noWrap}>{formatDate(row.submittedAt)}</td>

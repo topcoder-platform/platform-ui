@@ -32,6 +32,7 @@ jest.mock('~/libs/ui', () => ({
         <button disabled={props.disabled} onClick={props.onClick} type='button'>{props.label}</button>
     ),
     IconOutline: {
+        ExternalLinkIcon: () => <></>,
         SearchIcon: () => <span>search-icon</span>,
     },
     Tooltip: (props: { children: JSX.Element, content: string }) => (
@@ -41,6 +42,7 @@ jest.mock('~/libs/ui', () => ({
     virtual: true,
 })
 jest.mock('../../constants', () => ({
+    ENGAGEMENTS_APP_URL: 'https://engagements.test',
     PAGE_SIZE: 10,
 }))
 jest.mock('../../hooks', () => ({
@@ -121,6 +123,19 @@ describe('ApprovedTimesheetsTab', () => {
             mutate,
             rows,
         } as never)
+    })
+
+    it('links the engagement name to the assignee timesheet in a new tab', () => {
+        render(<ApprovedTimesheetsTab />)
+
+        const link = screen.getByRole('link', { name: 'Senior Frontend Engineer' })
+
+        expect(link.getAttribute('href'))
+            .toBe('https://engagements.test/eng1/timesheets/asg1')
+        expect(link.getAttribute('target'))
+            .toBe('_blank')
+        expect(link.getAttribute('rel'))
+            .toBe('noreferrer noopener')
     })
 
     it('shows the read-only approval fields', () => {
