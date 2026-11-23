@@ -185,6 +185,27 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
         }
     }, [props, reload, selectedRows])
 
+    const showApproveActions = !isApprovedView && !rangeError
+    const approveLabel = selectedRows.length > 0
+        ? `Approve (${selectedRows.length})`
+        : 'Approve'
+
+    // Rendered at both the top and the bottom of the pending list so long lists don't force a
+    // scroll to reach it; disabled until at least one entry is selected.
+    function renderApproveButton(): JSX.Element {
+        return (
+            <Button
+                disabled={isApproving || selectedRows.length === 0}
+                label={approveLabel}
+                onClick={function onOpenConfirm() {
+                    setActionError(undefined)
+                    setIsConfirmOpen(true)
+                }}
+                primary
+            />
+        )
+    }
+
     return (
         <div className={styles.view}>
             <section className={styles.rangeSection}>
@@ -228,6 +249,12 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
                         />
                     </>
                 )}
+
+                {showApproveActions && (
+                    <div className={styles.topActions}>
+                        {renderApproveButton()}
+                    </div>
+                )}
             </section>
 
             {rangeError && <p className={styles.error} role='alert'>{rangeError}</p>}
@@ -251,31 +278,24 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
                     )}
 
                     {!isApprovedView && selectedRows.length > 0 && (
-                        <>
-                            <section className={styles.summary}>
-                                <span>
-                                    Total Selected Days:
-                                    {' '}
-                                    <strong>{totals.days}</strong>
-                                </span>
-                                <span>
-                                    Total Selected Hours:
-                                    {' '}
-                                    <strong>{formatHoursLabel(totals.hours)}</strong>
-                                </span>
-                            </section>
-                            <section className={styles.actions}>
-                                <Button
-                                    disabled={isApproving}
-                                    label={`Approve (${selectedRows.length})`}
-                                    onClick={function onOpenConfirm() {
-                                        setActionError(undefined)
-                                        setIsConfirmOpen(true)
-                                    }}
-                                    primary
-                                />
-                            </section>
-                        </>
+                        <section className={styles.summary}>
+                            <span>
+                                Total Selected Days:
+                                {' '}
+                                <strong>{totals.days}</strong>
+                            </span>
+                            <span>
+                                Total Selected Hours:
+                                {' '}
+                                <strong>{formatHoursLabel(totals.hours)}</strong>
+                            </span>
+                        </section>
+                    )}
+
+                    {showApproveActions && (
+                        <section className={styles.actions}>
+                            {renderApproveButton()}
+                        </section>
                     )}
                 </>
             )}
