@@ -125,13 +125,13 @@ describe('ApprovedTimesheetsTab', () => {
         } as never)
     })
 
-    it('links the engagement name to the assignee timesheet in a new tab', () => {
+    it('links the engagement name to the assignee approved timesheet in a new tab', () => {
         render(<ApprovedTimesheetsTab />)
 
         const link = screen.getByRole('link', { name: 'Senior Frontend Engineer' })
 
         expect(link.getAttribute('href'))
-            .toBe('https://engagements.test/eng1/timesheets/asg1')
+            .toBe('https://engagements.test/eng1/timesheets/asg1?status=APPROVED')
         expect(link.getAttribute('target'))
             .toBe('_blank')
         expect(link.getAttribute('rel'))
