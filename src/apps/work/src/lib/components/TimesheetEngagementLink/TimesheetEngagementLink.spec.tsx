@@ -32,6 +32,21 @@ describe('TimesheetEngagementLink', () => {
             .toBe('_blank')
     })
 
+    it('opens the timesheet on the given status filter', () => {
+        render(
+            <TimesheetEngagementLink
+                assignmentId='asg1'
+                engagementId='eng1'
+                engagementTitle='Senior Frontend Engineer'
+                status='APPROVED'
+            />,
+        )
+
+        expect(screen.getByRole('link', { name: 'Senior Frontend Engineer' })
+            .getAttribute('href'))
+            .toBe('https://engagements.test/eng1/timesheets/asg1?status=APPROVED')
+    })
+
     it('shows the plain name when the row cannot identify the timesheet', () => {
         render(<TimesheetEngagementLink engagementId='eng1' engagementTitle='Data Engineer' />)
 

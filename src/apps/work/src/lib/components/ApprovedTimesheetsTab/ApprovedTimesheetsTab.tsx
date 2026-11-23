@@ -264,6 +264,7 @@ export const ApprovedTimesheetsTab: FC<ApprovedTimesheetsTabProps> = (
                         assignmentId={row.assignmentId}
                         engagementId={row.engagementId}
                         engagementTitle={row.engagementTitle}
+                        status='APPROVED'
                     />
                 </td>
                 <td className={styles.memberHandle}>{row.assigneeHandle || '-'}</td>
