@@ -15,6 +15,7 @@ import {
     hasRowValidationError,
     isRowReadOnly,
     isRowReopened,
+    isRowReturned,
     parseTimesheetRangeParams,
     parseTimesheetReviewStatus,
     sumSelectedTotals,
@@ -346,6 +347,18 @@ describe('timesheet.utils', () => {
             expect(isRowReopened(row({
                 reopenedAt: '2026-09-14T00:00:00.000Z',
                 status: TimesheetEntryStatus.APPROVED,
+            })))
+                .toBe(false)
+        })
+
+        it('identifies a row returned for corrections, which is a draft until resubmitted', () => {
+            expect(isRowReturned(row({ returnedAt: '2026-09-14T00:00:00.000Z' })))
+                .toBe(true)
+            expect(isRowReturned(row()))
+                .toBe(false)
+            expect(isRowReturned(row({
+                returnedAt: '2026-09-14T00:00:00.000Z',
+                status: TimesheetEntryStatus.SUBMITTED,
             })))
                 .toBe(false)
         })

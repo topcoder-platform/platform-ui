@@ -7,6 +7,7 @@ import {
     formatHoursLabel,
     isRowReadOnly,
     isRowReopened,
+    isRowReturned,
     sumSelectedTotals,
     validateHours,
     validateRemarks,
@@ -271,14 +272,29 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                                         )}
                                 </td>
                                 <td data-label='Status'>
-                                    {isRowReopened(row) ? (
+                                    {isRowReturned(row) && (
+                                        <span className={styles.returnedBadge}>Returned for Corrections</span>
+                                    )}
+                                    {!isRowReturned(row) && isRowReopened(row) && (
                                         <span className={styles.reopenedBadge}>Reopened</span>
-                                    ) : (
+                                    )}
+                                    {!isRowReturned(row) && !isRowReopened(row) && (
                                         row.status === TimesheetEntryStatus.DRAFT && !row.id
                                             ? <span className={styles.status}>-</span>
                                             : <StatusBadge size='sm' status={STATUS_LABELS[row.status]} />
                                     )}
-                                    {isRowReopened(row) && row.reopenComment && (
+                                    {isRowReturned(row) && row.returnedByHandle && (
+                                        <span className={styles.approvalDetail}>
+                                            {`by ${row.returnedByHandle}`}
+                                        </span>
+                                    )}
+                                    {isRowReturned(row) && row.returnComment && (
+                                        <ExpandableText
+                                            className={styles.approvalComment}
+                                            text={row.returnComment}
+                                        />
+                                    )}
+                                    {!isRowReturned(row) && isRowReopened(row) && row.reopenComment && (
                                         <ExpandableText
                                             className={styles.approvalComment}
                                             text={row.reopenComment}

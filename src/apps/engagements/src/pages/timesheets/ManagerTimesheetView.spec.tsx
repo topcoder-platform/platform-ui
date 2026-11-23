@@ -8,7 +8,7 @@ import userEvent from '@testing-library/user-event'
 
 import type { TimesheetEntry, TimesheetView } from '../../lib/models'
 import { TimesheetEntryStatus, TimesheetViewerRole } from '../../lib/models'
-import { approveTimesheetEntries, getTimesheet } from '../../lib/services'
+import { approveTimesheetEntries, getTimesheet, returnTimesheetEntries } from '../../lib/services'
 
 import ManagerTimesheetView from './ManagerTimesheetView'
 
@@ -75,10 +75,12 @@ jest.mock('~/libs/ui', () => ({
 jest.mock('../../lib/services', () => ({
     approveTimesheetEntries: jest.fn(),
     getTimesheet: jest.fn(),
+    returnTimesheetEntries: jest.fn(),
 }))
 
 const mockApprove = approveTimesheetEntries as jest.MockedFunction<typeof approveTimesheetEntries>
 const mockGetTimesheet = getTimesheet as jest.MockedFunction<typeof getTimesheet>
+const mockReturn = returnTimesheetEntries as jest.MockedFunction<typeof returnTimesheetEntries>
 
 const entry = (overrides: Partial<TimesheetEntry> = {}): TimesheetEntry => ({
     approvalComment: null,
@@ -218,6 +220,147 @@ describe('ManagerTimesheetView', () => {
         expect(within(summary)
             .getByText('16.5'))
             .toBeInTheDocument()
+    })
+
+    it('shows disabled return for corrections buttons at the top and bottom until rows are selected', async () => {
+        const user = userEvent.setup()
+        renderView()
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Select 07-09-2026'))
+                .toBeInTheDocument()
+        })
+
+        const idleButtons = screen.getAllByRole('button', { name: 'Return for corrections' })
+        expect(idleButtons)
+            .toHaveLength(2)
+        idleButtons.forEach(button => expect(button)
+            .toBeDisabled())
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+
+        const activeButtons = screen.getAllByRole('button', { name: 'Return for corrections (1)' })
+        expect(activeButtons)
+            .toHaveLength(2)
+        activeButtons.forEach(button => expect(button)
+            .toBeEnabled())
+    })
+
+    it('requires the corrections before returning the selected entries', async () => {
+        const user = userEvent.setup()
+        mockReturn.mockResolvedValue(timesheet([]))
+        renderView()
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Select 07-09-2026'))
+                .toBeInTheDocument()
+        })
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByLabelText('Select 08-09-2026'))
+        await user.click(screen.getAllByRole('button', { name: 'Return for corrections (2)' })[1])
+
+        const dialog = screen.getByRole('dialog')
+        expect(within(dialog)
+            .getByText('Return timesheet entries for corrections'))
+            .toBeInTheDocument()
+        expect(within(dialog)
+            .getByText(/You are about to return the following timesheet entries for correction\./))
+            .toBeInTheDocument()
+        expect(within(dialog)
+            .getByText('Total Hours: 16.5'))
+            .toBeInTheDocument()
+        expect(within(dialog)
+            .getByText('Number of Entries: 2'))
+            .toBeInTheDocument()
+        expect(within(dialog)
+            .getByRole('button', { name: 'Return' }))
+            .toBeDisabled()
+
+        await user.type(within(dialog)
+            .getByLabelText('Required corrections'), 'Split the hours by project')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Return' }))
+
+        await waitFor(() => {
+            expect(mockReturn)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    entryIds: ['e1', 'e2'],
+                    returnComment: 'Split the hours by project',
+                })
+        })
+        await waitFor(() => {
+            expect(screen.queryByRole('dialog'))
+                .not.toBeInTheDocument()
+        })
+    })
+
+    it('surfaces the API message when returning fails', async () => {
+        const user = userEvent.setup()
+        mockReturn.mockRejectedValue({
+            response: { data: { message: 'Only submitted timesheet entries can be returned for corrections.' } },
+        })
+        renderView()
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Select 07-09-2026'))
+                .toBeInTheDocument()
+        })
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getAllByRole('button', { name: 'Return for corrections (1)' })[0])
+
+        const dialog = screen.getByRole('dialog')
+        await user.type(within(dialog)
+            .getByLabelText('Required corrections'), 'Fix it')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Return' }))
+
+        expect(await screen.findByRole('alert'))
+            .toHaveTextContent('Only submitted timesheet entries can be returned for corrections.')
+    })
+
+    it('lists the entries returned for corrections, with what to fix', async () => {
+        const user = userEvent.setup()
+        renderView([
+            entry({ id: 'e1', workDate: '2026-09-07' }),
+            entry({
+                id: 'e3',
+                returnComment: 'Split the hours by project',
+                returnedAt: '2026-09-09T10:00:00.000Z',
+                returnedByHandle: 'maryj',
+                status: TimesheetEntryStatus.DRAFT,
+                workDate: '2026-09-09',
+            }),
+            entry({ id: 'e4', status: TimesheetEntryStatus.DRAFT, workDate: '2026-09-10' }),
+        ])
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Status'))
+                .toBeInTheDocument()
+        })
+        await user.selectOptions(screen.getByLabelText('Status'), 'RETURNED')
+
+        await waitFor(() => {
+            expect(mockGetTimesheet)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', expect.objectContaining({
+                    status: TimesheetEntryStatus.DRAFT,
+                }))
+        })
+        expect(screen.getByText('09-09-2026'))
+            .toBeInTheDocument()
+        expect(screen.queryByText('07-09-2026'))
+            .not.toBeInTheDocument()
+        expect(screen.queryByText('10-09-2026'))
+            .not.toBeInTheDocument()
+        expect(screen.getByText('Returned for Corrections', { selector: 'span' }))
+            .toBeInTheDocument()
+        expect(screen.getByText('by maryj'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Split the hours by project'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: /^Return for corrections/ }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: /^Approve/ }))
+            .not.toBeInTheDocument()
     })
 
     it('requires an approval comment before approving', async () => {

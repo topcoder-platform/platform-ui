@@ -273,6 +273,57 @@ describe('TimesheetGrid', () => {
             .toBeInTheDocument()
     })
 
+    it('shows a row returned for corrections with who returned it and what to fix', () => {
+        render(
+            <TimesheetGrid
+                onSelectionChange={noop}
+                rows={[
+                    row({
+                        reopenedAt: '2026-09-10T00:00:00.000Z',
+                        returnComment: 'Split the hours by project',
+                        returnedAt: '2026-09-14T00:00:00.000Z',
+                        returnedByHandle: 'maryj',
+                    }),
+                ]}
+                selectedDates={[]}
+            />,
+        )
+
+        expect(screen.getByText('Returned for Corrections'))
+            .toBeInTheDocument()
+        expect(screen.getByText('by maryj'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Split the hours by project'))
+            .toBeInTheDocument()
+        // The return is the newer, actionable state, so it replaces the reopened badge.
+        expect(screen.queryByText('Reopened'))
+            .not
+            .toBeInTheDocument()
+    })
+
+    it('drops the return for corrections once the row is submitted again', () => {
+        render(
+            <TimesheetGrid
+                onSelectionChange={noop}
+                rows={[
+                    row({
+                        returnComment: 'Split the hours by project',
+                        returnedAt: '2026-09-14T00:00:00.000Z',
+                        status: TimesheetEntryStatus.SUBMITTED,
+                    }),
+                ]}
+                selectedDates={[]}
+            />,
+        )
+
+        expect(screen.queryByText('Returned for Corrections'))
+            .not
+            .toBeInTheDocument()
+        expect(screen.queryByText('Split the hours by project'))
+            .not
+            .toBeInTheDocument()
+    })
+
     it('keeps a submitted row editable, because editing it returns it to draft', () => {
         render(
             <TimesheetGrid

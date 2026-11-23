@@ -47,6 +47,9 @@ export interface TimesheetRow {
     remarks: string
     reopenComment?: string
     reopenedAt?: string
+    returnComment?: string
+    returnedAt?: string
+    returnedByHandle?: string
     status: TimesheetEntryStatus
     /** `YYYY-MM-DD`, which is what every API payload uses. */
     workDate: string
@@ -197,6 +200,14 @@ export const isRowReopened = (row: TimesheetRow): boolean => (
     Boolean(row.reopenedAt) && row.status === TimesheetEntryStatus.DRAFT
 )
 
+/**
+ * A row a manager returned for corrections. It is a draft again, so the member edits and resubmits it as
+ * usual; resubmitting clears the return.
+ */
+export const isRowReturned = (row: TimesheetRow): boolean => (
+    Boolean(row.returnedAt) && row.status === TimesheetEntryStatus.DRAFT
+)
+
 const toRow = (workDate: string, entry?: TimesheetEntry): TimesheetRow => ({
     approvalComment: entry?.approvalComment ?? undefined,
     approvedAt: entry?.approvedAt ?? undefined,
@@ -212,6 +223,9 @@ const toRow = (workDate: string, entry?: TimesheetEntry): TimesheetRow => ({
     remarks: entry?.remarks ?? '',
     reopenComment: entry?.reopenComment ?? undefined,
     reopenedAt: entry?.reopenedAt ?? undefined,
+    returnComment: entry?.returnComment ?? undefined,
+    returnedAt: entry?.returnedAt ?? undefined,
+    returnedByHandle: entry?.returnedByHandle ?? undefined,
     status: entry?.status ?? TimesheetEntryStatus.DRAFT,
     workDate,
 })
