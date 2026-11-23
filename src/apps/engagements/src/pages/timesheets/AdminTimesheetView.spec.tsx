@@ -15,6 +15,7 @@ import {
     getTimesheet,
     getTimesheetEntryAudit,
     reopenTimesheetEntries,
+    revertTimesheetEntriesToDraft,
     saveTimesheetEntries,
     submitTimesheetEntries,
 } from '../../lib/services'
@@ -167,6 +168,7 @@ jest.mock('../../lib/services', () => ({
     getTimesheetEntryAudit: jest.fn()
         .mockResolvedValue([]),
     reopenTimesheetEntries: jest.fn(),
+    revertTimesheetEntriesToDraft: jest.fn(),
     saveTimesheetEntries: jest.fn(),
     submitTimesheetEntries: jest.fn(),
 }))
@@ -175,6 +177,9 @@ const mockApprove = approveTimesheetEntries as jest.MockedFunction<typeof approv
 const mockGetTimesheet = getTimesheet as jest.MockedFunction<typeof getTimesheet>
 const mockDelete = deleteTimesheetEntries as jest.MockedFunction<typeof deleteTimesheetEntries>
 const mockReopen = reopenTimesheetEntries as jest.MockedFunction<typeof reopenTimesheetEntries>
+const mockRevert = revertTimesheetEntriesToDraft as jest.MockedFunction<
+    typeof revertTimesheetEntriesToDraft
+>
 const mockSave = saveTimesheetEntries as jest.MockedFunction<typeof saveTimesheetEntries>
 const mockSubmit = submitTimesheetEntries as jest.MockedFunction<typeof submitTimesheetEntries>
 const mockGetAudit = getTimesheetEntryAudit as jest.MockedFunction<typeof getTimesheetEntryAudit>
@@ -564,6 +569,76 @@ describe('AdminTimesheetView', () => {
                     overrideReason: 'Wrong hours reported',
                 })
         })
+    })
+
+    it('requires a reason before reverting submitted entries to draft', async () => {
+        const user = userEvent.setup()
+        const reverted = timesheet([
+            entry({ id: 'e1', status: TimesheetEntryStatus.DRAFT }),
+            entry({ id: 'e2', status: TimesheetEntryStatus.DRAFT, workDate: '2026-09-08' }),
+        ])
+        mockRevert.mockResolvedValue(reverted)
+        const { onTimesheetChange }: { onTimesheetChange: jest.Mock } = renderView([
+            entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED }),
+            entry({
+                hoursWorked: '4.00',
+                id: 'e2',
+                status: TimesheetEntryStatus.SUBMITTED,
+                workDate: '2026-09-08',
+            }),
+        ])
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        await user.click(screen.getByLabelText('Select 08-09-2026'))
+        await user.click(screen.getByRole('button', { name: 'Revert to Draft (2)' }))
+
+        const dialog = screen.getByRole('dialog')
+        expect(within(dialog)
+            .getByText('Revert to Draft'))
+            .toBeInTheDocument()
+        expect(within(dialog)
+            .getByText(/You are about to revert below timesheet entries to Draft status\./))
+            .toBeInTheDocument()
+        expect(within(dialog)
+            .getByText('Total Hours: 12.5'))
+            .toBeInTheDocument()
+        expect(within(dialog)
+            .getByText('Number of Entries: 2'))
+            .toBeInTheDocument()
+        expect(within(dialog)
+            .getByRole('button', { name: 'Confirm' }))
+            .toBeDisabled()
+
+        await user.type(within(dialog)
+            .getByLabelText('Reason'), 'Submitted for the wrong week')
+        await user.click(within(dialog)
+            .getByRole('button', { name: 'Confirm' }))
+
+        await waitFor(() => {
+            expect(mockRevert)
+                .toHaveBeenCalledWith('eng-1', 'asg-1', {
+                    entryIds: ['e1', 'e2'],
+                    reason: 'Submitted for the wrong week',
+                })
+        })
+        expect(onTimesheetChange)
+            .toHaveBeenCalledWith(reverted)
+    })
+
+    it('offers revert to draft only when every selected row is submitted', async () => {
+        const user = userEvent.setup()
+        renderView([
+            entry({ id: 'e1', status: TimesheetEntryStatus.SUBMITTED }),
+            entry({ id: 'e2', status: TimesheetEntryStatus.DRAFT, workDate: '2026-09-08' }),
+        ])
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+        expect(screen.getByRole('button', { name: 'Revert to Draft (1)' }))
+            .toBeEnabled()
+
+        await user.click(screen.getByLabelText('Select 08-09-2026'))
+        expect(screen.queryByRole('button', { name: /^Revert to Draft/ }))
+            .not.toBeInTheDocument()
     })
 
     it('requires both a comment and a reason to approve on a manager’s behalf', async () => {
