@@ -169,6 +169,34 @@ describe('ManagerTimesheetView', () => {
             .toBeEnabled()
     })
 
+    it('shows disabled approve buttons at the top and bottom until rows are selected', async () => {
+        const user = userEvent.setup()
+        renderView()
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Select 07-09-2026'))
+                .toBeInTheDocument()
+        })
+
+        const idleButtons = screen.getAllByRole('button', { name: 'Approve' })
+        expect(idleButtons)
+            .toHaveLength(2)
+        idleButtons.forEach(button => expect(button)
+            .toBeDisabled())
+
+        await user.click(screen.getByLabelText('Select 07-09-2026'))
+
+        const activeButtons = screen.getAllByRole('button', { name: 'Approve (1)' })
+        expect(activeButtons)
+            .toHaveLength(2)
+        activeButtons.forEach(button => expect(button)
+            .toBeEnabled())
+
+        await user.click(activeButtons[1])
+        expect(screen.getByRole('dialog'))
+            .toBeInTheDocument()
+    })
+
     it('shows totals and a counted approve button once rows are selected', async () => {
         const user = userEvent.setup()
         renderView()
@@ -180,8 +208,8 @@ describe('ManagerTimesheetView', () => {
         await user.click(screen.getByLabelText('Select 07-09-2026'))
         await user.click(screen.getByLabelText('Select 08-09-2026'))
 
-        expect(screen.getByRole('button', { name: 'Approve (2)' }))
-            .toBeInTheDocument()
+        expect(screen.getAllByRole('button', { name: 'Approve (2)' }))
+            .toHaveLength(2)
         const summary = screen.getByText('Total Selected Days:')
             .closest('section') as HTMLElement
         expect(within(summary)
@@ -201,7 +229,7 @@ describe('ManagerTimesheetView', () => {
                 .toBeInTheDocument()
         })
         await user.click(screen.getByLabelText('Select 07-09-2026'))
-        await user.click(screen.getByRole('button', { name: 'Approve (1)' }))
+        await user.click(screen.getAllByRole('button', { name: 'Approve (1)' })[0])
 
         const dialog = screen.getByRole('dialog')
         expect(within(dialog)
@@ -235,7 +263,7 @@ describe('ManagerTimesheetView', () => {
                 .toBeInTheDocument()
         })
         await user.click(screen.getByLabelText('Select 07-09-2026'))
-        await user.click(screen.getByRole('button', { name: 'Approve (1)' }))
+        await user.click(screen.getAllByRole('button', { name: 'Approve (1)' })[0])
 
         const dialog = screen.getByRole('dialog')
         await user.type(within(dialog)
@@ -271,7 +299,7 @@ describe('ManagerTimesheetView', () => {
         })
         await user.click(screen.getByLabelText('Select 07-09-2026'))
         await user.click(screen.getByLabelText('Select 08-09-2026'))
-        await user.click(screen.getByRole('button', { name: 'Approve (2)' }))
+        await user.click(screen.getAllByRole('button', { name: 'Approve (2)' })[0])
 
         const dialog = screen.getByRole('dialog')
         await user.type(within(dialog)
@@ -295,7 +323,7 @@ describe('ManagerTimesheetView', () => {
                 .toBeInTheDocument()
         })
         await user.click(screen.getByLabelText('Select 07-09-2026'))
-        await user.click(screen.getByRole('button', { name: 'Approve (1)' }))
+        await user.click(screen.getAllByRole('button', { name: 'Approve (1)' })[0])
 
         const dialog = screen.getByRole('dialog')
         await user.type(within(dialog)
@@ -321,6 +349,7 @@ describe('ManagerTimesheetView', () => {
             .toBeInTheDocument()
         expect(screen.getByLabelText('To Date'))
             .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: /^Approve/ })).not.toBeInTheDocument()
         await waitFor(() => {
             expect(mockGetTimesheet)
                 .toHaveBeenCalledWith('eng-1', 'asg-1', expect.objectContaining({
