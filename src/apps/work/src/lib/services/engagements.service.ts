@@ -1141,6 +1141,10 @@ export async function fetchPendingSubmissionTimesheets(
             params.set('excludeTestProjects', 'true')
         }
 
+        if (query.managerAssigned) {
+            params.set('managerAssigned', 'true')
+        }
+
         if (query.page) {
             params.set('page', String(query.page))
         }

@@ -26,6 +26,14 @@ jest.mock('~/libs/ui', () => ({
     IconOutline: {
         ExternalLinkIcon: () => <></>,
     },
+    InputCheckbox: (props: { checked?: boolean, label: string, onClick?: () => void }) => (
+        <input
+            aria-label={props.label}
+            checked={!!props.checked}
+            onChange={props.onClick}
+            type='checkbox'
+        />
+    ),
     // Shows the picked day, and reports a change only for a complete YYYY-MM-DD value or a clear.
     InputDatePicker: (props: {
         date?: Date
@@ -176,6 +184,7 @@ describe('PendingTimesheetSubmissionsTab', () => {
                     engagement: undefined,
                     excludeTestProjects: false,
                     fromDate: '2026-11-09',
+                    managerAssigned: true,
                     page: 1,
                     perPage: 50,
                     toDate: '2026-11-13',
@@ -240,6 +249,7 @@ describe('PendingTimesheetSubmissionsTab', () => {
                         engagement: 'Frontend',
                         excludeTestProjects: true,
                         fromDate: '2026-11-02',
+                        managerAssigned: true,
                         page: 1,
                         perPage: 50,
                         toDate: '2026-11-06',
@@ -247,6 +257,21 @@ describe('PendingTimesheetSubmissionsTab', () => {
                     true,
                 )
         })
+    })
+
+    it('lists only engagements with a manager until Manager Assigned is unchecked', () => {
+        render(<PendingTimesheetSubmissionsTab />)
+
+        const checkbox = screen.getByLabelText('Manager Assigned') as HTMLInputElement
+        expect(checkbox.checked)
+            .toBe(true)
+
+        fireEvent.click(checkbox)
+
+        expect(checkbox.checked)
+            .toBe(false)
+        expect(mockedUseFetch)
+            .toHaveBeenLastCalledWith(expect.objectContaining({ managerAssigned: false, page: 1 }), true)
     })
 
     it.each([

@@ -26,6 +26,8 @@ export interface PendingSubmissionTimesheetQuery {
     excludeTestProjects?: boolean
     /** YYYY-MM-DD; required by the API. */
     fromDate: string
+    /** Only engagements with at least one manager assigned. */
+    managerAssigned?: boolean
     page?: number
     perPage?: number
     /** YYYY-MM-DD; required by the API. */

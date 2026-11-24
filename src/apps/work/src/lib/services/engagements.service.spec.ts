@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
-import { xhrDeleteAsync, xhrGetPaginatedAsync, xhrPostAsync } from '~/libs/core'
+import { xhrDeleteAsync, xhrGetAsync, xhrGetPaginatedAsync, xhrPostAsync } from '~/libs/core'
 
 import {
     normalizeEngagement,
@@ -9,6 +9,7 @@ import {
 import {
     createEngagement,
     fetchEngagements,
+    fetchPendingSubmissionTimesheets,
     removeSelectedEngagementAssignment,
 } from './engagements.service'
 
@@ -222,5 +223,28 @@ describe('removeSelectedEngagementAssignment', () => {
 
         await expect(removeSelectedEngagementAssignment('engagement-1', 'assignment-1')).rejects
             .toThrow('Only a selected assignment the member has not accepted yet can be removed.')
+    })
+})
+
+describe('fetchPendingSubmissionTimesheets', () => {
+    it('asks only for engagements with a manager when Manager Assigned is on', async () => {
+        const mockedGetAsync = xhrGetAsync as jest.Mock
+        mockedGetAsync.mockResolvedValue({ data: [], meta: {} })
+
+        await fetchPendingSubmissionTimesheets({
+            fromDate: '2026-11-16',
+            managerAssigned: true,
+            page: 1,
+            perPage: 50,
+            toDate: '2026-11-20',
+        })
+        await fetchPendingSubmissionTimesheets({ fromDate: '2026-11-16', toDate: '2026-11-20' })
+
+        expect(mockedGetAsync.mock.calls[0][0])
+            .toBe('https://example.com/engagements/timesheets/pending-submission'
+                + '?fromDate=2026-11-16&toDate=2026-11-20&managerAssigned=true&page=1&perPage=50')
+        expect(mockedGetAsync.mock.calls[1][0])
+            .toBe('https://example.com/engagements/timesheets/pending-submission'
+                + '?fromDate=2026-11-16&toDate=2026-11-20')
     })
 })
