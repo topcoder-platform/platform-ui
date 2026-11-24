@@ -91,26 +91,45 @@ it.each(['reports', 'sales'] as SalesDashboardPortal[])(
     },
 )
 
-it('shows monthly lead counts in a status table on the Sales dashboard', async () => {
+it('charts monthly lead counts by status under Flexible Talent in Sales', async () => {
+    const counts = { 'On Hold': 3, 'Partially Fulfilled': 1 }
     const chart: MonthlySalesChart = {
-        annual: { New: 3 },
+        annual: counts,
         description: 'Engagement leads by creation month (UTC) and current status',
         id: 'leads',
-        months: [{ month: '2026-11-01', values: { New: 3 } }],
-        series: [{ key: 'New', label: 'New' }],
-        stacked: false,
+        months: [{ month: '2026-11-01', values: counts }],
+        series: Object.keys(counts)
+            .map(key => ({ key, label: key })),
+        stacked: true,
         title: 'Leads Report',
         unit: 'count',
     }
     fetchDashboard.mockImplementation(async section => ({ charts: section === 'leads' ? [chart] : [], notices: [] }))
     render(<SalesReportsPage />)
     fireEvent.click(screen.getByRole('tab', { name: 'Monthly dashboards' }))
-    const table = within(await screen.findByRole('table', { name: chart.description }))
+    const talent = within(screen.getByRole('region', { name: 'Flexible Talent' }))
+    expect(await talent.findByRole('figure', { name: 'Leads Report chart' }))
+        .toBeInTheDocument()
+    expect(jest.mocked(HighchartsReact).mock.calls.slice(-1)[0][0].options)
+        .toMatchObject({
+            chart: { type: 'column' },
+            plotOptions: { column: { stacking: 'normal' } },
+            series: [
+                { data: [3], name: 'On Hold', type: 'column' },
+                { data: [1], name: 'Partially Fulfilled', type: 'column' },
+            ],
+            xAxis: { categories: ['Nov 2026'] },
+            yAxis: { title: { text: 'Leads' } },
+        })
+    fireEvent.click(screen.getByRole('button', { name: 'Quarterly' }))
+    const card = within(talent.getByRole('article', { name: 'Leads Report' }))
+    fireEvent.click(card.getByText('View monthly data'))
+    const table = within(card.getByRole('table', { name: chart.title }))
     expect(table.getByRole('columnheader', { name: 'Status' }))
         .toBeInTheDocument()
     expect(table.getByRole('columnheader', { name: 'Nov 2026' }))
         .toBeInTheDocument()
-    expect(table.getByRole('row', { name: 'New 3 3' }))
+    expect(table.getByRole('row', { name: 'On Hold 3 3' }))
         .toBeInTheDocument()
 })
 

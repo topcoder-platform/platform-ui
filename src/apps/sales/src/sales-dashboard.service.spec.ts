@@ -40,6 +40,8 @@ describe('Sales dashboard fiscal year requests', () => {
         get.mockResolvedValueOnce({
             data: [
                 lead('1', 'SUBMITTED', '2026-10-20'),
+                lead('8', 'ON_HOLD', '2026-10-08'),
+                lead('9', 'PARTIALLY_FULFILLED', '2026-10-03'),
                 lead('2', 'UNDER_REVIEW', '2026-10-02'),
                 overlap,
             ],
@@ -63,6 +65,10 @@ describe('Sales dashboard fiscal year requests', () => {
                 + `?page=${page}&perPage=100&sortBy=createdAt&sortOrder=desc`,
                 signal,
             ]))
+        expect(chart.stacked)
+            .toBe(true)
+        expect(chart.series.map(series => series.label))
+            .toEqual(['New', 'Under Review', 'Fulfilled', 'Partially Fulfilled', 'On Hold', 'Lost'])
         expect(chart.months)
             .toHaveLength(12)
         expect(chart.months[0])
@@ -73,11 +79,11 @@ describe('Sales dashboard fiscal year requests', () => {
         expect(chart.months[5].values.Lost)
             .toBe(1)
         expect(chart.months[6].values)
-            .toEqual({ ...NO_LEADS, Fulfilled: 1, New: 1, 'Under Review': 1 })
+            .toEqual({ Fulfilled: 1, Lost: 0, New: 1, 'On Hold': 1, 'Partially Fulfilled': 1, 'Under Review': 1 })
         expect(chart.months[11])
             .toEqual({ month: '2027-03-01', values: {} })
         expect(chart.annual)
-            .toEqual({ ...NO_LEADS, Fulfilled: 1, Lost: 1, New: 1, 'Under Review': 3 })
+            .toEqual({ Fulfilled: 1, Lost: 1, New: 1, 'On Hold': 1, 'Partially Fulfilled': 1, 'Under Review': 3 })
     })
 
     it('shows zero for every status in elapsed months when there are no leads', async () => {
