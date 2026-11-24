@@ -696,11 +696,25 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                                     + ` at 1 USD = ${formatCalculatorAmount(usdToInr.rate)} INR)`}
                             </span>
                         )}
-                        {' · '}
-                        {`Challenge fee: USD ${
-                            formatCalculatorAmount(result.challengeFee)
-                        }`}
                     </p>
+                </section>
+
+                <section className={styles.section}>
+                    <h4 className={styles.sectionTitle}>Products</h4>
+                    <div className={styles.cards}>
+                        <div className={styles.card}>
+                            <span className={styles.cardLabel}>Member Fee</span>
+                            <span className={styles.cardValue}>
+                                {`USD ${formatCalculatorAmount(result.totalMemberCost)}`}
+                            </span>
+                        </div>
+                        <div className={styles.card}>
+                            <span className={styles.cardLabel}>Challenge Fee</span>
+                            <span className={styles.cardValue}>
+                                {`USD ${formatCalculatorAmount(result.challengeFee)}`}
+                            </span>
+                        </div>
+                    </div>
                 </section>
 
                 <section className={styles.section}>

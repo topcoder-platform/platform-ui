@@ -7,6 +7,7 @@ import {
     render,
     screen,
     waitFor,
+    within,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
@@ -229,8 +230,16 @@ describe('FlexiTalentCalculatorModal', () => {
 
         expect(screen.getByLabelText('Member Cost (USD)'))
             .toHaveValue('104000')
-        expect(screen.getByText(/Challenge fee: USD 116,000/))
-            .toBeInTheDocument()
+        // Products: the member fee is the total member cost; the challenge fee is what is left.
+        const products = screen.getByRole('heading', { name: 'Products' }).parentElement as HTMLElement
+        expect(within(products)
+            .getByText('Member Fee').nextElementSibling)
+            .toHaveTextContent('USD 104,000')
+        expect(within(products)
+            .getByText('Challenge Fee').nextElementSibling)
+            .toHaveTextContent('USD 116,000')
+        expect(screen.queryByText(/Challenge fee:/))
+            .not.toBeInTheDocument()
         expect(screen.queryByText(/Member Hourly Rate \(based on Actual Cost\)/))
             .not.toBeInTheDocument()
         expect(screen.getByLabelText('Actual Cost (USD)'))
