@@ -295,8 +295,10 @@
     animation: shimmer 1.6s infinite;
 }
 
+// The options list is as wide as the field, so the field is kept wide enough for the longest status
+// ("Returned for Corrections", bold when selected) to fit on one line whichever status is picked.
 .selectFilter {
-    min-width: 190px;
+    min-width: 250px;
     label :last-child {
         margin-top: 0;
     }

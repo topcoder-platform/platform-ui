@@ -277,7 +277,7 @@ const ManagerTimesheetView: FC<ManagerTimesheetViewProps> = (props: ManagerTimes
         <div className={styles.view}>
             <section className={styles.rangeSection}>
                 <InputSelect
-                    classNameWrapper={styles.dateFilterWrapper}
+                    classNameWrapper={`${styles.dateFilterWrapper} ${styles.selectFilter}`}
                     dirty
                     label='Status'
                     name='timesheet-status-filter'
