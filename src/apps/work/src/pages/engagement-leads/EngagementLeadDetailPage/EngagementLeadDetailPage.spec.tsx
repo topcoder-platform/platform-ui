@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, react/jsx-no-bind */
 import '@testing-library/jest-dom'
 
 import React from 'react'
@@ -40,7 +40,36 @@ jest.mock('~/libs/ui', () => ({
             {props.children ?? props.label}
         </button>
     ),
+    IconOutline: {
+        CalculatorIcon: () => <svg />,
+        DocumentAddIcon: () => <svg />,
+    },
+    Tooltip: (props: { children?: React.ReactNode }) => <>{props.children}</>,
 }), { virtual: true })
+jest.mock('../../../lib/components/EngagementLeadNotesModal', () => ({
+    EngagementLeadNotesModal: (props: {
+        lead: { id: string, notes?: unknown[] }
+        onSaved: (lead: unknown) => void
+    }) => (
+        <div role='dialog' aria-label='Notes'>
+            {`Notes for ${props.lead.id}`}
+            <button
+                onClick={() => props.onSaved({ ...props.lead, notes: [{ id: 'note-1' }] })}
+                type='button'
+            >
+                Save note
+            </button>
+        </div>
+    ),
+}))
+jest.mock('../../../lib/components/FlexiTalentCalculatorModal', () => ({
+    FlexiTalentCalculatorModal: (props: { lead: { id: string }, onClose: () => void }) => (
+        <div role='dialog' aria-label='Calculator'>
+            {`Calculator for ${props.lead.id}`}
+            <button onClick={props.onClose} type='button'>Close calculator</button>
+        </div>
+    ),
+}))
 jest.mock('../../../config/routes.config', () => ({
     rootRoute: '/work',
 }))
@@ -283,6 +312,24 @@ describe('EngagementLeadDetailPage', () => {
         await expect(resolveUrl())
             .resolves
             .toBe('/work/projects/project-9/engagements/eng-1/view')
+    })
+
+    it('opens the lead notes and cost calculator from the lead page', async () => {
+        await renderLead(baseLead)
+
+        await userEvent.click(screen.getByRole('button', { name: 'Notes' }))
+        expect(screen.getByText('Notes for lead-1'))
+            .toBeInTheDocument()
+        await userEvent.click(screen.getByRole('button', { name: 'Save note' }))
+        expect(screen.queryByText('Notes for lead-1'))
+            .toBeNull()
+
+        await userEvent.click(screen.getByRole('button', { name: 'Cost Calculator' }))
+        expect(screen.getByText('Calculator for lead-1'))
+            .toBeInTheDocument()
+        await userEvent.click(screen.getByRole('button', { name: 'Close calculator' }))
+        expect(screen.queryByText('Calculator for lead-1'))
+            .toBeNull()
     })
 
     it('asks for a reason before rejecting a lead', async () => {

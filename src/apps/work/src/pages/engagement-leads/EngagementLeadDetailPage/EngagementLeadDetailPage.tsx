@@ -9,7 +9,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { PageWrapper } from '~/apps/review/src/lib'
-import { Button } from '~/libs/ui'
+import { Button, IconOutline, Tooltip } from '~/libs/ui'
 
 import {
     rootRoute,
@@ -27,6 +27,8 @@ import {
     ErrorMessage,
     LoadingSpinner,
 } from '../../../lib/components'
+import { EngagementLeadNotesModal } from '../../../lib/components/EngagementLeadNotesModal'
+import { FlexiTalentCalculatorModal } from '../../../lib/components/FlexiTalentCalculatorModal'
 import { RejectEngagementLeadModal } from '../../../lib/components/RejectEngagementLeadModal'
 import {
     extractErrorMessage,
@@ -100,6 +102,8 @@ export const EngagementLeadDetailPage: FC = () => {
     const [projectId, setProjectId] = useState<string>('')
     const [viewingEngagement, setViewingEngagement] = useState<boolean>(false)
     const [rejecting, setRejecting] = useState<boolean>(false)
+    const [notesOpen, setNotesOpen] = useState<boolean>(false)
+    const [calculatorOpen, setCalculatorOpen] = useState<boolean>(false)
 
     const leadsBackUrl = `${rootRoute}${getEngagementLeadsTabPath(lead?.leadType)}`
     // Each lead shows only what its intake form asks for. The Wipro Direct form has no role,
@@ -247,6 +251,39 @@ export const EngagementLeadDetailPage: FC = () => {
                                     {STATUS_ACTION_LABELS[status]}
                                 </Button>
                             ))}
+
+                            {/* Same Notes and Cost Calculator as the leads list. The trigger is blurred
+                                so the tooltip does not reopen when the modal hands focus back. */}
+                            <div className={styles.iconActions}>
+                                <Tooltip content='Notes' triggerOn='click-hover'>
+                                    <button
+                                        aria-label='Notes'
+                                        className={`${styles.iconButton} ${
+                                            lead.notes?.length ? styles.iconButtonActive : ''
+                                        }`}
+                                        type='button'
+                                        onClick={event => {
+                                            event.currentTarget.blur()
+                                            setNotesOpen(true)
+                                        }}
+                                    >
+                                        <IconOutline.DocumentAddIcon aria-hidden className={styles.icon} />
+                                    </button>
+                                </Tooltip>
+                                <Tooltip content='Cost Calculator' triggerOn='click-hover'>
+                                    <button
+                                        aria-label='Cost Calculator'
+                                        className={styles.iconButton}
+                                        type='button'
+                                        onClick={event => {
+                                            event.currentTarget.blur()
+                                            setCalculatorOpen(true)
+                                        }}
+                                    >
+                                        <IconOutline.CalculatorIcon aria-hidden className={styles.icon} />
+                                    </button>
+                                </Tooltip>
+                            </div>
                         </div>
 
                         {lead.convertedEngagementId && (
@@ -360,6 +397,24 @@ export const EngagementLeadDetailPage: FC = () => {
                             </section>
                         )}
                     </>
+                )}
+
+                {notesOpen && lead && (
+                    <EngagementLeadNotesModal
+                        lead={lead}
+                        onClose={() => setNotesOpen(false)}
+                        onSaved={updated => {
+                            setLead(updated)
+                            setNotesOpen(false)
+                        }}
+                    />
+                )}
+
+                {calculatorOpen && lead && (
+                    <FlexiTalentCalculatorModal
+                        lead={lead}
+                        onClose={() => setCalculatorOpen(false)}
+                    />
                 )}
 
                 {rejecting && lead && (
