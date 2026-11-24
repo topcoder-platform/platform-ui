@@ -43,7 +43,7 @@ jest.mock('~/libs/ui', () => ({
 })
 jest.mock('../../constants', () => ({
     ENGAGEMENTS_APP_URL: 'https://engagements.test',
-    PAGE_SIZE: 10,
+    TIMESHEETS_PAGE_SIZE: 50,
 }))
 jest.mock('../../hooks', () => ({
     useFetchApprovedTimesheets: jest.fn(),
@@ -119,10 +119,17 @@ describe('ApprovedTimesheetsTab', () => {
         mockedUseFetch.mockReturnValue({
             error: undefined,
             isLoading: false,
-            meta: { page: 1, perPage: 10, totalCount: 2, totalPages: 1 },
+            meta: { page: 1, perPage: 50, totalCount: 2, totalPages: 1 },
             mutate,
             rows,
         } as never)
+    })
+
+    it('asks for 50 rows per page by default', () => {
+        render(<ApprovedTimesheetsTab />)
+
+        expect(mockedUseFetch)
+            .toHaveBeenCalledWith(expect.objectContaining({ page: 1, perPage: 50 }))
     })
 
     it('links the engagement name to the assignee approved timesheet in a new tab', () => {
@@ -225,7 +232,7 @@ describe('ApprovedTimesheetsTab', () => {
         mockedUseFetch.mockReturnValue({
             error: undefined,
             isLoading: false,
-            meta: { page: 1, perPage: 10, totalCount: 3, totalPages: 1 },
+            meta: { page: 1, perPage: 50, totalCount: 3, totalPages: 1 },
             mutate,
             rows: [
                 buildRow({ hours: 30, id: 'row-1' }),

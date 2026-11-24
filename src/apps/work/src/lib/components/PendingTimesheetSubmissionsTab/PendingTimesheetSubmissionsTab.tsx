@@ -15,7 +15,7 @@ import {
     InputText,
 } from '~/libs/ui'
 
-import { PAGE_SIZE } from '../../constants'
+import { TIMESHEETS_PAGE_SIZE } from '../../constants'
 import { useFetchPendingSubmissionTimesheets } from '../../hooks'
 import {
     PendingSubmissionReminderResult,
@@ -119,7 +119,7 @@ export const PendingTimesheetSubmissionsTab: FC<PendingTimesheetSubmissionsTabPr
     const [fromDate, setFromDate] = useState<Date | undefined>(defaultPeriod.fromDate)
     const [toDate, setToDate] = useState<Date | undefined>(defaultPeriod.toDate)
     const [page, setPage] = useState<number>(1)
-    const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
+    const [perPage, setPerPage] = useState<number>(TIMESHEETS_PAGE_SIZE)
     // Keyed by row id and kept across pages and the engagement filter, so a selection can span
     // engagements. A new work period starts it over: whether a member is behind depends on it.
     const [selectedRows, setSelectedRows] = useState<Record<string, PendingSubmissionTimesheetRow>>({})

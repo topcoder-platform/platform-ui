@@ -15,7 +15,7 @@ import {
     InputText,
 } from '~/libs/ui'
 
-import { PAGE_SIZE } from '../../constants'
+import { TIMESHEETS_PAGE_SIZE } from '../../constants'
 import { useFetchPendingApprovalTimesheets } from '../../hooks'
 import {
     PendingApprovalReminderResult,
@@ -113,7 +113,7 @@ export const PendingTimesheetApprovalsTab: FC<PendingTimesheetApprovalsTabProps>
     const [fromDate, setFromDate] = useState<Date | undefined>()
     const [toDate, setToDate] = useState<Date | undefined>()
     const [page, setPage] = useState<number>(1)
-    const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
+    const [perPage, setPerPage] = useState<number>(TIMESHEETS_PAGE_SIZE)
     // Keyed by row id and kept across pages and filters, so a selection can span engagements.
     const [selectedRows, setSelectedRows] = useState<Record<string, PendingApprovalTimesheetRow>>({})
     const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false)
