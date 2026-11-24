@@ -65,7 +65,7 @@ export async function fetchSalesLeadsReport(signal: AbortSignal): Promise<SalesD
             id: 'leads',
             months,
             series: statuses.map(status => ({ key: status, label: status })),
-            stacked: false,
+            stacked: true,
             title: 'Leads Report',
             unit: 'count',
         }],

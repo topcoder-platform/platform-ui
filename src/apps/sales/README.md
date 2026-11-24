@@ -288,19 +288,19 @@ The Reports route is `/reports/sales-dashboards` on the combined host and
 `/sales-dashboards` on the Reports host. Existing pipeline/progression reports
 and platform dashboards retain their routes and behavior.
 
-The page groups its six cards into **Sales** (Bookings Won and Bookings in Pipeline),
-**Revenue** (Revenue Closed), **Payments** (Topcoder Payments and TaaS Payments), and
-**Flexible Talent** (Members Engaged), followed by the two **Customer** matrices.
-The six sources call `/sales-dashboard/:section` independently, with inline loading,
-failure/retry and pending-source states. Refresh reloads every active source; changing
-Close date / Created date reloads bookings and pipeline only. Requests are aborted
+The page groups its cards into **Sales** (Bookings Won and Bookings in Pipeline),
+**Revenue** (Revenue Closed and Revenue Forecast), **Payments** (Topcoder Payments and TaaS Payments), and
+**Flexible Talent** (Members Engaged and, in Sales, Leads Report), followed by the two **Customer** matrices.
+Dashboard sources load independently, with inline loading, failure/retry and pending-source
+states. Refresh reloads every active source. Changing Close date / Created date reloads
+bookings and pipeline only. Requests are aborted
 on unmount or control changes.
 
-In Sales, **Leads Report** shows each month's engagement leads by their current
-Work status (New, Under Review, Fulfilled or Lost). The month is the lead's UTC
-creation month. A later status change updates its count in that original month.
-The table includes both Wipro Consumption and Wipro Direct leads from the
-Engagements API and stays monthly when the dashboard switches to Quarterly.
+The **Leads Report** shows one bar per UTC creation month, stacked by current
+Work status (New, Under Review, Fulfilled, Partially Fulfilled, On Hold, or Lost).
+A later status change updates the count in the lead's original creation month.
+The chart and its data table include both Wipro Consumption and Wipro Direct
+leads from the Engagements API and stay monthly when the dashboard switches to Quarterly.
 
 Bookings Won, Bookings in Pipeline and Revenue Closed each have one independent
 **Filter by** dropdown. It selects the dimension shown as stacked chart series and

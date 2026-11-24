@@ -208,6 +208,8 @@ const SalesDashboardChart: FC<{
         () => chart.months.map(month => salesPeriodLabel(month.month, period)),
         [chart.months, period],
     )
+    const isLeads = chart.id === 'leads'
+    const countLabel = isLeads ? 'Leads' : 'Members'
     const hasTotals = chart.unit === 'currency'
     const options = useMemo<Highcharts.Options>(() => ({
         chart: { backgroundColor: 'transparent', height: 320, type: 'column' },
@@ -232,9 +234,9 @@ const SalesDashboardChart: FC<{
         yAxis: {
             allowDecimals: chart.unit !== 'count',
             labels: { formatter: context => axisLabel(Number(context.value), chart.unit) },
-            title: { text: chart.unit === 'currency' ? 'USD' : chart.unit === 'percent' ? 'Markup (%)' : 'Members' },
+            title: { text: chart.unit === 'currency' ? 'USD' : chart.unit === 'percent' ? 'Markup (%)' : countLabel },
         },
-    }), [chart, labels, hasTotals])
+    }), [chart, labels, hasTotals, countLabel])
 
     return (
         <article className={styles.card} aria-label={chart.title}>
@@ -266,14 +268,19 @@ const SalesDashboardChart: FC<{
             </figure>
             <details>
                 <summary>{`View ${period.toLowerCase()} data`}</summary>
-                {chart.unit === 'count' && (
+                {chart.unit === 'count' && !isLeads && (
                     <p>
                         Counts are unique within each category and period.
                         Members may appear in more than one category.
                         Unavailable annual or quarterly counts are shown as a dash.
                     </p>
                 )}
-                <SalesDashboardTable chart={chart} period={period} caption={chart.title} />
+                <SalesDashboardTable
+                    chart={chart}
+                    period={period}
+                    caption={chart.title}
+                    firstColumn={isLeads ? 'Status' : undefined}
+                />
             </details>
         </article>
     )
