@@ -28,6 +28,7 @@ import {
     fetchEngagementLeadCalculations,
     updateEngagementLeadCalculation,
 } from '../../services/engagement-leads.service'
+import { ExchangeRate, fetchUsdToInrRate } from '../../services/exchange-rates.service'
 import {
     extractErrorMessage,
     showErrorToast,
@@ -101,6 +102,13 @@ const REFERRAL_OPTIONS: ReadonlyArray<InputSelectOption> = [
     { label: 'Yes', value: 'yes' },
 ]
 
+/** `YYYY-MM-DD` as the `DD-MM-YYYY` the work app shows dates in. */
+function formatRateDate(value: string): string {
+    const [year, month, day] = value.split('-')
+
+    return year && month && day ? `${day}-${month}-${year}` : value
+}
+
 function getFieldValue<TField extends string>(
     field: TField,
     draft: DraftInput<TField> | undefined,
@@ -137,6 +145,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
     const [deleting, setDeleting] = useState<boolean>(false)
     // Not saved: the role always comes from the lead.
     const [roleTitle] = useState<string>(lead.roleTitle || '')
+    const [usdToInr, setUsdToInr] = useState<ExchangeRate | undefined>(undefined)
 
     // Autosave runs outside React's render cycle, so it reads the latest state from refs.
     const draftsRef = useRef<CalculatorDraft[]>([])
@@ -253,6 +262,23 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                 .catch(() => undefined)
         }, AUTOSAVE_DELAY_MS))
     }, [clearAutosaveTimer, saveDraft])
+
+    // The INR figure is a convenience next to the USD one: without a rate the USD rate shows alone.
+    useEffect(() => {
+        let active = true
+
+        fetchUsdToInrRate()
+            .then(rate => {
+                if (active) {
+                    setUsdToInr(rate)
+                }
+            })
+            .catch(() => undefined)
+
+        return () => {
+            active = false
+        }
+    }, [])
 
     // Closing the calculator saves whatever is still waiting for the autosave delay.
     useEffect(() => () => {
@@ -660,6 +686,16 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                         {`Member Weekly Rate: USD ${formatCalculatorAmount(result.memberWeeklyRate)}`}
                         {' · '}
                         {`Member Monthly Rate: USD ${formatCalculatorAmount(result.memberMonthlyRate)}`}
+                        {usdToInr && result.memberMonthlyRate !== undefined && (
+                            <span
+                                title={`European Central Bank reference rate${
+                                    usdToInr.date ? ` for ${formatRateDate(usdToInr.date)}` : ''
+                                }, via frankfurter.dev`}
+                            >
+                                {` (INR ${formatCalculatorAmount(result.memberMonthlyRate * usdToInr.rate)}`
+                                    + ` at 1 USD = ${formatCalculatorAmount(usdToInr.rate)} INR)`}
+                            </span>
+                        )}
                         {' · '}
                         {`Challenge fee: USD ${
                             formatCalculatorAmount(result.challengeFee)
