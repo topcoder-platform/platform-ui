@@ -56,7 +56,7 @@ const columnLabels = [
 
 function getPeriodError(fromDate?: Date, toDate?: Date): string | undefined {
     if (!fromDate || !toDate) {
-        return 'Choose the work period to check, from and to.'
+        return 'Select the work period to view data.'
     }
 
     if (toDate.getTime() < fromDate.getTime()) {

@@ -252,7 +252,7 @@ describe('PendingTimesheetSubmissionsTab', () => {
     it.each([
         ['2026-11-13', '2026-11-09', 'The to date cannot be earlier than the from date.'],
         ['2026-10-01', '2026-11-01', 'The work period cannot span more than 31 days.'],
-        ['', '2026-11-13', 'Choose the work period to check, from and to.'],
+        ['', '2026-11-13', 'Select the work period to view data.'],
     ])('does not request the period %p to %p', (fromDate, toDate, message) => {
         render(<PendingTimesheetSubmissionsTab />)
 

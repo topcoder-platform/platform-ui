@@ -1,12 +1,16 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
-import { xhrGetPaginatedAsync, xhrPostAsync } from '~/libs/core'
+import { xhrDeleteAsync, xhrGetPaginatedAsync, xhrPostAsync } from '~/libs/core'
 
 import {
     normalizeEngagement,
     toEngagementStatusApi,
 } from '../utils'
 
-import { createEngagement, fetchEngagements } from './engagements.service'
+import {
+    createEngagement,
+    fetchEngagements,
+    removeSelectedEngagementAssignment,
+} from './engagements.service'
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
@@ -190,5 +194,33 @@ describe('createEngagement', () => {
             .toEqual(['skill-java'])
         expect(payload.newSkillNames)
             .toEqual(['Legacy Skill'])
+    })
+})
+
+describe('removeSelectedEngagementAssignment', () => {
+    it('deletes the selected assignment offer', async () => {
+        const mockedDeleteAsync = xhrDeleteAsync as jest.Mock
+        mockedDeleteAsync.mockResolvedValue(undefined)
+
+        await removeSelectedEngagementAssignment('engagement-1', 'assignment-1')
+
+        expect(mockedDeleteAsync)
+            .toHaveBeenCalledWith(
+                'https://example.com/engagements/engagements/engagement-1/assignments/assignment-1/offer',
+            )
+    })
+
+    it('reports a failed removal with the API message', async () => {
+        const mockedDeleteAsync = xhrDeleteAsync as jest.Mock
+        mockedDeleteAsync.mockRejectedValue({
+            response: {
+                data: {
+                    message: 'Only a selected assignment the member has not accepted yet can be removed.',
+                },
+            },
+        })
+
+        await expect(removeSelectedEngagementAssignment('engagement-1', 'assignment-1')).rejects
+            .toThrow('Only a selected assignment the member has not accepted yet can be removed.')
     })
 })

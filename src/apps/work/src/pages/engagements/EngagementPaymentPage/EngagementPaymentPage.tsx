@@ -27,6 +27,7 @@ import {
 
 import {
     CompleteAssignmentModal,
+    ConfirmationModal,
     EngagementManagersField,
     ErrorMessage,
     LoadingSpinner,
@@ -62,6 +63,7 @@ import {
     getPaymentReference,
     linkTimesheetEntriesToPayment,
     partiallyUpdateEngagement,
+    removeSelectedEngagementAssignment,
     updateEngagementAssignmentStatus,
 } from '../../../lib/services'
 import {
@@ -231,6 +233,13 @@ function canEditAssignment(status: string): boolean {
         .toUpperCase()
 
     return normalizedStatus === 'ASSIGNED' || normalizedStatus === 'SELECTED'
+}
+
+/** A selected assignment is an offer the member has not accepted yet, so it can still be withdrawn. */
+function isSelectedStatus(status: string): boolean {
+    return status
+        .trim()
+        .toUpperCase() === 'SELECTED'
 }
 
 function getAssignmentStatusPillClass(status: string): string {
@@ -844,6 +853,8 @@ export const EngagementPaymentPage: FC = () => {
     const [paymentMember, setPaymentMember] = useState<Assignment | undefined>()
     const [remarksAssignment, setRemarksAssignment] = useState<Assignment | undefined>()
     const [terminateMember, setTerminateMember] = useState<Assignment | undefined>()
+    const [removeMember, setRemoveMember] = useState<Assignment | undefined>()
+    const [isRemoving, setIsRemoving] = useState<boolean>(false)
     const assignmentCardRefs = useRef<Record<string, HTMLElement | null>>({})
     const hasScrolledToHighlightedAssignment = useRef<boolean>(false)
 
@@ -1090,6 +1101,28 @@ export const EngagementPaymentPage: FC = () => {
         }
     }, [engagementId, engagementResult, terminateMember])
 
+    const handleRemoveConfirm = useCallback(async (): Promise<void> => {
+        if (!removeMember || isRemoving) {
+            return
+        }
+
+        setIsRemoving(true)
+
+        try {
+            await removeSelectedEngagementAssignment(engagementId, removeMember.id)
+            await engagementResult.mutate()
+            setRemoveMember(undefined)
+            showSuccessToast('Assignment removed. The application is back to Submitted.')
+        } catch (error) {
+            const message = error instanceof Error
+                ? error.message
+                : 'Failed to remove assignment'
+            showErrorToast(message)
+        } finally {
+            setIsRemoving(false)
+        }
+    }, [engagementId, engagementResult, isRemoving, removeMember])
+
     const handleCompleteConfirm = useCallback(async (): Promise<void> => {
         if (!completeMember) {
             return
@@ -1220,6 +1253,7 @@ export const EngagementPaymentPage: FC = () => {
                                 const normalizedStatus = normalizeAssignmentStatus(String(assignment.status || ''))
                                 const assignedStatus = isAssignedStatus(String(assignment.status || ''))
                                 const canEdit = canEditAssignment(String(assignment.status || ''))
+                                const selectedStatus = isSelectedStatus(String(assignment.status || ''))
                                 const isHighlightedAssignment = String(assignment.id) === highlightedAssignmentId
                                 const remarksText = toTrimmedText(assignment.otherRemarks)
 
@@ -1437,6 +1471,19 @@ export const EngagementPaymentPage: FC = () => {
                                                     </div>
                                                 )
                                                 : undefined}
+                                            {selectedStatus
+                                                ? (
+                                                    <div className={styles.rightActions}>
+                                                        <Button
+                                                            label='Remove Assignment'
+                                                            onClick={() => setRemoveMember(assignment)}
+                                                            variant='danger'
+                                                            primary
+                                                            size='sm'
+                                                        />
+                                                    </div>
+                                                )
+                                                : undefined}
                                         </div>
                                     </article>
                                 )
@@ -1503,6 +1550,27 @@ export const EngagementPaymentPage: FC = () => {
                 onConfirm={handleTerminateConfirm}
                 open={!!terminateMember}
             />
+
+            {removeMember && (
+                <ConfirmationModal
+                    confirmButtonDanger
+                    confirmDisabled={isRemoving}
+                    confirmText={isRemoving ? 'Removing...' : 'Remove Assignment'}
+                    message={`Remove the assignment offer for ${removeMember.memberHandle || 'this member'}? `
+                        + 'The engagement is removed from their assignments, their application goes back to '
+                        + 'Submitted, and they are emailed that the application was revoked.'}
+                    onCancel={() => {
+                        if (!isRemoving) {
+                            setRemoveMember(undefined)
+                        }
+                    }}
+                    onConfirm={() => {
+                        handleRemoveConfirm()
+                            .catch(() => undefined)
+                    }}
+                    title='Remove Assignment'
+                />
+            )}
 
             <CompleteAssignmentModal
                 isProcessing={isCompleting}
