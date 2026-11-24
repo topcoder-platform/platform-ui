@@ -132,38 +132,46 @@ export const markEngagementLeadConverted = async (
     )
 )
 
-/** Cost calculations saved for a lead, oldest first. */
+/**
+ * Where a lead's calculations live, or, without a lead, the signed-in user's general calculations
+ * from the Leads page. General calculations are private to whoever saved them.
+ */
+function getCalculationsUrl(leadId: string | undefined): string {
+    return leadId ? `${LEADS_URL}/${leadId}/calculations` : `${LEADS_URL}/calculations`
+}
+
+/** Cost calculations saved for a lead (or the user's general ones without a lead), oldest first. */
 export const fetchEngagementLeadCalculations = async (
-    leadId: string,
+    leadId: string | undefined,
 ): Promise<EngagementLeadCalculation[]> => (
-    xhrGetAsync<EngagementLeadCalculation[]>(`${LEADS_URL}/${leadId}/calculations`)
+    xhrGetAsync<EngagementLeadCalculation[]>(getCalculationsUrl(leadId))
 )
 
 export const createEngagementLeadCalculation = async (
-    leadId: string,
+    leadId: string | undefined,
     input: EngagementLeadCalculationInput,
 ): Promise<EngagementLeadCalculation> => (
     xhrPostAsync<EngagementLeadCalculationInput, EngagementLeadCalculation>(
-        `${LEADS_URL}/${leadId}/calculations`,
+        getCalculationsUrl(leadId),
         input,
     )
 )
 
 /** Overwrites a saved calculation; its previous values are not kept. */
 export const updateEngagementLeadCalculation = async (
-    leadId: string,
+    leadId: string | undefined,
     calculationId: string,
     input: EngagementLeadCalculationInput,
 ): Promise<EngagementLeadCalculation> => (
     xhrPutAsync<EngagementLeadCalculationInput, EngagementLeadCalculation>(
-        `${LEADS_URL}/${leadId}/calculations/${calculationId}`,
+        `${getCalculationsUrl(leadId)}/${calculationId}`,
         input,
     )
 )
 
 export const deleteEngagementLeadCalculation = async (
-    leadId: string,
+    leadId: string | undefined,
     calculationId: string,
 ): Promise<void> => {
-    await xhrDeleteAsync<unknown>(`${LEADS_URL}/${leadId}/calculations/${calculationId}`)
+    await xhrDeleteAsync<unknown>(`${getCalculationsUrl(leadId)}/${calculationId}`)
 }

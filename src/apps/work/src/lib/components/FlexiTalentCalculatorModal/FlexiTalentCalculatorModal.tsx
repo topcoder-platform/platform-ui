@@ -122,7 +122,8 @@ function getFieldValue<TField extends string>(
 }
 
 export interface FlexiTalentCalculatorModalProps {
-    lead: EngagementLead
+    /** Left out for a general calculation from the Leads page, not linked to any lead. */
+    lead?: EngagementLead
     onClose: () => void
 }
 
@@ -130,6 +131,9 @@ export interface FlexiTalentCalculatorModalProps {
  * Works out member cost, TC margin, cost transfer and booking cost for a lead, and builds a cost
  * proposal to share with the customer. A lead can have several calculations (e.g. one per
  * resource). They save themselves as they are edited, overwriting the previous values.
+ *
+ * Without a lead it is a general calculator: nothing is prefilled, and the calculations are the
+ * signed-in user's own, saved and deleted the same way.
  */
 export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
     props: FlexiTalentCalculatorModalProps,
@@ -144,7 +148,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
     const [confirmingDelete, setConfirmingDelete] = useState<boolean>(false)
     const [deleting, setDeleting] = useState<boolean>(false)
     // Not saved: the role always comes from the lead.
-    const [roleTitle] = useState<string>(lead.roleTitle || '')
+    const [roleTitle] = useState<string>(lead?.roleTitle || '')
     const [usdToInr, setUsdToInr] = useState<ExchangeRate | undefined>(undefined)
 
     // Autosave runs outside React's render cycle, so it reads the latest state from refs.
@@ -163,7 +167,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
         setLoadError(undefined)
 
         try {
-            const calculations = await fetchEngagementLeadCalculations(lead.id)
+            const calculations = await fetchEngagementLeadCalculations(lead?.id)
             const loaded = calculations.length
                 ? calculations.map(createDraftFromCalculation)
                 : [createDraftFromLead(lead)]
@@ -222,8 +226,8 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
             try {
                 const payload = getDraftSavePayload(draft)
                 const saved = savedId
-                    ? await updateEngagementLeadCalculation(lead.id, savedId, payload)
-                    : await createEngagementLeadCalculation(lead.id, payload)
+                    ? await updateEngagementLeadCalculation(lead?.id, savedId, payload)
+                    : await createEngagementLeadCalculation(lead?.id, payload)
 
                 savedIdsRef.current.set(key, saved.id)
                 // What the user typed stays on screen; only record what is saved.
@@ -252,7 +256,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
         }
 
         return undefined
-    }, [clearAutosaveTimer, lead.id])
+    }, [clearAutosaveTimer, lead?.id])
 
     const scheduleSave = useCallback((key: string): void => {
         clearAutosaveTimer(key)
@@ -416,7 +420,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
 
             const savedId = savedIdsRef.current.get(key)
             if (savedId) {
-                await deleteEngagementLeadCalculation(lead.id, savedId)
+                await deleteEngagementLeadCalculation(lead?.id, savedId)
                 savedIdsRef.current.delete(key)
             }
 
@@ -568,7 +572,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                             name='durationWeeks'
                             onBlur={handleFieldBlur}
                             onChange={handleDurationChange}
-                            placeholder={lead.engagementDuration || undefined}
+                            placeholder={lead?.engagementDuration || undefined}
                             tabIndex={0}
                             type='text'
                             value={draft.durationWeeksRaw}
@@ -753,7 +757,9 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
         >
             <div className={styles.content}>
                 <p className={styles.subtitle}>
-                    {`Lead ${lead.id}`}
+                    {lead
+                        ? `Lead ${lead.id}`
+                        : 'General calculation, not linked to a lead. Only you can see the calculations saved here.'}
                 </p>
 
                 {loading && <LoadingSpinner />}

@@ -429,6 +429,36 @@ describe('FlexiTalentCalculatorModal', () => {
             .toHaveBeenCalledTimes(1)
     })
 
+    it('works as a general calculator without a lead', async () => {
+        const user = userEvent.setup()
+        render(<FlexiTalentCalculatorModal onClose={jest.fn()} />)
+        await screen.findByLabelText('Member Name')
+
+        expect(fetchEngagementLeadCalculations)
+            .toHaveBeenCalledWith(undefined)
+        expect(screen.getByText(/General calculation, not linked to a lead/))
+            .toBeInTheDocument()
+        // Nothing to prefill from apart from the usual working day.
+        expect(screen.getByLabelText('Account Name'))
+            .toHaveValue('')
+        expect(screen.getByLabelText('Duration (Weeks)'))
+            .toHaveValue('')
+        expect(screen.getByLabelText('Hours per Day'))
+            .toHaveValue('8')
+
+        await user.type(screen.getByLabelText('Account Name'), 'Globex')
+        await user.tab()
+
+        expect(createEngagementLeadCalculation)
+            .toHaveBeenCalledWith(undefined, expect.objectContaining({ accountName: 'Globex' }))
+
+        await user.click(screen.getByRole('button', { name: 'Delete Calculation' }))
+        await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+        await waitFor(() => expect(deleteEngagementLeadCalculation)
+            .toHaveBeenCalledWith(undefined, 'calc-new'))
+    })
+
     it('saves straight away when a field loses focus', async () => {
         jest.mocked(fetchEngagementLeadCalculations)
             .mockResolvedValue([savedCalculation])
