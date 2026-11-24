@@ -31,9 +31,11 @@ import {
     generateWorkDates,
     getDayLabel,
     hasEnteredHours,
+    hasFutureWorkDate,
     hasRowValidationError,
     isRowDeletable,
     sumSelectedTotals,
+    TIMESHEET_FUTURE_WORK_PERIOD_MESSAGE,
     toWorkDateString,
     validateDateRange,
     validateEntryRange,
@@ -850,6 +852,11 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                         disabled={isWorking}
                         label={`Submit on behalf (${selectedIds.length})`}
                         onClick={async function onSubmitOnBehalf() {
+                            if (hasFutureWorkDate(selectedRows)) {
+                                setActionError(TIMESHEET_FUTURE_WORK_PERIOD_MESSAGE)
+                                return
+                            }
+
                             // Check remarks before asking for a reason; the API refuses the submit
                             // anyway, and this points at the rows to fix.
                             const missingRemarks = findMissingRemarksErrors(selectedRows)

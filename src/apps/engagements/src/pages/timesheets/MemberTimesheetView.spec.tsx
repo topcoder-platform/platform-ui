@@ -495,6 +495,24 @@ describe('MemberTimesheetView', () => {
             .toHaveTextContent('Some selected rows have no hours entered.')
     })
 
+    it('lets a future day be saved but not submitted', async () => {
+        const user = userEvent.setup()
+        renderView([entry({ hoursWorked: '8', remarks: 'Planning', workDate: '2099-01-05' })])
+
+        await pickRange('2099-01-05', '2099-01-05')
+        await user.click(await screen.findByLabelText('Select 05-01-2099'))
+        await user.click(screen.getByRole('button', { name: 'Submit (1)' }))
+
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+        expect(screen.getByText(
+            'You cannot submit timesheets for future work periods. '
+            + 'Save your entries and submit them once the relevant work period begins.',
+        ))
+            .toBeInTheDocument()
+        expect(mockSave).not.toHaveBeenCalled()
+        expect(mockSubmit).not.toHaveBeenCalled()
+    })
+
     it('requires remarks before submitting and flags the row', async () => {
         const user = userEvent.setup()
         renderView([entry({ hoursWorked: '8', remarks: null, workDate: '2026-09-07' })])

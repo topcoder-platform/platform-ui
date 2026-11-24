@@ -80,6 +80,24 @@ export const toWorkDateString = (date: Date): string => (
         .slice(0, 10)
 )
 
+/** Shown, and returned by the API, when a submit includes days that have not started yet. */
+export const TIMESHEET_FUTURE_WORK_PERIOD_MESSAGE = 'You cannot submit timesheets for future work periods. '
+    + 'Save your entries and submit them once the relevant work period begins.'
+
+/**
+ * True when any row is dated after today, in the member's own time zone. Those rows can be saved but not
+ * submitted: hours cannot be approved for work not done yet.
+ */
+export const hasFutureWorkDate = (
+    rows: Array<{ workDate: string }>,
+    now: Date = new Date(),
+): boolean => {
+    const today = toWorkDateString(now)
+
+    // YYYY-MM-DD strings compare in date order.
+    return rows.some(row => row.workDate > today)
+}
+
 /** Formats `YYYY-MM-DD` as the `DD-MM-YYYY` the grid displays. */
 export const formatDisplayDate = (workDate: string): string => {
     const parsed = parseWorkDate(workDate)
