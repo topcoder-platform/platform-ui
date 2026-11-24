@@ -273,7 +273,11 @@ const TimesheetGrid: FC<TimesheetGridProps> = (props: TimesheetGridProps) => {
                                 </td>
                                 <td data-label='Status'>
                                     {isRowReturned(row) && (
-                                        <span className={styles.returnedBadge}>Returned for Corrections</span>
+                                        <StatusBadge
+                                            label='Returned for Corrections'
+                                            size='sm'
+                                            status='returned_for_corrections'
+                                        />
                                     )}
                                     {!isRowReturned(row) && isRowReopened(row) && (
                                         <span className={styles.reopenedBadge}>Reopened</span>
