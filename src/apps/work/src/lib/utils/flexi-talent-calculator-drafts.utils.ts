@@ -87,18 +87,22 @@ function toDraftInput<TField extends string>(
     return field ? { field, raw: numberToRaw(value) } : undefined
 }
 
-/** A new, unsaved calculation prefilled from the lead: account, SMU, hours per day and duration. */
-export function createDraftFromLead(lead: EngagementLead): CalculatorDraft {
+/**
+ * A new, unsaved calculation prefilled from the lead: account, SMU, hours per day and duration.
+ * Without a lead (a general calculation) everything is left for the user to enter, apart from the
+ * usual 8 hours per day.
+ */
+export function createDraftFromLead(lead?: EngagementLead): CalculatorDraft {
     return {
-        accountName: lead.accountName || '',
-        durationWeeksRaw: numberToRaw(parseDurationToWeeks(lead.engagementDuration)),
-        hoursPerDayRaw: String(lead.workingHoursPerDay || DEFAULT_HOURS_PER_DAY),
+        accountName: lead?.accountName || '',
+        durationWeeksRaw: numberToRaw(parseDurationToWeeks(lead?.engagementDuration)),
+        hoursPerDayRaw: String(lead?.workingHoursPerDay || DEFAULT_HOURS_PER_DAY),
         key: createDraftKey(),
         memberName: '',
         referral: false,
         revision: 0,
         savedRevision: 0,
-        smuCode: getSmuOption(lead.smu)?.code || '',
+        smuCode: getSmuOption(lead?.smu)?.code || '',
     }
 }
 

@@ -2,6 +2,7 @@ import {
     FC,
     useCallback,
     useMemo,
+    useState,
 } from 'react'
 
 import { copyTextToClipboard } from '~/libs/shared'
@@ -16,14 +17,25 @@ import {
 } from '../../utils'
 import { getLeadIntakeUrl } from '../../utils/engagement-leads.utils'
 import { EngagementLeadsTab } from '../EngagementLeadsTab'
+import { FlexiTalentCalculatorModal } from '../FlexiTalentCalculatorModal'
 
 import styles from './EngagementLeadsPanel.module.scss'
 
 /**
- * Engagement leads submitted through the Wipro Consumption intake form, with the form link.
+ * Engagement leads submitted through the Wipro Consumption intake form, with the form link and a
+ * general cost calculator for figures that are not about any one lead.
  */
 export const EngagementLeadsPanel: FC = () => {
     const intakeUrl = useMemo(() => getLeadIntakeUrl(ENGAGEMENTS_APP_URL), [])
+    const [calculatorOpen, setCalculatorOpen] = useState<boolean>(false)
+
+    const handleCalculatorOpen = useCallback((): void => {
+        setCalculatorOpen(true)
+    }, [])
+
+    const handleCalculatorClose = useCallback((): void => {
+        setCalculatorOpen(false)
+    }, [])
 
     const handleCopyLink = useCallback((): void => {
         copyTextToClipboard(intakeUrl)
@@ -39,6 +51,12 @@ export const EngagementLeadsPanel: FC = () => {
                 </p>
                 <div className={styles.headerActions}>
                     <Button
+                        label='Cost Calculator'
+                        onClick={handleCalculatorOpen}
+                        secondary
+                        size='md'
+                    />
+                    <Button
                         label='Copy Lead Form Link'
                         onClick={handleCopyLink}
                         primary
@@ -48,6 +66,10 @@ export const EngagementLeadsPanel: FC = () => {
             </div>
 
             <EngagementLeadsTab leadType={EngagementLeadType.WIPRO_CONSUMPTION} />
+
+            {calculatorOpen && (
+                <FlexiTalentCalculatorModal onClose={handleCalculatorClose} />
+            )}
         </div>
     )
 }

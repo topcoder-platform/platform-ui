@@ -1,2 +1,7 @@
 // Same layout as the Pending Timesheet Approvals tab: its rules are compiled into this module too.
 @import '../PendingTimesheetApprovalsTab/PendingTimesheetApprovalsTab.module';
+
+// Checkbox filters, on their own row under the fields.
+.filterOptions {
+    grid-column: 1 / -1;
+}

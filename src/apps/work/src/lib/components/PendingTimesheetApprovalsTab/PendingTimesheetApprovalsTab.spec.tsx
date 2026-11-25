@@ -56,7 +56,7 @@ jest.mock('~/libs/ui', () => ({
 })
 jest.mock('../../constants', () => ({
     ENGAGEMENTS_APP_URL: 'https://engagements.test',
-    PAGE_SIZE: 10,
+    TIMESHEETS_PAGE_SIZE: 50,
 }))
 jest.mock('../../hooks', () => ({
     useFetchPendingApprovalTimesheets: jest.fn(),
@@ -148,7 +148,7 @@ describe('PendingTimesheetApprovalsTab', () => {
         mockedUseFetch.mockReturnValue({
             error: undefined,
             isLoading: false,
-            meta: { page: 1, perPage: 10, totalCount: 3, totalPages: 1 },
+            meta: { page: 1, perPage: 50, totalCount: 3, totalPages: 1 },
             mutate,
             rows,
         })
@@ -205,7 +205,7 @@ describe('PendingTimesheetApprovalsTab', () => {
                         excludeTestProjects: true,
                         fromDate: '2026-10-01',
                         page: 1,
-                        perPage: 10,
+                        perPage: 50,
                         toDate: '2026-10-31',
                     },
                     true,
@@ -323,7 +323,7 @@ describe('PendingTimesheetApprovalsTab', () => {
         mockedUseFetch.mockReturnValue({
             error: undefined,
             isLoading: false,
-            meta: { page: 1, perPage: 10, totalCount: 0, totalPages: 0 },
+            meta: { page: 1, perPage: 50, totalCount: 0, totalPages: 0 },
             mutate,
             rows: [],
         })

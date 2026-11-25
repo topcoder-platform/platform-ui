@@ -10,6 +10,37 @@
     align-items: center;
 }
 
+.iconActions {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.iconButton {
+    align-items: center;
+    appearance: none;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: #2a62d5;
+    cursor: pointer;
+    display: inline-flex;
+    padding: 4px;
+
+    &:hover {
+        background: rgb(42 98 213 / 8%);
+    }
+}
+
+.iconButtonActive {
+    background: rgb(42 98 213 / 8%);
+}
+
+.icon {
+    height: 20px;
+    width: 20px;
+}
+
 .createEngagementRow {
     display: flex;
     flex-wrap: wrap;

@@ -53,6 +53,8 @@ export const IS_TEST_CHALLENGE_METADATA_FIELD = 'is_test_challenge'
 export const GITEA_METADATA_FIELD = 'gitea'
 
 export const PAGE_SIZE = 10
+/** Rows per page on the Engagements > Timesheets tabs, which are worked through in bulk. */
+export const TIMESHEETS_PAGE_SIZE = 50
 
 export const PAGINATION_PER_PAGE_OPTIONS: ReadonlyArray<number> = [5, 10, 20, 25, 50]
 

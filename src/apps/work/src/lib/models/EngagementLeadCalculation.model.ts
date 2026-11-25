@@ -39,7 +39,8 @@ export interface EngagementLeadCalculation {
     createdAt: string
     createdBy?: string | null
     durationWeeks?: number | null
-    engagementLeadId: string
+    /** Null for a general calculation, made for no particular lead. */
+    engagementLeadId: string | null
     hoursPerDay?: number | null
     id: string
     memberInputField?: LeadCalculationMemberInput | null

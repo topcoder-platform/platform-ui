@@ -31,6 +31,7 @@ export function useFetchPendingSubmissionTimesheets(
             query.fromDate || '',
             query.toDate || '',
             query.excludeTestProjects ? 'exclude-test-projects' : '',
+            query.managerAssigned ? 'manager-assigned' : '',
             String(query.page || ''),
             String(query.perPage || ''),
         ]

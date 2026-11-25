@@ -11,11 +11,12 @@ import {
 
 import {
     Button,
+    InputCheckbox,
     InputDatePicker,
     InputText,
 } from '~/libs/ui'
 
-import { PAGE_SIZE } from '../../constants'
+import { TIMESHEETS_PAGE_SIZE } from '../../constants'
 import { useFetchPendingSubmissionTimesheets } from '../../hooks'
 import {
     PendingSubmissionReminderResult,
@@ -41,6 +42,9 @@ import { Pagination } from '../Pagination'
 import { TimesheetEngagementLink } from '../TimesheetEngagementLink'
 
 import styles from './PendingTimesheetSubmissionsTab.module.scss'
+
+// InputCheckbox reports clicks through onClick; its onChange is required but not needed here.
+const noopCheckboxChange = (() => undefined) as (event: Event) => void
 
 const FILTER_DEBOUNCE_MS = 300
 /** The longest period the member's timesheet page can open, which is where the reminder links. */
@@ -118,8 +122,10 @@ export const PendingTimesheetSubmissionsTab: FC<PendingTimesheetSubmissionsTabPr
     const [engagementFilter, setEngagementFilter] = useState<string>('')
     const [fromDate, setFromDate] = useState<Date | undefined>(defaultPeriod.fromDate)
     const [toDate, setToDate] = useState<Date | undefined>(defaultPeriod.toDate)
+    // On by default: without a manager nobody can approve the timesheet once it is submitted.
+    const [managerAssigned, setManagerAssigned] = useState<boolean>(true)
     const [page, setPage] = useState<number>(1)
-    const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
+    const [perPage, setPerPage] = useState<number>(TIMESHEETS_PAGE_SIZE)
     // Keyed by row id and kept across pages and the engagement filter, so a selection can span
     // engagements. A new work period starts it over: whether a member is behind depends on it.
     const [selectedRows, setSelectedRows] = useState<Record<string, PendingSubmissionTimesheetRow>>({})
@@ -140,7 +146,7 @@ export const PendingTimesheetSubmissionsTab: FC<PendingTimesheetSubmissionsTabPr
 
     useEffect(() => {
         setPage(1)
-    }, [engagementFilter, excludeTestProjects, fromDateFilter, toDateFilter])
+    }, [engagementFilter, excludeTestProjects, fromDateFilter, managerAssigned, toDateFilter])
 
     useEffect(() => {
         setSelectedRows({})
@@ -152,6 +158,7 @@ export const PendingTimesheetSubmissionsTab: FC<PendingTimesheetSubmissionsTabPr
             engagement: engagementFilter || undefined,
             excludeTestProjects,
             fromDate: fromDateFilter,
+            managerAssigned,
             page,
             perPage,
             toDate: toDateFilter,
@@ -374,6 +381,16 @@ export const PendingTimesheetSubmissionsTab: FC<PendingTimesheetSubmissionsTabPr
                         label='Work period to'
                         minDate={fromDate}
                         onChange={handleToDateChange}
+                    />
+                </div>
+
+                <div className={styles.filterOptions}>
+                    <InputCheckbox
+                        checked={managerAssigned}
+                        label='Manager Assigned'
+                        name='work-pending-submissions-manager-assigned'
+                        onChange={noopCheckboxChange}
+                        onClick={() => setManagerAssigned(current => !current)}
                     />
                 </div>
             </div>

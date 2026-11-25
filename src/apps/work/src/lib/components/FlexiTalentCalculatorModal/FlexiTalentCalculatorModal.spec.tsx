@@ -7,6 +7,7 @@ import {
     render,
     screen,
     waitFor,
+    within,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
@@ -229,8 +230,16 @@ describe('FlexiTalentCalculatorModal', () => {
 
         expect(screen.getByLabelText('Member Cost (USD)'))
             .toHaveValue('104000')
-        expect(screen.getByText(/Challenge fee: USD 116,000/))
-            .toBeInTheDocument()
+        // Products: the member fee is the total member cost; the challenge fee is what is left.
+        const products = screen.getByRole('heading', { name: 'Products' }).parentElement as HTMLElement
+        expect(within(products)
+            .getByText('Member Fee').nextElementSibling)
+            .toHaveTextContent('USD 104,000')
+        expect(within(products)
+            .getByText('Challenge Fee').nextElementSibling)
+            .toHaveTextContent('USD 116,000')
+        expect(screen.queryByText(/Challenge fee:/))
+            .not.toBeInTheDocument()
         expect(screen.queryByText(/Member Hourly Rate \(based on Actual Cost\)/))
             .not.toBeInTheDocument()
         expect(screen.getByLabelText('Actual Cost (USD)'))
@@ -418,6 +427,36 @@ describe('FlexiTalentCalculatorModal', () => {
         })
         expect(createEngagementLeadCalculation)
             .toHaveBeenCalledTimes(1)
+    })
+
+    it('works as a general calculator without a lead', async () => {
+        const user = userEvent.setup()
+        render(<FlexiTalentCalculatorModal onClose={jest.fn()} />)
+        await screen.findByLabelText('Member Name')
+
+        expect(fetchEngagementLeadCalculations)
+            .toHaveBeenCalledWith(undefined)
+        expect(screen.getByText(/General calculation, not linked to a lead/))
+            .toBeInTheDocument()
+        // Nothing to prefill from apart from the usual working day.
+        expect(screen.getByLabelText('Account Name'))
+            .toHaveValue('')
+        expect(screen.getByLabelText('Duration (Weeks)'))
+            .toHaveValue('')
+        expect(screen.getByLabelText('Hours per Day'))
+            .toHaveValue('8')
+
+        await user.type(screen.getByLabelText('Account Name'), 'Globex')
+        await user.tab()
+
+        expect(createEngagementLeadCalculation)
+            .toHaveBeenCalledWith(undefined, expect.objectContaining({ accountName: 'Globex' }))
+
+        await user.click(screen.getByRole('button', { name: 'Delete Calculation' }))
+        await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+        await waitFor(() => expect(deleteEngagementLeadCalculation)
+            .toHaveBeenCalledWith(undefined, 'calc-new'))
     })
 
     it('saves straight away when a field loses focus', async () => {
