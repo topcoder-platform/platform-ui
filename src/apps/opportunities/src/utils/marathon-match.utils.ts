@@ -398,6 +398,12 @@ export function marathonSubmissionScores(
     return { finalScore, provisionalScore }
 }
 
+/** Resolves the most recent example run, including legacy review-only scores. */
+export function marathonExampleScore(submission: ChallengeSubmission, fallback?: number): number | undefined {
+    const example = latestPhaseSummation(submission, 'example')
+    return provisionalScoreIsPending(example) ? undefined : finiteScore(example?.aggregateScore) ?? fallback
+}
+
 /**
  * Ranks the complete latest-submission collection for the MM All Submissions table.
  * Provisional ties favor earlier submissions; final ties share competition ranks
@@ -410,13 +416,30 @@ export function marathonSubmissionScores(
 export function marathonSubmissionRanks(
     submissions: ChallengeSubmission[],
 ): Map<string, MarathonSubmissionRanks> {
+    return rankMarathonScores(submissions.map(submission => ({
+        ...marathonSubmissionScores(submission),
+        id: submission.id,
+        submittedDate: submission.submittedDate ?? submission.createdAt,
+    })))
+}
+
+/** Ranks latest attempts using the resolved, full-precision scores for each phase. */
+export function rankMarathonScores(
+    submissions: Array<MarathonSubmissionScores & {
+        id: string
+        submittedDate?: Date | string | null
+        createdAt?: Date | string | null
+    }>,
+): Map<string, MarathonSubmissionRanks> {
     const ranks = new Map<string, MarathonSubmissionRanks>()
     const entries = submissions.map(submission => {
-        const timestamp = Date.parse(submission.submittedDate ?? submission.createdAt ?? '')
+        const date = submission.submittedDate ?? submission.createdAt
+        const timestamp = date instanceof Date ? date.getTime() : Date.parse(date ?? '')
         ranks.set(submission.id, {})
         return {
+            finalScore: submission.finalScore,
             id: submission.id,
-            ...marathonSubmissionScores(submission),
+            provisionalScore: submission.provisionalScore,
             timestamp: Number.isFinite(timestamp) ? timestamp : Number.POSITIVE_INFINITY,
         }
     })
