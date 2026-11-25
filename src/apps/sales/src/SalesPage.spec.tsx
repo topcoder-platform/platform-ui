@@ -668,6 +668,47 @@ describe('Sales page', () => {
             .toBeInTheDocument()
     })
 
+    it('switches between stage and probability tiles and drills into the selected bands', async () => {
+        const report = fixture()
+        const summary = report.summary
+        if (!summary) throw new Error('Expected a report summary')
+        const bands = ['Shaping (<20%)', 'Long Upside (20–49%)', 'Upside (50–69%)', 'Commit (70–99%)', 'Won (100%)']
+        summary.probabilityBreakdown = {
+            ...summary.groups[0],
+            buckets: bands.map(label => ({ ...summary.groups[0].buckets[0], label })),
+            columnId: '__probability_band',
+            label: 'Probability',
+            otherBuckets: 0,
+        }
+        fetchReport.mockResolvedValue(report)
+        render(<SalesPage />)
+        const toggle = await screen.findByRole('checkbox', { name: 'Probability Wise' })
+        expect(toggle).not.toBeChecked()
+        fireEvent.click(screen.getByRole('button', { name: /Proposal.*Opportunities/ }))
+        fireEvent.click(toggle)
+        const panel = within(screen.getByRole('region', { name: 'Probability breakdown' }))
+        expect(panel.getAllByRole('button', { pressed: false })
+            .map(button => button.textContent))
+            .toEqual(bands.map(label => expect.stringContaining(label)))
+        expect(panel.getByRole('button', { name: /Commit/ }))
+            .toHaveTextContent('$450,000')
+        expect(screen.getByText('$1,146,913'))
+            .toBeInTheDocument()
+        fireEvent.click(panel.getByRole('button', { name: /Commit/ }))
+        fireEvent.click(panel.getByRole('button', { name: /Shaping/ }))
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({
+                drilldownColumn: '__probability_band', drilldownValue: [bands[3], bands[0]], page: 1,
+            }), expect.any(AbortSignal)))
+        fireEvent.click(toggle)
+        expect(screen.getByRole('button', { name: /Proposal.*Opportunities/, pressed: false }))
+            .toBeInTheDocument()
+        await waitFor(() => expect(fetchReport)
+            .toHaveBeenLastCalledWith(expect.objectContaining({
+                drilldownColumn: undefined, drilldownValue: undefined, page: 1,
+            }), expect.any(AbortSignal)))
+    })
+
     it('drills the table into a stage and releases it when the stage is clicked again', async () => {
         render(<SalesPage />)
         await screen.findByText('Example opportunity')

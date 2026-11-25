@@ -63,6 +63,7 @@
 .categoryPanel :global(.pipeline-select__placeholder) { color: $tc-2026-body; }
 .categoryPanel :global(.pipeline-select__menu) { z-index: 3; font-size: 14px; }
 .stages { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 12px; }
+.probabilityToggle { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; cursor: pointer; font-size: 14px; }
 .stage {
     width: 100%;
     height: 100%;

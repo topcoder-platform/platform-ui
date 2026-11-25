@@ -134,6 +134,16 @@ without a won bucket cannot establish the won total and displays a dash.
 The cards deliberately ignore the selected stage: they are the overview the
 stage tiles are read against. See the drilldown note below.
 
+## Probability Wise (PM-6819)
+
+In Stage breakdown, select **Probability Wise** to group opportunities by their
+Salesforce probability. The five tiles show Shaping (below 20%), Long Upside
+(20% to below 50%), Upside (50% to below 70%), Commit (70% to below 100%) and
+Won (100%). Each shows the opportunity count, Amount and Expected Amount across
+the filtered report. Select multiple tiles to show matching opportunities in
+the table. Switching views clears the tile selection and keeps other filters.
+The toggle appears when the Reports API supplies the probability breakdown.
+
 ## Stage breakdown (PM-6392)
 
 The stage breakdown is a compact grid of clickable tiles, one per stage, each
