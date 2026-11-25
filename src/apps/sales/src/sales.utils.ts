@@ -341,6 +341,30 @@ export interface SalesStageBreakdown {
     otherStages: number
 }
 
+/** Uses the same monetary columns for stage and probability tiles. */
+export function groupBreakdown(
+    group: SalesSummaryGroup,
+    buckets: SalesSummaryGroup['buckets'] = group.buckets,
+): SalesStageBreakdown {
+    const stages = buckets.map(bucket => ({
+        // A response without per-bucket amounts still shows the primary total.
+        amount: bucket.amounts
+            ? amountTotal(bucket.amounts)
+            : {
+                columnId: group.amountColumnId ?? group.columnId,
+                count: bucket.count,
+                currencyCode: group.currencyCode,
+                label: group.label,
+                mixedCurrency: group.mixedCurrency,
+                total: bucket.total,
+            },
+        count: bucket.count,
+        expectedRevenue: bucket.amounts ? expectedRevenueTotal(bucket.amounts) : undefined,
+        label: bucket.label,
+    }))
+    return { columnId: group.columnId, label: group.label, otherStages: group.otherBuckets, stages }
+}
+
 /**
  * Builds the compact stage breakdown from the snapshot-wide summary.
  * @param summary Aggregates over every matching row, or undefined when the report has none.
@@ -361,23 +385,8 @@ export function stageBreakdown(summary?: SalesSummary): SalesStageBreakdown | un
             return { bucket, index, rank: rank < 0 ? stageOrderPatterns.length : rank }
         })
         .sort((left, right) => left.rank - right.rank || left.index - right.index)
-        .map(entry => ({
-            // A response without per-bucket amounts still shows the primary total.
-            amount: entry.bucket.amounts
-                ? amountTotal(entry.bucket.amounts)
-                : {
-                    columnId: group.amountColumnId ?? group.columnId,
-                    count: entry.bucket.count,
-                    currencyCode: group.currencyCode,
-                    label: group.label,
-                    mixedCurrency: group.mixedCurrency,
-                    total: entry.bucket.total,
-                },
-            count: entry.bucket.count,
-            expectedRevenue: entry.bucket.amounts ? expectedRevenueTotal(entry.bucket.amounts) : undefined,
-            label: entry.bucket.label,
-        }))
-    return { columnId: group.columnId, label: group.label, otherStages: group.otherBuckets, stages }
+        .map(entry => entry.bucket)
+    return groupBreakdown(group, stages)
 }
 
 /**
