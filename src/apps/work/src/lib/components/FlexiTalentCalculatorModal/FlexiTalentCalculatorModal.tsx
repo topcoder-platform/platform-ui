@@ -28,6 +28,7 @@ import {
     fetchEngagementLeadCalculations,
     updateEngagementLeadCalculation,
 } from '../../services/engagement-leads.service'
+import { ExchangeRate, fetchUsdToInrRate } from '../../services/exchange-rates.service'
 import {
     extractErrorMessage,
     showErrorToast,
@@ -101,6 +102,13 @@ const REFERRAL_OPTIONS: ReadonlyArray<InputSelectOption> = [
     { label: 'Yes', value: 'yes' },
 ]
 
+/** `YYYY-MM-DD` as the `DD-MM-YYYY` the work app shows dates in. */
+function formatRateDate(value: string): string {
+    const [year, month, day] = value.split('-')
+
+    return year && month && day ? `${day}-${month}-${year}` : value
+}
+
 function getFieldValue<TField extends string>(
     field: TField,
     draft: DraftInput<TField> | undefined,
@@ -114,7 +122,8 @@ function getFieldValue<TField extends string>(
 }
 
 export interface FlexiTalentCalculatorModalProps {
-    lead: EngagementLead
+    /** Left out for a general calculation from the Leads page, not linked to any lead. */
+    lead?: EngagementLead
     onClose: () => void
 }
 
@@ -122,6 +131,9 @@ export interface FlexiTalentCalculatorModalProps {
  * Works out member cost, TC margin, cost transfer and booking cost for a lead, and builds a cost
  * proposal to share with the customer. A lead can have several calculations (e.g. one per
  * resource). They save themselves as they are edited, overwriting the previous values.
+ *
+ * Without a lead it is a general calculator: nothing is prefilled, and the calculations are the
+ * signed-in user's own, saved and deleted the same way.
  */
 export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
     props: FlexiTalentCalculatorModalProps,
@@ -136,7 +148,8 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
     const [confirmingDelete, setConfirmingDelete] = useState<boolean>(false)
     const [deleting, setDeleting] = useState<boolean>(false)
     // Not saved: the role always comes from the lead.
-    const [roleTitle] = useState<string>(lead.roleTitle || '')
+    const [roleTitle] = useState<string>(lead?.roleTitle || '')
+    const [usdToInr, setUsdToInr] = useState<ExchangeRate | undefined>(undefined)
 
     // Autosave runs outside React's render cycle, so it reads the latest state from refs.
     const draftsRef = useRef<CalculatorDraft[]>([])
@@ -154,7 +167,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
         setLoadError(undefined)
 
         try {
-            const calculations = await fetchEngagementLeadCalculations(lead.id)
+            const calculations = await fetchEngagementLeadCalculations(lead?.id)
             const loaded = calculations.length
                 ? calculations.map(createDraftFromCalculation)
                 : [createDraftFromLead(lead)]
@@ -213,8 +226,8 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
             try {
                 const payload = getDraftSavePayload(draft)
                 const saved = savedId
-                    ? await updateEngagementLeadCalculation(lead.id, savedId, payload)
-                    : await createEngagementLeadCalculation(lead.id, payload)
+                    ? await updateEngagementLeadCalculation(lead?.id, savedId, payload)
+                    : await createEngagementLeadCalculation(lead?.id, payload)
 
                 savedIdsRef.current.set(key, saved.id)
                 // What the user typed stays on screen; only record what is saved.
@@ -243,7 +256,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
         }
 
         return undefined
-    }, [clearAutosaveTimer, lead.id])
+    }, [clearAutosaveTimer, lead?.id])
 
     const scheduleSave = useCallback((key: string): void => {
         clearAutosaveTimer(key)
@@ -253,6 +266,23 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                 .catch(() => undefined)
         }, AUTOSAVE_DELAY_MS))
     }, [clearAutosaveTimer, saveDraft])
+
+    // The INR figure is a convenience next to the USD one: without a rate the USD rate shows alone.
+    useEffect(() => {
+        let active = true
+
+        fetchUsdToInrRate()
+            .then(rate => {
+                if (active) {
+                    setUsdToInr(rate)
+                }
+            })
+            .catch(() => undefined)
+
+        return () => {
+            active = false
+        }
+    }, [])
 
     // Closing the calculator saves whatever is still waiting for the autosave delay.
     useEffect(() => () => {
@@ -390,7 +420,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
 
             const savedId = savedIdsRef.current.get(key)
             if (savedId) {
-                await deleteEngagementLeadCalculation(lead.id, savedId)
+                await deleteEngagementLeadCalculation(lead?.id, savedId)
                 savedIdsRef.current.delete(key)
             }
 
@@ -542,7 +572,7 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                             name='durationWeeks'
                             onBlur={handleFieldBlur}
                             onChange={handleDurationChange}
-                            placeholder={lead.engagementDuration || undefined}
+                            placeholder={lead?.engagementDuration || undefined}
                             tabIndex={0}
                             type='text'
                             value={draft.durationWeeksRaw}
@@ -660,11 +690,35 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
                         {`Member Weekly Rate: USD ${formatCalculatorAmount(result.memberWeeklyRate)}`}
                         {' · '}
                         {`Member Monthly Rate: USD ${formatCalculatorAmount(result.memberMonthlyRate)}`}
-                        {' · '}
-                        {`Challenge fee: USD ${
-                            formatCalculatorAmount(result.challengeFee)
-                        }`}
+                        {usdToInr && result.memberMonthlyRate !== undefined && (
+                            <span
+                                title={`European Central Bank reference rate${
+                                    usdToInr.date ? ` for ${formatRateDate(usdToInr.date)}` : ''
+                                }, via frankfurter.dev`}
+                            >
+                                {` (INR ${formatCalculatorAmount(result.memberMonthlyRate * usdToInr.rate)}`
+                                    + ` at 1 USD = ${formatCalculatorAmount(usdToInr.rate)} INR)`}
+                            </span>
+                        )}
                     </p>
+                </section>
+
+                <section className={styles.section}>
+                    <h4 className={styles.sectionTitle}>Products</h4>
+                    <div className={styles.cards}>
+                        <div className={styles.card}>
+                            <span className={styles.cardLabel}>Member Fee</span>
+                            <span className={styles.cardValue}>
+                                {`USD ${formatCalculatorAmount(result.totalMemberCost)}`}
+                            </span>
+                        </div>
+                        <div className={styles.card}>
+                            <span className={styles.cardLabel}>Challenge Fee</span>
+                            <span className={styles.cardValue}>
+                                {`USD ${formatCalculatorAmount(result.challengeFee)}`}
+                            </span>
+                        </div>
+                    </div>
                 </section>
 
                 <section className={styles.section}>
@@ -703,7 +757,9 @@ export const FlexiTalentCalculatorModal: FC<FlexiTalentCalculatorModalProps> = (
         >
             <div className={styles.content}>
                 <p className={styles.subtitle}>
-                    {`Lead ${lead.id}`}
+                    {lead
+                        ? `Lead ${lead.id}`
+                        : 'General calculation, not linked to a lead. Only you can see the calculations saved here.'}
                 </p>
 
                 {loading && <LoadingSpinner />}

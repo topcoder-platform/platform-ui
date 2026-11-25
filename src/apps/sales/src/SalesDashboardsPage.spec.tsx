@@ -53,11 +53,14 @@ beforeEach(() => {
 it.each([undefined, 'reports', 'sales'] as Array<SalesDashboardPortal | undefined>)(
     'loads only active sections with the correct scope for portal %s',
     async portal => {
+        const sections = portal === 'sales' ? [...activeSections, 'leads'] : activeSections
         render(<SalesDashboardsPage portal={portal} />)
         await waitFor(() => expect(fetchDashboard)
-            .toHaveBeenCalledTimes(7))
+            .toHaveBeenCalledTimes(sections.length))
         expect(fetchDashboard.mock.calls.map(call => [call[0], call[1]]))
-            .toEqual(activeSections.map(section => [section, portal ?? 'reports']))
+            .toEqual(sections.map(section => [section, portal ?? 'reports']))
+        expect(!!screen.queryByRole('heading', { name: 'Leads Report' }))
+            .toBe(portal === 'sales')
         expect(screen.queryByRole('heading', { name: /gross margin/i }))
             .not.toBeInTheDocument()
         expect(screen.getByText(/Current fiscal year: April through March in UTC/))
@@ -68,24 +71,67 @@ it.each([undefined, 'reports', 'sales'] as Array<SalesDashboardPortal | undefine
 it.each(['reports', 'sales'] as SalesDashboardPortal[])(
     'changes only pipeline grouping and refreshes active sections in %s',
     async portal => {
+        const sections = portal === 'sales' ? [...activeSections, 'leads'] : activeSections
         render(<SalesDashboardsPage portal={portal} />)
         await waitFor(() => expect(fetchDashboard)
-            .toHaveBeenCalledTimes(7))
+            .toHaveBeenCalledTimes(sections.length))
         fireEvent.click(screen.getByRole('button', { name: 'Created date' }))
         await waitFor(() => expect(fetchDashboard)
-            .toHaveBeenCalledTimes(9))
+            .toHaveBeenCalledTimes(sections.length + 2))
         expect(fetchDashboard)
             .toHaveBeenLastCalledWith('pipeline', portal, 'created', expect.any(AbortSignal), 'offeringType')
         fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
         await waitFor(() => expect(fetchDashboard)
-            .toHaveBeenCalledTimes(16))
-        expect(fetchDashboard.mock.calls.slice(9)
+            .toHaveBeenCalledTimes(sections.length * 2 + 2))
+        expect(fetchDashboard.mock.calls.slice(sections.length + 2)
             .map(call => call[0]))
-            .toEqual(activeSections)
+            .toEqual(sections)
         expect(screen.queryByRole('heading', { name: /gross margin/i }))
             .not.toBeInTheDocument()
     },
 )
+
+it('charts monthly lead counts by status under Flexible Talent in Sales', async () => {
+    const counts = { 'On Hold': 3, 'Partially Fulfilled': 1 }
+    const chart: MonthlySalesChart = {
+        annual: counts,
+        description: 'Engagement leads by creation month (UTC) and current status',
+        id: 'leads',
+        months: [{ month: '2026-11-01', values: counts }],
+        series: Object.keys(counts)
+            .map(key => ({ key, label: key })),
+        stacked: true,
+        title: 'Leads Report',
+        unit: 'count',
+    }
+    fetchDashboard.mockImplementation(async section => ({ charts: section === 'leads' ? [chart] : [], notices: [] }))
+    render(<SalesReportsPage />)
+    fireEvent.click(screen.getByRole('tab', { name: 'Monthly dashboards' }))
+    const talent = within(screen.getByRole('region', { name: 'Flexible Talent' }))
+    expect(await talent.findByRole('figure', { name: 'Leads Report chart' }))
+        .toBeInTheDocument()
+    expect(jest.mocked(HighchartsReact).mock.calls.slice(-1)[0][0].options)
+        .toMatchObject({
+            chart: { type: 'column' },
+            plotOptions: { column: { stacking: 'normal' } },
+            series: [
+                { data: [3], name: 'On Hold', type: 'column' },
+                { data: [1], name: 'Partially Fulfilled', type: 'column' },
+            ],
+            xAxis: { categories: ['Nov 2026'] },
+            yAxis: { title: { text: 'Leads' } },
+        })
+    fireEvent.click(screen.getByRole('button', { name: 'Quarterly' }))
+    const card = within(talent.getByRole('article', { name: 'Leads Report' }))
+    fireEvent.click(card.getByText('View monthly data'))
+    const table = within(card.getByRole('table', { name: chart.title }))
+    expect(table.getByRole('columnheader', { name: 'Status' }))
+        .toBeInTheDocument()
+    expect(table.getByRole('columnheader', { name: 'Nov 2026' }))
+        .toBeInTheDocument()
+    expect(table.getByRole('row', { name: 'On Hold 3 3' }))
+        .toBeInTheDocument()
+})
 
 it('keeps independent sections usable when one source fails and retries just that source', async () => {
     fetchDashboard.mockImplementation(async section => {
@@ -463,7 +509,7 @@ it('places both customer tables at the bottom without duplicate requests or the 
         .toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Bookings' })).not.toBeInTheDocument()
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(7)
+        .toHaveBeenCalledTimes(8)
 })
 
 it('shows customer-source failures independently and retries the shared source only once', async () => {
@@ -489,7 +535,7 @@ it('shows customer-source failures independently and retries the shared source o
         .getByText('Partial source.'))
         .toBeInTheDocument()
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(8)
+        .toHaveBeenCalledTimes(9)
     expect(fetchDashboard)
         .toHaveBeenLastCalledWith('revenue', 'sales', 'close', expect.any(AbortSignal), 'offeringType')
 })
@@ -645,7 +691,7 @@ it('selects independent breakdown dimensions and displays every category in the 
         .getByLabelText('Filter by'))
         .toHaveValue('dealCategory')
     fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
-    await waitFor(() => expect(fetchDashboard.mock.calls.slice(-7)
+    await waitFor(() => expect(fetchDashboard.mock.calls.slice(-8)
         .slice(0, 3)
         .map(call => call[4]))
         .toEqual(['dealCategory', 'customerType', 'customerType']))
@@ -738,7 +784,7 @@ it('switches pipeline and payment measures without refetching and never sums mem
     expect(payments.getByRole('row', { hidden: true, name: 'Amount $1,000.00 $1,000.00' }))
         .toBeInTheDocument()
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(7)
+        .toHaveBeenCalledTimes(8)
 })
 
 it('sorts customer rows alphabetically and numerically before applying the five-row limit', () => {
@@ -915,7 +961,7 @@ it('combines customer revenue filters and preserves selections across refresh', 
         .getByRole('row', { name: /^Metro/ }))
         .toHaveTextContent('Metro$8,500.00$8,500.00')
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(7)
+        .toHaveBeenCalledTimes(8)
     fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
     await screen.findByRole('table', { name: 'Revenue Customer-Wise (USD)' })
     expect(offering)
@@ -942,7 +988,7 @@ it('combines customer revenue filters and preserves selections across refresh', 
         .getAllByRole('rowheader'))
         .toHaveLength(4)
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(14)
+        .toHaveBeenCalledTimes(16)
 })
 
 it('headlines quarterly data using the current fiscal quarter and the previous quarter comparison', () => {
@@ -982,7 +1028,7 @@ it('offers FY Closure only on revenue cards and keeps forecast selection indepen
         .getByRole('rowheader', { hidden: true, name: 'FY21' }))
         .toBeInTheDocument())
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(8)
+        .toHaveBeenCalledTimes(9)
     expect(fetchDashboard)
         .toHaveBeenLastCalledWith('revenue-forecast', 'sales', 'close', expect.any(AbortSignal), 'fyClosure')
     expect(card('Revenue Closed')
@@ -998,11 +1044,11 @@ it('offers FY Closure only on revenue cards and keeps forecast selection indepen
         .getByRole('rowheader', { hidden: true, name: 'FY21' }))
         .toBeInTheDocument()
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(9)
+        .toHaveBeenCalledTimes(10)
     fireEvent.click(screen.getByRole('button', { name: 'Refresh data' }))
     await waitFor(() => expect(fetchDashboard)
-        .toHaveBeenCalledTimes(16))
-    expect(fetchDashboard.mock.calls.slice(-7)
+        .toHaveBeenCalledTimes(18))
+    expect(fetchDashboard.mock.calls.slice(-8)
         .filter(call => ['revenue', 'revenue-forecast'].includes(call[0]))
         .map(call => call[4]))
         .toEqual(['fyClosure', 'fyClosure'])
@@ -1026,7 +1072,7 @@ it('retries a failed forecast without reloading recognized revenue', async () =>
         .getByRole('table', { hidden: true }))
         .toBeInTheDocument())
     expect(fetchDashboard)
-        .toHaveBeenCalledTimes(8)
+        .toHaveBeenCalledTimes(9)
     expect(fetchDashboard)
         .toHaveBeenLastCalledWith('revenue-forecast', 'sales', 'close', expect.any(AbortSignal), 'offeringType')
 })

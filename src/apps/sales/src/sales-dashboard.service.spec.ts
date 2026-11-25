@@ -2,11 +2,22 @@ import { xhrGetAsync } from '~/libs/core'
 
 import { fetchSalesDashboard, SalesDashboardPortal, SalesDashboardSection } from './sales-dashboard.service'
 
+jest.mock('../../work/src/lib/constants', () => ({ ENGAGEMENTS_ROOT_API_URL: 'https://api.example/v6/engagements' }))
+
 jest.mock('~/config', () => ({
     EnvironmentConfig: { REPORTS_API: 'https://api.example/v6/reports' },
 }), { virtual: true })
 
 jest.mock('~/libs/core', () => ({ xhrGetAsync: jest.fn() }), { virtual: true })
+
+const NO_LEADS = {
+    Fulfilled: 0,
+    Lost: 0,
+    New: 0,
+    'On Hold': 0,
+    'Partially Fulfilled': 0,
+    'Under Review': 0,
+}
 
 describe('Sales dashboard fiscal year requests', () => {
     beforeEach(() => {
@@ -17,6 +28,87 @@ describe('Sales dashboard fiscal year requests', () => {
 
     afterEach(() => {
         jest.useRealTimers()
+    })
+
+    it('counts each lead in its UTC creation month across pages and stops at the fiscal-year boundary', async () => {
+        const get = jest.mocked(xhrGetAsync)
+        const signal = new AbortController().signal
+        const lead = (id: string, status: string, createdAt: string): Record<string, string> => (
+            { createdAt, id, status }
+        )
+        const overlap = lead('3', 'FULFILLED', '2026-10-01T00:01:00Z')
+        get.mockResolvedValueOnce({
+            data: [
+                lead('1', 'SUBMITTED', '2026-10-20'),
+                lead('8', 'ON_HOLD', '2026-10-08'),
+                lead('9', 'PARTIALLY_FULFILLED', '2026-10-03'),
+                lead('2', 'UNDER_REVIEW', '2026-10-02'),
+                overlap,
+            ],
+            meta: { totalPages: 3 },
+        })
+            .mockResolvedValueOnce({
+                data: [
+                    overlap,
+                    lead('4', 'REJECTED', '2026-10-01T00:01:00+01:00'),
+                    lead('5', 'QUALIFIED', '2026-04-02'),
+                    lead('6', 'CONVERTED', '2026-04-01T00:00:00Z'),
+                    lead('7', 'SUBMITTED', '2026-03-31T23:59:59Z'),
+                ],
+                meta: { totalPages: 3 },
+            })
+        const result = await fetchSalesDashboard('leads', 'sales', 'close', signal)
+        const chart = result.charts[0]
+        expect(get.mock.calls.map(([url, , config]) => [String(url), config?.signal]))
+            .toEqual([1, 2].map(page => [
+                'https://api.example/v6/engagements/engagement-leads'
+                + `?page=${page}&perPage=100&sortBy=createdAt&sortOrder=desc`,
+                signal,
+            ]))
+        expect(chart.stacked)
+            .toBe(true)
+        expect(chart.series.map(series => series.label))
+            .toEqual(['New', 'Under Review', 'Fulfilled', 'Partially Fulfilled', 'On Hold', 'Lost'])
+        expect(chart.months)
+            .toHaveLength(12)
+        expect(chart.months[0])
+            .toEqual({
+                month: '2026-04-01',
+                values: { ...NO_LEADS, 'Under Review': 2 },
+            })
+        expect(chart.months[5].values.Lost)
+            .toBe(1)
+        expect(chart.months[6].values)
+            .toEqual({ Fulfilled: 1, Lost: 0, New: 1, 'On Hold': 1, 'Partially Fulfilled': 1, 'Under Review': 1 })
+        expect(chart.months[11])
+            .toEqual({ month: '2027-03-01', values: {} })
+        expect(chart.annual)
+            .toEqual({ Fulfilled: 1, Lost: 1, New: 1, 'On Hold': 1, 'Partially Fulfilled': 1, 'Under Review': 3 })
+    })
+
+    it('shows zero for every status in elapsed months when there are no leads', async () => {
+        jest.mocked(xhrGetAsync)
+            .mockResolvedValueOnce({ data: [], meta: { totalPages: 1 } })
+        const result = await fetchSalesDashboard('leads', 'sales', 'close', new AbortController().signal)
+        const chart = result.charts[0]
+        const zeros = NO_LEADS
+        expect(chart.annual)
+            .toEqual(zeros)
+        expect(chart.months[6].values)
+            .toEqual(zeros)
+        expect(chart.months[7].values)
+            .toEqual({})
+    })
+
+    it('rejects an incomplete leads report when a later page fails', async () => {
+        jest.mocked(xhrGetAsync)
+            .mockResolvedValueOnce({
+                data: [{ createdAt: '2026-10-20', id: '1', status: 'SUBMITTED' }],
+                meta: { totalPages: 2 },
+            })
+            .mockRejectedValueOnce(new Error('offline'))
+        await expect(fetchSalesDashboard('leads', 'sales', 'close', new AbortController().signal))
+            .rejects.toThrow('offline')
     })
 
     it.each([

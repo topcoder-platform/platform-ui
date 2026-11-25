@@ -12,9 +12,11 @@ import {
     generateWorkDates,
     getDayLabel,
     hasEnteredHours,
+    hasFutureWorkDate,
     hasRowValidationError,
     isRowReadOnly,
     isRowReopened,
+    isRowReturned,
     parseTimesheetRangeParams,
     parseTimesheetReviewStatus,
     sumSelectedTotals,
@@ -346,6 +348,27 @@ describe('timesheet.utils', () => {
             expect(isRowReopened(row({
                 reopenedAt: '2026-09-14T00:00:00.000Z',
                 status: TimesheetEntryStatus.APPROVED,
+            })))
+                .toBe(false)
+        })
+
+        it('knows when a selection includes a day after today', () => {
+            const now = new Date(2026, 10, 24, 23, 30)
+
+            expect(hasFutureWorkDate([{ workDate: '2026-11-23' }, { workDate: '2026-11-24' }], now))
+                .toBe(false)
+            expect(hasFutureWorkDate([{ workDate: '2026-11-24' }, { workDate: '2026-11-25' }], now))
+                .toBe(true)
+        })
+
+        it('identifies a row returned for corrections, which is a draft until resubmitted', () => {
+            expect(isRowReturned(row({ returnedAt: '2026-09-14T00:00:00.000Z' })))
+                .toBe(true)
+            expect(isRowReturned(row()))
+                .toBe(false)
+            expect(isRowReturned(row({
+                returnedAt: '2026-09-14T00:00:00.000Z',
+                status: TimesheetEntryStatus.SUBMITTED,
             })))
                 .toBe(false)
         })

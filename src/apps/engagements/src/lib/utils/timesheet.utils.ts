@@ -47,6 +47,9 @@ export interface TimesheetRow {
     remarks: string
     reopenComment?: string
     reopenedAt?: string
+    returnComment?: string
+    returnedAt?: string
+    returnedByHandle?: string
     status: TimesheetEntryStatus
     /** `YYYY-MM-DD`, which is what every API payload uses. */
     workDate: string
@@ -76,6 +79,24 @@ export const toWorkDateString = (date: Date): string => (
         .toISOString()
         .slice(0, 10)
 )
+
+/** Shown, and returned by the API, when a submit includes days that have not started yet. */
+export const TIMESHEET_FUTURE_WORK_PERIOD_MESSAGE = 'You cannot submit timesheets for future work periods. '
+    + 'Save your entries and submit them once the relevant work period begins.'
+
+/**
+ * True when any row is dated after today, in the member's own time zone. Those rows can be saved but not
+ * submitted: hours cannot be approved for work not done yet.
+ */
+export const hasFutureWorkDate = (
+    rows: Array<{ workDate: string }>,
+    now: Date = new Date(),
+): boolean => {
+    const today = toWorkDateString(now)
+
+    // YYYY-MM-DD strings compare in date order.
+    return rows.some(row => row.workDate > today)
+}
 
 /** Formats `YYYY-MM-DD` as the `DD-MM-YYYY` the grid displays. */
 export const formatDisplayDate = (workDate: string): string => {
@@ -197,6 +218,14 @@ export const isRowReopened = (row: TimesheetRow): boolean => (
     Boolean(row.reopenedAt) && row.status === TimesheetEntryStatus.DRAFT
 )
 
+/**
+ * A row a manager returned for corrections. It is a draft again, so the member edits and resubmits it as
+ * usual; resubmitting clears the return.
+ */
+export const isRowReturned = (row: TimesheetRow): boolean => (
+    Boolean(row.returnedAt) && row.status === TimesheetEntryStatus.DRAFT
+)
+
 const toRow = (workDate: string, entry?: TimesheetEntry): TimesheetRow => ({
     approvalComment: entry?.approvalComment ?? undefined,
     approvedAt: entry?.approvedAt ?? undefined,
@@ -212,6 +241,9 @@ const toRow = (workDate: string, entry?: TimesheetEntry): TimesheetRow => ({
     remarks: entry?.remarks ?? '',
     reopenComment: entry?.reopenComment ?? undefined,
     reopenedAt: entry?.reopenedAt ?? undefined,
+    returnComment: entry?.returnComment ?? undefined,
+    returnedAt: entry?.returnedAt ?? undefined,
+    returnedByHandle: entry?.returnedByHandle ?? undefined,
     status: entry?.status ?? TimesheetEntryStatus.DRAFT,
     workDate,
 })

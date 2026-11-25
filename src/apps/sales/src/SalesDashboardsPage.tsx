@@ -155,6 +155,7 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
     const payments = useSalesDashboard('payments', portal, dateBasis, refreshKey)
     const taas = useSalesDashboard('taas-payments', portal, dateBasis, refreshKey)
     const talent = useSalesDashboard('talent', portal, dateBasis, refreshKey)
+    const leads = useSalesDashboard('leads', portal, 'close', refreshKey, undefined, undefined, portal === 'sales')
     const months = [pipeline, revenue, payments, talent].map(source => source.data?.charts[0]?.months)
         .find(value => value?.length)
     const first = months?.[0]?.month
@@ -268,7 +269,10 @@ const SalesDashboardsPage: FC<{ portal?: SalesDashboardPortal }> = props => {
             </section>
             <section aria-labelledby='monthly-talent' className={styles.section}>
                 <h2 id='monthly-talent'>Flexible Talent</h2>
-                <DashboardCard source={talent} chartId='flexible-talent' title='Members Engaged' />
+                <div className={styles.grid}>
+                    <DashboardCard source={talent} chartId='flexible-talent' title='Members Engaged' />
+                    {portal === 'sales' && <DashboardCard source={leads} chartId='leads' title='Leads Report' />}
+                </div>
             </section>
             <section aria-labelledby='monthly-customer' className={styles.section}>
                 <h2 id='monthly-customer'>Customer</h2>

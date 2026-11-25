@@ -15,7 +15,7 @@ import {
     InputText,
 } from '~/libs/ui'
 
-import { PAGE_SIZE } from '../../constants'
+import { TIMESHEETS_PAGE_SIZE } from '../../constants'
 import { useFetchPendingApprovalTimesheets } from '../../hooks'
 import {
     PendingApprovalReminderResult,
@@ -38,6 +38,7 @@ import { ConfirmationModal } from '../ConfirmationModal'
 import { ErrorMessage } from '../ErrorMessage'
 import { LoadingSpinner } from '../LoadingSpinner'
 import { Pagination } from '../Pagination'
+import { TimesheetEngagementLink } from '../TimesheetEngagementLink'
 
 import styles from './PendingTimesheetApprovalsTab.module.scss'
 
@@ -112,7 +113,7 @@ export const PendingTimesheetApprovalsTab: FC<PendingTimesheetApprovalsTabProps>
     const [fromDate, setFromDate] = useState<Date | undefined>()
     const [toDate, setToDate] = useState<Date | undefined>()
     const [page, setPage] = useState<number>(1)
-    const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
+    const [perPage, setPerPage] = useState<number>(TIMESHEETS_PAGE_SIZE)
     // Keyed by row id and kept across pages and filters, so a selection can span engagements.
     const [selectedRows, setSelectedRows] = useState<Record<string, PendingApprovalTimesheetRow>>({})
     const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false)
@@ -257,7 +258,13 @@ export const PendingTimesheetApprovalsTab: FC<PendingTimesheetApprovalsTabProps>
                         type='checkbox'
                     />
                 </td>
-                <td className={styles.engagementTitle}>{row.engagementTitle || '-'}</td>
+                <td className={styles.engagementTitle}>
+                    <TimesheetEngagementLink
+                        assignmentId={row.assignmentId}
+                        engagementId={row.engagementId}
+                        engagementTitle={row.engagementTitle}
+                    />
+                </td>
                 <td className={styles.memberHandle}>{row.assigneeHandle || '-'}</td>
                 <td className={styles.noWrap}>{formatApprovedTimesheetWorkPeriod(row)}</td>
                 <td className={styles.noWrap}>{formatDate(row.submittedAt)}</td>

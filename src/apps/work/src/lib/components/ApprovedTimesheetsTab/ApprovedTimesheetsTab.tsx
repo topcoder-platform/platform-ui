@@ -14,7 +14,7 @@ import {
     IconOutline,
 } from '~/libs/ui'
 
-import { PAGE_SIZE } from '../../constants'
+import { TIMESHEETS_PAGE_SIZE } from '../../constants'
 import { useFetchApprovedTimesheets } from '../../hooks'
 import { ApprovedTimesheetRow } from '../../models'
 import {
@@ -29,6 +29,7 @@ import {
 import { ErrorMessage } from '../ErrorMessage'
 import { LoadingSpinner } from '../LoadingSpinner'
 import { Pagination } from '../Pagination'
+import { TimesheetEngagementLink } from '../TimesheetEngagementLink'
 
 import { PayApprovedTimesheetsModal } from './PayApprovedTimesheetsModal'
 import styles from './ApprovedTimesheetsTab.module.scss'
@@ -122,7 +123,7 @@ export const ApprovedTimesheetsTab: FC<ApprovedTimesheetsTabProps> = (
     const [engagementFilter, setEngagementFilter] = useState<string>('')
     const [assigneeFilter, setAssigneeFilter] = useState<string>('')
     const [page, setPage] = useState<number>(1)
-    const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
+    const [perPage, setPerPage] = useState<number>(TIMESHEETS_PAGE_SIZE)
     // Keyed by row id and kept across pages and filters, so a selection can span engagements.
     const [selectedRows, setSelectedRows] = useState<Record<string, ApprovedTimesheetRow>>({})
     const [isPayModalOpen, setIsPayModalOpen] = useState<boolean>(false)
@@ -258,7 +259,14 @@ export const ApprovedTimesheetsTab: FC<ApprovedTimesheetsTabProps> = (
                         type='checkbox'
                     />
                 </td>
-                <td className={styles.engagementTitle}>{row.engagementTitle || '-'}</td>
+                <td className={styles.engagementTitle}>
+                    <TimesheetEngagementLink
+                        assignmentId={row.assignmentId}
+                        engagementId={row.engagementId}
+                        engagementTitle={row.engagementTitle}
+                        status='APPROVED'
+                    />
+                </td>
                 <td className={styles.memberHandle}>{row.assigneeHandle || '-'}</td>
                 <td>{formatHoursLeft(row.hoursLeft)}</td>
                 <td className={styles.noWrap}>{formatApprovedTimesheetWorkPeriod(row)}</td>

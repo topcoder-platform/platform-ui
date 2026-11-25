@@ -7,6 +7,7 @@ import {
     render,
     screen,
     waitFor,
+    within,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
@@ -24,6 +25,8 @@ import {
     fetchEngagementLeadCalculations,
     updateEngagementLeadCalculation,
 } from '../../services/engagement-leads.service'
+
+import { fetchUsdToInrRate } from '../../services/exchange-rates.service'
 
 import { AUTOSAVE_DELAY_MS, FlexiTalentCalculatorModal } from './FlexiTalentCalculatorModal'
 
@@ -109,6 +112,10 @@ jest.mock('../../services/engagement-leads.service', () => ({
     updateEngagementLeadCalculation: jest.fn(),
 }))
 
+jest.mock('../../services/exchange-rates.service', () => ({
+    fetchUsdToInrRate: jest.fn(),
+}))
+
 jest.mock('../LoadingSpinner', () => ({
     LoadingSpinner: (): JSX.Element => <div>Loading</div>,
 }))
@@ -181,6 +188,9 @@ describe('FlexiTalentCalculatorModal', () => {
         jest.mocked(deleteEngagementLeadCalculation)
             .mockReset()
             .mockResolvedValue(undefined)
+        jest.mocked(fetchUsdToInrRate)
+            .mockReset()
+            .mockResolvedValue({ date: '2026-11-24', rate: 92.73 })
     })
 
     it('prefills a new calculation from the lead when none is saved', async () => {
@@ -220,8 +230,16 @@ describe('FlexiTalentCalculatorModal', () => {
 
         expect(screen.getByLabelText('Member Cost (USD)'))
             .toHaveValue('104000')
-        expect(screen.getByText(/Challenge fee: USD 116,000/))
-            .toBeInTheDocument()
+        // Products: the member fee is the total member cost; the challenge fee is what is left.
+        const products = screen.getByRole('heading', { name: 'Products' }).parentElement as HTMLElement
+        expect(within(products)
+            .getByText('Member Fee').nextElementSibling)
+            .toHaveTextContent('USD 104,000')
+        expect(within(products)
+            .getByText('Challenge Fee').nextElementSibling)
+            .toHaveTextContent('USD 116,000')
+        expect(screen.queryByText(/Challenge fee:/))
+            .not.toBeInTheDocument()
         expect(screen.queryByText(/Member Hourly Rate \(based on Actual Cost\)/))
             .not.toBeInTheDocument()
         expect(screen.getByLabelText('Actual Cost (USD)'))
@@ -273,6 +291,33 @@ describe('FlexiTalentCalculatorModal', () => {
 
         expect(screen.getByLabelText('Actual Cost (USD)'))
             .toHaveValue('10000')
+    })
+
+    it('shows the member monthly rate in INR with the exchange rate used', async () => {
+        const user = userEvent.setup()
+        await renderCalculator()
+
+        // 50/hour, 8 hours a day for 52 weeks: USD 2,000 a week, so 2,000 * 52 / 12 a month.
+        await user.type(screen.getByLabelText('Member Rate / Hour (USD)'), '50')
+
+        expect(await screen.findByText('(INR 803,660 at 1 USD = 92.73 INR)', { exact: false }))
+            .toHaveAttribute('title', 'European Central Bank reference rate for 24-11-2026, via frankfurter.dev')
+        expect(screen.getByText(/Member Monthly Rate: USD 8,666\.67/))
+            .toBeInTheDocument()
+    })
+
+    it('shows the member monthly rate in USD only when the exchange rate cannot be loaded', async () => {
+        jest.mocked(fetchUsdToInrRate)
+            .mockRejectedValue(new Error('offline'))
+        const user = userEvent.setup()
+        await renderCalculator()
+
+        await user.type(screen.getByLabelText('Member Rate / Hour (USD)'), '50')
+
+        expect(screen.getByText(/Member Monthly Rate: USD 8,666\.67/))
+            .toBeInTheDocument()
+        expect(screen.queryByText(/INR/))
+            .not.toBeInTheDocument()
     })
 
     it('copies the cost proposal', async () => {
@@ -382,6 +427,36 @@ describe('FlexiTalentCalculatorModal', () => {
         })
         expect(createEngagementLeadCalculation)
             .toHaveBeenCalledTimes(1)
+    })
+
+    it('works as a general calculator without a lead', async () => {
+        const user = userEvent.setup()
+        render(<FlexiTalentCalculatorModal onClose={jest.fn()} />)
+        await screen.findByLabelText('Member Name')
+
+        expect(fetchEngagementLeadCalculations)
+            .toHaveBeenCalledWith(undefined)
+        expect(screen.getByText(/General calculation, not linked to a lead/))
+            .toBeInTheDocument()
+        // Nothing to prefill from apart from the usual working day.
+        expect(screen.getByLabelText('Account Name'))
+            .toHaveValue('')
+        expect(screen.getByLabelText('Duration (Weeks)'))
+            .toHaveValue('')
+        expect(screen.getByLabelText('Hours per Day'))
+            .toHaveValue('8')
+
+        await user.type(screen.getByLabelText('Account Name'), 'Globex')
+        await user.tab()
+
+        expect(createEngagementLeadCalculation)
+            .toHaveBeenCalledWith(undefined, expect.objectContaining({ accountName: 'Globex' }))
+
+        await user.click(screen.getByRole('button', { name: 'Delete Calculation' }))
+        await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+        await waitFor(() => expect(deleteEngagementLeadCalculation)
+            .toHaveBeenCalledWith(undefined, 'calc-new'))
     })
 
     it('saves straight away when a field loses focus', async () => {

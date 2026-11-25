@@ -38,6 +38,8 @@ export interface SalesSummary {
     recordCount: number
     amounts: SalesSummaryAmount[]
     groups: SalesSummaryGroup[]
+    /** Five ordered bands when the report includes a numeric opportunity probability. */
+    probabilityBreakdown?: SalesSummaryGroup
 }
 
 /** Metadata-driven report contract shared by Sales and the WIN integration. */
@@ -67,7 +69,7 @@ export interface SalesQuery {
     filterColumn?: string
     /** Displayed-value substrings matched with OR; serialized as repeated parameters. */
     filterValue?: string | string[]
-    /** Column the returned page drills into; requires drilldownValue. */
+    /** Report column or probabilityBreakdown.columnId to drill into. Requires drilldownValue. */
     drilldownColumn?: string
     /**
      * Exact displayed values the page drills into, matched with OR, such as pipeline stages.

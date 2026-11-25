@@ -901,6 +901,23 @@ export async function updateEngagementAssignmentStatus(
     }
 }
 
+/**
+ * Removes a selected assignment the member has not accepted yet. The API deletes it, returns the member's
+ * application to Submitted and emails them that the application was revoked.
+ */
+export async function removeSelectedEngagementAssignment(
+    engagementId: number | string,
+    assignmentId: number | string,
+): Promise<void> {
+    try {
+        await xhrDeleteAsync<unknown>(
+            `${ENGAGEMENTS_API_URL}/${engagementId}/assignments/${assignmentId}/offer`,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to remove assignment')
+    }
+}
+
 export async function fetchEngagementFeedback(
     engagementId: number | string,
     assignmentId: number | string,
@@ -1122,6 +1139,10 @@ export async function fetchPendingSubmissionTimesheets(
 
         if (query.excludeTestProjects) {
             params.set('excludeTestProjects', 'true')
+        }
+
+        if (query.managerAssigned) {
+            params.set('managerAssigned', 'true')
         }
 
         if (query.page) {

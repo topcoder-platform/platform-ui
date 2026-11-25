@@ -21,6 +21,7 @@ import {
     displayedColumns,
     expectedRevenueTotal,
     formatSummaryAmount,
+    groupBreakdown,
     pipelineTotal,
     stageBreakdown,
     withAmountRange,
@@ -64,8 +65,8 @@ interface SelectedOpportunity {
     name: string
 }
 
-/** Stages selected by tile clicks, identified by their column and exact labels. */
-interface SelectedStage {
+/** Selected breakdown tiles, identified by their drilldown column and labels. */
+interface TileSelection {
     columnId: string
     labels: string[]
 }
@@ -139,7 +140,8 @@ const SalesPage: FC = () => {
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
     const [dateError, setDateError] = useState('')
-    const [stage, setStage] = useState<SelectedStage>()
+    const [selection, setSelection] = useState<TileSelection>()
+    const [probabilityWise, setProbabilityWise] = useState(false)
     const [report, setReport] = useState<SalesReport>()
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(true)
@@ -229,8 +231,8 @@ const SalesPage: FC = () => {
     useEffect(() => {
         // A tile click is a deliberate, single action, so it applies at once
         // rather than after the pause the typed controls need.
-        setQuery(current => withDrilldown(current, stage?.columnId ?? '', stage?.labels ?? []))
-    }, [stage])
+        setQuery(current => withDrilldown(current, selection?.columnId ?? '', selection?.labels ?? []))
+    }, [selection])
 
     /** @param event Filter form submission. @returns Nothing; applies pending controls immediately. Does not throw. */
     function applyFilters(event: FormEvent<HTMLFormElement>): void {
@@ -315,13 +317,13 @@ const SalesPage: FC = () => {
     }
 
     /**
-     * Adds or removes a stage from the table's OR selection.
-     * @param columnId Stage column the breakdown was built from.
-     * @param label Exact stage label the tile reports.
-     * @returns Nothing; the summary keeps describing every stage either way. Does not throw.
+     * Adds or removes a breakdown tile from the table's OR selection.
+     * @param columnId Drilldown column for this breakdown.
+     * @param label Exact bucket label the tile reports.
+     * @returns Nothing; the summary keeps describing every bucket. Does not throw.
      */
-    function toggleStage(columnId: string, label: string): void {
-        setStage(current => {
+    function toggleTile(columnId: string, label: string): void {
+        setSelection(current => {
             const selected = current?.columnId === columnId ? current.labels : []
             const labels = selected.includes(label) ? selected.filter(value => value !== label) : [...selected, label]
             return labels.length ? { columnId, labels } : undefined
@@ -349,10 +351,17 @@ const SalesPage: FC = () => {
     const rangeApplied = !!query.dateColumn
     const summary = report?.summary
     const columns = useMemo(() => displayedColumns(report), [report])
-    const breakdown = useMemo(() => stageBreakdown(summary), [summary])
+    const stages = useMemo(() => stageBreakdown(summary), [summary])
+    const probabilities = useMemo(
+        () => summary?.probabilityBreakdown && groupBreakdown(summary.probabilityBreakdown),
+        [summary],
+    )
+    const showProbabilities = !!probabilities && (probabilityWise || !stages)
+    const breakdown = showProbabilities ? probabilities : stages
+    const tileType = showProbabilities ? 'probability bands' : 'stages'
     const totalAmount = summary && amountTotal(summary.amounts)
     const totalExpectedRevenue = summary && expectedRevenueTotal(summary.amounts)
-    const totalWonSowSigned = wonSowSignedTotal(breakdown, totalAmount)
+    const totalWonSowSigned = wonSowSignedTotal(stages, totalAmount)
     const title = `Sales - ${salesFiscalYearLabel(query.dateFrom, query.dateTo)}`
     const firstRow = report?.total ? (report.page - 1) * report.perPage + 1 : 0
     const lastRow = report ? Math.min(report.page * report.perPage, report.total) : 0
@@ -441,22 +450,40 @@ const SalesPage: FC = () => {
                             <div>
                                 <h2 id='sales-stage-heading'>{`${breakdown.label} breakdown`}</h2>
                                 <p className={styles.panelHint}>
-                                    Select one or more stages to filter the table. Totals cover every matching record.
+                                    {`Select one or more ${tileType} to filter the table. `}
+                                    {showProbabilities
+                                        ? 'Totals cover matching opportunities with a probability from 0% to 100%.'
+                                        : 'Totals cover every matching record.'}
                                 </p>
                             </div>
-                            {stage && (
-                                <Button noCaps onClick={() => setStage(undefined)} link>Clear stages</Button>
+                            {stages && probabilities && (
+                                <label className={styles.probabilityToggle}>
+                                    <input
+                                        checked={showProbabilities}
+                                        onChange={event => {
+                                            setProbabilityWise(event.target.checked)
+                                            setSelection(undefined)
+                                        }}
+                                        type='checkbox'
+                                    />
+                                    Probability Wise
+                                </label>
+                            )}
+                            {selection && (
+                                <Button noCaps onClick={() => setSelection(undefined)} link>
+                                    {`Clear ${tileType}`}
+                                </Button>
                             )}
                         </div>
                         <ul className={styles.stages}>
                             {breakdown.stages.map(tile => (
                                 <li key={tile.label || '—'}>
                                     <button
-                                        aria-pressed={stage?.labels.includes(tile.label) ?? false}
+                                        aria-pressed={selection?.labels.includes(tile.label) ?? false}
                                         className={`${styles.stage} ${
-                                            stage?.labels.includes(tile.label) ? styles.stageSelected : ''
+                                            selection?.labels.includes(tile.label) ? styles.stageSelected : ''
                                         }`}
-                                        onClick={() => toggleStage(breakdown.columnId, tile.label)}
+                                        onClick={() => toggleTile(breakdown.columnId, tile.label)}
                                         type='button'
                                     >
                                         <span className={styles.stageName}>{salesStageLabel(tile.label) || '—'}</span>
@@ -598,8 +625,8 @@ const SalesPage: FC = () => {
                     <div>
                         <h2>{report?.reportName || 'Sales report'}</h2>
                         <p className={styles.panelHint}>
-                            {stage
-                                ? `Showing stages: ${stage.labels.map(salesStageLabel)
+                            {selection
+                                ? `Showing ${tileType}: ${selection.labels.map(salesStageLabel)
                                     .join(' OR ')}. Salesforce is the source of truth.`
                                 : 'Salesforce is the source of truth. Changes are made there.'}
                         </p>
@@ -802,7 +829,7 @@ const SalesPage: FC = () => {
                                     {query.search || query.filterValue || query.drilldownValue
                                         || query.dateColumn || query.amountColumn
                                         || categoryFilters.some(filter => query[filter.key]?.length)
-                                        ? 'Try a different search, stage or clear the filters.'
+                                        ? 'Try changing your search or clearing a filter.'
                                         : 'The Salesforce report does not contain any records yet.'}
                                 </p>
                             </div>

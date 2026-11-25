@@ -32,6 +32,7 @@ jest.mock('~/libs/ui', () => ({
         <button disabled={props.disabled} onClick={props.onClick} type='button'>{props.label}</button>
     ),
     IconOutline: {
+        ExternalLinkIcon: () => <></>,
         SearchIcon: () => <span>search-icon</span>,
     },
     Tooltip: (props: { children: JSX.Element, content: string }) => (
@@ -41,7 +42,8 @@ jest.mock('~/libs/ui', () => ({
     virtual: true,
 })
 jest.mock('../../constants', () => ({
-    PAGE_SIZE: 10,
+    ENGAGEMENTS_APP_URL: 'https://engagements.test',
+    TIMESHEETS_PAGE_SIZE: 50,
 }))
 jest.mock('../../hooks', () => ({
     useFetchApprovedTimesheets: jest.fn(),
@@ -117,10 +119,30 @@ describe('ApprovedTimesheetsTab', () => {
         mockedUseFetch.mockReturnValue({
             error: undefined,
             isLoading: false,
-            meta: { page: 1, perPage: 10, totalCount: 2, totalPages: 1 },
+            meta: { page: 1, perPage: 50, totalCount: 2, totalPages: 1 },
             mutate,
             rows,
         } as never)
+    })
+
+    it('asks for 50 rows per page by default', () => {
+        render(<ApprovedTimesheetsTab />)
+
+        expect(mockedUseFetch)
+            .toHaveBeenCalledWith(expect.objectContaining({ page: 1, perPage: 50 }))
+    })
+
+    it('links the engagement name to the assignee approved timesheet in a new tab', () => {
+        render(<ApprovedTimesheetsTab />)
+
+        const link = screen.getByRole('link', { name: 'Senior Frontend Engineer' })
+
+        expect(link.getAttribute('href'))
+            .toBe('https://engagements.test/eng1/timesheets/asg1?status=APPROVED')
+        expect(link.getAttribute('target'))
+            .toBe('_blank')
+        expect(link.getAttribute('rel'))
+            .toBe('noreferrer noopener')
     })
 
     it('shows the read-only approval fields', () => {
@@ -210,7 +232,7 @@ describe('ApprovedTimesheetsTab', () => {
         mockedUseFetch.mockReturnValue({
             error: undefined,
             isLoading: false,
-            meta: { page: 1, perPage: 10, totalCount: 3, totalPages: 1 },
+            meta: { page: 1, perPage: 50, totalCount: 3, totalPages: 1 },
             mutate,
             rows: [
                 buildRow({ hours: 30, id: 'row-1' }),

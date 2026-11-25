@@ -73,6 +73,14 @@
     border-color: $black-20;
 }
 
+// Same pill as Pending Approval, in red so an entry waiting on the member's corrections does not read as
+// one waiting on a manager.
+.status-returned_for_corrections {
+    background: $red-25;
+    color: $red-140;
+    border-color: $red-100;
+}
+
 .status-approved {
     background: $green-25;
     color: $green-1;

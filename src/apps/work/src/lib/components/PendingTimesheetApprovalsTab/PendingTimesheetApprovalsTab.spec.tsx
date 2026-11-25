@@ -23,6 +23,9 @@ jest.mock('~/libs/ui', () => ({
     Button: (props: { disabled?: boolean, label: string, onClick?: () => void }) => (
         <button disabled={props.disabled} onClick={props.onClick} type='button'>{props.label}</button>
     ),
+    IconOutline: {
+        ExternalLinkIcon: () => <></>,
+    },
     // Only a complete YYYY-MM-DD value reports a change, the way the real picker reports a whole date.
     InputDatePicker: (props: { label: string, onChange: (date: Date | null) => void }) => (
         <input
@@ -52,7 +55,8 @@ jest.mock('~/libs/ui', () => ({
     virtual: true,
 })
 jest.mock('../../constants', () => ({
-    PAGE_SIZE: 10,
+    ENGAGEMENTS_APP_URL: 'https://engagements.test',
+    TIMESHEETS_PAGE_SIZE: 50,
 }))
 jest.mock('../../hooks', () => ({
     useFetchPendingApprovalTimesheets: jest.fn(),
@@ -144,7 +148,7 @@ describe('PendingTimesheetApprovalsTab', () => {
         mockedUseFetch.mockReturnValue({
             error: undefined,
             isLoading: false,
-            meta: { page: 1, perPage: 10, totalCount: 3, totalPages: 1 },
+            meta: { page: 1, perPage: 50, totalCount: 3, totalPages: 1 },
             mutate,
             rows,
         })
@@ -171,6 +175,19 @@ describe('PendingTimesheetApprovalsTab', () => {
             .toBeTruthy()
     })
 
+    it('links the engagement name to the assignee timesheet in a new tab', () => {
+        render(<PendingTimesheetApprovalsTab />)
+
+        const link = screen.getByRole('link', { name: 'Data Engineer' })
+
+        expect(link.getAttribute('href'))
+            .toBe('https://engagements.test/eng1/timesheets/asg2')
+        expect(link.getAttribute('target'))
+            .toBe('_blank')
+        expect(link.getAttribute('rel'))
+            .toBe('noreferrer noopener')
+    })
+
     it('filters by engagement name and work period', async () => {
         render(<PendingTimesheetApprovalsTab excludeTestProjects />)
 
@@ -188,7 +205,7 @@ describe('PendingTimesheetApprovalsTab', () => {
                         excludeTestProjects: true,
                         fromDate: '2026-10-01',
                         page: 1,
-                        perPage: 10,
+                        perPage: 50,
                         toDate: '2026-10-31',
                     },
                     true,
@@ -306,7 +323,7 @@ describe('PendingTimesheetApprovalsTab', () => {
         mockedUseFetch.mockReturnValue({
             error: undefined,
             isLoading: false,
-            meta: { page: 1, perPage: 10, totalCount: 0, totalPages: 0 },
+            meta: { page: 1, perPage: 50, totalCount: 0, totalPages: 0 },
             mutate,
             rows: [],
         })

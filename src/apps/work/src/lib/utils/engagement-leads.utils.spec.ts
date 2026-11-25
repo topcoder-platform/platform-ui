@@ -17,6 +17,8 @@ describe('getLeadDisplayStatus', () => {
         [EngagementLeadStatus.CONVERTED, 'Under Review'],
         [EngagementLeadStatus.FULFILLED, 'Fulfilled'],
         [EngagementLeadStatus.REJECTED, 'Lost'],
+        [EngagementLeadStatus.PARTIALLY_FULFILLED, 'Partially Fulfilled'],
+        [EngagementLeadStatus.ON_HOLD, 'On Hold'],
     ])('shows %s leads as %s', (status, displayStatus) => {
         expect(getLeadDisplayStatus(status))
             .toBe(displayStatus)
@@ -24,16 +26,43 @@ describe('getLeadDisplayStatus', () => {
 })
 
 describe('getLeadStatusTransitions', () => {
+    const PARTIAL_AND_ON_HOLD = [EngagementLeadStatus.PARTIALLY_FULFILLED, EngagementLeadStatus.ON_HOLD]
+
     it.each([
         [EngagementLeadStatus.SUBMITTED, [
             EngagementLeadStatus.UNDER_REVIEW,
             EngagementLeadStatus.FULFILLED,
             EngagementLeadStatus.REJECTED,
+            ...PARTIAL_AND_ON_HOLD,
         ]],
-        [EngagementLeadStatus.REJECTED, [EngagementLeadStatus.UNDER_REVIEW, EngagementLeadStatus.FULFILLED]],
-        [EngagementLeadStatus.UNDER_REVIEW, [EngagementLeadStatus.FULFILLED, EngagementLeadStatus.REJECTED]],
-        [EngagementLeadStatus.CONVERTED, [EngagementLeadStatus.FULFILLED, EngagementLeadStatus.REJECTED]],
-        [EngagementLeadStatus.FULFILLED, [EngagementLeadStatus.UNDER_REVIEW]],
+        [EngagementLeadStatus.REJECTED, [
+            EngagementLeadStatus.UNDER_REVIEW,
+            EngagementLeadStatus.FULFILLED,
+            ...PARTIAL_AND_ON_HOLD,
+        ]],
+        [EngagementLeadStatus.UNDER_REVIEW, [
+            EngagementLeadStatus.FULFILLED,
+            EngagementLeadStatus.REJECTED,
+            ...PARTIAL_AND_ON_HOLD,
+        ]],
+        [EngagementLeadStatus.CONVERTED, [
+            EngagementLeadStatus.FULFILLED,
+            EngagementLeadStatus.REJECTED,
+            ...PARTIAL_AND_ON_HOLD,
+        ]],
+        [EngagementLeadStatus.FULFILLED, [EngagementLeadStatus.UNDER_REVIEW, ...PARTIAL_AND_ON_HOLD]],
+        [EngagementLeadStatus.PARTIALLY_FULFILLED, [
+            EngagementLeadStatus.UNDER_REVIEW,
+            EngagementLeadStatus.FULFILLED,
+            EngagementLeadStatus.REJECTED,
+            EngagementLeadStatus.ON_HOLD,
+        ]],
+        [EngagementLeadStatus.ON_HOLD, [
+            EngagementLeadStatus.UNDER_REVIEW,
+            EngagementLeadStatus.FULFILLED,
+            EngagementLeadStatus.REJECTED,
+            EngagementLeadStatus.PARTIALLY_FULFILLED,
+        ]],
     ])('lets a %s lead move to %p', (status, transitions) => {
         expect(getLeadStatusTransitions(status))
             .toEqual(transitions)

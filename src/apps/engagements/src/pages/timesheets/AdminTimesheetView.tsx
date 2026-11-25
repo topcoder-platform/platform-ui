@@ -17,6 +17,7 @@ import {
     deleteTimesheetEntries,
     getTimesheet,
     reopenTimesheetEntries,
+    revertTimesheetEntriesToDraft,
     saveTimesheetEntries,
     submitTimesheetEntries,
 } from '../../lib/services'
@@ -30,9 +31,11 @@ import {
     generateWorkDates,
     getDayLabel,
     hasEnteredHours,
+    hasFutureWorkDate,
     hasRowValidationError,
     isRowDeletable,
     sumSelectedTotals,
+    TIMESHEET_FUTURE_WORK_PERIOD_MESSAGE,
     toWorkDateString,
     validateDateRange,
     validateEntryRange,
@@ -52,10 +55,20 @@ interface AdminTimesheetViewProps {
 }
 
 /** Which override the reason dialog is collecting a reason for. */
-type PendingOverride = 'correct' | 'reopen' | 'submit'
+type PendingOverride = 'correct' | 'reopen' | 'revert' | 'submit'
 type StatusFilter = TimesheetReviewStatus
 
-const OVERRIDE_COPY: Record<PendingOverride, { confirmLabel: string, description: string, title: string }> = {
+interface OverrideCopy {
+    confirmLabel: string
+    description: string
+    /** Label of the reason field; the modal's `Override reason` when unset. */
+    reasonLabel?: string
+    /** Whether the modal lists the selected hours and entry count. */
+    showTotals?: boolean
+    title: string
+}
+
+const OVERRIDE_COPY: Record<PendingOverride, OverrideCopy> = {
     correct: {
         confirmLabel: 'Save correction',
         description:
@@ -69,6 +82,15 @@ const OVERRIDE_COPY: Record<PendingOverride, { confirmLabel: string, description
             'You are reopening approved entries, which overrides a manager’s approval. '
             + 'They return to draft and must be resubmitted and approved again.',
         title: 'Reopen approved entries',
+    },
+    revert: {
+        confirmLabel: 'Confirm',
+        description:
+            'You are about to revert below timesheet entries to Draft status. '
+            + 'Please enter the reason and confirm the action.',
+        reasonLabel: 'Reason',
+        showTotals: true,
+        title: 'Revert to Draft',
     },
     submit: {
         confirmLabel: 'Submit on behalf',
@@ -475,6 +497,14 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                 )
                 props.onTimesheetChange(updated)
                 toast.success('Entries reopened.')
+            } else if (pendingOverride === 'revert') {
+                const updated = await revertTimesheetEntriesToDraft(
+                    props.timesheet.engagementId,
+                    props.timesheet.assignment.id,
+                    { entryIds: selectedIds, reason: overrideReason },
+                )
+                props.onTimesheetChange(updated)
+                toast.success('Entries reverted to draft. The member has been notified.')
             } else if (pendingOverride === 'submit') {
                 if (invalidRows.length) {
                     setActionError('Fix the highlighted fields before submitting.')
@@ -618,6 +648,8 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
 
     const canApprove = selectedIds.length > 0
         && selectedRows.every(row => row.status === TimesheetEntryStatus.SUBMITTED)
+    // Same selection as approving: a submitted entry can be approved, or sent back to the member.
+    const canRevertToDraft = canApprove
     const canSubmitOnBehalf = selectedIds.length > 0
         && selectedRows.every(row => row.status === TimesheetEntryStatus.DRAFT)
     const canReopen = selectedIds.length > 0
@@ -803,11 +835,28 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                         secondary
                     />
                 )}
+                {canRevertToDraft && (
+                    <Button
+                        disabled={isWorking}
+                        label={`Revert to Draft (${selectedIds.length})`}
+                        onClick={async function onRevertToDraft() {
+                            if (await confirmDiscardingUnselectedEdits()) {
+                                setPendingOverride('revert')
+                            }
+                        }}
+                        secondary
+                    />
+                )}
                 {canSubmitOnBehalf && (
                     <Button
                         disabled={isWorking}
                         label={`Submit on behalf (${selectedIds.length})`}
                         onClick={async function onSubmitOnBehalf() {
+                            if (hasFutureWorkDate(selectedRows)) {
+                                setActionError(TIMESHEET_FUTURE_WORK_PERIOD_MESSAGE)
+                                return
+                            }
+
                             // Check remarks before asking for a reason; the API refuses the submit
                             // anyway, and this points at the rows to fix.
                             const missingRemarks = findMissingRemarksErrors(selectedRows)
@@ -861,7 +910,11 @@ const AdminTimesheetView: FC<AdminTimesheetViewProps> = (props: AdminTimesheetVi
                 }}
                 onConfirm={runOverride}
                 open={Boolean(pendingOverride)}
+                reasonLabel={pendingOverride ? OVERRIDE_COPY[pendingOverride].reasonLabel : undefined}
                 title={pendingOverride ? OVERRIDE_COPY[pendingOverride].title : 'Override'}
+                totals={pendingOverride && OVERRIDE_COPY[pendingOverride].showTotals
+                    ? { entryCount: selectedIds.length, totalHours: totals.hours }
+                    : undefined}
             />
 
             <TimesheetAuditModal

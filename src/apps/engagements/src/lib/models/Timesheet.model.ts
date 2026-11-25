@@ -40,6 +40,15 @@ export interface TimesheetEntry {
     reopenedAt: string | null
     /** The note the administrator left when last reopening the entry. */
     reopenComment: string | null
+    /**
+     * Set when a manager returned the entry for corrections; the entry is back in draft until the member
+     * resubmits it, which clears these.
+     */
+    returnedAt?: string | null
+    /** Handle of the manager who returned the entry. */
+    returnedByHandle?: string | null
+    /** The corrections the manager asked for. */
+    returnComment?: string | null
     status: TimesheetEntryStatus
     submittedAt: string | null
     /** `YYYY-MM-DD`. `DD-MM-YYYY` is display only. */
@@ -102,6 +111,18 @@ export interface ApproveTimesheetEntriesRequest {
 export interface ReopenTimesheetEntriesRequest {
     entryIds: string[]
     overrideReason: string
+}
+
+export interface ReturnTimesheetEntriesRequest {
+    entryIds: string[]
+    returnComment: string
+    /** Required when an administrator returns entries on a manager's behalf. */
+    overrideReason?: string
+}
+
+export interface RevertTimesheetEntriesToDraftRequest {
+    entryIds: string[]
+    reason: string
 }
 
 export interface SkippedTimesheetEntry {

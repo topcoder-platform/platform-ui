@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, react/jsx-no-bind */
 import '@testing-library/jest-dom'
 
 import React from 'react'
@@ -40,7 +40,36 @@ jest.mock('~/libs/ui', () => ({
             {props.children ?? props.label}
         </button>
     ),
+    IconOutline: {
+        CalculatorIcon: () => <svg />,
+        DocumentAddIcon: () => <svg />,
+    },
+    Tooltip: (props: { children?: React.ReactNode }) => <>{props.children}</>,
 }), { virtual: true })
+jest.mock('../../../lib/components/EngagementLeadNotesModal', () => ({
+    EngagementLeadNotesModal: (props: {
+        lead: { id: string, notes?: unknown[] }
+        onSaved: (lead: unknown) => void
+    }) => (
+        <div role='dialog' aria-label='Notes'>
+            {`Notes for ${props.lead.id}`}
+            <button
+                onClick={() => props.onSaved({ ...props.lead, notes: [{ id: 'note-1' }] })}
+                type='button'
+            >
+                Save note
+            </button>
+        </div>
+    ),
+}))
+jest.mock('../../../lib/components/FlexiTalentCalculatorModal', () => ({
+    FlexiTalentCalculatorModal: (props: { lead: { id: string }, onClose: () => void }) => (
+        <div role='dialog' aria-label='Calculator'>
+            {`Calculator for ${props.lead.id}`}
+            <button onClick={props.onClose} type='button'>Close calculator</button>
+        </div>
+    ),
+}))
 jest.mock('../../../config/routes.config', () => ({
     rootRoute: '/work',
 }))
@@ -179,13 +208,21 @@ describe('EngagementLeadDetailPage', () => {
         })
     })
 
-    const STATUS_BUTTONS = ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost']
+    const PARTIAL = 'Mark Partially Fulfilled'
+    const ON_HOLD = 'Mark On Hold'
+    const STATUS_BUTTONS = ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost', PARTIAL, ON_HOLD]
 
     it.each([
-        [EngagementLeadStatus.SUBMITTED, 'New', ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost']],
-        [EngagementLeadStatus.REJECTED, 'Lost', ['Mark Under Review', 'Mark Fulfilled']],
-        [EngagementLeadStatus.UNDER_REVIEW, 'Under Review', ['Mark Fulfilled', 'Mark Lost']],
-        [EngagementLeadStatus.FULFILLED, 'Fulfilled', ['Mark Under Review']],
+        [EngagementLeadStatus.SUBMITTED, 'New', ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost', PARTIAL, ON_HOLD]],
+        [EngagementLeadStatus.REJECTED, 'Lost', ['Mark Under Review', 'Mark Fulfilled', PARTIAL, ON_HOLD]],
+        [EngagementLeadStatus.UNDER_REVIEW, 'Under Review', ['Mark Fulfilled', 'Mark Lost', PARTIAL, ON_HOLD]],
+        [EngagementLeadStatus.FULFILLED, 'Fulfilled', ['Mark Under Review', PARTIAL, ON_HOLD]],
+        [
+            EngagementLeadStatus.PARTIALLY_FULFILLED,
+            'Partially Fulfilled',
+            ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost', ON_HOLD],
+        ],
+        [EngagementLeadStatus.ON_HOLD, 'On Hold', ['Mark Under Review', 'Mark Fulfilled', 'Mark Lost', PARTIAL]],
     ])('shows a %s lead as %s with its status actions', async (status, label, buttons) => {
         await renderLead({ ...baseLead, status })
 
@@ -223,6 +260,26 @@ describe('EngagementLeadDetailPage', () => {
             .toBeInTheDocument()
     })
 
+    it.each([
+        ['Mark Partially Fulfilled', EngagementLeadStatus.PARTIALLY_FULFILLED, 'Partially Fulfilled'],
+        ['Mark On Hold', EngagementLeadStatus.ON_HOLD, 'On Hold'],
+    ])('%s moves the lead to %s', async (button, status, label) => {
+        mockUpdateStatus.mockResolvedValue({ ...baseLead, status })
+        await renderLead({ ...baseLead, status: EngagementLeadStatus.SUBMITTED })
+
+        fireEvent.click(screen.getByText(button))
+
+        await waitFor(() => {
+            expect(mockUpdateStatus)
+                .toHaveBeenCalledWith('lead-1', status, undefined)
+        })
+        expect(await screen.findByText(label))
+            .toBeInTheDocument()
+        expect(screen.queryByText(button))
+            .not
+            .toBeInTheDocument()
+    })
+
     it('does not offer another engagement once one was created from the lead', async () => {
         await renderLead({
             ...baseLead,
@@ -255,6 +312,24 @@ describe('EngagementLeadDetailPage', () => {
         await expect(resolveUrl())
             .resolves
             .toBe('/work/projects/project-9/engagements/eng-1/view')
+    })
+
+    it('opens the lead notes and cost calculator from the lead page', async () => {
+        await renderLead(baseLead)
+
+        await userEvent.click(screen.getByRole('button', { name: 'Notes' }))
+        expect(screen.getByText('Notes for lead-1'))
+            .toBeInTheDocument()
+        await userEvent.click(screen.getByRole('button', { name: 'Save note' }))
+        expect(screen.queryByText('Notes for lead-1'))
+            .toBeNull()
+
+        await userEvent.click(screen.getByRole('button', { name: 'Cost Calculator' }))
+        expect(screen.getByText('Calculator for lead-1'))
+            .toBeInTheDocument()
+        await userEvent.click(screen.getByRole('button', { name: 'Close calculator' }))
+        expect(screen.queryByText('Calculator for lead-1'))
+            .toBeNull()
     })
 
     it('asks for a reason before rejecting a lead', async () => {

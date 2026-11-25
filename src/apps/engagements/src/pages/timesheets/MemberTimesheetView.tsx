@@ -18,11 +18,13 @@ import {
     findMissingRemarksErrors,
     formatHoursLabel,
     hasEnteredHours,
+    hasFutureWorkDate,
     hasRowValidationError,
     isRowDeletable,
     isRowReadOnly,
     parseTimesheetSaveError,
     sumSelectedTotals,
+    TIMESHEET_FUTURE_WORK_PERIOD_MESSAGE,
     toWorkDateString,
     validateEntryRange,
 } from '../../lib/utils'
@@ -357,6 +359,11 @@ const MemberTimesheetView: FC<MemberTimesheetViewProps> = (props: MemberTimeshee
             setActionError(
                 'Some selected rows have no hours entered. Enter hours or clear the selection.',
             )
+            return
+        }
+
+        if (hasFutureWorkDate(selectedRows)) {
+            setActionError(TIMESHEET_FUTURE_WORK_PERIOD_MESSAGE)
             return
         }
 

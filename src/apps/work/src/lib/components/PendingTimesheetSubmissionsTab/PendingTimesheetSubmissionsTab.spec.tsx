@@ -23,6 +23,17 @@ jest.mock('~/libs/ui', () => ({
     Button: (props: { disabled?: boolean, label: string, onClick?: () => void }) => (
         <button disabled={props.disabled} onClick={props.onClick} type='button'>{props.label}</button>
     ),
+    IconOutline: {
+        ExternalLinkIcon: () => <></>,
+    },
+    InputCheckbox: (props: { checked?: boolean, label: string, onClick?: () => void }) => (
+        <input
+            aria-label={props.label}
+            checked={!!props.checked}
+            onChange={props.onClick}
+            type='checkbox'
+        />
+    ),
     // Shows the picked day, and reports a change only for a complete YYYY-MM-DD value or a clear.
     InputDatePicker: (props: {
         date?: Date
@@ -64,7 +75,8 @@ jest.mock('~/libs/ui', () => ({
     virtual: true,
 })
 jest.mock('../../constants', () => ({
-    PAGE_SIZE: 10,
+    ENGAGEMENTS_APP_URL: 'https://engagements.test',
+    TIMESHEETS_PAGE_SIZE: 50,
 }))
 jest.mock('../../hooks', () => ({
     useFetchPendingSubmissionTimesheets: jest.fn(),
@@ -153,7 +165,7 @@ describe('PendingTimesheetSubmissionsTab', () => {
         mockedUseFetch.mockReturnValue({
             error: undefined,
             isLoading: false,
-            meta: { page: 1, perPage: 10, totalCount: 3, totalPages: 1 },
+            meta: { page: 1, perPage: 50, totalCount: 3, totalPages: 1 },
             mutate,
             rows,
         })
@@ -172,8 +184,9 @@ describe('PendingTimesheetSubmissionsTab', () => {
                     engagement: undefined,
                     excludeTestProjects: false,
                     fromDate: '2026-11-09',
+                    managerAssigned: true,
                     page: 1,
-                    perPage: 10,
+                    perPage: 50,
                     toDate: '2026-11-13',
                 },
                 true,
@@ -203,6 +216,19 @@ describe('PendingTimesheetSubmissionsTab', () => {
             .toBeTruthy()
     })
 
+    it('links the engagement name to the assignee timesheet in a new tab', () => {
+        render(<PendingTimesheetSubmissionsTab />)
+
+        const link = screen.getByRole('link', { name: 'Data Engineer' })
+
+        expect(link.getAttribute('href'))
+            .toBe('https://engagements.test/eng1/timesheets/asg2')
+        expect(link.getAttribute('target'))
+            .toBe('_blank')
+        expect(link.getAttribute('rel'))
+            .toBe('noreferrer noopener')
+    })
+
     it('filters by engagement name and a picked work period', async () => {
         render(<PendingTimesheetSubmissionsTab excludeTestProjects />)
 
@@ -223,8 +249,9 @@ describe('PendingTimesheetSubmissionsTab', () => {
                         engagement: 'Frontend',
                         excludeTestProjects: true,
                         fromDate: '2026-11-02',
+                        managerAssigned: true,
                         page: 1,
-                        perPage: 10,
+                        perPage: 50,
                         toDate: '2026-11-06',
                     },
                     true,
@@ -232,10 +259,25 @@ describe('PendingTimesheetSubmissionsTab', () => {
         })
     })
 
+    it('lists only engagements with a manager until Manager Assigned is unchecked', () => {
+        render(<PendingTimesheetSubmissionsTab />)
+
+        const checkbox = screen.getByLabelText('Manager Assigned') as HTMLInputElement
+        expect(checkbox.checked)
+            .toBe(true)
+
+        fireEvent.click(checkbox)
+
+        expect(checkbox.checked)
+            .toBe(false)
+        expect(mockedUseFetch)
+            .toHaveBeenLastCalledWith(expect.objectContaining({ managerAssigned: false, page: 1 }), true)
+    })
+
     it.each([
         ['2026-11-13', '2026-11-09', 'The to date cannot be earlier than the from date.'],
         ['2026-10-01', '2026-11-01', 'The work period cannot span more than 31 days.'],
-        ['', '2026-11-13', 'Choose the work period to check, from and to.'],
+        ['', '2026-11-13', 'Select the work period to view data.'],
     ])('does not request the period %p to %p', (fromDate, toDate, message) => {
         render(<PendingTimesheetSubmissionsTab />)
 
@@ -331,7 +373,7 @@ describe('PendingTimesheetSubmissionsTab', () => {
         mockedUseFetch.mockReturnValue({
             error: undefined,
             isLoading: false,
-            meta: { page: 1, perPage: 10, totalCount: 0, totalPages: 0 },
+            meta: { page: 1, perPage: 50, totalCount: 0, totalPages: 0 },
             mutate,
             rows: [],
         })

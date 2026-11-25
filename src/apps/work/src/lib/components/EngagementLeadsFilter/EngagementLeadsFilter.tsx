@@ -49,6 +49,8 @@ export const LEAD_STATUS_GROUP_OPTIONS: InputMultiselectOption[] = [
     { label: 'New', value: EngagementLeadStatusGroup.NEW },
     { label: 'Under Review', value: EngagementLeadStatusGroup.UNDER_REVIEW },
     { label: 'Fulfilled', value: EngagementLeadStatusGroup.FULFILLED },
+    { label: 'Partially Fulfilled', value: EngagementLeadStatusGroup.PARTIALLY_FULFILLED },
+    { label: 'On Hold', value: EngagementLeadStatusGroup.ON_HOLD },
     { label: 'Lost', value: EngagementLeadStatusGroup.LOST },
 ]
 

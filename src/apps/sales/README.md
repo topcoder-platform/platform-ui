@@ -134,6 +134,16 @@ without a won bucket cannot establish the won total and displays a dash.
 The cards deliberately ignore the selected stage: they are the overview the
 stage tiles are read against. See the drilldown note below.
 
+## Probability Wise (PM-6819)
+
+In Stage breakdown, select **Probability Wise** to group opportunities by their
+Salesforce probability. The five tiles show Shaping (below 20%), Long Upside
+(20% to below 50%), Upside (50% to below 70%), Commit (70% to below 100%) and
+Won (100%). Each shows the opportunity count, Amount and Expected Amount across
+the filtered report. Select multiple tiles to show matching opportunities in
+the table. Switching views clears the tile selection and keeps other filters.
+The toggle appears when the Reports API supplies the probability breakdown.
+
 ## Stage breakdown (PM-6392)
 
 The stage breakdown is a compact grid of clickable tiles, one per stage, each
@@ -288,13 +298,19 @@ The Reports route is `/reports/sales-dashboards` on the combined host and
 `/sales-dashboards` on the Reports host. Existing pipeline/progression reports
 and platform dashboards retain their routes and behavior.
 
-The page groups its six cards into **Sales** (Bookings Won and Bookings in Pipeline),
-**Revenue** (Revenue Closed), **Payments** (Topcoder Payments and TaaS Payments), and
-**Flexible Talent** (Members Engaged), followed by the two **Customer** matrices.
-The six sources call `/sales-dashboard/:section` independently, with inline loading,
-failure/retry and pending-source states. Refresh reloads every active source; changing
-Close date / Created date reloads bookings and pipeline only. Requests are aborted
+The page groups its cards into **Sales** (Bookings Won and Bookings in Pipeline),
+**Revenue** (Revenue Closed and Revenue Forecast), **Payments** (Topcoder Payments and TaaS Payments), and
+**Flexible Talent** (Members Engaged and, in Sales, Leads Report), followed by the two **Customer** matrices.
+Dashboard sources load independently, with inline loading, failure/retry and pending-source
+states. Refresh reloads every active source. Changing Close date / Created date reloads
+bookings and pipeline only. Requests are aborted
 on unmount or control changes.
+
+The **Leads Report** shows one bar per UTC creation month, stacked by current
+Work status (New, Under Review, Fulfilled, Partially Fulfilled, On Hold, or Lost).
+A later status change updates the count in the lead's original creation month.
+The chart and its data table include both Wipro Consumption and Wipro Direct
+leads from the Engagements API and stay monthly when the dashboard switches to Quarterly.
 
 Bookings Won, Bookings in Pipeline and Revenue Closed each have one independent
 **Filter by** dropdown. It selects the dimension shown as stacked chart series and
