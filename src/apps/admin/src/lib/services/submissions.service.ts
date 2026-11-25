@@ -45,9 +45,9 @@ interface ManualSubmissionUploadPayload {
     type?: string
 }
 
-export const fetchSubmissionsOfChallenge = async (
+export const fetchChallengeSubmissionRows = async (
     challengeId: string,
-): Promise<MemberSubmission[]> => {
+): Promise<Submission[]> => {
     if (!challengeId) {
         return Promise.resolve([])
     }
@@ -78,8 +78,12 @@ export const fetchSubmissionsOfChallenge = async (
         }
     }
 
-    return adjustSubmissionsResponse(submissions)
+    return submissions
 }
+
+export const fetchSubmissionsOfChallenge = async (challengeId: string): Promise<MemberSubmission[]> => (
+    adjustSubmissionsResponse(await fetchChallengeSubmissionRows(challengeId))
+)
 
 /**
  * Remove the submission

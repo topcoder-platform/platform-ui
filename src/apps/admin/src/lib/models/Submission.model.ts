@@ -1,10 +1,17 @@
 import _ from 'lodash'
 import moment from 'moment'
 
+import {
+    marathonExampleScore,
+    marathonSubmissionScores,
+    rankMarathonScores,
+} from '~/apps/opportunities/src/utils/marathon-match.utils'
 import { EnvironmentConfig } from '~/config'
 
 import { TABLE_DATE_FORMAT } from '../../config/index.config'
-import { isStringObject, processRanks, toFixed } from '../utils'
+import { processRanks } from '../utils/challenge'
+import { toFixed } from '../utils/number'
+import { isStringObject } from '../utils/string'
 
 import { MemberSubmission } from './MemberSubmission.model'
 import {
@@ -41,12 +48,14 @@ export interface Submission {
     review: SubmissionReview[]
     reviewSummation?: SubmissionReviewSummation[]
     exampleScore?: number // this field is calculated at frontend
+    initialScore?: number | null
     provisionalScore?: number // this field is calculated at frontend
     finalScore?: number // this field is calculated at frontend
     provisionalRank?: number // this field is calculated at frontend
     finalRank?: number // this field is calculated at frontend
     hideToggleHistory?: boolean // this field is calculated at frontend
     virusScan?: boolean
+    isLatest?: boolean
     isTheLatestSubmission?: boolean // this field is calculated at frontend
     // Enriched fields from API (Admin/Copilot/M2M only)
     submitterHandle?: string
@@ -58,8 +67,9 @@ export interface Submission {
  * @param memberSubmissions array of member submissions
  * @returns array of member submission
  */
-export function recalculateSubmissionRank(
+function recalculateSubmissionRank(
     memberSubmissions: MemberSubmission[],
+    isMM: boolean,
 ): MemberSubmission[] {
     const validMemberSubmissions: MemberSubmission[] = _.filter(
         memberSubmissions,
@@ -67,8 +77,19 @@ export function recalculateSubmissionRank(
             && !!memberSubmission.submissions.length,
     )
     _.each(validMemberSubmissions, memberSubmission => {
-        memberSubmission.submissions = memberSubmission.submissions.map(adjustSubmissionResponse)
+        memberSubmission.submissions = memberSubmission.submissions.map(row => adjustSubmissionResponse(row, isMM))
     })
+
+    if (isMM) {
+        const ranks = rankMarathonScores(validMemberSubmissions.map(member => member.submissions[0]))
+        validMemberSubmissions.forEach(member => {
+            const latest = member.submissions[0]
+            const rank = ranks.get(latest.id)
+            Object.assign(member, rank)
+            Object.assign(latest, rank)
+        })
+        return _.orderBy(validMemberSubmissions, ['finalRank', 'provisionalRank'])
+    }
 
     const { submissions: finalSubmissions, maxFinalScore }: {
         maxFinalScore: number;
@@ -82,13 +103,11 @@ export function recalculateSubmissionRank(
 
         return (a.finalRank ?? 0) - (b.finalRank ?? 0)
     })
-    let results: Submission[] = []
 
     _.forEach(finalSubmissions, finalSubmission => {
         finalSubmission.submissions[0].provisionalRank
             = finalSubmission.provisionalRank
         finalSubmission.submissions[0].finalRank = finalSubmission.finalRank
-        results = [...results, ...finalSubmission.submissions]
     })
 
     return finalSubmissions
@@ -96,11 +115,13 @@ export function recalculateSubmissionRank(
 
 /**
  * Update submissions to show in ui
- * @param data data from backend response
+ * @param submissions raw submission rows from all result pages
+ * @param isMM whether to apply Marathon Match scoring and leaderboard rules
  * @returns array of member submission
  */
 export function adjustSubmissionsResponse(
     submissions: Submission[],
+    isMM: boolean = false,
 ): MemberSubmission[] {
     const grouped: Record<string, Submission[]> = {}
     _.each(submissions, submission => {
@@ -131,7 +152,8 @@ export function adjustSubmissionsResponse(
                 ? new Date(a.submittedDate)
                 : new Date(0)
 
-            return submittedB.getTime() - submittedA.getTime()
+            const latestFirst = isMM ? Number(b.isLatest === true) - Number(a.isLatest === true) : 0
+            return latestFirst || submittedB.getTime() - submittedA.getTime()
         })
 
         result.push({
@@ -142,72 +164,49 @@ export function adjustSubmissionsResponse(
         })
     })
 
-    return recalculateSubmissionRank(result)
+    return recalculateSubmissionRank(result, isMM)
 }
 
 /**
  * Update submission to show in ui
- * @param data data from backend response
+ * @param data raw submission row
+ * @param isMM whether the submission has phase-specific Marathon Match scores
  * @returns updated data
  */
-export function adjustSubmissionResponse(data: Submission): Submission {
-    const getNormalizedReviews = (
-        input: Submission,
-    ): {
-        example: SubmissionReview[]
-        normalized: SubmissionReview[]
-        provisional: SubmissionReview[]
-    } => {
-        const normalized = (input.review ?? []).map(
-            adjustSubmissionReviewResponse,
-        )
-        const valid = _.reject(normalized, [
-            'typeId',
-            EnvironmentConfig.ADMIN.AV_SCAN_SCORER_REVIEW_TYPE_ID,
-        ])
-        const provisional = _.filter(
-            valid,
-            item => !item.metadata || item.metadata.testType === 'provisional',
-        )
-        const example = _.filter(
-            valid,
-            item => item.metadata?.testType === 'example',
-        )
-
-        return { example, normalized, provisional }
+export function adjustSubmissionResponse(data: Submission, isMM: boolean = false): Submission {
+    const normalizedReviews = (data.review ?? []).map(adjustSubmissionReviewResponse)
+    const scorerReviews = normalizedReviews.filter(review => (
+        review.typeId !== EnvironmentConfig.ADMIN.AV_SCAN_SCORER_REVIEW_TYPE_ID
+    ))
+    const provisionalReview = scorerReviews.find(review => !review.metadata
+        || review.metadata.testType === 'provisional')
+    const exampleReview = scorerReviews.find(review => review.metadata?.testType === 'example')
+    const score = (review?: SubmissionReview): number | undefined => (
+        review?.score ?? review?.initialScore ?? review?.finalScore ?? undefined
+    )
+    const exampleScore = score(exampleReview)
+    const provisionalScore = score(provisionalReview)
+    const systemReviews = scorerReviews.filter(review => (
+        review.metadata?.testType === 'system' || review.metadata?.testType === 'final'
+    ))
+    const scoreSource = {
+        finalScore: data.finalScore,
+        id: data.id,
+        initialScore: data.initialScore,
+        provisionalScore: data.provisionalScore ?? provisionalScore,
+        // Only system reviews can supply the legacy final-score fallback.
+        review: systemReviews.map(review => ({ finalScore: score(review), status: review.status ?? undefined })),
+        reviewSummation: data.reviewSummation,
     }
-
-    const {
-        normalized: normalizedReviews,
-        provisional: provisionalReviews,
-        example: exampleReviews,
-    }: {
-        normalized: SubmissionReview[]
-        provisional: SubmissionReview[]
-        example: SubmissionReview[]
-    } = getNormalizedReviews(data)
-    const extractScore = (review?: SubmissionReview): number | undefined => {
-        if (!review) {
-            return undefined
+    const scores = isMM
+        ? {
+            ...marathonSubmissionScores(scoreSource),
+            exampleScore: marathonExampleScore(scoreSource, data.exampleScore ?? exampleScore),
+        } : {
+            exampleScore: toFixed(exampleScore, 5),
+            finalScore: toFixed(data.reviewSummation?.[0]?.aggregateScore, 5),
+            provisionalScore: toFixed(provisionalScore, 5),
         }
-
-        const score = review.score ?? review.initialScore ?? review.finalScore
-
-        return score ?? undefined
-    }
-
-    const finalScore = toFixed(
-        _.get(data, 'reviewSummation[0].aggregateScore', undefined),
-        5,
-    )
-    const provisionalScore = toFixed(
-        extractScore(provisionalReviews[0]),
-        5,
-    )
-    const exampleScore = toFixed(
-        extractScore(exampleReviews[0]),
-        5,
-    )
 
     const toDate = (
         value?: Date | string | null,
@@ -248,10 +247,8 @@ export function adjustSubmissionResponse(data: Submission): Submission {
         challengeId,
         created,
         createdAt: createdRaw ?? undefined,
-        exampleScore: exampleScore as number,
-        finalScore: finalScore as number,
+        ...scores,
         memberId,
-        provisionalScore: provisionalScore as number,
         review: normalizedReviews,
         submittedDate,
         submittedDateString,

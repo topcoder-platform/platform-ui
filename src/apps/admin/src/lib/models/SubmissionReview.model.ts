@@ -21,7 +21,7 @@ export interface SubmissionReview {
     reviewedDate?: Date | string | null
     reviewDate?: Date | string | null
     metadata?: {
-        testType?: 'provisional' | 'example'
+        testType?: 'provisional' | 'example' | 'system' | 'final'
         [key: string]: any
     }
 }
