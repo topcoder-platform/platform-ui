@@ -13,8 +13,8 @@ import {
 import { toast } from 'react-toastify'
 import _ from 'lodash'
 
-import { IsRemovingType, MemberSubmission, recalculateSubmissionRank, Submission } from '../models'
-import { fetchSubmissionsOfChallenge, removeSubmission } from '../services'
+import { adjustSubmissionsResponse, IsRemovingType, Submission } from '../models'
+import { fetchChallengeSubmissionRows, removeSubmission } from '../services'
 import { handleError } from '../utils'
 import { removeReviewSummations } from '../services/reviews.service'
 
@@ -39,11 +39,11 @@ export interface useManageChallengeSubmissionsProps {
  */
 export function useManageChallengeSubmissions(
     challengeId: string,
+    isMM: boolean,
 ): useManageChallengeSubmissionsProps {
     const [isLoading, setIsLoading] = useState(false)
-    const [memberSubmissions, setMemberSubmissions] = useState<
-        MemberSubmission[]
-    >([])
+    const [rows, setRows] = useState<Submission[]>([])
+    const memberSubmissions = useMemo(() => adjustSubmissionsResponse(rows, isMM), [rows, isMM])
     const [showSubmissionHistory, setShowSubmissionHistory]
         = useState<IsRemovingType>({})
 
@@ -83,11 +83,11 @@ export function useManageChallengeSubmissions(
 
         isLoadingRef.current = true
         setIsLoading(isLoadingRef.current)
-        fetchSubmissionsOfChallenge(challengeId)
+        fetchChallengeSubmissionRows(challengeId)
             .then(result => {
                 isLoadingRef.current = false
                 setIsLoading(isLoadingRef.current)
-                setMemberSubmissions(result)
+                setRows(result)
             })
             .catch(e => {
                 isLoadingRef.current = false
@@ -133,13 +133,7 @@ export function useManageChallengeSubmissions(
                         ...prev,
                         [item.id]: false,
                     }))
-                    setMemberSubmissions(prev => recalculateSubmissionRank(_.map(prev, member => {
-                        member.submissions = _.filter(
-                            member.submissions,
-                            sub => sub.id !== item.id,
-                        )
-                        return member
-                    }))) // remove submission in ui
+                    setRows(prev => prev.filter(row => row.id !== item.id))
                 })
                 .catch(e => {
                     handleError(e)
@@ -171,15 +165,7 @@ export function useManageChallengeSubmissions(
                         [item.id]: false,
                     }))
 
-                    setMemberSubmissions(prev => recalculateSubmissionRank(_.map(prev, member => {
-                        member.submissions = _.map(
-                            member.submissions,
-                            sub => (sub.id === item.id
-                                ? { ...sub, reviewSummation: [] }
-                                : sub),
-                        )
-                        return member
-                    }))) // remove review summations in ui
+                    setRows(prev => prev.map(row => (row.id === item.id ? { ...row, reviewSummation: [] } : row)))
                 })
                 .catch(e => {
                     handleError(e)

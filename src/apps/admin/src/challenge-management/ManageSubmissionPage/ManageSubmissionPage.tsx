@@ -293,7 +293,7 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
         setShowSubmissionHistory,
         refresh,
     }: useManageChallengeSubmissionsProps
-        = useManageChallengeSubmissions(challengeId)
+        = useManageChallengeSubmissions(challengeId, isMM)
 
     const {
         isLoading: isDownloadingSubmission,
