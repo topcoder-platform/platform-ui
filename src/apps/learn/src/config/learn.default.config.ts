@@ -12,5 +12,6 @@ export const LearnConfigDefault: LearnConfigModel = {
         attribute: 'data-id',
         value: 'certificate-container',
     },
+    CERT_IMAGE_ORIGIN: 'https://tca-dev.topcoder-dev.com',
     CLIENT: 'https://fcc.topcoder-dev.com:4431',
 }

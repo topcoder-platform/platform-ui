@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Archived certificates | Topcoder Academy</title>
+    <style>
+        :root { font: 100%/1.5 system-ui, sans-serif; color: #18232c; background: #f5f8fa; }
+        main { max-width: 38rem; margin: 8vh auto; padding: 1.75rem; background: white; }
+        h1 { font-size: 2rem; margin: 0 0 1rem; }
+        label { display: block; font-weight: 600; }
+        input, button { font: inherit; padding: .55rem .8rem; margin: .3rem 0; }
+        button { background: #064d68; color: white; border: 1px solid #064d68; cursor: pointer; }
+        a { color: #00597b; } li { margin: .75rem 0; }
+    </style>
+    <script src="./lookup.js" defer></script>
+</head>
+<body><main>
+    <h1>Archived Academy certificates</h1>
+    <form>
+        <label for="handle">Topcoder handle used when you earned the certificate</label>
+        <input id="handle" name="handle" required maxlength="100" autocomplete="off">
+        <button>Find certificates</button>
+    </form>
+    <p role="status"></p>
+    <ul></ul>
+    <noscript>Enable JavaScript to look up an archived certificate.</noscript>
+</main></body>
+</html>

@@ -10,6 +10,7 @@ import {
     UserTraitIds,
     useUserCompletedCertifications,
 } from '~/libs/core'
+import { LearnConfig } from '~/apps/learn/src/config'
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
@@ -32,6 +33,8 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
     const { data: memberTCA, loading: tcaDataLoading }: UserCompletedCertificationsResponse
         = useUserCompletedCertifications(props.profile?.userId)
 
+    const archiveUrl: string
+        = `${LearnConfig.CERT_IMAGE_ORIGIN}/archive/index.html#handle=${encodeURIComponent(props.profile.handle)}`
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
@@ -97,6 +100,12 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
                     )
                 )}
             </div>
+
+            {canEdit && (
+                <a href={archiveUrl}>
+                    Find archived Academy certificates
+                </a>
+            )}
 
             <MemberTCAInfo isOwnProfile={canEdit} memberTcaData={memberTCA} profile={props.profile} />
 
