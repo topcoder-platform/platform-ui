@@ -14,6 +14,7 @@ import { BaseModal, TCALogo } from '~/libs/ui'
 import styles from './MemberTCAInfo.module.scss'
 
 interface MemberTCAInfoProps {
+    isOwnProfile: boolean
     memberTcaData?: UserCompletedCertificationsData
     profile: UserProfile | undefined
 }
@@ -34,13 +35,18 @@ const MemberTCAInfo: React.FC<MemberTCAInfoProps> = (props: MemberTCAInfoProps) 
         LearnUserCertificationProgress | undefined, Dispatch<SetStateAction<LearnUserCertificationProgress | undefined>>
     ] = useState<LearnUserCertificationProgress | undefined>(undefined)
 
-    const tcaHiringManagerViewUrl: string
-        // eslint-disable-next-line max-len
-        = `https://${AppSubdomain.tcAcademy}.${EnvironmentConfig.TC_DOMAIN}/tca-certifications/${selectedCertification?.topcoderCertification?.dashedName}/${selectedCertification?.userHandle}/certification?view-style=modal`
+    const archiveRoot: string = `${EnvironmentConfig.PLATFORMUI_URL}/${AppSubdomain.tcAcademy}`
+    const certificationPath: string
+        = `${archiveRoot}/tca-certifications/${selectedCertification?.topcoderCertification?.dashedName}`
+    const tcaHiringManagerViewUrl: string = props.isOwnProfile
+        ? `${certificationPath}/${selectedCertification?.userHandle}/certificate`
+        : `${certificationPath}/${selectedCertification?.userHandle}/certification?view-style=modal`
 
-    const tcaCourseViewUrl: string
-        // eslint-disable-next-line max-len
-        = `https://${AppSubdomain.tcAcademy}.${EnvironmentConfig.TC_DOMAIN}/${selectedCourse?.resourceProvider.name}/${selectedCourse?.certification}/${props.profile?.handle}/certificate`
+    const coursePath: string
+        = `${archiveRoot}/${selectedCourse?.resourceProvider.name}/${selectedCourse?.certification}`
+    const tcaCourseViewUrl: string = props.isOwnProfile
+        ? `${coursePath}/certificate`
+        : `${coursePath}/${props.profile?.handle}/certificate`
 
     function onCertClick(enrollment: TCACertificationEnrollmentBase): void {
         setCertPreviewModalIsOpen(true)

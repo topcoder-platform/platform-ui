@@ -98,7 +98,7 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
                 )}
             </div>
 
-            <MemberTCAInfo memberTcaData={memberTCA} profile={props.profile} />
+            <MemberTCAInfo isOwnProfile={canEdit} memberTcaData={memberTCA} profile={props.profile} />
 
             {!loading && !hasEducationData && (
                 <EmptySection

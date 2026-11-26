@@ -1,44 +1,42 @@
 import {
-    Dispatch,
     FC,
     MutableRefObject,
-    SetStateAction,
     useEffect,
     useLayoutEffect,
     useRef,
-    useState,
 } from 'react'
 import { Params, useParams } from 'react-router-dom'
 
 import { LoadingSpinner } from '~/libs/ui'
-import { profileGetPublicAsync, UserProfile } from '~/libs/core'
 
 import { CertificateView } from '../certificate-view'
 import { hideSiblings } from '../../lib'
+import { getUserCertificateSsr } from '../../learn.routes'
+import {
+    useGetUserProfile,
+    UseGetUserProfileData,
+} from '../../tca-certificate/user-certification-view/use-get-user-profile'
 
 const UserCertificate: FC<{}> = () => {
     const elRef: MutableRefObject<HTMLElement | any> = useRef()
 
     const routeParams: Params<string> = useParams()
 
-    const [profile, setProfile]: [
-        UserProfile | undefined,
-        Dispatch<SetStateAction<UserProfile | undefined>>
-    ] = useState()
-    const [profileReady, setProfileReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
-
+    const { profile, ready: profileReady }: UseGetUserProfileData = useGetUserProfile(routeParams.memberHandle)
     const providerParam: string = routeParams.provider ?? ''
     const certificationParam: string = routeParams.certification ?? ''
 
     useEffect(() => {
-        if (routeParams.memberHandle) {
-            profileGetPublicAsync(routeParams.memberHandle)
-                .then(userProfile => {
-                    setProfile(userProfile)
-                    setProfileReady(true)
-                })
+        if (profileReady && !profile && routeParams.memberHandle) {
+            // A member profile can become unavailable after the certificate image was issued.
+            window.location.replace(getUserCertificateSsr(
+                encodeURIComponent(providerParam),
+                encodeURIComponent(certificationParam),
+                encodeURIComponent(routeParams.memberHandle),
+                'Topcoder Academy Certificate',
+            ))
         }
-    }, [routeParams.memberHandle, setProfileReady])
+    }, [profileReady, profile, providerParam, certificationParam, routeParams.memberHandle])
 
     useLayoutEffect(() => {
         const el: HTMLElement = elRef.current
