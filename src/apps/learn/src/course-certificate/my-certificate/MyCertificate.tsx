@@ -1,30 +1,23 @@
-import { FC, useCallback, useContext, useEffect } from 'react'
-import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
+import { FC, useContext, useEffect } from 'react'
+import { Params, useParams } from 'react-router-dom'
 
 import { LoadingSpinner } from '~/libs/ui'
-import { profileContext, ProfileContextData } from '~/libs/core'
+import { authUrlLogin, profileContext, ProfileContextData } from '~/libs/core'
 
-import { getCoursePath } from '../../learn.routes'
 import CertificateView from '../certificate-view/CertificateView'
 
 const MyCertificate: FC<{}> = () => {
     const routeParams: Params<string> = useParams()
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
 
-    const navigate: NavigateFunction = useNavigate()
     const providerParam: string = routeParams.provider ?? ''
     const certificationParam: string = routeParams.certification ?? ''
-    const coursePath: string = getCoursePath(providerParam, certificationParam)
-
-    const navigateToCourse: () => void = useCallback(() => {
-        navigate(coursePath)
-    }, [coursePath, navigate])
 
     useEffect(() => {
         if (profileReady && !profile) {
-            navigateToCourse()
+            window.location.replace(authUrlLogin(window.location.href))
         }
-    }, [profileReady, profile, navigateToCourse])
+    }, [profileReady, profile])
 
     return (
         <>

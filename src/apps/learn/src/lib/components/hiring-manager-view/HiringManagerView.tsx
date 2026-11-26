@@ -61,7 +61,7 @@ export interface HiringManagerViewProps {
     isPreview?: boolean
     isModalView?: boolean
     isOwner?: boolean
-    userProfile?: UserProfile
+    userProfile?: Pick<UserProfile, 'handle' | 'photoURL'>
     userName?: string
     validationUrl?: string
 }

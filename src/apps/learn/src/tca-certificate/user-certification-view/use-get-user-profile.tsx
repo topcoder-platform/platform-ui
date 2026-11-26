@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { profileGetPublicAsync, UserProfile } from '~/libs/core'
 
@@ -9,26 +9,26 @@ export interface UseGetUserProfileData {
 }
 
 export function useGetUserProfile(memberHandle?: string): UseGetUserProfileData {
-    const [profile, setProfile]: [
-        UserProfile | undefined,
-        Dispatch<SetStateAction<UserProfile | undefined>>
-    ] = useState()
-
-    const [profileReady, setProfileReady]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(false)
+    const [result, setResult] = useState<{ handle: string, profile?: UserProfile }>()
 
     useEffect(() => {
+        let current = true
         if (memberHandle) {
             profileGetPublicAsync(memberHandle)
-                .then(userProfile => {
-                    setProfile(userProfile)
-                    setProfileReady(true)
+                .catch(() => undefined)
+                .then(profile => {
+                    if (current) setResult({ handle: memberHandle, profile })
                 })
         }
-    }, [memberHandle, setProfileReady])
 
+        return () => { current = false }
+    }, [memberHandle])
+
+    const ready: boolean = !!memberHandle && result?.handle === memberHandle
+    const profile: UserProfile | undefined = ready ? result?.profile : undefined
     return {
         isOwnProfile: !!profile?.email,
         profile,
-        ready: profileReady,
+        ready,
     }
 }

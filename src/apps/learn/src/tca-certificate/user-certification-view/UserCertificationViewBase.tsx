@@ -62,7 +62,7 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
             <PageTitle>
                 {`${!!props.enrollment && `${props.enrollment.userName}'s `}${props.certification?.title} Certificate`}
             </PageTitle>
-            <LoadingSpinner hide={props.enrollmentError || (props.profile && !!props.enrollment)} ref={elRef} />
+            <LoadingSpinner hide={props.enrollmentError || (!!props.certification && !!props.enrollment)} ref={elRef} />
 
             {props.enrollmentError && (
                 <CertificatePageLayout
@@ -77,12 +77,12 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
             )}
 
             <div className='full-height-frame' ref={elRef}>
-                {props.profile && props.certification && props.enrollment && (
+                {props.certification && props.enrollment && (
                     <HiringManagerView
                         certification={props.certification}
                         completedAt={(props.enrollment.completedAt ?? undefined) as string}
                         completionUuid={props.enrollment.completionUuid ?? undefined}
-                        userProfile={props.profile}
+                        userProfile={props.profile ?? { handle: props.enrollment.userHandle }}
                         userName={userName}
                         isOwner={isOwnProfile}
                         validationUrl={validationUrl}
