@@ -25,6 +25,7 @@ import {
     getCoursePath,
     getUserCertificateSsr,
 } from '../../learn.routes'
+import { useArchivedCertificate } from '../../use-archived-certificate'
 import { CertificateNotFound } from '../certificate-not-found'
 
 import Certificate from './certificate/Certificate'
@@ -89,6 +90,13 @@ const CertificateView: FC<CertificateViewProps & RefAttributes<HTMLDivElement>>
             completedCertificateReady && courseReady && certificateReady
         ), [certificateReady, completedCertificateReady, courseReady])
         const certificateNotFoundError: boolean = ready && !hasCompletedTheCertification
+
+        useArchivedCertificate(
+            certificateNotFoundError || (courseReady && !course) || (certificateReady && !certificate),
+            props.provider,
+            props.certification,
+            props.profile.handle,
+        )
 
         function renderCertificate(): ReactNode {
             if (ready && !hasCompletedTheCertification) {

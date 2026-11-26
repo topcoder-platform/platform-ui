@@ -13,6 +13,7 @@ import {
     useValidateTCACertification,
 } from '../../lib'
 import { getTCACertificationPath, getTCACertificationValidationUrl, getUserTCACertificateSsr } from '../../learn.routes'
+import { useArchivedCertificate } from '../../use-archived-certificate'
 import { CertificateNotFound } from '../certificate-not-found'
 import { useGetUserProfile, UseGetUserProfileData } from '../user-certification-view/use-get-user-profile'
 
@@ -41,6 +42,8 @@ const CertificateView: FC<{}> = () => {
 
     const hasCompletedTheCertification: boolean = !!certification && !!enrollment && !hasValidationError
     const certificateNotFoundError: boolean = profileReady && ready && !hasCompletedTheCertification
+
+    useArchivedCertificate(certificateNotFoundError, 'tca', certificationParam, userHandle)
 
     function getCertTitle(user: string): string {
         return `${user} - ${certification?.title}`
