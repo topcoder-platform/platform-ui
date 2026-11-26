@@ -5,6 +5,7 @@ import {
     CompletedTCACertificationEnrollmentData,
     useGetCompletedTCACertificationEnrollment,
 } from '../../lib'
+import { useArchivedCertificate } from '../../use-archived-certificate'
 
 import { useGetUserProfile, UseGetUserProfileData } from './use-get-user-profile'
 import UserCertificationViewBase from './UserCertificationViewBase'
@@ -24,6 +25,8 @@ const UserCertificationView: FC<{}> = () => {
             `${routeParams.certification}`,
             `${routeParams.memberHandle}`,
         )
+
+    useArchivedCertificate(enrollmentError, 'tca', routeParams.certification ?? '', routeParams.memberHandle)
 
     return (
         <UserCertificationViewBase

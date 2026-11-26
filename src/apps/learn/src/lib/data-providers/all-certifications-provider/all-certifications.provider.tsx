@@ -53,7 +53,7 @@ export function useGetCertification(
         certification: data ?? undefined,
         certifications: [],
         error: !!error,
-        loading: !data,
-        ready: !!data,
+        loading: !data && !error,
+        ready: !!data || !!error,
     }
 }
