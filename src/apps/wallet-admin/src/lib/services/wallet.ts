@@ -8,7 +8,7 @@ import {
     xhrPatchAsync,
     xhrPostAsync,
 } from '~/libs/core'
-import { postAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
+import { getPaginatedAsync, postAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
 import { fetchChallenge } from '~/apps/work/src/lib/services/challenges.service'
 
 import { WalletDetails } from '../models/WalletDetails'
@@ -24,11 +24,13 @@ import { PaginationInfo } from '../models/PaginationInfo'
 import { WinningsAudit } from '../models/WinningsAudit'
 import { PayoutAudit } from '../models/PayoutAudit'
 import { TrolleyLogReleasePair } from '../models/TrolleyLogReleasePair'
-import { ActionLogEntry, MemberContact } from '../models/ActionLogEntry'
+import { ActionLogEntry, ActionLogFilters, MemberContact } from '../models/ActionLogEntry'
+import { WALLET_ADMIN_ACTION_ROLES } from '../../config/access.config'
 import ApiResponse from '../models/ApiResponse'
 
 const baseUrl = `${EnvironmentConfig.TC_FINANCE_API}`
 const memberApiBaseUrl = `${EnvironmentConfig.API.V6}/members`
+const rolesApiBaseUrl = `${EnvironmentConfig.API.V6}/roles`
 const engagementsApiBaseUrl = `${EnvironmentConfig.API.V6}/engagements/engagements`
 const challengeApiBaseUrl = CHALLENGE_API_URL.replace(/\/$/, '')
 const challengeApiXhr = xhrCreateInstance()
@@ -333,10 +335,26 @@ export async function fetchTrolleyLogs(days?: number): Promise<TrolleyLogRelease
     return response.data
 }
 
-export async function fetchActionLog(days?: number): Promise<ActionLogEntry[]> {
-    const query = days ? `?days=${days}` : ''
+export async function fetchActionLog(filters: ActionLogFilters): Promise<ActionLogEntry[]> {
+    const params = new URLSearchParams({
+        dateFrom: filters.dateFrom.toISOString(),
+        dateTo: filters.dateTo.toISOString(),
+    })
+
+    if (filters.paymentSource) {
+        params.set('paymentSource', filters.paymentSource)
+    }
+
+    if (filters.categories?.length) {
+        params.set('categories', filters.categories.join(','))
+    }
+
+    if (filters.adminUserId) {
+        params.set('adminUserId', filters.adminUserId)
+    }
+
     const response = await xhrGetAsync<ApiResponse<ActionLogEntry[]>>(
-        `${baseUrl}/admin/action-log${query}`,
+        `${baseUrl}/admin/action-log?${params.toString()}`,
     )
 
     if (response.status === 'error') {
@@ -344,6 +362,70 @@ export async function fetchActionLog(days?: number): Promise<ActionLogEntry[]> {
     }
 
     return response.data
+}
+
+/**
+ * @returns user IDs of every admin with at least one Wallet Admin payment
+ *   change, including admins who no longer hold a payment role.
+ */
+export async function fetchActionLogAdminIds(): Promise<string[]> {
+    const response = await xhrGetAsync<ApiResponse<string[]>>(`${baseUrl}/admin/action-log/admins`)
+
+    if (response.status === 'error') {
+        throw new Error('Error fetching action log admins')
+    }
+
+    return response.data
+}
+
+interface RoleResponse {
+    id: string | number
+    roleName: string
+}
+
+interface RoleSubjectResponse {
+    userId?: number | null
+}
+
+const ROLE_SUBJECTS_PER_PAGE = 200
+const ROLE_SUBJECTS_MAX_PAGES = 20
+
+async function fetchRoleSubjectIds(roleId: string | number): Promise<string[]> {
+    const userIds: string[] = []
+
+    for (let page = 1; page <= ROLE_SUBJECTS_MAX_PAGES; page++) {
+        // pages are fetched one after the other until the last one
+        // eslint-disable-next-line no-await-in-loop
+        const response = await getPaginatedAsync<RoleSubjectResponse[]>(
+            `${rolesApiBaseUrl}/${roleId}/subjects?page=${page}&perPage=${ROLE_SUBJECTS_PER_PAGE}`,
+        )
+        const subjects = Array.isArray(response.data) ? response.data : []
+
+        subjects.forEach(subject => {
+            if (subject.userId) {
+                userIds.push(String(subject.userId))
+            }
+        })
+
+        if (subjects.length < ROLE_SUBJECTS_PER_PAGE || page >= (response.totalPages || page)) {
+            break
+        }
+    }
+
+    return userIds
+}
+
+/**
+ * @returns user IDs of the members holding a role that can change payments
+ *   in Wallet Admin (WALLET_ADMIN_ACTION_ROLES).
+ */
+export async function fetchPaymentActionRoleMemberIds(): Promise<string[]> {
+    const actionRoles = new Set(WALLET_ADMIN_ACTION_ROLES.map(role => role.toLowerCase()))
+    const roles = await xhrGetAsync<RoleResponse[]>(rolesApiBaseUrl)
+    const matchingRoles = (roles ?? []).filter(role => actionRoles.has(role.roleName?.toLowerCase()))
+    const userIds = await Promise.all(matchingRoles.map(role => fetchRoleSubjectIds(role.id)))
+
+    return [...new Set(userIds.flat())]
 }
 
 export async function fetchPayoutAuditLogs(paymentId: string): Promise<PayoutAudit[]> {

@@ -26,33 +26,8 @@
     margin: $sp-4 0;
 }
 
-.periodButtons {
-    display: inline-flex;
-    align-items: center;
-    gap: $sp-1;
-    padding: $sp-1;
-    border: 1px solid $black-20;
-    border-radius: 999px;
-    background-color: white;
-}
-
-.periodButton {
-    border: none;
-    border-radius: 999px;
-    background: transparent;
-    color: $black-60;
-    cursor: pointer;
-    padding: $sp-2 $sp-4;
-
-    &:focus-visible {
-        outline: 2px solid $turq-160;
-        outline-offset: 2px;
-    }
-}
-
-.periodButtonActive {
-    background-color: $turq-160;
-    color: white;
+.filters {
+    margin-top: $sp-4;
 }
 
 .summary {

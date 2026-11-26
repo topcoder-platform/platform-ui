@@ -6,26 +6,166 @@ import { Button, LoadingCircles } from '~/libs/ui'
 
 import {
     ActionLogEntry,
+    ActionLogFilters,
+    ActionLogPaymentSource,
     ActionLogRow,
     ActionLogType,
     MemberContact,
 } from '../../../lib/models/ActionLogEntry'
-import { fetchActionLog, getMemberContacts } from '../../../lib/services/wallet'
+import {
+    fetchActionLog,
+    fetchActionLogAdminIds,
+    fetchPaymentActionRoleMemberIds,
+    getMemberContacts,
+} from '../../../lib/services/wallet'
+import FilterBar, { Filter } from '../../../lib/components/filter-bar/FilterBar'
 
 import styles from './ActionLog.module.scss'
 
-interface PeriodOption {
-    days: number
-    label: string
-}
+/** Longest date range the finance API accepts, in days. */
+export const MAX_RANGE_DAYS = 90
 
-export const PERIOD_OPTIONS: ReadonlyArray<PeriodOption> = [
-    { days: 7, label: 'Last 7 days' },
-    { days: 30, label: 'Last 30 days' },
-    { days: 90, label: 'Last 3 months' },
+const DAY_MS = 24 * 60 * 60 * 1000
+const ALL_ADMINS = 'all'
+
+export const PAYMENT_SOURCE_OPTIONS: ReadonlyArray<{ label: string, value: ActionLogPaymentSource }> = [
+    { label: 'Topcoder', value: 'TOPCODER' },
+    { label: 'TaaS', value: 'TAAS' },
+    { label: 'Topgear', value: 'TOPGEAR' },
 ]
 
-const DEFAULT_PERIOD_INDEX = 2
+/** Topcoder payment types, as listed in the Payments tab. */
+export const PAYMENT_TYPE_OPTIONS: ReadonlyArray<{ label: string, value: string }> = [
+    { label: 'Task Payment', value: 'TASK_PAYMENT' },
+    { label: 'Contest Payment', value: 'CONTEST_PAYMENT' },
+    { label: 'Contest Checkpoint Payment', value: 'CONTEST_CHECKPOINT_PAYMENT' },
+    { label: 'Copilot Payment', value: 'COPILOT_PAYMENT' },
+    { label: 'Review Board Payment', value: 'REVIEW_BOARD_PAYMENT' },
+    { label: 'Engagement Payment', value: 'ENGAGEMENT_PAYMENT' },
+]
+
+interface FilterValues {
+    paymentSource: ActionLogPaymentSource
+    categories: string[]
+    adminUserId: string
+    /** yyyy-mm-dd, local time */
+    dateFrom: string
+    /** yyyy-mm-dd, local time */
+    dateTo: string
+}
+
+interface AdminOption {
+    label: string
+    value: string
+}
+
+function formatIsoDateOnly(date: Date): string {
+    const y = date.getFullYear()
+    const mo = String(date.getMonth() + 1)
+        .padStart(2, '0')
+    const day = String(date.getDate())
+        .padStart(2, '0')
+
+    return `${y}-${mo}-${day}`
+}
+
+function parseIsoDateOnly(value: string, endOfDay: boolean): Date | undefined {
+    const [y, m, d] = value.split('-')
+        .map(part => parseInt(part, 10))
+    if (!y || !m || !d) {
+        return undefined
+    }
+
+    return endOfDay
+        ? new Date(y, m - 1, d, 23, 59, 59, 999)
+        : new Date(y, m - 1, d)
+}
+
+/** Topcoder payments, any type and admin, over the last 90 days including today. */
+function getDefaultFilters(): FilterValues {
+    const dateTo = new Date()
+    const dateFrom = new Date()
+    dateFrom.setDate(dateFrom.getDate() - (MAX_RANGE_DAYS - 1))
+
+    return {
+        adminUserId: ALL_ADMINS,
+        categories: [],
+        dateFrom: formatIsoDateOnly(dateFrom),
+        dateTo: formatIsoDateOnly(dateTo),
+        paymentSource: 'TOPCODER',
+    }
+}
+
+/**
+ * @returns the API filters, or an error message when the date range is not
+ *   valid.
+ */
+function toQueryFilters(values: FilterValues): ActionLogFilters | string {
+    const dateFrom = parseIsoDateOnly(values.dateFrom, false)
+    const dateTo = parseIsoDateOnly(values.dateTo, true)
+
+    if (!dateFrom || !dateTo) {
+        return 'Select both a from and a to date.'
+    }
+
+    if (dateFrom.getTime() > dateTo.getTime()) {
+        return 'The from date must be on or before the to date.'
+    }
+
+    // compare calendar days so daylight saving changes do not count
+    const startDay = Date.UTC(dateFrom.getFullYear(), dateFrom.getMonth(), dateFrom.getDate())
+    const endDay = Date.UTC(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate())
+    if ((endDay - startDay) / DAY_MS + 1 > MAX_RANGE_DAYS) {
+        return `Select a date range of at most ${MAX_RANGE_DAYS} days.`
+    }
+
+    return {
+        adminUserId: values.adminUserId === ALL_ADMINS ? undefined : values.adminUserId,
+        categories: values.paymentSource === 'TOPCODER' ? values.categories : [],
+        dateFrom,
+        dateTo,
+        paymentSource: values.paymentSource,
+    }
+}
+
+function areFiltersEqual(a: FilterValues, b: FilterValues): boolean {
+    return a.paymentSource === b.paymentSource
+        && a.adminUserId === b.adminUserId
+        && a.dateFrom === b.dateFrom
+        && a.dateTo === b.dateTo
+        && a.categories.length === b.categories.length
+        && a.categories.every(category => b.categories.includes(category))
+}
+
+/**
+ * Lists everyone who can action payments: members holding a payment role,
+ * plus admins with past actions who may have lost the role since. Either
+ * source may fail on its own; the other one is still listed.
+ */
+async function loadAdminOptions(): Promise<AdminOption[]> {
+    const results = await Promise.allSettled([
+        fetchPaymentActionRoleMemberIds(),
+        fetchActionLogAdminIds(),
+    ])
+    const userIds = [...new Set(results.flatMap(result => (
+        result.status === 'fulfilled' ? result.value : []
+    )))]
+
+    if (!userIds.length) {
+        return []
+    }
+
+    let members = new Map<string, MemberContact>()
+    try {
+        members = await getMemberContacts(userIds)
+    } catch {
+        // fall back to user IDs
+    }
+
+    return userIds
+        .map(userId => ({ label: members.get(userId)?.handle ?? userId, value: userId }))
+        .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
+}
 
 export const ACTION_TYPE_LABELS: Record<ActionLogType, string> = {
     AMOUNT_CHANGE: 'Amount',
@@ -122,18 +262,29 @@ function matchesSearch(entry: ActionLogRow, search: string): boolean {
 }
 
 const ActionLogTab: FC = () => {
-    const [periodIndex, setPeriodIndex] = useState<number>(DEFAULT_PERIOD_INDEX)
+    const [defaultFilters] = useState<FilterValues>(getDefaultFilters)
+    const [filters, setFilters] = useState<FilterValues>(defaultFilters)
+    const [adminOptions, setAdminOptions] = useState<AdminOption[]>([])
     const [entries, setEntries] = useState<ActionLogRow[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | undefined>()
     const [search, setSearch] = useState<string>('')
 
+    const queryFilters = useMemo(() => toQueryFilters(filters), [filters])
+
     const loadEntries = useCallback(async (): Promise<void> => {
+        if (typeof queryFilters === 'string') {
+            setEntries([])
+            setError(queryFilters)
+            setIsLoading(false)
+            return
+        }
+
         setIsLoading(true)
         setError(undefined)
 
         try {
-            const actions = await fetchActionLog(PERIOD_OPTIONS[periodIndex].days)
+            const actions = await fetchActionLog(queryFilters)
             setEntries(await withMemberDetails(actions))
         } catch {
             setEntries([])
@@ -141,11 +292,91 @@ const ActionLogTab: FC = () => {
         } finally {
             setIsLoading(false)
         }
-    }, [periodIndex])
+    }, [queryFilters])
 
     useEffect(() => {
         loadEntries()
     }, [loadEntries])
+
+    useEffect(() => {
+        let isMounted = true
+
+        loadAdminOptions()
+            .then(options => {
+                if (isMounted) {
+                    setAdminOptions(options)
+                }
+            })
+
+        return () => {
+            isMounted = false
+        }
+    }, [])
+
+    const filterBarFilters = useMemo((): Filter[] => {
+        const out: Filter[] = [
+            {
+                key: 'paymentSource',
+                label: 'Payment Category',
+                options: [...PAYMENT_SOURCE_OPTIONS],
+                type: 'dropdown',
+            },
+        ]
+
+        if (filters.paymentSource === 'TOPCODER') {
+            out.push({
+                displayValueInTrigger: true,
+                key: 'categories',
+                label: 'Payment Type',
+                options: [...PAYMENT_TYPE_OPTIONS],
+                type: 'multi_dropdown',
+            })
+        }
+
+        out.push(
+            {
+                key: 'adminUserId',
+                label: 'Actioned By',
+                options: [{ label: 'All', value: ALL_ADMINS }, ...adminOptions],
+                type: 'dropdown',
+            },
+            { key: 'dateFrom', label: 'Date from', type: 'date' },
+            { key: 'dateTo', label: 'Date to', type: 'date' },
+        )
+
+        return out
+    }, [adminOptions, filters.paymentSource])
+
+    const filterBarValues = useMemo((): Record<string, string | string[]> => ({
+        adminUserId: filters.adminUserId,
+        categories: filters.categories,
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
+        paymentSource: filters.paymentSource,
+    }), [filters])
+
+    const handleFilterChange = useCallback((key: string, value: string[]): void => {
+        setFilters(prev => {
+            switch (key) {
+                case 'paymentSource':
+                    return {
+                        ...prev,
+                        categories: [],
+                        paymentSource: (value[0] as ActionLogPaymentSource) || defaultFilters.paymentSource,
+                    }
+                case 'categories':
+                    return { ...prev, categories: value }
+                case 'adminUserId':
+                    return { ...prev, adminUserId: value[0] || ALL_ADMINS }
+                case 'dateFrom':
+                    return { ...prev, dateFrom: value[0] ?? '' }
+                case 'dateTo':
+                    return { ...prev, dateTo: value[0] ?? '' }
+                default:
+                    return prev
+            }
+        })
+    }, [defaultFilters])
 
     const filteredEntries = useMemo(() => {
         const normalizedSearch = search.trim()
@@ -175,7 +406,7 @@ const ActionLogTab: FC = () => {
             return (
                 <div className={styles.centered}>
                     {entries.length === 0
-                        ? 'No manual payment actions found for this period.'
+                        ? 'No manual payment actions match the selected filters.'
                         : 'No actions match your search.'}
                 </div>
             )
@@ -268,27 +499,20 @@ const ActionLogTab: FC = () => {
             <div className={styles.header}>
                 <h3>Action Log</h3>
                 <p className={styles.muted}>
-                    Payment changes made manually in Wallet Admin. The current state column
-                    shows the payment as it is now, not at the time of the action.
+                    {`Payment changes made manually in Wallet Admin, up to ${MAX_RANGE_DAYS} days at a time.`}
+                    {' The current state column shows the payment as it is now, not at the time of the action.'}
                 </p>
             </div>
+            <div className={styles.filters}>
+                <FilterBar
+                    filters={filterBarFilters}
+                    selectedValueOverrides={filterBarValues}
+                    hasActiveFilters={!areFiltersEqual(filters, defaultFilters)}
+                    onFilterChange={handleFilterChange}
+                    onResetFilters={() => setFilters(defaultFilters)}
+                />
+            </div>
             <div className={styles.toolbar}>
-                <div className={styles.periodButtons} role='group' aria-label='Period'>
-                    {PERIOD_OPTIONS.map((option, index) => (
-                        <button
-                            key={option.label}
-                            type='button'
-                            aria-pressed={index === periodIndex}
-                            className={classNames(
-                                styles.periodButton,
-                                index === periodIndex && styles.periodButtonActive,
-                            )}
-                            onClick={() => setPeriodIndex(index)}
-                        >
-                            {option.label}
-                        </button>
-                    ))}
-                </div>
                 <div className={styles.toolbarActions}>
                     <input
                         type='search'
