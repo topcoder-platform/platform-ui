@@ -1,3 +1,5 @@
+import { FC, useEffect } from 'react'
+
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
 import {
     authUrlLogin,
@@ -10,20 +12,9 @@ import {
 import { LearnConfig } from './config'
 
 const LearnAppRoot: LazyLoadedComponent = lazyLoad(() => import('./LearnApp'))
-const WelcomePage: LazyLoadedComponent = lazyLoad(() => import('./welcome'), 'WelcomePage')
-const CourseDetailsPage: LazyLoadedComponent = lazyLoad(() => import('./course-details'), 'CourseDetailsPage')
 const CourseCompletedPage: LazyLoadedComponent = lazyLoad(() => import('./course-completed'), 'CourseCompletedPage')
 const MyCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'MyCertificate')
 const UserCertificate: LazyLoadedComponent = lazyLoad(() => import('./course-certificate'), 'UserCertificate')
-const FreeCodeCamp: LazyLoadedComponent = lazyLoad(() => import('./free-code-camp'), 'FreeCodeCamp')
-const CertificationDetailsPage: LazyLoadedComponent = lazyLoad(
-    () => import('./certification-details'),
-    'CertificationDetailsPage',
-)
-const EnrollmentPage: LazyLoadedComponent = lazyLoad(
-    () => import('./certification-details/enrollment-page'),
-    'EnrollmentPage',
-)
 const CoursePageWrapper: LazyLoadedComponent = lazyLoad(
     () => import('./course-page-wrapper'),
     'CoursePageWrapper',
@@ -35,9 +26,6 @@ const ValidateTCACertificate: LazyLoadedComponent
 
 const UserCertificationView: LazyLoadedComponent
     = lazyLoad(() => import('./tca-certificate'), 'UserCertificationView')
-
-const UserCertificationPreview: LazyLoadedComponent
-    = lazyLoad(() => import('./tca-certificate'), 'UserCertificationPreview')
 
 export const rootRoute: string = (
     EnvironmentConfig.SUBDOMAIN === AppSubdomain.tcAcademy ? '' : `/${AppSubdomain.tcAcademy}`
@@ -173,35 +161,18 @@ const oldUrlRedirectRoute: ReadonlyArray<PlatformRoute> = EnvironmentConfig.SUBD
     },
 ] : []
 
+const RetiredAcademy: FC = () => {
+    useEffect(() => {
+        window.location.replace(`https://${EnvironmentConfig.TC_DOMAIN}/`)
+    }, [])
+    return <></>
+}
+
 export const learnRoutes: ReadonlyArray<PlatformRoute> = [
     {
         children: [
             {
-                children: [],
-                element: <WelcomePage />,
-                id: 'Welcome to Topcoder Academy',
-                route: '',
-            },
-            {
-                children: [],
-                element: <CertificationDetailsPage />,
-                id: 'Certification Details',
-                route: 'tca-certifications/:certification',
-            },
-            {
-                children: [],
-                element: <EnrollmentPage />,
-                id: 'Certification Details',
-                route: 'tca-certifications/:certification/enroll',
-            },
-            {
                 children: [
-                    {
-                        children: [],
-                        element: <CourseDetailsPage />,
-                        id: 'Course Details',
-                        route: ':certification',
-                    },
                     {
                         children: [],
                         element: <CourseCompletedPage />,
@@ -219,12 +190,6 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
                         element: <UserCertificate />,
                         id: 'User Certificate',
                         route: ':certification/:memberHandle/certificate',
-                    },
-                    {
-                        children: [],
-                        element: <FreeCodeCamp />,
-                        id: 'FxreeCodeCamp',
-                        route: ':certification/:module/:lesson',
                     },
                 ],
                 element: <CoursePageWrapper />,
@@ -251,11 +216,17 @@ export const learnRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 children: [],
-                element: <UserCertificationPreview />,
-                id: 'Giring manager preview',
-                route: 'tca-certifications/:certification/preview',
+                element: <RetiredAcademy />,
+                id: 'Retired Academy home',
+                route: '',
             },
             ...oldUrlRedirectRoute,
+            {
+                children: [],
+                element: <RetiredAcademy />,
+                id: 'Retired Academy',
+                route: '*',
+            },
         ],
         domain: AppSubdomain.tcAcademy,
         element: <LearnAppRoot />,
