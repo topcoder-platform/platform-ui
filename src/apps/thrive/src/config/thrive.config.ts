@@ -1,3 +1,5 @@
+import { PAYLOAD_ASSET_ORIGIN } from '~/libs/cms'
+
 import { ThriveTrack } from '../models'
 
 /** Root route for the Payload-backed Thrive application. */
@@ -90,6 +92,11 @@ export const THRIVE_TRACKS: ThriveTrack[] = [
 ]
 
 /** Default migrated Thrive banner used when an article has no featured image. */
-export const THRIVE_DEFAULT_BANNER = 'https://assets.topcoder-dev.com/media/contentful/'
+export const THRIVE_DEFAULT_BANNER = `${PAYLOAD_ASSET_ORIGIN}/media/contentful/`
     + 'images.ctfassets.net/97/970c80d628d90c49e1a8817954d5ef8ddcffdf1b0a0e2cdb74a2decd7cabe8ee/'
     + '0C37CB5E-B253-4804-8935-78E64E67589E-970c80d628d90c49e1a8817954d5ef8ddcffdf1b0a0e2cdb74a2decd7cabe8ee.png'
+
+/** Rectangular Thrive artwork for cards without a featured image. */
+export const THRIVE_DEFAULT_CARD_IMAGE = `${PAYLOAD_ASSET_ORIGIN}/media/contentful/`
+    + 'images.ctfassets.net/c7/c7062f58c497b7d7819b3ea43fbf63807cdce5bf30eadef8f948ba79d227c0c1/'
+    + 'Banner_Thrive-c7062f58c497b7d7819b3ea43fbf63807cdce5bf30eadef8f948ba79d227c0c1.png'
