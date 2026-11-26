@@ -30,6 +30,21 @@ export interface ActionLogEntry {
     datePaid: string | null
 }
 
+/** Payment source as split in Wallet Admin; see tc-finance-api. */
+export type ActionLogPaymentSource = 'TOPCODER' | 'TAAS' | 'TOPGEAR'
+
+/** Filters for the Action Log report. */
+export interface ActionLogFilters {
+    /** Start of the range, inclusive. */
+    dateFrom: Date
+    /** End of the range, inclusive. */
+    dateTo: Date
+    paymentSource?: ActionLogPaymentSource
+    /** Winnings categories (payment types) to include; all when empty. */
+    categories?: string[]
+    adminUserId?: string
+}
+
 export interface MemberContact {
     userId: number
     handle: string
