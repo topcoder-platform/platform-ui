@@ -197,7 +197,7 @@ export const ThriveArticlePage: FC = () => {
                     </Metadata>
                 </aside>
                 <article className={styles.articleContent}>
-                    <CmsMarkdown>{fields.content}</CmsMarkdown>
+                    <CmsMarkdown className={styles.articleBody}>{fields.content}</CmsMarkdown>
                     {fields.type === 'Video' && videoUrl && (
                         <a
                             className={styles.videoLink}

@@ -85,16 +85,14 @@ export const ThriveFilterPanel: FC<ThriveFilterPanelProps> = (props: ThriveFilte
                     value={tags}
                 />
             </label>
-            <div className={styles.dateFields}>
-                <label>
-                    From
-                    <input onChange={event => setStartDate(event.target.value)} type='date' value={startDate} />
-                </label>
-                <label>
-                    To
-                    <input onChange={event => setEndDate(event.target.value)} type='date' value={endDate} />
-                </label>
-            </div>
+            <label>
+                From
+                <input onChange={event => setStartDate(event.target.value)} type='date' value={startDate} />
+            </label>
+            <label>
+                To
+                <input onChange={event => setEndDate(event.target.value)} type='date' value={endDate} />
+            </label>
             <label>
                 Sort by
                 <select

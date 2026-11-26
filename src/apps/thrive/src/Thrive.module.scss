@@ -210,6 +210,34 @@
   }
 }
 
+.trackSection .smallCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) min(36%, 155px);
+  min-height: 138px;
+  border: 0;
+  border-radius: 10px;
+  background: #f4f4f4;
+
+  .cardImage {
+    grid-column: 2;
+    grid-row: 1;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .cardBody {
+    grid-column: 1;
+    grid-row: 1;
+    overflow-wrap: anywhere;
+  }
+
+  h3 {
+    font-family: Barlow, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.25;
+  }
+}
+
 .cardBody {
   display: flex;
   flex: 1;
@@ -374,7 +402,7 @@
 
 .filterPanel {
   display: grid;
-  grid-template-columns: repeat(5, minmax(110px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
   gap: 14px;
   margin-bottom: 32px;
   padding: 18px;
@@ -398,6 +426,7 @@
   input,
   select {
     width: 100%;
+    min-width: 0;
     height: 40px;
     padding: 0 10px;
     border: 1px solid #aaa;
@@ -407,11 +436,6 @@
     font-size: 14px;
     text-transform: none;
   }
-}
-
-.dateFields {
-  display: flex;
-  gap: 8px;
 }
 
 .outlineButton {
@@ -520,7 +544,7 @@
 .articleHero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(360px, 50%);
-  min-height: 475px;
+  min-height: 355px;
   overflow: hidden;
   background: #f4f4f4;
 
@@ -548,10 +572,12 @@
   }
 
   > img {
-    width: 100%;
-    height: 475px;
-    object-fit: cover;
-    clip-path: polygon(5% 8%, 80% 0, 100% 25%, 96% 82%, 70% 100%, 15% 94%, 0 65%);
+    align-self: center;
+    justify-self: center;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 355px;
   }
 }
 
@@ -638,15 +664,54 @@
   color: #2a2a2a;
   font-size: 16px;
   line-height: 1.625;
+}
 
+.articleBody {
   h1,
   h2,
   h3,
-  h4 {
+  h4,
+  h5,
+  h6 {
     margin: 1.7em 0 0.55em;
     font-family: "Barlow Condensed", Arial, sans-serif;
+    font-weight: 600;
     line-height: 1.1;
     text-transform: uppercase;
+  }
+
+  h1 { font-size: 2em; }
+  h2 { font-size: 1.5em; }
+  h3 { font-size: 1.375em; }
+  h4 { font-size: 1.125em; }
+  h5, h6 { font-size: 1em; }
+
+  p,
+  ul,
+  ol {
+    margin: 0 0 1.25em;
+  }
+
+  ul,
+  ol {
+    padding-inline-start: 1.875em;
+  }
+
+  ul { list-style-type: disc; }
+  ol { list-style-type: decimal; }
+
+  li > ul,
+  li > ol,
+  li > p {
+    margin-bottom: 0;
+  }
+
+  strong, b { font-weight: 700; }
+  em, i { font-style: italic; }
+
+  a:not([class]) {
+    color: #0d61bf;
+    text-decoration: underline;
   }
 
   img {
@@ -872,6 +937,6 @@
   }
 
   .articleHero > img {
-    height: 270px;
+    max-height: 270px;
   }
 }

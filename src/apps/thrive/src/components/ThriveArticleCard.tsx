@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 
 import type { CmsResource } from '~/libs/cms'
 
+import { THRIVE_DEFAULT_CARD_IMAGE } from '../config'
 import type { ThriveArticleFields } from '../models'
 import {
     formatThriveDate,
@@ -30,11 +31,11 @@ export const ThriveArticleCard: FC<ThriveArticleCardProps> = (props: ThriveArtic
     const fields = props.article.fields
     const authors = getThriveAuthors(fields)
     const href = getThriveArticleUrl(fields)
-    const image = getThriveImageUrl(props.article)
+    const image = getThriveImageUrl(props.article) || THRIVE_DEFAULT_CARD_IMAGE
     const external = Boolean(getThriveExternalUrl(fields))
     const content = (
         <>
-            {image && <img alt='' className={styles.cardImage} loading='lazy' src={image} />}
+            <img alt='' className={styles.cardImage} loading='lazy' src={image} />
             <div className={styles.cardBody}>
                 <div className={styles.cardType}>{fields.type}</div>
                 <h3>{fields.title}</h3>
