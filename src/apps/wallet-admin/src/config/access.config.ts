@@ -14,6 +14,18 @@ export const WALLET_ADMIN_PAYMENT_ROLES: ReadonlyArray<string> = [
 ]
 
 /**
+ * Roles that can change payments in Wallet Admin, i.e. whose changes show in
+ * the Action Log. Keep aligned with tc-finance-api `PATCH /admin/winnings`.
+ */
+export const WALLET_ADMIN_ACTION_ROLES: ReadonlyArray<string> = [
+    'Payment Admin',
+    'Payment BA Admin',
+    'Payment Approver',
+    'Payment Editor',
+    'Wipro TaaS Admin',
+]
+
+/**
  * Role allowed to see the Trolley Logs report.
  *
  * The report lists releases for every member and is not filtered by billing
