@@ -170,7 +170,7 @@
 .skills {
     gap: 8px;
 
-    a {
+    a, button {
         background: rgba(255, 255, 255, .2);
         border-radius: 2px;
         color: inherit;
@@ -189,6 +189,14 @@
         &:hover {
             background: rgba(255, 255, 255, .3);
         }
+    }
+    button {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, .15);
+        color: #5ef0f0;
+        cursor: pointer;
+        font-family: inherit;
+        padding: 3px 4px;
     }
 }
 

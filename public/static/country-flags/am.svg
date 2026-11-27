@@ -1,0 +1,7 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Flag">
+<path id="Vector" d="M0 38.9884H63.9999V51.8619C63.9999 52.4713 63.5058 52.9654 62.8964 52.9654H1.1035C0.494124 52.9654 0 52.4713 0 51.8619V38.9884Z" fill="#FFB400"/>
+<path id="Vector_2" d="M1.1035 11.0345H62.8965C63.5059 11.0345 64 11.5286 64 12.138V25.0115H0V12.138C0 11.5286 0.494124 11.0345 1.1035 11.0345Z" fill="#FF4B55"/>
+<path id="Vector_3" d="M63.9999 25.0112H0V38.9874H63.9999V25.0112Z" fill="#41479B"/>
+</g>
+</svg>

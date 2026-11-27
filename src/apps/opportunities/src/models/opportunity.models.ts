@@ -147,6 +147,8 @@ export interface ChallengeOpportunity {
     numOfPosts?: number
     numOfRegistrants?: number
     numOfSubmissions?: number
+    numOfSubmitters?: number
+    totalSubmissions?: number
     overview?: ChallengeOverview
     phases?: ChallengePhase[]
     privateDescription?: string

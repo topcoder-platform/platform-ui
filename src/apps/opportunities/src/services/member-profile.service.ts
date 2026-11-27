@@ -3,7 +3,7 @@ import { xhrGetAsync } from '~/libs/core'
 
 import { MemberProfileSummary } from '../models'
 
-const MEMBER_FIELDS = 'userId,handle,photoURL,maxRating'
+const MEMBER_FIELDS = 'userId,handle,photoURL,maxRating,competitionCountryCode,homeCountryCode'
 const MEMBER_BATCH_SIZE = 50
 const MEMBER_REQUEST_BATCH_SIZE = 4
 
@@ -72,6 +72,7 @@ function normalizeMember(value: unknown): MemberProfileSummary | undefined {
     const handle = optionalString(row.handle)
     if (!userId || !handle) return undefined
     return {
+        countryCode: optionalString(row.competitionCountryCode) ?? optionalString(row.homeCountryCode),
         handle,
         maxRating: optionalNumber(row.maxRating ?? row.rating),
         photoURL: safePhotoUrl(row.photoURL),

@@ -55,6 +55,8 @@ import {
 } from './challenge-card.utils'
 import styles from './ChallengeDetailHeader.module.scss'
 
+const COLLAPSED_LABEL_COUNT = 8
+
 interface ChallengeDetailHeaderProps {
     busy: boolean
     challenge: ChallengeOpportunity
@@ -526,6 +528,7 @@ function timelineTimezone(): string {
  * @throws Does not throw.
  */
 export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
+    const [labelsExpanded, setLabelsExpanded] = useState(false)
     const [timelineOpen, setTimelineOpen] = useState(false)
     const cancelled = challengeIsCancelled(props.challenge)
     const currentPhase = challengeCurrentPhase(props.challenge)
@@ -565,6 +568,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
     // lower placement prizes, so the three featured amounts stay inside the frame.
     const denseFeaturedPrizes = challengePrizes.length > 3
     const labels = challengeLabels(props.challenge)
+    const visibleLabels = labelsExpanded ? labels : labels.slice(0, COLLAPSED_LABEL_COUNT)
     const expandedTimeline = challengeTimelineItems(props.challenge, phase)
     // Half-width endpoint columns put Launch and Winners at the header edges
     // while keeping the 36px nodes evenly spaced and centered over phase labels.
@@ -607,7 +611,7 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                         <h1>{props.challenge.name}</h1>
                         {labels.length > 0 && (
                             <div className={styles.skills}>
-                                {labels.map(entry => (
+                                {visibleLabels.map(entry => (
                                     <Link
                                         className={classNames({ [styles.tagLabel]: entry.isTag })}
                                         key={entry.label}
@@ -617,6 +621,16 @@ export const ChallengeDetailHeader: FC<ChallengeDetailHeaderProps> = props => {
                                         {entry.label}
                                     </Link>
                                 ))}
+                                {labels.length > COLLAPSED_LABEL_COUNT && (
+                                    <button
+                                        aria-expanded={labelsExpanded}
+                                        aria-label={labelsExpanded ? 'Show fewer tags' : 'Show all tags'}
+                                        onClick={() => setLabelsExpanded(expanded => !expanded)}
+                                        type='button'
+                                    >
+                                        {labelsExpanded ? 'Show less' : `+${labels.length - COLLAPSED_LABEL_COUNT}`}
+                                    </button>
+                                )}
                             </div>
                         )}
                         <div className={styles.timeline}>

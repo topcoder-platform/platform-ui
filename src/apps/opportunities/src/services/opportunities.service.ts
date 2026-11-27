@@ -2047,6 +2047,22 @@ export async function getChallengeSubmitters(
     return getChallengeResources(challengeId, page, perPage, memberId, role.id, 'created', sortOrder)
 }
 
+/** Loads all submitter resources when the table is sorted by public profile fields. */
+export async function getAllChallengeSubmitters(challengeId: string): Promise<OpportunityPage<ChallengeResource>> {
+    const role = await getSubmitterRole()
+    const loadPage = (page: number): Promise<OpportunityPage<ChallengeResource>> => (
+        getChallengeResources(challengeId, page, 100, undefined, role.id, 'memberHandle', 'asc')
+    )
+    const first = await loadPage(1)
+    const pages = await loadPagesInBatches(
+        Array.from({ length: first.totalPages - 1 }, (_value, index) => index + 2),
+        async page => (await loadPage(page)).items,
+    )
+    const items = Array.from(new Map([...first.items, ...pages.flat()].map(item => [item.id, item]))
+        .values())
+    return { items, page: 1, perPage: items.length, total: items.length, totalPages: 1 }
+}
+
 /**
  * Resolves the authenticated member's own canonical Submitter resource.
  * The response is rechecked defensively so a broad or stale Resource API page

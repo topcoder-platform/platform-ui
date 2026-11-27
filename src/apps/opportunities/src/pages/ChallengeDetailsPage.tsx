@@ -17,6 +17,8 @@ import {
     useParams,
 } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import countries from 'i18n-iso-countries'
+import english from 'i18n-iso-countries/langs/en.json'
 import useSWR, { SWRResponse } from 'swr'
 
 import {
@@ -69,6 +71,7 @@ import {
 import {
     deleteChallengeSubmission,
     getAllChallengeSubmissions,
+    getAllChallengeSubmitters,
     getChallengeAiReviewConfig,
     getChallengeForumTopics,
     getChallengeMemberResource,
@@ -474,7 +477,7 @@ export const ChallengeDetailsPage: FC = () => {
             { count: challenge?.numOfRegistrants, id: 'registrants', label: 'Registrants' },
             ...(!taskChallenge && (memberId || designChallenge || publicMarathonLeaderboard)
                 ? [{
-                    count: challenge?.numOfSubmissions,
+                    count: challenge?.totalSubmissions,
                     id: 'submissions' as ChallengeTab,
                     label: 'Submissions',
                 }]
@@ -776,16 +779,12 @@ export const ChallengeDetailsPage: FC = () => {
     /**
      * Updates challenge and member submission counters after a successful upload.
      *
-     * @returns promise settled after both optimistic SWR cache updates.
+     * @returns promise settled after refreshing aggregate counts and updating the member cache.
      * @throws Propagates an unexpected SWR cache mutation failure to the upload workflow.
      */
     const recordSubmittedSolution = async (): Promise<void> => {
-        if (!challenge) return
         await Promise.all([
-            challengeResponse.mutate({
-                ...challenge,
-                numOfSubmissions: (challenge.numOfSubmissions ?? 0) + 1,
-            }, { revalidate: false }),
+            challengeResponse.mutate(),
             mySubmissionCountResponse.mutate(
                 current => (current ?? 0) + 1,
                 { revalidate: false },
@@ -801,10 +800,7 @@ export const ChallengeDetailsPage: FC = () => {
      */
     const recordDeletedSolution = async (): Promise<void> => {
         await Promise.all([
-            challengeResponse.mutate(current => (current ? {
-                ...current,
-                numOfSubmissions: Math.max(0, (current.numOfSubmissions ?? 0) - 1),
-            } : current), { revalidate: false }),
+            challengeResponse.mutate(),
             mySubmissionCountResponse.mutate(
                 current => Math.max(0, (current ?? 0) - 1),
                 { revalidate: false },
@@ -830,6 +826,7 @@ export const ChallengeDetailsPage: FC = () => {
     return (
         <main className={styles.page}>
             <ChallengeDetailHeader
+                key={challenge.id}
                 busy={registrationBusy || submissionUploadBusy}
                 challenge={challenge}
                 hasSubmitted={isRegistered && (
@@ -1181,6 +1178,35 @@ function registrationTimestamp(resource: ChallengeResource): string {
     return formatTimestamp(resource.created)
 }
 
+const registrantColumns = {
+    country: 'Country',
+    created: 'Registration Date',
+    handle: 'Handle',
+    rating: 'Rating',
+} as const
+type RegistrantSortField = keyof typeof registrantColumns
+const registrantFields: RegistrantSortField[] = ['handle', 'rating', 'country', 'created']
+
+countries.registerLocale(english)
+const regionNames = typeof Intl.DisplayNames === 'function'
+    ? new Intl.DisplayNames(['en'], { type: 'region' })
+    : undefined
+
+/** Compares the displayed table values, keeping missing values last in either direction. */
+function compareTableValues(
+    left: string | number | undefined,
+    right: string | number | undefined,
+    order: 'asc' | 'desc',
+): number {
+    if (left === undefined) return right === undefined ? 0 : 1
+    if (right === undefined) return -1
+    const difference = typeof left === 'number' && typeof right === 'number'
+        ? left - right
+        : String(left)
+            .localeCompare(String(right), undefined, { sensitivity: 'base' })
+    return order === 'asc' ? difference : -difference
+}
+
 /**
  * Loads Submitter resources only after the Registrants tab is selected.
  *
@@ -1190,11 +1216,16 @@ function registrationTimestamp(resource: ChallengeResource): string {
  */
 const RegistrantsTab: FC<{ challenge: ChallengeOpportunity; revision: number }> = props => {
     const [page, setPage] = useState(1)
-    const [perPage, setPerPage] = useState(10)
+    const [perPage, setPerPage] = useState(50)
+    const [sortBy, setSortBy] = useState<RegistrantSortField>('created')
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+    const profileSort = sortBy !== 'created'
     const response: SWRResponse<OpportunityPage<ChallengeResource>, Error> = useSWR(
-        ['opportunities:registrants', props.challenge.id, page, perPage, sortOrder, props.revision],
-        () => getChallengeSubmitters(props.challenge.id, page, perPage, undefined, sortOrder),
+        ['opportunities:registrants', props.challenge.id, profileSort ? 'all' : page,
+            profileSort ? 'all' : perPage, profileSort ? 'all' : sortOrder, props.revision],
+        () => (profileSort
+            ? getAllChallengeSubmitters(props.challenge.id)
+            : getChallengeSubmitters(props.challenge.id, page, perPage, undefined, sortOrder)),
         { revalidateOnFocus: false },
     )
     const memberIds = useMemo(
@@ -1213,8 +1244,33 @@ const RegistrantsTab: FC<{ challenge: ChallengeOpportunity; revision: number }> 
         () => memberProfilesById(profileResponse.data),
         [profileResponse.data],
     )
-    const trackKey = challengeCatalogKey(props.challenge.track)
-    const showRating = trackKey !== 'design'
+    const rows = useMemo(() => {
+        const registrants = (response.data?.items ?? []).map(resource => {
+            const profile = profilesById.get(String(resource.memberId ?? ''))
+            const countryCode = profile?.countryCode && countries.toAlpha2(profile.countryCode)
+            const country = countryCode && countries.isValid(countryCode)
+                ? regionNames?.of(countryCode) ?? countries.getName(countryCode, 'en')
+                : undefined
+            const flagFile = countryCode === 'CA' ? 'ca.png' : `${countryCode?.toLowerCase()}.svg`
+            return {
+                country,
+                flagUrl: country ? `/static/country-flags/${flagFile}` : undefined,
+                handle: profile?.handle ?? resource.memberHandle ?? String(resource.memberId || 'Member'),
+                profile,
+                rating: profile?.maxRating ?? resource.rating,
+                resource,
+            }
+        })
+        if (sortBy === 'created') return registrants
+        return registrants.sort((first, second) => compareTableValues(first[sortBy], second[sortBy], sortOrder))
+            .slice((page - 1) * perPage, page * perPage)
+    }, [page, perPage, profilesById, response.data?.items, sortBy, sortOrder])
+    const selectSort = (field: RegistrantSortField): void => {
+        setSortOrder(field === sortBy && sortOrder === 'asc' ? 'desc' : 'asc')
+        setSortBy(field)
+        setPage(1)
+    }
+
     if (response.isValidating && !response.data) {
         return <OpportunityTabLoading label='Loading registrants' />
     }
@@ -1227,65 +1283,60 @@ const RegistrantsTab: FC<{ challenge: ChallengeOpportunity; revision: number }> 
     return (
         <div className={styles.tableSection}>
             <h2>Registrants</h2>
-            <MobileTableSort
-                label='Registration Date'
-                onToggle={() => {
-                    setSortOrder(value => (value === 'asc' ? 'desc' : 'asc'))
-                    setPage(1)
-                }}
-                order={sortOrder}
-            />
+            <label className={styles.mobileTableSort}>
+                Sort registrants by
+                <select onChange={event => selectSort(event.target.value as RegistrantSortField)} value={sortBy}>
+                    {registrantFields.map(field => (
+                        <option key={field} value={field}>{registrantColumns[field]}</option>
+                    ))}
+                </select>
+            </label>
+            <MobileTableSort label={registrantColumns[sortBy]} onToggle={() => selectSort(sortBy)} order={sortOrder} />
             <div className={`${styles.tableCard} ${styles.mobileRecordCard}`}>
-                <table className={`${!showRating
-                    ? styles.designRegistrantTable
-                    : styles.ratedRegistrantTable} ${styles.mobileRecordTable}`}
-                >
+                <table className={`${styles.registrantTable} ${styles.mobileRecordTable}`}>
                     <thead>
                         <tr>
-                            <th>Handle</th>
-                            {showRating && <th>Rating</th>}
-                            <SortableColumnHeader
-                                label='Registration Date'
-                                onToggle={() => {
-                                    setSortOrder(value => (value === 'asc' ? 'desc' : 'asc'))
-                                    setPage(1)
-                                }}
-                                order={sortOrder}
-                            />
+                            {registrantFields.map(field => (
+                                <SortableColumnHeader
+                                    active={field === sortBy}
+                                    key={field}
+                                    label={registrantColumns[field]}
+                                    onToggle={() => selectSort(field)}
+                                    order={field === sortBy ? sortOrder : 'desc'}
+                                />
+                            ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {response.data.items.map(resource => {
-                            const memberId = String(resource.memberId ?? '')
-                            const profile = profilesById.get(memberId)
-                            const handle = profile?.handle
-                                ?? resource.memberHandle
-                                ?? String(resource.memberId || 'Member')
-                            const rating = profile?.maxRating ?? resource.rating
-                            return (
-                                <tr key={resource.id}>
-                                    <td data-mobile-label='Handle'>
-                                        <MemberHandle
-                                            handle={handle}
-                                            link={!!profile?.handle || !!resource.memberHandle}
-                                            profile={profile}
-                                            rating={rating}
-                                        />
-                                    </td>
-                                    {showRating && (
-                                        <td
-                                            className={ratingClass(rating)}
-                                            data-mobile-label='Rating'
-                                        >
-                                            {rating ?? '—'}
-                                        </td>
-                                    )}
-                                    <td data-mobile-label='Registration Date'>
-                                        {registrationTimestamp(resource)}
-                                    </td>
-                                </tr>
-                            )
-                        })}
+                        {rows.map(row => (
+                            <tr key={row.resource.id}>
+                                <td data-mobile-label='Handle'>
+                                    <MemberHandle
+                                        handle={row.handle}
+                                        link={!!row.profile?.handle || !!row.resource.memberHandle}
+                                        profile={row.profile}
+                                        rating={row.rating}
+                                    />
+                                </td>
+                                <td className={ratingClass(row.rating)} data-mobile-label='Rating'>
+                                    {row.rating ?? '—'}
+                                </td>
+                                <td data-mobile-label='Country'>
+                                    <span className={styles.registrantCountry}>
+                                        {row.flagUrl && (
+                                            <img
+                                                alt=''
+                                                height={20}
+                                                src={row.flagUrl}
+                                                width={20}
+                                            />
+                                        )}
+                                        {row.country ?? '—'}
+                                    </span>
+                                </td>
+                                <td data-mobile-label='Registration Date'>{registrationTimestamp(row.resource)}</td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
@@ -1296,10 +1347,10 @@ const RegistrantsTab: FC<{ challenge: ChallengeOpportunity; revision: number }> 
                         setPerPage(value)
                         setPage(1)
                     }}
-                    page={response.data.page}
-                    perPage={response.data.perPage}
+                    page={profileSort ? page : response.data.page}
+                    perPage={profileSort ? perPage : response.data.perPage}
                     total={response.data.total}
-                    totalPages={response.data.totalPages}
+                    totalPages={profileSort ? Math.ceil(response.data.total / perPage) : response.data.totalPages}
                 />
             </div>
         </div>
@@ -1334,8 +1385,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
     const [page, setPage] = useState(1)
     const [perPage, setPerPage] = useState(isMarathonMatch ? 200 : 10)
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-    const [allSubmissionsSortBy, setSortBy] = useState<SubmissionSortField>('submittedDate')
-    const sortBy = props.mine ? 'submittedDate' : allSubmissionsSortBy
+    const [selectedSort, setSortBy] = useState<SubmissionSortField>()
     const [artifactsSubmission, setArtifactsSubmission] = useState<ChallengeSubmission>()
     const [historySubmission, setHistorySubmission] = useState<ChallengeSubmission | undefined>()
     const [aiSubmissionExpansionOverrides, setAiSubmissionExpansionOverrides]
@@ -1403,7 +1453,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         && challengeMetadataFlag(props.challenge, 'submissionsViewable')
     const usePublicPreviewPage = privatePreviewGallery && !props.viewerMemberId
     const clientSort = !props.mine && !privatePreviewGallery && !privateDesignSubmissions
-        && (isMarathonMatch || showDevelopmentResults || sortBy !== 'submittedDate')
+        && (isMarathonMatch || showDevelopmentResults || (!!selectedSort && selectedSort !== 'submittedDate'))
     const response: SWRResponse<OpportunityPage<ChallengeSubmission>, Error> = useSWR(
         privateDesignSubmissions ? undefined : [
             usePublicPreviewPage ? 'opportunities:submission-previews' : 'opportunities:submissions',
@@ -1481,6 +1531,12 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
         props.challenge,
         loadedSubmissions,
     )
+    const hasReleasedFinalScore = isMarathonMatch && showAllSubmissionFinalScores
+        && loadedSubmissions.some(submission => marathonSubmissionScores(submission).finalScore !== undefined)
+    const defaultSort = isMarathonMatch && !props.mine
+        ? (hasReleasedFinalScore ? 'finalScore' : 'provisionalScore')
+        : 'submittedDate'
+    const sortBy: SubmissionSortField = props.mine ? 'submittedDate' : selectedSort ?? defaultSort
     const submissionRanks = useMemo(
         () => marathonSubmissionRanks(
             (isMarathonMatch || showDevelopmentResults) && !props.mine ? loadedSubmissions : [],
@@ -1520,18 +1576,11 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                 : scores.finalScore
         }
 
-        return [...loadedSubmissions].sort((first, second) => {
-            const left = valueFor(first)
-            const right = valueFor(second)
-            // Missing or unreleased values stay last in either direction.
-            if (left === undefined) return right === undefined ? 0 : 1
-            if (right === undefined) return -1
-            const difference = typeof left === 'number' && typeof right === 'number'
-                ? left - right
-                : String(left)
-                    .localeCompare(String(right), undefined, { sensitivity: 'base' })
-            return sortOrder === 'asc' ? difference : -difference
-        })
+        return [...loadedSubmissions].sort((first, second) => compareTableValues(
+            valueFor(first),
+            valueFor(second),
+            sortOrder,
+        ))
             .slice((page - 1) * perPage, page * perPage)
     }, [clientSort, isMarathonMatch, loadedSubmissions, page, perPage, profilesById,
         showAllSubmissionFinalScores, sortBy, sortOrder, submissionRanks])
@@ -1674,6 +1723,7 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
             : <EmptyTab title='No submissions yet' text='Visible submissions will appear here.' />
     }
 
+    const { numOfSubmitters, totalSubmissions }: ChallengeOpportunity = props.challenge
     const pagination = (
         <OpportunityPagination
             onPageChange={setPage}
@@ -1694,6 +1744,12 @@ const SubmissionsTab: FC<SubmissionsTabProps> = props => {
                 <div>
                     <h2>{props.mine ? 'My Submissions' : 'All Submissions'}</h2>
                     {props.mine && <p>Manage your submissions or upload new.</p>}
+                    {!props.mine && numOfSubmitters !== undefined && totalSubmissions !== undefined && (
+                        <p className={styles.submissionSummary}>
+                            {`${numOfSubmitters} member${numOfSubmitters === 1 ? '' : 's'} competing · `}
+                            {`${totalSubmissions} submission${totalSubmissions === 1 ? '' : 's'} in total`}
+                        </p>
+                    )}
                 </div>
                 {props.mine && (
                     <a

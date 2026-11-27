@@ -387,8 +387,7 @@
     transform: rotate(180deg);
 }
 
-.ratedRegistrantTable,
-.designRegistrantTable,
+.registrantTable,
 .developmentSubmissionTable,
 .developmentResultsTable,
 .designSubmissionTable,
@@ -400,12 +399,22 @@
     min-width: 0;
 }
 
-.ratedRegistrantTable {
-    th { width: 384px; }
+.registrantTable {
+    th { width: 25%; }
 }
 
-.designRegistrantTable {
-    th { width: 576px; }
+.registrantCountry {
+    align-items: center;
+    display: inline-flex;
+    gap: 8px;
+
+    img { object-fit: contain; }
+}
+
+.submissionHeading p.submissionSummary {
+    font-size: 14px;
+    line-height: 20px;
+    margin: 4px 0 0;
 }
 
 .developmentSubmissionTable {
@@ -1401,8 +1410,7 @@
         }
     }
 
-    .ratedRegistrantTable,
-    .designRegistrantTable,
+    .registrantTable,
     .developmentSubmissionTable,
     .developmentResultsTable,
     .designSubmissionTable,
