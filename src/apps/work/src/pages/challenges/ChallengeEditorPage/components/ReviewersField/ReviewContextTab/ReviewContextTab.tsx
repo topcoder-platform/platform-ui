@@ -1,9 +1,14 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
+    buildReviewContextSeed,
     createChallengeReviewContext,
     deleteChallengeReviewContext,
+    fetchChallengePayload,
+    fetchScorecardPayload,
+    findMemberReviewScorecardId,
     generateChallengeReviewContext,
+    projectReviewContextScorecard,
     showErrorToast,
     showSuccessToast,
     useFetchChallengeReviewContext,
@@ -18,6 +23,31 @@ import { ReviewContextLockReason } from '../reviewers-field.utils'
 
 import ReviewContextEditor from './ReviewContextEditor'
 import styles from './ReviewContextTab.module.scss'
+
+/**
+ * Builds the initial context for a manually managed review context: the
+ * challenge-derived fields of the unified context with empty requirements.
+ * Falls back to an empty requirements list when challenge data cannot be
+ * loaded; the review API backfills missing fields when the context is read.
+ *
+ * @param challengeId challenge the context is created for
+ * @returns review context payload to persist
+ */
+async function buildManualReviewContext(challengeId: string): Promise<Record<string, unknown>> {
+    try {
+        const challenge = await fetchChallengePayload(challengeId)
+        const scorecardId = findMemberReviewScorecardId(challenge)
+        const scorecard = scorecardId
+            ? await fetchScorecardPayload(scorecardId)
+                .then(projectReviewContextScorecard)
+                .catch(() => undefined)
+            : undefined
+
+        return buildReviewContextSeed(challenge, scorecard)
+    } catch {
+        return { requirements: [] }
+    }
+}
 
 interface ReviewContextTabProps {
     challengeId?: string
@@ -91,7 +121,7 @@ const ReviewContextTab: FC<ReviewContextTabProps> = props => {
     const createManualReviewContext = useCallback(async (): Promise<void> => {
         await createChallengeReviewContext({
             challengeId: props.challengeId || '',
-            context: { requirements: [] },
+            context: await buildManualReviewContext(props.challengeId || ''),
             status: 'HUMAN_APPROVED',
         })
 

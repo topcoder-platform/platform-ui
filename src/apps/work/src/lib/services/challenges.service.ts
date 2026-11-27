@@ -581,6 +581,42 @@ export async function fetchChallenge(challengeId: string): Promise<Challenge> {
 }
 
 /**
+ * Fetch one challenge by id as the raw Challenge API payload, without the
+ * `normalizeChallengeData` rewrites applied by `fetchChallenge`.
+ *
+ * @param challengeId challenge id
+ * @returns raw challenge payload
+ */
+export async function fetchChallengePayload(challengeId: string): Promise<Record<string, unknown>> {
+    try {
+        return await xhrGetAsync<Record<string, unknown>>(
+            `${CHALLENGE_API_URL}/${encodeURIComponent(challengeId)}`,
+            challengeServiceXhrInstance,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to fetch challenge')
+    }
+}
+
+/**
+ * Fetch one scorecard with its groups, sections and questions as returned
+ * by the review API.
+ *
+ * @param scorecardId scorecard id
+ * @returns raw scorecard payload
+ */
+export async function fetchScorecardPayload(scorecardId: string): Promise<unknown> {
+    try {
+        return await xhrGetAsync<unknown>(
+            `${SCORECARDS_API_URL}/${encodeURIComponent(scorecardId)}`,
+            challengeServiceXhrInstance,
+        )
+    } catch (error) {
+        throw normalizeError(error, 'Failed to fetch scorecard')
+    }
+}
+
+/**
  * Fetch challenge types metadata.
  */
 export async function fetchChallengeTypes(): Promise<ChallengeType[]> {

@@ -1,18 +1,31 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { ChallengeStatus } from '~/apps/admin/src/lib/models'
 
 import ReviewContextTab from './ReviewContextTab'
 
 const mockUseFetchChallengeReviewContext = jest.fn()
+const mockCreateChallengeReviewContext = jest.fn()
+const mockFetchChallengePayload = jest.fn()
+const mockFetchScorecardPayload = jest.fn()
 
-jest.mock('../../../../../../lib', () => ({
-    createChallengeReviewContext: jest.fn(),
-    deleteChallengeReviewContext: jest.fn(),
-    generateChallengeReviewContext: jest.fn(),
-    showErrorToast: jest.fn(),
-    showSuccessToast: jest.fn(),
-    useFetchChallengeReviewContext: () => mockUseFetchChallengeReviewContext(),
-}))
+jest.mock('../../../../../../lib', () => {
+    const seedUtils = jest.requireActual('../../../../../../lib/utils/review-context-seed.utils')
+
+    return {
+        buildReviewContextSeed: seedUtils.buildReviewContextSeed,
+        createChallengeReviewContext: (...args: unknown[]) => mockCreateChallengeReviewContext(...args),
+        deleteChallengeReviewContext: jest.fn(),
+        fetchChallengePayload: (...args: unknown[]) => mockFetchChallengePayload(...args),
+        fetchScorecardPayload: (...args: unknown[]) => mockFetchScorecardPayload(...args),
+        findMemberReviewScorecardId: seedUtils.findMemberReviewScorecardId,
+        generateChallengeReviewContext: jest.fn(),
+        projectReviewContextScorecard: seedUtils.projectReviewContextScorecard,
+        showErrorToast: jest.fn(),
+        showSuccessToast: jest.fn(),
+        useFetchChallengeReviewContext: () => mockUseFetchChallengeReviewContext(),
+    }
+})
 
 jest.mock('./ReviewContextEditor', () => ({
     __esModule: true,
@@ -168,5 +181,84 @@ describe('ReviewContextTab', () => {
 
         expect(screen.getByRole('button', { name: 'Manage Review Context' }))
             .toBeInTheDocument()
+    })
+
+    describe('Manage Review Context', () => {
+        const emptyContextResult = {
+            context: undefined,
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+        }
+
+        const renderTab = (): void => {
+            render(
+                <ReviewContextTab
+                    challengeId='challenge-1'
+                    challengeDescription={'A'.repeat(120)}
+                    challengeStatus={ChallengeStatus.Draft}
+                />,
+            )
+        }
+
+        it('seeds the manual context with challenge-derived unified context fields', async () => {
+            mockUseFetchChallengeReviewContext.mockReturnValue(emptyContextResult)
+            mockFetchChallengePayload.mockResolvedValue({
+                description: '## Spec',
+                id: 'challenge-1',
+                name: 'Build the widget',
+                prizeSets: [{ prizes: [{ type: 'USD', value: 800 }], type: 'PLACEMENT' }],
+                reviewers: [{ isMemberReview: true, scorecardId: 'sc-1' }],
+                status: 'Draft',
+                track: { name: 'Development' },
+                type: { name: 'Challenge' },
+            })
+            mockFetchScorecardPayload.mockResolvedValue({
+                id: 'sc-1',
+                name: 'Dev Scorecard',
+                scorecardGroups: [],
+            })
+            mockCreateChallengeReviewContext.mockResolvedValue({})
+
+            renderTab()
+            fireEvent.click(screen.getByRole('button', { name: 'Manage Review Context' }))
+
+            await waitFor(() => expect(mockCreateChallengeReviewContext)
+                .toHaveBeenCalled())
+
+            expect(mockFetchScorecardPayload)
+                .toHaveBeenCalledWith('sc-1')
+            const input = mockCreateChallengeReviewContext.mock.calls[0][0]
+            expect(input.status)
+                .toBe('HUMAN_APPROVED')
+            expect(input.context)
+                .toMatchObject({
+                    challenge_metadata: { track: 'Development', type: 'Challenge' },
+                    challengeId: 'challenge-1',
+                    descriptionRaw: '## Spec',
+                    prizes: [{ currency: 'USD', placement: 1, value: 800 }],
+                    requirements: [],
+                    review_criteria: {
+                        scorecard: { id: 'sc-1', name: 'Dev Scorecard' },
+                    },
+                    title: 'Build the widget',
+                })
+        })
+
+        it('falls back to an empty requirements context when the challenge cannot be loaded', async () => {
+            mockUseFetchChallengeReviewContext.mockReturnValue(emptyContextResult)
+            mockFetchChallengePayload.mockRejectedValue(new Error('offline'))
+            mockCreateChallengeReviewContext.mockResolvedValue({})
+
+            renderTab()
+            fireEvent.click(screen.getByRole('button', { name: 'Manage Review Context' }))
+
+            await waitFor(() => expect(mockCreateChallengeReviewContext)
+                .toHaveBeenCalled())
+
+            expect(mockCreateChallengeReviewContext.mock.calls[0][0].context)
+                .toEqual({ requirements: [] })
+        })
     })
 })
