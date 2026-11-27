@@ -108,12 +108,12 @@ async function renderSubmissions(
         metadata: [{ name: 'submissionLimit', value: JSON.stringify({ limit, type: 'limited' }) }],
         name: 'Design submission replacement',
         numOfRegistrants: 3,
-        numOfSubmissions: limit + OTHER_MEMBER_SUBMISSIONS,
         phases: [
             { isOpen: true, name: 'Registration' },
             { isOpen: true, name: phase },
         ],
         status: 'ACTIVE',
+        totalSubmissions: limit + OTHER_MEMBER_SUBMISSIONS,
         track: 'Design',
         type: 'Challenge',
     }
@@ -148,6 +148,7 @@ async function submitReplacement(): Promise<File> {
     const input = await screen.findByLabelText(/Upload File\*/)
     const file = new File(['zip'], 'replacement.zip', { type: 'application/zip' })
     fireEvent.change(input, { target: { files: [file] } })
+    fireEvent.click(screen.getByRole('radio', { name: 'No' }))
     fireEvent.click(screen.getByRole('checkbox', { name: 'I understand and agree' }))
     await act(async () => {
         fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
@@ -163,7 +164,10 @@ describe('PM-5987 Design submission replacement without reloading', () => {
         jest.spyOn(window, 'confirm')
             .mockReturnValue(true)
         mockGetRegistration.mockResolvedValue({ id: 'registration-id', memberId: '123' })
-        mockGetChallenge.mockImplementation(async () => ({ ...challenge }))
+        mockGetChallenge.mockImplementation(async () => ({
+            ...challenge,
+            totalSubmissions: submissions.length + OTHER_MEMBER_SUBMISSIONS,
+        }))
         mockGetSubmissions.mockImplementation(async (_challengeId, page, perPage) => ({
             items: submissions.slice((page - 1) * perPage, page * perPage),
             page,
@@ -211,6 +215,7 @@ describe('PM-5987 Design submission replacement without reloading', () => {
                 file,
                 expect.any(Function),
                 expect.any(AbortSignal),
+                false,
             )
         expect(toast.error).not.toHaveBeenCalled()
         expect(screen.queryByText(LIMIT_ERROR)).not.toBeInTheDocument()

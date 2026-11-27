@@ -44,6 +44,7 @@ describe('member profile service', () => {
         mockXhrGetAsync.mockResolvedValue({
             result: {
                 content: [{
+                    competitionCountryCode: 'FRA',
                     handle: 'dok',
                     maxRating: { rating: 2_345 },
                     photoURL: 'https://cdn.example/dok.png',
@@ -59,6 +60,7 @@ describe('member profile service', () => {
 
         await expect(getMemberProfilesByUserIds(['1', '1', ' 2 ', '']))
             .resolves.toEqual([{
+                countryCode: 'FRA',
                 handle: 'dok',
                 maxRating: 2_345,
                 photoURL: 'https://cdn.example/dok.png',
@@ -74,7 +76,7 @@ describe('member profile service', () => {
         expect(requestedUrl.pathname)
             .toBe('/v6/members')
         expect(requestedUrl.searchParams.get('fields'))
-            .toBe('userId,handle,photoURL,maxRating')
+            .toBe('userId,handle,photoURL,maxRating,competitionCountryCode,homeCountryCode')
         expect(requestedUrl.searchParams.getAll('userIds[]'))
             .toEqual(['1', '2'])
         expect(requestedUrl.searchParams.get('perPage'))

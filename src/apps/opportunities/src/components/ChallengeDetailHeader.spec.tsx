@@ -78,6 +78,39 @@ describe('ChallengeDetailHeader actions and presentation', () => {
             .toHaveAttribute('href', '/opportunities/competitions?search=Probability')
     })
 
+    it('expands and collapses the labels after the first eight distinct tags and skills', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeDetailHeader
+                    busy={false}
+                    challenge={challengeFixture({
+                        skills: Array.from({ length: 14 }, (_, i) => ({ name: `Skill ${i}` })),
+                        tags: ['Skill 0'],
+                    })}
+                    isRegistered={false}
+                    onRegister={jest.fn()}
+                    onSubmit={jest.fn()}
+                    onUnregister={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+        const toggle = screen.getByRole('button', { name: 'Show all tags' })
+        expect(toggle)
+            .toHaveTextContent('+6')
+        expect(screen.queryByRole('link', { name: 'Skill 8' })).not.toBeInTheDocument()
+        fireEvent.click(toggle)
+        expect(toggle)
+            .toHaveAttribute('aria-expanded', 'true')
+        expect(toggle)
+            .toHaveTextContent('Show less')
+        expect(screen.getByRole('link', { name: 'Skill 13' }))
+            .toHaveAttribute('href', '/opportunities/competitions?search=Skill%2013')
+        fireEvent.click(toggle)
+        expect(toggle)
+            .toHaveAttribute('aria-expanded', 'false')
+        expect(screen.queryByRole('link', { name: 'Skill 13' })).not.toBeInTheDocument()
+    })
+
     it('shows authored design tags alongside standardized skills', () => {
         render(
             <MemoryRouter>

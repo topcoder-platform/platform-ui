@@ -506,9 +506,11 @@ describe('ChallengeDetailsPage member flows', () => {
             name: 'Challenge',
             numOfPosts: 3,
             numOfRegistrants: 8,
-            numOfSubmissions: 5,
+            numOfSubmissions: 3,
+            numOfSubmitters: 3,
             phases: [{ isOpen: true, name: 'Submission' }],
             status: 'ACTIVE',
+            totalSubmissions: 5,
             track: 'Development',
             type: 'Challenge',
         }
@@ -593,7 +595,7 @@ describe('ChallengeDetailsPage member flows', () => {
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:registrants') {
-                return swrResponse(submissionPage(mockRegistrants))
+                return swrResponse(submissionPage(mockRegistrants, key[2], key[3]))
             }
 
             if (Array.isArray(key) && key[0] === 'opportunities:member-profiles') {
@@ -654,6 +656,10 @@ describe('ChallengeDetailsPage member flows', () => {
 
         fireEvent.click(screen.getByRole('tab', { name: /^Submissions/ }))
         expect(screen.getByRole('columnheader', { name: 'Provisional Score' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('columnheader', { name: 'Provisional Score' }))
+            .toHaveAttribute('aria-sort', 'descending')
+        expect(screen.getByText('3 members competing · 5 submissions in total'))
             .toBeInTheDocument()
         expect(screen.getByText('88.5'))
             .toBeInTheDocument()
@@ -1046,7 +1052,7 @@ describe('ChallengeDetailsPage member flows', () => {
         fireEvent.click(screen.getByRole('tab', { name: /^Registrants/ }))
         expect(mockUseSWR)
             .toHaveBeenCalledWith(
-                ['opportunities:registrants', 'challenge-id', 1, 10, 'desc', 1],
+                ['opportunities:registrants', 'challenge-id', 1, 50, 'desc', 1],
                 expect.any(Function),
                 { revalidateOnFocus: false },
             )
@@ -1272,11 +1278,43 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         const cells = screen.getAllByRole('cell')
         expect(cells.map(cell => cell.getAttribute('data-mobile-label')))
-            .toEqual(['Handle', 'Rating', 'Registration Date'])
+            .toEqual(['Handle', 'Rating', 'Country', 'Registration Date'])
         expect(screen.getByRole('table'))
             .toHaveClass('mobileRecordTable')
         expect(challengeDetailStyles)
             .toMatch(/\.mobileRecordTable\s*\{[\s\S]*?thead\s*\{[\s\S]*?button\s*\{\s*display: none;/)
+    })
+
+    it('sorts the full registrant list by displayed country, rating, and handle before paging', () => {
+        mockRegistrants = Array.from({ length: 51 }, (_, i) => ({
+            id: `resource-${i}`, memberHandle: `coder${i}`, memberId: String(i), rating: 1000 + i,
+        }))
+        mockMemberProfiles = [
+            { countryCode: 'CAN', handle: 'Zed', userId: '0' },
+            { countryCode: 'BR', handle: 'Ace', maxRating: 900, userId: '50' },
+        ]
+        renderPage('/opportunities/challenge/challenge-id?tab=registrants')
+        expect(screen.getByRole('combobox', { name: 'Items per page:' }))
+            .toHaveValue('50')
+        fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+        fireEvent.change(screen.getByRole('combobox', { name: 'Sort registrants by' }), {
+            target: { value: 'country' },
+        })
+        const firstRow = (): HTMLElement => screen.getAllByRole('row')[1]
+        expect(firstRow())
+            .toHaveTextContent('Ace900Brazil')
+        expect(firstRow()
+            .querySelector('img[src="/static/country-flags/br.svg"]'))
+            .toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'Country' }))
+        expect(firstRow())
+            .toHaveTextContent('Canada')
+        fireEvent.click(screen.getByRole('button', { name: 'Rating' }))
+        expect(firstRow())
+            .toHaveTextContent('Ace900')
+        fireEvent.click(screen.getByRole('button', { name: 'Handle' }))
+        expect(firstRow())
+            .toHaveTextContent('Ace')
     })
 
     it('renders public and authored submissions as labeled mobile records', () => {
@@ -1409,7 +1447,7 @@ describe('ChallengeDetailsPage member flows', () => {
             ...mockChallenge,
             numOfPosts: count,
             numOfRegistrants: count,
-            numOfSubmissions: count,
+            totalSubmissions: count,
         }
 
         renderPage()
@@ -1536,10 +1574,7 @@ describe('ChallengeDetailsPage member flows', () => {
         await waitFor(() => expect(screen.getByRole('tab', { name: 'Requirements' }))
             .not.toBeDisabled())
         expect(mockChallengeMutate)
-            .toHaveBeenCalledWith(
-                expect.objectContaining({ numOfSubmissions: 6 }),
-                { revalidate: false },
-            )
+            .toHaveBeenCalledWith()
         expect(mockMySubmissionCountMutate)
             .toHaveBeenCalledWith(expect.any(Function), { revalidate: false })
     })
@@ -2344,6 +2379,13 @@ describe('ChallengeDetailsPage member flows', () => {
             .slice(0, 3)
             .map(header => header.textContent))
             .toEqual(['Final Rank', 'Provisional Rank', 'Handle'])
+        expect(screen.getByRole('columnheader', { name: 'Final Score' }))
+            .toHaveAttribute('aria-sort', 'descending')
+        expect(within(screen.getAllByRole('row')[1])
+            .getByRole('link', { name: 'coder0' }))
+            .toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'Submission Date' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Submission Date' }))
         const firstRow = screen.getAllByRole('row')[1]
         expect(within(firstRow)
             .getAllByRole('cell')
@@ -2838,8 +2880,10 @@ describe('ChallengeDetailsPage member flows', () => {
             .toBeInTheDocument()
         expect(screen.getByRole('columnheader', { name: 'Registration Date' }))
             .toBeInTheDocument()
-        expect(screen.queryByRole('columnheader', { name: 'Rating' }))
-            .not.toBeInTheDocument()
+        expect(screen.getByRole('columnheader', { name: 'Rating' }))
+            .toBeInTheDocument()
+        expect(screen.getByRole('columnheader', { name: 'Country' }))
+            .toBeInTheDocument()
 
         rendered.unmount()
         mockChallenge = {
