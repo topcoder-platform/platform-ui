@@ -283,14 +283,14 @@ function safeChallengeLink(value: unknown): string | undefined {
  * environment destinations absent from Challenge API metadata.
  *
  * @param challenge raw Challenge API detail response.
- * @returns safe environment, repository, discussion, and attachment links.
+ * @returns safe environment, repository, scorecard, and attachment links.
  * @throws Does not throw.
  */
 export function challengeSidebarLinks(challenge: ChallengeOpportunity): {
     attachments: ChallengeSidebarLink[]
     challengeLinks: ChallengeSidebarLink[]
 } {
-    const metadataLinks = [
+    const challengeLinks = [
         { label: 'Environment', value: challengeMetadataValue(challenge.metadata, 'environment') },
         { label: 'Code Repository', value: challengeMetadataValue(challenge.metadata, 'codeRepo') },
         {
@@ -302,11 +302,6 @@ export function challengeSidebarLinks(challenge: ChallengeOpportunity): {
             value: challengeScorecardUrl(challenge.legacy?.reviewScorecardId),
         },
     ]
-    const discussions = (challenge.discussions ?? []).map(discussion => ({
-        label: discussion.name?.trim() || 'Challenge Discussion',
-        value: discussion.url,
-    }))
-    const challengeLinks = [...metadataLinks, ...discussions]
         .map(link => ({ label: link.label, url: safeChallengeLink(link.value) }))
         .filter((link): link is ChallengeSidebarLink => !!link.url)
     const attachments = (challenge.attachments ?? [])

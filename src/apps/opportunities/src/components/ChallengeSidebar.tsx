@@ -18,7 +18,6 @@ import {
 import {
     challengeAllowsStockArt,
     challengeFileTypes,
-    challengeForumUrl,
     challengeManualReviewScorecardUrl,
     challengeReviewAppUrl,
     ChallengeSidebarLink,
@@ -233,7 +232,6 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
     const fileTypes = challengeFileTypes(props.challenge)
     const submissionLimit = challengeSubmissionLimit(props.challenge)
     const links = challengeSidebarLinks(props.challenge)
-    const forumUrl = challengeForumUrl(props.challenge)
     const trackKey = challengeCatalogKey(props.challenge.track)
     const designChallenge = trackKey === 'design'
     const marathonMatch = isMarathonMatchChallenge(props.challenge)
@@ -264,14 +262,9 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
      * @throws Does not throw.
      */
     const showAllTerms = (): void => props.onShowTerms()
-    const challengeLinks = [...links.challengeLinks]
-    if (forumUrl && !challengeLinks.some(link => link.url === forumUrl)) {
-        challengeLinks.push({ label: 'Challenge Forum', url: forumUrl })
-    }
-
     const showReviewStyle = developmentChallenge && !marathonMatch && props.showReviewStyle && !topgearChallenge
     const showChallengeTerms = !topgearChallenge
-    const showChallengeLinks = !developmentChallenge && challengeLinks.length > 0
+    const showChallengeLinks = !developmentChallenge && links.challengeLinks.length > 0
     const showChallengeInfo = designChallenge || showReviewStyle || showChallengeTerms || showChallengeLinks
 
     /**
@@ -581,7 +574,7 @@ export const ChallengeSidebar: FC<ChallengeSidebarProps> = props => {
                                 <IconOutline.LinkIcon />
                                 Challenge Links
                             </h3>
-                            {challengeLinks.map(externalLink)}
+                            {links.challengeLinks.map(externalLink)}
                         </div>
                     )}
                     {designChallenge && (
