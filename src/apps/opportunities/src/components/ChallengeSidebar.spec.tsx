@@ -64,7 +64,6 @@ jest.mock('~/libs/ui', () => {
 jest.mock('../utils', () => ({
     challengeAllowsStockArt: (...args: unknown[]) => mockChallengeAllowsStockArt(...args),
     challengeFileTypes: (...args: unknown[]) => mockChallengeFileTypes(...args),
-    challengeForumUrl: (): undefined => undefined,
     challengeManualReviewScorecardUrl: (...args: unknown[]) => mockChallengeManualReviewScorecardUrl(...args),
     challengeReviewAppUrl: (challengeId: string): string => (
         `https://review.topcoder-dev.com/active-challenges/${challengeId}/challenge-details`
@@ -469,8 +468,8 @@ describe('ChallengeSidebar Review Style', () => {
             .not.toBeInTheDocument()
     })
 
-    it('does not render a fallback challenge links section when no authored forum or metadata links exist', () => {
-        renderSidebar()
+    it('omits the Challenge Links section when a legacy forum ID is the only destination', () => {
+        renderSidebar(undefined, { ...challenge, legacy: { forumId: 168 } })
 
         expect(screen.queryByRole('heading', { name: 'Challenge Links' }))
             .not.toBeInTheDocument()

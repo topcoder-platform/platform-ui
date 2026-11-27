@@ -924,10 +924,10 @@ report without it. Successful uploads remain attached throughout this recovery.
 
 The challenge rail parses case-insensitive `fileTypes`, `allowStockArt`,
 `submissionLimit`, `environment`, and `codeRepo` metadata, shows safe Challenge
-API discussions and attachments, and fails closed for unsafe or retired-host
-URLs. Design source-file labels appear only when authored and never synthesize
-Figma; the stock-photography allowance appears only when Work Manager explicitly
-enables it. Positive
+API attachments, and fails closed for unsafe or retired-host URLs. Members access
+challenge discussions through the Forum tab. Design source-file labels appear
+only when authored and never synthesize Figma; the stock-photography allowance
+appears only when Work Manager explicitly enables it. Positive
 legacy screening and review scorecard IDs link through the environment-specific
 `ADMIN.ONLINE_REVIEW_URL`; Review App remains the primary authenticated review
 handoff. Review Style uses the authored document-search rail icon. Development

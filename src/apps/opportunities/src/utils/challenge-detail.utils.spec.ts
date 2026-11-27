@@ -142,7 +142,7 @@ describe('challenge detail utilities', () => {
             .toBe('zip')
     })
 
-    it('returns only safe authored challenge and attachment links', () => {
+    it('returns safe sidebar resources and leaves discussion links to the Forum tab', () => {
         const links = challengeSidebarLinks({
             attachments: [
                 { id: 'safe', name: 'Starter files', url: 'https://assets.topcoder-dev.com/starter.zip' },
@@ -152,9 +152,8 @@ describe('challenge detail utilities', () => {
                 { id: 'relative', name: 'Relative', url: '/downloads/starter.zip' },
             ],
             discussions: [
-                { name: 'Discussion', url: 'https://vanilla.topcoder-dev.com/discussion/1' },
-                { name: 'Legacy', url: 'https://cdn.contentful.com/legacy' },
-                { name: 'Fragment', url: '#discussion' },
+                { name: 'Marathon Match 168', url: 'https://www.topcoder.com/opportunities/challenge/match?tab=forum' },
+                { name: 'Legacy discussion', url: 'https://vanilla.topcoder-dev.com/discussion/1' },
             ],
             id: 'challenge',
             metadata: [
@@ -167,7 +166,6 @@ describe('challenge detail utilities', () => {
         expect(links.challengeLinks)
             .toEqual([
                 { label: 'Environment', url: 'https://example.topcoder-dev.com/' },
-                { label: 'Discussion', url: 'https://vanilla.topcoder-dev.com/discussion/1' },
             ])
         expect(links.attachments)
             .toEqual([{ label: 'Starter files', url: 'https://assets.topcoder-dev.com/starter.zip' }])
